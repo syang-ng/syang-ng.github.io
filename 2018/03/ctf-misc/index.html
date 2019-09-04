@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2018/03/how-to-use-leancloud/" />
+  <link rel="next" href="https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2018/03/ctf-misc/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           CTF Misc 入门 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="CTF Misc 入门 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "CTF Misc 入门",
+    "headline" : "CTF Misc 入门",
+    "description" : "前言 这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上 其实我也只是个入门半年的萌新呀（误 简介 Misc 即安全杂项，题目或涉及流量分析、",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2018",
+    "datePublished": "2018-03-12 14:28:35 \x2b0000 UTC",
+    "dateModified" : "2018-03-12 14:28:35 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2018\/03\/ctf-misc\/",
+    "wordCount" : "3291",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">CTF Misc 入门</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2018-03-12 itemprop="datePublished">March 12, 2018</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/misc/"> Misc </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上</p>
+
+<p>其实我也只是个入门半年的萌新呀（误</p>
+
+<h2 id="简介">简介</h2>
+
+<p>Misc 即安全杂项，题目或涉及流量分析、电子取证、人肉搜索、数据分析等等</p>
+
+<p>在 Misc 的讲解中，将从以下两个方面介绍这一块的知识：</p>
+
+<ol>
+<li>Encode（编码转换）</li>
+</ol>
+
+<p>主要介绍在 CTF 比赛中一些常见的编码形式以及转换的技巧和常见方式</p>
+
+<ol>
+<li>Forensic &amp;&amp; Stego（数字取证 &amp;&amp; 隐写分析）
+隐写取证是 Misc 中最为重要的一块，包括文件分析、隐写、内存镜像分析和流量抓包分析等等，涉及巧妙的编码、隐藏数据、层层嵌套的文件中的文件，灵活利用搜索引擎获取所需要的信息等等。</li>
+</ol>
+
+<h2 id="编码分析-古典密码">编码分析 &amp;&amp; 古典密码</h2>
+
+<p>下面是 CTF 比赛中较为常见的几种编码格式</p>
+
+<ul>
+<li><code>通信领域常用编码</code>
+
+<ul>
+<li><code>Morse 编码</code></li>
+</ul></li>
+<li><code>计算机相关的编码</code>
+
+<ul>
+<li><code>字母表编码</code></li>
+<li><code>ASCII 编码</code></li>
+<li><code>Base 编码</code></li>
+<li><code>URL 编码</code></li>
+<li><code>Unicode 编码</code></li>
+</ul></li>
+<li><code>现实世界中常用的编码</code>
+
+<ul>
+<li><code>条形码</code></li>
+<li><code>二维码</code></li>
+</ul></li>
+</ul>
+
+<p>除了相应编码之外，Misc 题目中往往和一些较为简单的古典密码相结合，比如说如下古典密码</p>
+
+<ul>
+<li><code>单表替换密码</code>
+
+<ul>
+<li><code>凯撒密码</code></li>
+</ul></li>
+<li><code>多表替换密码</code></li>
+<li><code>其他类型</code>
+
+<ul>
+<li><code>栅栏密码</code></li>
+</ul></li>
+</ul>
+
+<h3 id="morse-编码">Morse 编码</h3>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/morse.jpg" alt="Morse 编码" class="lazyload"><figcaption class="image-caption">Morse 编码</figcaption></figure></p>
+
+<h4 id="特点">特点</h4>
+
+<ul>
+<li>只有 <code>.</code> 和 <code>-</code></li>
+<li>最多 6 位</li>
+<li>也可以使用 01 串表示</li>
+</ul>
+
+<h4 id="工具">工具</h4>
+
+<p><a href="http://www.zhongguosou.com/zonghe/moErSiCodeConverter.aspx" rel="nofollow noreferrer" target="_blank">摩尔斯电码在线转换</a></p>
+
+<h4 id="例题">例题</h4>
+
+<p>请选手观察以下密文并转换成flag形式</p>
+
+<p>..-. .-.. .- &ndash;. - &hellip;. .. &hellip;.. .. &hellip; &ndash; &mdash; .-. &hellip; . -.-. &mdash; -.. .</p>
+
+<h3 id="字母表编码">字母表编码</h3>
+
+<h4 id="特点-1">特点</h4>
+
+<p>A-Z/a-z 对应 1-26 或者 0-25</p>
+
+<h3 id="ascii-编码">ASCII 编码</h3>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/ascii.jpg" alt="ASCII 编码" class="lazyload"><figcaption class="image-caption">ASCII 编码</figcaption></figure></p>
+
+<h4 id="特点-2">特点</h4>
+
+<p>我们一般使用的 ascii 编码的时候采用的都是可见字符，而且主要是如下字符</p>
+
+<ul>
+<li>0-9, 49-57</li>
+<li>A-Z, 65-90</li>
+<li>a-z, 97-122</li>
+</ul>
+
+<h4 id="二进制编码">二进制编码</h4>
+
+<p>将 ascii 码对应的数字换成二进制表示形式</p>
+
+<ul>
+<li>只有 0 和 1</li>
+<li>不大于 8 位，一般 7 位也可以，因为可见字符到 127</li>
+<li>A: 01000001; B: 01000010; a: 01100001; b: 1100010</li>
+</ul>
+
+<h4 id="十六进制编码">十六进制编码</h4>
+
+<p>将 ascii 码对应的数字换成十六进制表示形式。</p>
+
+<ul>
+<li>A-Z–&gt;41-5A</li>
+<li>a-z–&gt;61-7A</li>
+</ul>
+
+<h4 id="例题-jarvis-oj-德军的密码">例题 Jarvis oj 德军的密码</h4>
+
+<p>已知将一个flag以一种加密形式为使用密钥进行加密，使用密钥WELCOMETOCFF加密后密文为 000000000000000000000000000000000000000000000000000101110000110001000000101000000001 请分析出flag</p>
+
+<h3 id="base-编码">Base 编码</h3>
+
+<p>base xx 中的 xx 表示的是采用多少个字符进行编码，比如说 base64 就是采用以下 64 个字符编码，由于 2 的 6 次方等于 64，所以每 6 个比特为一个单元，对应某个可打印字符。三个字节有 24 个比特，对应于 4 个 Base64 单元，即 3 个字节需要用 4 个可打印字符来表示</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/base64.png" alt="Base64 编码" class="lazyload"><figcaption class="image-caption">Base64 编码</figcaption></figure></p>
+
+<p>编码 Man</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/base64_man.png" alt="Base64 编码 Man" class="lazyload"><figcaption class="image-caption">Base64 编码 Man</figcaption></figure></p>
+
+<p>如果要编码的字节数不能被 3 整除，最后会多出 1 个或 2 个字节，那么可以使用下面的方法进行处理：先使用 0 值在末尾补足，使其能够被 3 整除，然后再进行 base64 的编码。在编码后的 base64 文本后加上一个或两个 = 号，代表补足的字节数。也就是说，当最后剩余一个八位字节（一个 byte）时，最后一个 6 位的 base64 字节块有四位是 0 值，最后附加上两个等号；如果最后剩余两个八位字节（2 个 byte）时，最后一个 6 位的 base 字节块有两位是 0 值，最后附加一个等号</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/base64_0.png" alt="Base64 编码补充" class="lazyload"><figcaption class="image-caption">Base64 编码补充</figcaption></figure></p>
+
+<h4 id="特点-3">特点</h4>
+
+<ul>
+<li>base64 结尾可能会有=号，但最多有两个</li>
+<li>base32 结尾可能会最多有 3 个等号</li>
+<li>根据 base 的不同，字符集会有所限制</li>
+<li>有可能需要自己加等号</li>
+</ul>
+
+<h4 id="工具-1">工具</h4>
+
+<ul>
+<li><a href="http://base64.xpcha.com/" rel="nofollow noreferrer" target="_blank">在线 Base64 编码</a></li>
+<li>python 库函数</li>
+</ul>
+
+<h4 id="例题-jarvis-oj-base-64">例题 Jarvis oj base 64?</h4>
+
+<p>请用正确的编码格式解析以下文本</p>
+
+<p>GUYDIMZVGQ2DMN3CGRQTONJXGM3TINLGG42DGMZXGM3TINLGGY4DGNBXGYZTGNLGGY3DGNBWMU3WI===</p>
+
+<h3 id="url-编码">URL 编码</h3>
+
+<h4 id="特点-4">特点</h4>
+
+<p>大量的百分号</p>
+
+<h4 id="工具-2">工具</h4>
+
+<p><a href="http://tool.chinaz.com/tools/urlencode.aspx" rel="nofollow noreferrer" target="_blank">在线 URL 编码</a></p>
+
+<h3 id="unicode-编码">Unicode 编码</h3>
+
+<h4 id="特点-5">特点</h4>
+
+<p>可能有不同的表现形式</p>
+
+<p>源文本： The</p>
+
+<p>&amp;#x [Hex]: <code>&amp;#x0054;&amp;#x0068;&amp;#x0065;</code></p>
+
+<p>&amp;# [Decimal]: <code>&amp;#00084;&amp;#00104;&amp;#00101;</code></p>
+
+<p>U [Hex]: <code>\U0054\U0068\U0065</code></p>
+
+<p>U + [Hex]: <code>\U+0054\U+0068\U+0065</code></p>
+
+<h4 id="工具-3">工具</h4>
+
+<p><a href="http://tool.chinaz.com/tools/unicode.aspx" rel="nofollow noreferrer" target="_blank">在线 Unicode 编码</a></p>
+
+<h3 id="凯撒加密">凯撒加密</h3>
+
+<h4 id="原理">原理</h4>
+
+<p>凯撒密码（Caesar）加密时会将明文中的 每个字母 都按照其在字母表中的顺序向后（或向前）移动固定数目（循环移动）作为密文。例如，当偏移量是左移 3 的时候（解密时的密钥就是 3）：</p>
+
+<pre><code>明文字母表：ABCDEFGHIJKLMNOPQRSTUVWXYZ
+密文字母表：DEFGHIJKLMNOPQRSTUVWXYZABC
+</code></pre>
+
+<p>使用时，加密者查找明文字母表中需要加密的消息中的每一个字母所在位置，并且写下密文字母表中对应的字母。需要解密的人则根据事先已知的密钥反过来操作，得到原来的明文。例如：</p>
+
+<pre><code>明文：THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG
+密文：WKH TXLFN EURZQ IRA MXPSV RYHU WKH ODCB GRJ
+</code></pre>
+
+<h4 id="破解">破解</h4>
+
+<p>对于不带秘钥的凯撒密码来说，其基本的破解方法有两种方式</p>
+
+<ol>
+<li>遍历 26 个偏移量，适用于普遍情况</li>
+<li>利用词频分析，适用于密文较长的情况</li>
+</ol>
+
+<p>其中，第一种方式肯定可以得到明文，而第二种方式则不一定可以得到正确的明文</p>
+
+<h4 id="工具-4">工具</h4>
+
+<p><a href="http://tools.matchzones.net/caesar_cipher" rel="nofollow noreferrer" target="_blank">在线凯撒加密破解</a></p>
+
+<h4 id="题目">题目</h4>
+
+<p>根据凯撒加密后的密文：MGAKUZKRWZWGAWCP，解出原文（原文为 KEY 开头）</p>
+
+<h3 id="栅栏密码">栅栏密码</h3>
+
+<h4 id="原理-1">原理</h4>
+
+<p>栅栏密码把要加密的明文分成 N 个一组，然后把每组的第 1 个字连起来，形成一段无规律的话。这里给出一个例子</p>
+
+<pre><code>明文：THERE IS A CIPHER
+</code></pre>
+
+<p>去掉空格后变为</p>
+
+<pre><code>THEREISACIPHER
+</code></pre>
+
+<p>分成两栏，两个一组得到</p>
+
+<pre><code>TH ER EI SA CI PH ER
+</code></pre>
+
+<p>先取出第一个字母，再取出第二个字母</p>
+
+<pre><code>TEESCPE
+HRIAIHR
+</code></pre>
+
+<p>连在一起就是</p>
+
+<pre><code>TEESCPEHRIAIHR
+</code></pre>
+
+<h4 id="破解-1">破解</h4>
+
+<p>暴力枚举所有可能情况</p>
+
+<h4 id="工具-5">工具</h4>
+
+<p><a href="http://www.qqxiuzi.cn/bianma/zhalanmima.php" rel="nofollow noreferrer" target="_blank">在线栅栏密码</a></p>
+
+<h4 id="例题-1">例题</h4>
+
+<p>请找出密文隐藏的 flag</p>
+
+<p>tn c0afsiwal kes,hwit1r  g,npt  ttessfu}ua u  hmqik e {m,  n huiouosarwCniibecesnren.</p>
+
+<h2 id="数字取证-隐写分析">数字取证 &amp;&amp; 隐写分析</h2>
+
+<h3 id="前置技能">前置技能</h3>
+
+<ul>
+<li>能够对文件中出现的一些编码进行解码，并且对一些特殊的编码(Base64,十六进制，二进制等)有一定的敏感度</li>
+<li>熟知常见文件的文件格式,尤其是 文件头，协议，结构等</li>
+<li>灵活地运用常见的工具、根据题目要求搜索工具、脚本等</li>
+</ul>
+
+<h3 id="图片隐写">图片隐写</h3>
+
+<h4 id="png">PNG</h4>
+
+<p>文件格式 <code>89 50 4E 47 0D 0A 1A 0A</code> + 数据块 + 数据块</p>
+
+<p>可能使用的隐写方式： <code>LSB</code></p>
+
+<p>LSB 全称 least significant bit，最低有效位</p>
+
+<p>PNG 文件中的图像像素一般是由 RGB 三原色（红绿蓝）组成，每一种颜色占用 8 位，取值范围为 0x00~0xFF，即有 256 种颜色，一共包含了 256 的 3 次方的颜色，即 16777216 种颜色，而人类的眼睛可以区分约 1000 万种不同的颜色，这意味着人类的眼睛无法区分余下的颜色大约有 6777216 种</p>
+
+<p>LSB 隐写就是修改 RGB 颜色分量的最低二进制位，每个颜色会有 8bit，LSB 隐写就是修改了像素中的最低的 1bit，而人类的眼睛不会注意到这前后的变化，每个像素可以携带 3bit 的信息</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="./lsb.jpg" alt="lsb" class="lazyload"><figcaption class="image-caption">lsb</figcaption></figure></p>
+
+<p>寻找这种 LSB 隐藏痕迹的话，可以使用神器 Stegsolve，来辅助我们进行分析</p>
+
+<h4 id="jpeg">JPEG</h4>
+
+<p>JPEG 是一种有损压缩格式</p>
+
+<p><code>FFD8</code> &amp;&amp; <code>FFD9</code> 为 JPEG 文件的开始和结束的标志</p>
+
+<p>可能使用的隐写软件：<code>JPHS</code></p>
+
+<h3 id="压缩包分析">压缩包分析</h3>
+
+<p>比赛中压缩包的考察主要是集中在 <code>zip</code> 和 <code>rar</code> 这一块，其他类型的较为少见，不会特别深入</p>
+
+<p>通过 <code>binwalk</code> 以及 <code>strings</code> 可能发现部分信息</p>
+
+<p><code>strings</code> 通常可以发现隐藏在压缩包中的注释内容或者是解压需要的密码等</p>
+
+<h4 id="伪加密">伪加密</h4>
+
+<p>在 <code>Zip</code> 格式中的 <code>ZIPDIRENTRY</code> 中，我们可以看到一个叫做通用位标记（General purpose bit flag）的 2 字节，不同比特位有着不同的含义</p>
+
+<p>在 <code>010Editor</code> 中我们尝试着将这 1 位修改: 0&ndash;&gt;1</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/zip.png" alt="zip 伪加密" class="lazyload"><figcaption class="image-caption">zip 伪加密</figcaption></figure></p>
+
+<p><code>Rar</code> 文件的伪加密在文件头中的位标记字段上，用 <code>010Editor</code> 可以很清楚地看见这一位，修改这一位可以造成伪加密</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/rar.png" alt="rar 伪加密" class="lazyload"><figcaption class="image-caption">rar 伪加密</figcaption></figure></p>
+
+<h4 id="密码爆破">密码爆破</h4>
+
+<p>主要使用 <code>ARPR</code> 和 <code>AZPR</code> 对可能的密码进行爆破</p>
+
+<p>一般密码为数字+字母或纯数字，极有可能是本题的出题时间，比如说 <code>20180122</code></p>
+
+<h4 id="crc-校验">CRC 校验</h4>
+
+<p><code>CRC</code> 本身是「冗余校验码」的意思，<code>CRC32</code> 则表示会产生一个 32bit（8 位十六进制数）的校验值。由于 <code>CRC32</code> 产生校验值时源数据块的每一个 bit（位）都参与了计算，所以数据块中即使只有一位发生了变化，也会得到不同的 <code>CRC32</code> 值</p>
+
+<p>值得注意的是，zip 中的 <code>CRC32</code> 是未加密文件的校验值.</p>
+
+<p>这也就导致了基于 <code>CRC32</code> 的攻击手法</p>
+
+<ul>
+<li>文件内内容很少（一般比赛中大多为 4 字节左右）</li>
+<li>加密的密码很长</li>
+</ul>
+
+<p>我们不去爆破压缩包的密码，而是直接去直接爆破源文件的内容（一般都是可见的字符串），从而获取想要的信息。</p>
+
+<p>比如我们新建一个 <code>flag.txt</code>，其中内容为 <code>123</code>，使用密码 <code>!QAZXSW@#EDCVFR$</code> 去加密</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/crc1.png" alt="crc1" class="lazyload"><figcaption class="image-caption">crc1</figcaption></figure></p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTF-Misc/crc2.png" alt="crc2" class="lazyload"><figcaption class="image-caption">crc2</figcaption></figure></p>
+
+<h3 id="音频分析">音频分析</h3>
+
+<h4 id="mp3-隐写">MP3 隐写</h4>
+
+<p>MP3 隐写主要是使用 <code>Mp3Stego</code> 工具进行隐写，其使用方式如下</p>
+
+<pre><code>encode -E hidden_text.txt -P pass svega.wav svega_stego.mp3
+decode -X -P pass svega_stego.mp3
+</code></pre>
+
+<p><a href="/images/posts/CTF-Misc/examples/Canon.wav">mp3stego 演示</a></p>
+
+<h4 id="波形-频谱">波形 &amp;&amp; 频谱</h4>
+
+<p>通常来说，波形或频谱方向的题，在观察到异常后，需要使用相关软件（Audacity, Adobe Audition）</p>
+
+<p>波形题需要观察波形规律，并将波形进一步转化为 01 字符串等，从而提取转化出最终的 flag</p>
+
+<p>频谱隐写是将字符串隐藏在频谱中，此类音频通常会有一个较明显的特征，听起来是一段杂音或者比较刺耳</p>
+
+<h3 id="流量分析">流量分析</h3>
+
+<h4 id="网络协议">网络协议</h4>
+
+<p>流量分析需要对一些常用的协议有简单的了解。</p>
+
+<ul>
+<li>IP / TCP</li>
+<li>UDP / TCP</li>
+<li>DNS</li>
+<li>HTTP / HTTPS</li>
+</ul>
+
+<h4 id="技巧">技巧</h4>
+
+<ul>
+<li>统计流量，以便于知道该流量包主要利用了哪些协议</li>
+<li>ip contains &ldquo;xxx&rdquo;，过滤内容</li>
+<li>流重组：Follow TCP Stream</li>
+<li>提取流中的文件数据</li>
+</ul>
+
+<h2 id="常用工具一览">常用工具一览</h2>
+
+<h3 id="010editor">010Editor</h3>
+
+<p>十六进制文件编辑器，可以查看文件对应的字节，利用010的模板功能，能够轻松查看特定类型文件的内部结构</p>
+
+<h3 id="audacity">Audacity</h3>
+
+<p>音频隐写必备工具，可以方便地查看音频对应的波形和频谱</p>
+
+<h3 id="stegsolve">Stegsolve</h3>
+
+<p>图片隐写必备软件，可以用于图片的 lsb 隐写相关的题目</p>
+
+<h3 id="binwalk">Binwalk</h3>
+
+<p>Misc 必备神器，有助于我们分析文件格式</p>
+
+<h3 id="advanced-rar-password-recovery-advanced-zip-password-recovery">Advanced Rar Password Recovery &amp;&amp; Advanced Zip Password Recovery</h3>
+
+<p>针对 rar &amp;&amp; zip 的密码爆破软件</p>
+
+<h3 id="wireshark">WireShark</h3>
+
+<p>流量分析必备软件</p>
+
+<h3 id="and-so-on">And so on&hellip;</h3>
+
+<p>很多 Misc 题目往往需要我们现搜相应的工具和脚本进行做题，这时候就需要使用 Google or Baidu，相比较而言，Google 搜出来的结果往往质量更高~~</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="https://ctf-wiki.github.io/ctf-wiki/misc/about.html" rel="nofollow noreferrer" target="_blank">ctf-wiki Misc 介绍</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27598087" rel="nofollow noreferrer" target="_blank">CTF从入门到进（fang）阶(qi)之MISC</a></li>
+<li><a href="https://www.tuicool.com/articles/2E3INnm" rel="nofollow noreferrer" target="_blank">CTF中那些脑洞大开的编码和加密</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2018/03/ctf-misc/>https://syang-ng.github.io/2018/03/ctf-misc/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2018/03/how-to-use-leancloud/" class="prev" rel="prev" title="LeanCloud 使用笔记"><i class="iconfont icon-left"></i>&nbsp;LeanCloud 使用笔记</a>
+         
+        
+        <a href="https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/" class="next" rel="next" title="CentOS 7 MySQL 数据目录移动小记">CentOS 7 MySQL 数据目录移动小记&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

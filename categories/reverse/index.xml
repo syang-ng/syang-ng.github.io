@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reverse on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/reverse/</link>
+    <description>Recent content in Reverse on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Sun, 07 Apr 2019 00:42:32 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/reverse/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>看雪CTF - 变形金钢</title>
+      <link>https://syang-ng.github.io/2019/04/kanxue-transformer/</link>
+      <pubDate>Sun, 07 Apr 2019 00:42:32 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/04/kanxue-transformer/</guid>
+      <description>前言 看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。 题目链接：第二题 变形金钢 Android 既然本题是 apk，那直接拖到 jadx 查看源码，</description>
+    </item>
+    
+  </channel>
+</rss>

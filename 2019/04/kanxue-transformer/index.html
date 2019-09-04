@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/03/reverse-an-android-app/" />
+  <link rel="next" href="https://syang-ng.github.io/2019/04/ddctf2019-web/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2019/04/kanxue-transformer/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           看雪CTF - 变形金钢 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="看雪CTF - 变形金钢 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "看雪CTF - 变形金钢",
+    "headline" : "看雪CTF - 变形金钢",
+    "description" : "前言 看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。 题目链接：第二题 变形金钢 Android 既然本题是 apk，那直接拖到 jadx 查看源码，",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-04-07 00:42:32 \x2b0000 UTC",
+    "dateModified" : "2019-04-07 00:42:32 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2019\/04\/kanxue-transformer\/",
+    "wordCount" : "1174",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">看雪CTF - 变形金钢</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-04-07 itemprop="datePublished">April 7, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/reverse/"> Reverse </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。</p>
+
+<p>题目链接：<a href="https://ctf.pediy.com/game-season_fight-93.htm" rel="nofollow noreferrer" target="_blank">第二题 变形金钢</a></p>
+
+<h2 id="android">Android</h2>
+
+<p>既然本题是 apk，那直接拖到 jadx 查看源码，很明显就能看到以下逻辑：</p>
+
+<pre><code class="language-Java">private void login(final String str, final String str2, final Handler handler) {
+    Toast.makeText(this, &quot;登录中。。。&quot;, 1).show();
+    runnable = new Runnable() {
+        public void run() {
+            Message obtain = Message.obtain();
+            StringBuilder stringBuilder = new StringBuilder(str2);
+            if (str.equals(stringBuilder.reverse().toString())) {
+                obtain.obj = stringBuilder.toString();
+            } else {
+                obtain.what = 1;
+            }
+            handler.sendMessage(obtain);
+        }
+    };
+    cachedThreadPool.execute(runnable);
+}
+</code></pre>
+
+<p>看样子很简单，貌似只需要将账号的反序作为密码输入即可通过，但在实际操作过程中发现这是错误的。再仔细观察就能发现 <code>public class MainActivity extends AppCompiatActivity {</code> 这行代码非常奇怪，正常情况下继承的应该是 <code>AppCompatActivity</code> 这个类，二者存在细微的差异，于是继续去看 <code>AppCompiatActivity</code> 的代码：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/AppCompatActivity.png" alt="AppCompiatActivity" class="lazyload"><figcaption class="image-caption">AppCompiatActivity</figcaption></figure></p>
+
+<p>可以发现谁是李逵，谁是李鬼了。由此我们可以推断真正的校验逻辑在 <code>AppCompaitActivity</code> 这个类的 <code>public native boolean eq(String str);</code> 函数内，可以看到这个函数是一个 native 函数，那么具体的校验逻辑必然在 <code>oo000oo</code> 对应的 so 文件中</p>
+
+<h2 id="so">So</h2>
+
+<p>看到 Android 的 so 文件第一步就是看 <code>JNI_ONLoad</code> 函数:</p>
+
+<pre><code class="language-C">signed int __fastcall JNI_OnLoad(int a1)
+{
+  int v1; // r8
+  signed int result; // r0
+  JNIEnv *v3; // r5
+  jclass v4; // r6
+  JNIEnv *v5; // [sp+0h] [bp-18h]
+  int v6; // [sp+4h] [bp-14h]
+  int v7; // [sp+8h] [bp-10h]
+
+  v7 = v1;
+  v5 = 0;
+  if ( !(*(int (**)(void))(*(_DWORD *)a1 + 24))() )
+    goto LABEL_4;
+LABEL_2:
+  result = -1;
+  while ( _stack_chk_guard != v6 )
+  {
+LABEL_4:
+    v3 = v5;
+    v4 = (*v5)-&gt;FindClass(v5, (const char *)off_4010);
+    dword_4110 = (int)(*v3)-&gt;NewGlobalRef(v3, v4);
+    if ( !v4 || (*v3)-&gt;RegisterNatives(v3, v4, (const JNINativeMethod *)off_4014, 1) &lt;= -1 )
+      goto LABEL_2;
+    result = 65542;
+  }
+  return result;
+}
+</code></pre>
+
+<p>可以发现本题使用的是利用 <code>jni</code> 所提供的 <code>RegisterNatives</code> 方法来动态注册 Native 函数，很明显 <code>off_4014</code> 上存储的就是需要注册的函数的地址，使用 ida 查看发现地址对应是 <code>sub_784()</code> 函数。</p>
+
+<h3 id="算法分析">算法分析</h3>
+
+<p>本题使用的是魔改的 RC4 和替换码表的 Base64 编码，本函数主要实现的功能如下：
+1. 对输入的字符串先调用一次 RC4 算法
+2. 再用魔改的 Base64 函数对加密后的字符串进行编码</p>
+
+<h3 id="rc4">RC4</h3>
+
+<p>先简单介绍 RC4 加密，该加密主要分为以下几个步骤：
+1. 根据密钥 key 生成 s-box
+2. 根据 s-box 生成伪随机的密钥流
+3. 异或按位加密明文</p>
+
+<p>更详细的链接可以参考 <a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/" rel="nofollow noreferrer" target="_blank">经典对称加密RC4分析</a></p>
+
+<p>下面我们来看程序内部的 RC4 加密，和经典的 RC4 算法一样，程序内部的 RC4 算法也分为这样几个步骤：</p>
+
+<ol>
+<li>密钥生成</li>
+</ol>
+
+<p>这一段的代码最为冗长，但其实非常简单，即通过原始的密钥生成 RC4 算法所使用的密钥，大致是去掉 <code>-</code> 后翻转再加上 <code>-</code></p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/RC4-Key.png" alt="RC4 Key" class="lazyload"><figcaption class="image-caption">RC4 Key</figcaption></figure></p>
+
+<ol>
+<li>sbox 生成</li>
+</ol>
+
+<p>下一步是 RC4 算法的 sbox：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/RC4-SBox.png" alt="sbox" class="lazyload"><figcaption class="image-caption">sbox</figcaption></figure></p>
+
+<ol>
+<li>伪随机密钥流 / 加密明文</li>
+</ol>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/Encrypt.png" alt="encrypt" class="lazyload"><figcaption class="image-caption">encrypt</figcaption></figure></p>
+
+<p>加密明文分为两部分，在和 sbox 生产的密钥流进行异或之后，密文会通过一个魔改的 base64 进行输出</p>
+
+<ol>
+<li>魔改 Base64</li>
+</ol>
+
+<p>对 Base64 的魔改有两个部分，一是替换码表，二是在每四个字符中，对第一个、第三个字符进行额外的异或处理，具体可以看上图的标注。</p>
+
+<ol>
+<li>比较</li>
+</ol>
+
+<p>最后程序会将加密后的输出对内置的输出进行比较，只有每一个字符相同才会认为是通过判断。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/Compare.png" alt="compare" class="lazyload"><figcaption class="image-caption">compare</figcaption></figure></p>
+
+<h3 id="solve">Solve</h3>
+
+<p>最后编写脚本如下：</p>
+
+<pre><code class="language-python">import base64
+
+std_base64table = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=&quot;
+base64table = &quot;!:#$%&amp;()+-*/`~_[]{}?&lt;&gt;,.@^abcdefghijklmnopqrstuvwxyz0123456789\\';&quot;
+sbox = [0xf0,0x37,0xe1,0x9b,0x2a,0x15,0x17,0x9f,0xd7,0x58,0x4d,0x6e,0x33,0xa0,0x39,0xae,0x4,0xd0,0xbe,0xed,0xf8,0x66,0x5e,0x0,0xd6,0x91,0x2f,0xc3,0x10,0x4c,0xf7,0xa6,0xc1,0xec,0x6d,0xb,0x50,0x65,0xbb,0x34,0xfa,0xa4,0x2d,0x3b,0x23,0xa1,0x96,0xd5,0x1d,0x38,0x56,0xa,0x5d,0x4f,0xe4,0xcc,0x24,0xd,0x12,0x87,0x35,0x85,0x8e,0x6f,0xc6,0x13,0x9a,0xd3,0xfc,0xe7,0x8,0xac,0xb7,0xe9,0xb0,0xe8,0x41,0xaa,0x55,0x53,0xc2,0x42,0xbc,0xe6,0xf,0x8a,0x86,0xa8,0xcf,0x84,0xc5,0x48,0x74,0x36,0x7,0xeb,0x88,0x51,0xf6,0x7f,0x57,0x5,0x63,0x3e,0xfe,0xb8,0xc9,0xf5,0xaf,0xdf,0xea,0x82,0x44,0xf9,0xcd,0x6,0xba,0x30,0x47,0x40,0xde,0xfd,0x1c,0x7c,0x11,0x5c,0x2,0x31,0x2c,0x9c,0x5f,0x46,0x27,0xc4,0x83,0x73,0x16,0x90,0x20,0x76,0x7b,0xf2,0xe3,0xf3,0x77,0x52,0x80,0x25,0x9,0x26,0x3f,0xc7,0x18,0x1b,0xa3,0xff,0xfb,0xcb,0xa9,0x8c,0x54,0x7a,0x68,0xb4,0x70,0x4b,0xe2,0x49,0x22,0x7e,0xa5,0xb6,0x81,0x9d,0x4e,0x67,0xf1,0xa7,0x3c,0xd9,0x94,0xef,0x32,0x6b,0x1f,0xb1,0x60,0xb9,0x64,0x59,0x1,0xb3,0x7d,0xe0,0x6c,0xad,0x97,0x19,0xb5,0x3a,0xf4,0xd8,0x8d,0x98,0x3,0x93,0x1a,0xdc,0x1e,0x4a,0xc0,0x5a,0xe5,0xd1,0x3d,0x14,0xc8,0x79,0xbd,0x43,0xdb,0x69,0xd2,0x61,0x95,0x9e,0x21,0x45,0x89,0x2b,0xab,0x29,0xa2,0x8b,0x2e,0xd4,0xe,0x62,0xca,0x28,0xda,0x5b,0x72,0x8f,0x99,0x75,0xee,0x78,0xc,0x71,0xbf,0xdd,0xce,0x92,0x6a,0xb2]
+
+encode_flag = &quot; {9*8ga*l!Tn?@#fj'j$\g;;&quot;
+
+def base64decode():
+    encode_flag1 = []
+    for i in range(len(encode_flag)):
+        if i % 4 == 0:
+            bit = 7
+        elif i % 4 == 2 and encode_flag[i] != ';':
+            bit = 0xf
+        else:
+            bit = 0
+        encode_flag1.append(chr(ord(encode_flag[i])^bit))
+    encode_flag2 = ''.join(encode_flag1).translate(''.maketrans(base64table, std_base64table))
+    return base64.b64decode(encode_flag2)
+
+def rc4decrypt(s):
+    i = 0
+    j = 0
+    ss = []
+    for k in range(len(s)):
+        i = (i + 1) % 256
+        j = (j + sbox[i]) % 256
+        sbox[i], sbox[j] = sbox[j], sbox[i]
+        index = (sbox[i] + sbox[j]) % 256
+        ss.append(chr(s[k] ^ sbox[index]))
+    print(''.join(ss))
+
+print(rc4decrypt(base64decode()))
+# fu0kzHp2aqtZAuY6
+</code></pre>
+
+<h3 id="补充">补充</h3>
+
+<p>.init_array 函数执行了 <code>datadiv_decode5009363700628197108</code> 函数对字符串进行解密，之前在 ida 上直接显示的字符串是加密后的，因此可能部分是不可见的，只有在程序执行后执行该解密函数才会变成可见字符。</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="https://xz.aliyun.com/t/4614" rel="nofollow noreferrer" target="_blank">先知社区 - 详解变形金刚</a></li>
+<li><a href="https://bbs.pediy.com/thread-250413.htm" rel="nofollow noreferrer" target="_blank">看雪论坛 - 第二题 变形金刚</a></li>
+<li><a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/" rel="nofollow noreferrer" target="_blank">经典对称加密RC4分析</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2019/04/kanxue-transformer/>https://syang-ng.github.io/2019/04/kanxue-transformer/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/03/reverse-an-android-app/" class="prev" rel="prev" title="Android 某应用的简单逆向"><i class="iconfont icon-left"></i>&nbsp;Android 某应用的简单逆向</a>
+         
+        
+        <a href="https://syang-ng.github.io/2019/04/ddctf2019-web/" class="next" rel="next" title="DDCTF2019 Web 填坑">DDCTF2019 Web 填坑&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

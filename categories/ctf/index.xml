@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CTF on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/ctf/</link>
+    <description>Recent content in CTF on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 27 May 2019 13:42:59 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Ethernaut 部分题解</title>
+      <link>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</link>
+      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</guid>
+      <description>前言 久违地想做智能合约的题目了，正好 Ethernaut 上还有几题没做的，就特地在博客里码一下~~ MagicNumber 手动构造智能合约，具体参考了 Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes 这里</description>
+    </item>
+    
+    <item>
+      <title>DDCTF2019 Web 填坑</title>
+      <link>https://syang-ng.github.io/2019/04/ddctf2019-web/</link>
+      <pubDate>Thu, 25 Apr 2019 19:29:23 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/04/ddctf2019-web/</guid>
+      <description>前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http://116.85.48.107:5002/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = &#39;garzon&#39; from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = &#39;*********************&#39; # censored url_prefix = &#39;/d5af33f66147e857&#39; def FLAG():</description>
+    </item>
+    
+    <item>
+      <title>看雪CTF - 变形金钢</title>
+      <link>https://syang-ng.github.io/2019/04/kanxue-transformer/</link>
+      <pubDate>Sun, 07 Apr 2019 00:42:32 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/04/kanxue-transformer/</guid>
+      <description>前言 看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。 题目链接：第二题 变形金钢 Android 既然本题是 apk，那直接拖到 jadx 查看源码，</description>
+    </item>
+    
+    <item>
+      <title>pwnable.tw 入门 - start / orw / calc</title>
+      <link>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</link>
+      <pubDate>Sun, 10 Mar 2019 14:51:57 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</guid>
+      <description>start 查看汇编代码: 08048060 &amp;lt;_start&amp;gt;: 8048060: 54 push %esp 8048061: 68 9d 80 04 08 push $0x804809d 8048066: 31 c0 xor %eax,%eax 8048068: 31 db xor %ebx,%ebx 804806a: 31 c9 xor %ecx,%ecx 804806c: 31 d2 xor %edx,%edx 804806e: 68 43 54 46 3a push $0x3a465443 8048073: 68 74 68 65 20 push $0x20656874 8048078: 68 61 72 74 20 push $0x20747261 804807d: 68 73 20</description>
+    </item>
+    
+    <item>
+      <title>SECCON 2018 - Web Ghostkingdom / Shooter 题解</title>
+      <link>https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/</link>
+      <pubDate>Mon, 29 Oct 2018 08:38:00 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/</guid>
+      <description>文章首发于先知社区 https://xz.aliyun.com/t/3075 ghostkingdom SEECON 2018 唯一的一道 Web 题，不过确实挺好玩的。。 首先打开题目链接：http://ghostkingdom.pwn.seccon</description>
+    </item>
+    
+    <item>
+      <title>Dragon CTF Web 部分 Writeup</title>
+      <link>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</link>
+      <pubDate>Sun, 30 Sep 2018 20:01:34 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</guid>
+      <description>3NTERPRISE s0lution 题目直接给出了源码，我已经贴在了 gist 上：https://gist.github.com/syang2forever/b90c36a66b7</description>
+    </item>
+    
+    <item>
+      <title>从一道 CTF 题看 Node.js 的 prototype pollution attack</title>
+      <link>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</link>
+      <pubDate>Tue, 25 Sep 2018 14:50:27 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</guid>
+      <description>文章首发于先知社区 https://xz.aliyun.com/t/2802 前言 文章的灵感来自于刚刚结束的 DefCamp CTF 2018 上的一道题目，主要的考点是 Node.js 的 prototype pollution attack。因为在 CTF 中 Node.js 的题型较少，同时本人也恰</description>
+    </item>
+    
+    <item>
+      <title>网鼎杯-Web-Writeup</title>
+      <link>https://syang-ng.github.io/2018/08/wangding-web-writeup/</link>
+      <pubDate>Mon, 20 Aug 2018 18:35:43 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/08/wangding-web-writeup/</guid>
+      <description>fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: /user.php.bak Sitemap: http://domain.com/sitemap.xml &amp;lt;?php class UserInfo { public $name = &amp;quot;&amp;quot;; public $age = 0; public $blog = &amp;quot;&amp;quot;; public function __construct($name, $age, $blog) { $this-&amp;gt;name = $name; $this-&amp;gt;age = (int)$age; $this-&amp;gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,</description>
+    </item>
+    
+    <item>
+      <title>CTFZone 2018</title>
+      <link>https://syang-ng.github.io/2018/07/ctfzone-2018/</link>
+      <pubDate>Mon, 23 Jul 2018 14:39:46 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/ctfzone-2018/</guid>
+      <description>前言 CTFZone 2018 整体上还是学习到一些新姿势了的，就是可惜情不自禁的摸起了鱼 (lll￢ω￢) Piggy-Bank 本题是 SOAP 相关的注入题，主要有以下 5 个页面： Profile - 个人信息页</description>
+    </item>
+    
+    <item>
+      <title>MeePwn CTF 2018 Web Part2</title>
+      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</link>
+      <pubDate>Fri, 20 Jul 2018 15:00:22 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</guid>
+      <description>前言 MeePwn CTF 2018 剩下的 Web 题，主要是基于 PHP 的代码审计，考点颇多，恰好是我所不擅长的区域😭 赶紧来复现一下提高姿势水平 Mapl Story 主要考点有 PHP 代码审计能力，以及</description>
+    </item>
+    
+    <item>
+      <title>MeePwn CTF 2018 Web</title>
+      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</link>
+      <pubDate>Tue, 17 Jul 2018 18:04:35 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</guid>
+      <description>前言 上周末打了 MeePwnCTF 2018，感觉还是非常有价值的一场比赛 Grandline 本题的考点是 RPO 攻击问题，关于 RPO 攻击的具体细节，可以自行 Google，这里不再做过多叙</description>
+    </item>
+    
+    <item>
+      <title>googlectf js_safe2 writeup</title>
+      <link>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</link>
+      <pubDate>Tue, 26 Jun 2018 18:28:38 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</guid>
+      <description>前言 GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧 分析 可以看到页面的输入框变化会触发 open_safe() 函数 &amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=</description>
+    </item>
+    
+    <item>
+      <title>BCTF 2018 Web Love Q</title>
+      <link>https://syang-ng.github.io/2018/04/bctf-2018-web-love-q/</link>
+      <pubDate>Sat, 21 Apr 2018 20:28:34 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/04/bctf-2018-web-love-q/</guid>
+      <description>前言 BCTF 的 Web 题 —— Love Q，其实是 N1CTF 的 77777 和 77777 2 的后续，当时脚本出了问题，事后看着师傅们的 writeup 进行了修改，然后过了(lll￢ω￢) 真是悲伤的故事 简介 网</description>
+    </item>
+    
+    <item>
+      <title>CTF Misc 入门</title>
+      <link>https://syang-ng.github.io/2018/03/ctf-misc/</link>
+      <pubDate>Mon, 12 Mar 2018 14:28:35 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/03/ctf-misc/</guid>
+      <description>前言 这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上 其实我也只是个入门半年的萌新呀（误 简介 Misc 即安全杂项，题目或涉及流量分析、</description>
+    </item>
+    
+  </channel>
+</rss>

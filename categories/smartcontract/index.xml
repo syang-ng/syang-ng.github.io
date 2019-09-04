@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SmartContract on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/smartcontract/</link>
+    <description>Recent content in SmartContract on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 27 May 2019 13:42:59 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/smartcontract/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Ethernaut 部分题解</title>
+      <link>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</link>
+      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</guid>
+      <description>前言 久违地想做智能合约的题目了，正好 Ethernaut 上还有几题没做的，就特地在博客里码一下~~ MagicNumber 手动构造智能合约，具体参考了 Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes 这里</description>
+    </item>
+    
+  </channel>
+</rss>

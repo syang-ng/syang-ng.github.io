@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=6.0.5" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/social-hackernews-outline.png?v=6.0.5">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/heacker-news-32x32.png?v=6.0.5">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/heacker-news-16x16.png?v=6.0.5">
+
+
+  <link rel="mask-icon" href="/images/hacker-news.svg?v=6.0.5" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '6.0.5',
+    sidebar: {"position":"left","display":"always","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  
+  <meta name="keywords" content="CTF,Misc," />
+
+
+<meta name="description" content="前言这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上 其实我也只是个入门半年的萌新呀（误">
+<meta name="keywords" content="CTF,Misc">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CTF Misc 入门">
+<meta property="og:url" content="https://syang2forever.github.io/2018/03/12/CTF Misc 入门/index.html">
+<meta property="og:site_name" content="Oh My Blog">
+<meta property="og:description" content="前言这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上 其实我也只是个入门半年的萌新呀（误">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/morse.jpg">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/ascii.jpg">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/base64.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/base64_man.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/base64_0.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/lsb.jpg">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/zip.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/rar.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/crc1.png">
+<meta property="og:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/crc2.png">
+<meta property="og:updated_time" content="2018-03-12T06:34:41.419Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CTF Misc 入门">
+<meta name="twitter:description" content="前言这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上 其实我也只是个入门半年的萌新呀（误">
+<meta name="twitter:image" content="https://syang2forever.github.io/2018/03/12/CTF%20Misc%20入门/morse.jpg">
+
+
+
+
+
+
+  <link rel="canonical" href="https://syang2forever.github.io/2018/03/12/CTF Misc 入门/"/>
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+  <title>CTF Misc 入门 | Oh My Blog</title>
+  
+
+
+
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"> <div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Oh My Blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <h1 class="site-subtitle" itemprop="description">about what I learn about code</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-home"></i> <br />首页</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />标签</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />归档</a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            <i class="menu-item-icon fa fa-fw fa-user"></i> <br />关于</a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />搜索</a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off"
+             placeholder="搜索..." spellcheck="false"
+             type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+  
+
+
+
+ </div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://syang2forever.github.io/2018/03/12/CTF Misc 入门/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="syang2forever">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpeg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Oh My Blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h2 class="post-title" itemprop="name headline">CTF Misc 入门</h2>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-03-12T14:28:35+08:00">2018-03-12</time>
+            
+
+            
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/03/12/CTF Misc 入门/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count disqus-comment-count"
+                        data-disqus-identifier="2018/03/12/CTF Misc 入门/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+
+          
+            <span class="post-meta-divider">|</span>
+            <span class="post-meta-item-icon"
+            >
+            <i class="fa fa-eye"></i>
+             阅读次数： 
+            <span class="busuanzi-value" id="busuanzi_value_page_pv" ></span>
+            </span>
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这是寒假里写给萌新们的 CTF Misc 相关的入门讲解，现在顺便把它搬到博客上</p>
+<p>其实我也只是个入门半年的萌新呀（误</p>
+<a id="more"></a>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>Misc 即安全杂项，题目或涉及流量分析、电子取证、人肉搜索、数据分析等等</p>
+<p>在 Misc 的讲解中，将从以下两个方面介绍这一块的知识：</p>
+<ol>
+<li>Encode（编码转换）</li>
+</ol>
+<p>主要介绍在 CTF 比赛中一些常见的编码形式以及转换的技巧和常见方式</p>
+<ol>
+<li>Forensic &amp;&amp; Stego（数字取证 &amp;&amp; 隐写分析）<br>隐写取证是 Misc 中最为重要的一块，包括文件分析、隐写、内存镜像分析和流量抓包分析等等，涉及巧妙的编码、隐藏数据、层层嵌套的文件中的文件，灵活利用搜索引擎获取所需要的信息等等。</li>
+</ol>
+<h2 id="编码分析-amp-amp-古典密码"><a href="#编码分析-amp-amp-古典密码" class="headerlink" title="编码分析 &amp;&amp; 古典密码"></a>编码分析 &amp;&amp; 古典密码</h2><p>下面是 CTF 比赛中较为常见的几种编码格式</p>
+<ul>
+<li><code>通信领域常用编码</code><ul>
+<li><code>Morse 编码</code></li>
+</ul>
+</li>
+<li><code>计算机相关的编码</code><ul>
+<li><code>字母表编码</code></li>
+<li><code>ASCII 编码</code></li>
+<li><code>Base 编码</code></li>
+<li><code>URL 编码</code></li>
+<li><code>Unicode 编码</code></li>
+</ul>
+</li>
+<li><code>现实世界中常用的编码</code><ul>
+<li><code>条形码</code></li>
+<li><code>二维码</code></li>
+</ul>
+</li>
+</ul>
+<p>除了相应编码之外，Misc 题目中往往和一些较为简单的古典密码相结合，比如说如下古典密码</p>
+<ul>
+<li><code>单表替换密码</code><ul>
+<li><code>凯撒密码</code></li>
+</ul>
+</li>
+<li><code>多表替换密码</code></li>
+<li><code>其他类型</code><ul>
+<li><code>栅栏密码</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="Morse-编码"><a href="#Morse-编码" class="headerlink" title="Morse 编码"></a>Morse 编码</h3><p><img src="./morse.jpg" alt="Morse 编码"></p>
+<h4 id="特点"><a href="#特点" class="headerlink" title="特点"></a>特点</h4><ul>
+<li>只有 <code>.</code> 和 <code>-</code></li>
+<li>最多 6 位</li>
+<li>也可以使用 01 串表示</li>
+</ul>
+<h4 id="工具"><a href="#工具" class="headerlink" title="工具"></a>工具</h4><p><a href="http://www.zhongguosou.com/zonghe/moErSiCodeConverter.aspx" target="_blank" rel="external">摩尔斯电码在线转换</a></p>
+<h4 id="例题"><a href="#例题" class="headerlink" title="例题"></a>例题</h4><p>请选手观察以下密文并转换成flag形式</p>
+<p>..-. .-.. .- –. - …. .. ….. .. … – — .-. … . -.-. — -.. .</p>
+<h3 id="字母表编码"><a href="#字母表编码" class="headerlink" title="字母表编码"></a>字母表编码</h3><h4 id="特点-1"><a href="#特点-1" class="headerlink" title="特点"></a>特点</h4><p>A-Z/a-z 对应 1-26 或者 0-25</p>
+<h3 id="ASCII-编码"><a href="#ASCII-编码" class="headerlink" title="ASCII 编码"></a>ASCII 编码</h3><p><img src="./ascii.jpg" alt="ASCII 编码"></p>
+<h4 id="特点-2"><a href="#特点-2" class="headerlink" title="特点"></a>特点</h4><p>我们一般使用的 ascii 编码的时候采用的都是可见字符，而且主要是如下字符</p>
+<ul>
+<li>0-9, 49-57</li>
+<li>A-Z, 65-90</li>
+<li>a-z, 97-122</li>
+</ul>
+<h4 id="二进制编码"><a href="#二进制编码" class="headerlink" title="二进制编码"></a>二进制编码</h4><p>将 ascii 码对应的数字换成二进制表示形式</p>
+<ul>
+<li>只有 0 和 1</li>
+<li>不大于 8 位，一般 7 位也可以，因为可见字符到 127</li>
+<li>A: 01000001; B: 01000010; a: 01100001; b: 1100010</li>
+</ul>
+<h4 id="十六进制编码"><a href="#十六进制编码" class="headerlink" title="十六进制编码"></a>十六进制编码</h4><p>将 ascii 码对应的数字换成十六进制表示形式。</p>
+<ul>
+<li>A-Z–&gt;41-5A</li>
+<li>a-z–&gt;61-7A</li>
+</ul>
+<h4 id="例题-Jarvis-oj-德军的密码"><a href="#例题-Jarvis-oj-德军的密码" class="headerlink" title="例题 Jarvis oj 德军的密码"></a>例题 Jarvis oj 德军的密码</h4><p>已知将一个flag以一种加密形式为使用密钥进行加密，使用密钥WELCOMETOCFF加密后密文为 000000000000000000000000000000000000000000000000000101110000110001000000101000000001 请分析出flag</p>
+<h3 id="Base-编码"><a href="#Base-编码" class="headerlink" title="Base 编码"></a>Base 编码</h3><p>base xx 中的 xx 表示的是采用多少个字符进行编码，比如说 base64 就是采用以下 64 个字符编码，由于 2 的 6 次方等于 64，所以每 6 个比特为一个单元，对应某个可打印字符。三个字节有 24 个比特，对应于 4 个 Base64 单元，即 3 个字节需要用 4 个可打印字符来表示</p>
+<p><img src="./base64.png" alt="Base64 编码"></p>
+<p>编码 Man</p>
+<p><img src="./base64_man.png" alt="Base64 编码 Man"></p>
+<p>如果要编码的字节数不能被 3 整除，最后会多出 1 个或 2 个字节，那么可以使用下面的方法进行处理：先使用 0 值在末尾补足，使其能够被 3 整除，然后再进行 base64 的编码。在编码后的 base64 文本后加上一个或两个 = 号，代表补足的字节数。也就是说，当最后剩余一个八位字节（一个 byte）时，最后一个 6 位的 base64 字节块有四位是 0 值，最后附加上两个等号；如果最后剩余两个八位字节（2 个 byte）时，最后一个 6 位的 base 字节块有两位是 0 值，最后附加一个等号</p>
+<p><img src="./base64_0.png" alt="Base64 编码补充"></p>
+<h4 id="特点-3"><a href="#特点-3" class="headerlink" title="特点"></a>特点</h4><ul>
+<li>base64 结尾可能会有=号，但最多有两个</li>
+<li>base32 结尾可能会最多有 3 个等号</li>
+<li>根据 base 的不同，字符集会有所限制</li>
+<li>有可能需要自己加等号</li>
+</ul>
+<h4 id="工具-1"><a href="#工具-1" class="headerlink" title="工具"></a>工具</h4><ul>
+<li><a href="http://base64.xpcha.com/" target="_blank" rel="external">在线 Base64 编码</a></li>
+<li>python 库函数</li>
+</ul>
+<h4 id="例题-Jarvis-oj-base-64"><a href="#例题-Jarvis-oj-base-64" class="headerlink" title="例题 Jarvis oj base 64?"></a>例题 Jarvis oj base 64?</h4><p>请用正确的编码格式解析以下文本</p>
+<p>GUYDIMZVGQ2DMN3CGRQTONJXGM3TINLGG42DGMZXGM3TINLGGY4DGNBXGYZTGNLGGY3DGNBWMU3WI===</p>
+<h3 id="URL-编码"><a href="#URL-编码" class="headerlink" title="URL 编码"></a>URL 编码</h3><h4 id="特点-4"><a href="#特点-4" class="headerlink" title="特点"></a>特点</h4><p>大量的百分号</p>
+<h4 id="工具-2"><a href="#工具-2" class="headerlink" title="工具"></a>工具</h4><p><a href="http://tool.chinaz.com/tools/urlencode.aspx" target="_blank" rel="external">在线 URL 编码</a></p>
+<h3 id="Unicode-编码"><a href="#Unicode-编码" class="headerlink" title="Unicode 编码"></a>Unicode 编码</h3><h4 id="特点-5"><a href="#特点-5" class="headerlink" title="特点"></a>特点</h4><p>可能有不同的表现形式</p>
+<p>源文本： The</p>
+<p>&amp;#x [Hex]: <code>&amp;#x0054;&amp;#x0068;&amp;#x0065;</code></p>
+<p>&amp;# [Decimal]: <code>&amp;#00084;&amp;#00104;&amp;#00101;</code></p>
+<p>U [Hex]: <code>\U0054\U0068\U0065</code></p>
+<p>U + [Hex]: <code>\U+0054\U+0068\U+0065</code></p>
+<h4 id="工具-3"><a href="#工具-3" class="headerlink" title="工具"></a>工具</h4><p><a href="http://tool.chinaz.com/tools/unicode.aspx" target="_blank" rel="external">在线 Unicode 编码</a></p>
+<h3 id="凯撒加密"><a href="#凯撒加密" class="headerlink" title="凯撒加密"></a>凯撒加密</h3><h4 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h4><p>凯撒密码（Caesar）加密时会将明文中的 每个字母 都按照其在字母表中的顺序向后（或向前）移动固定数目（循环移动）作为密文。例如，当偏移量是左移 3 的时候（解密时的密钥就是 3）：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">明文字母表：ABCDEFGHIJKLMNOPQRSTUVWXYZ</div><div class="line">密文字母表：DEFGHIJKLMNOPQRSTUVWXYZABC</div></pre></td></tr></table></figure>
+<p>使用时，加密者查找明文字母表中需要加密的消息中的每一个字母所在位置，并且写下密文字母表中对应的字母。需要解密的人则根据事先已知的密钥反过来操作，得到原来的明文。例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">明文：THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG</div><div class="line">密文：WKH TXLFN EURZQ IRA MXPSV RYHU WKH ODCB GRJ</div></pre></td></tr></table></figure>
+<h4 id="破解"><a href="#破解" class="headerlink" title="破解"></a>破解</h4><p>对于不带秘钥的凯撒密码来说，其基本的破解方法有两种方式</p>
+<ol>
+<li>遍历 26 个偏移量，适用于普遍情况</li>
+<li>利用词频分析，适用于密文较长的情况</li>
+</ol>
+<p>其中，第一种方式肯定可以得到明文，而第二种方式则不一定可以得到正确的明文</p>
+<h4 id="工具-4"><a href="#工具-4" class="headerlink" title="工具"></a>工具</h4><p><a href="http://tools.matchzones.net/caesar_cipher" target="_blank" rel="external">在线凯撒加密破解</a></p>
+<h4 id="题目"><a href="#题目" class="headerlink" title="题目"></a>题目</h4><p>根据凯撒加密后的密文：MGAKUZKRWZWGAWCP，解出原文（原文为 KEY 开头）</p>
+<h3 id="栅栏密码"><a href="#栅栏密码" class="headerlink" title="栅栏密码"></a>栅栏密码</h3><h4 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h4><p>栅栏密码把要加密的明文分成 N 个一组，然后把每组的第 1 个字连起来，形成一段无规律的话。这里给出一个例子<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">明文：THERE IS A CIPHER</div></pre></td></tr></table></figure></p>
+<p>去掉空格后变为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">THEREISACIPHER</div></pre></td></tr></table></figure></p>
+<p>分成两栏，两个一组得到<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">TH ER EI SA CI PH ER</div></pre></td></tr></table></figure></p>
+<p>先取出第一个字母，再取出第二个字母<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">TEESCPE</div><div class="line">HRIAIHR</div></pre></td></tr></table></figure></p>
+<p>连在一起就是<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">TEESCPEHRIAIHR</div></pre></td></tr></table></figure></p>
+<h4 id="破解-1"><a href="#破解-1" class="headerlink" title="破解"></a>破解</h4><p>暴力枚举所有可能情况</p>
+<h4 id="工具-5"><a href="#工具-5" class="headerlink" title="工具"></a>工具</h4><p><a href="http://www.qqxiuzi.cn/bianma/zhalanmima.php" target="_blank" rel="external">在线栅栏密码</a></p>
+<h4 id="例题-1"><a href="#例题-1" class="headerlink" title="例题"></a>例题</h4><p>请找出密文隐藏的 flag</p>
+<p>tn c0afsiwal kes,hwit1r  g,npt  ttessfu}ua u  hmqik e {m,  n huiouosarwCniibecesnren.</p>
+<h2 id="数字取证-amp-amp-隐写分析"><a href="#数字取证-amp-amp-隐写分析" class="headerlink" title="数字取证 &amp;&amp; 隐写分析"></a>数字取证 &amp;&amp; 隐写分析</h2><h3 id="前置技能"><a href="#前置技能" class="headerlink" title="前置技能"></a>前置技能</h3><ul>
+<li>能够对文件中出现的一些编码进行解码，并且对一些特殊的编码(Base64,十六进制，二进制等)有一定的敏感度</li>
+<li>熟知常见文件的文件格式,尤其是 文件头，协议，结构等</li>
+<li>灵活地运用常见的工具、根据题目要求搜索工具、脚本等</li>
+</ul>
+<h3 id="图片隐写"><a href="#图片隐写" class="headerlink" title="图片隐写"></a>图片隐写</h3><h4 id="PNG"><a href="#PNG" class="headerlink" title="PNG"></a>PNG</h4><p>文件格式 <code>89 50 4E 47 0D 0A 1A 0A</code> + 数据块 + 数据块</p>
+<p>可能使用的隐写方式： <code>LSB</code></p>
+<p>LSB 全称 least significant bit，最低有效位</p>
+<p>PNG 文件中的图像像素一般是由 RGB 三原色（红绿蓝）组成，每一种颜色占用 8 位，取值范围为 0x00~0xFF，即有 256 种颜色，一共包含了 256 的 3 次方的颜色，即 16777216 种颜色，而人类的眼睛可以区分约 1000 万种不同的颜色，这意味着人类的眼睛无法区分余下的颜色大约有 6777216 种</p>
+<p>LSB 隐写就是修改 RGB 颜色分量的最低二进制位，每个颜色会有 8bit，LSB 隐写就是修改了像素中的最低的 1bit，而人类的眼睛不会注意到这前后的变化，每个像素可以携带 3bit 的信息</p>
+<p><img src="./lsb.jpg" alt="lsb"></p>
+<p>寻找这种 LSB 隐藏痕迹的话，可以使用神器 Stegsolve，来辅助我们进行分析</p>
+<p>例题：<a href="./examples/lsb.png">教练我想打 CTF</a></p>
+<h4 id="JPEG"><a href="#JPEG" class="headerlink" title="JPEG"></a>JPEG</h4><p>JPEG 是一种有损压缩格式</p>
+<p><code>FFD8</code> &amp;&amp; <code>FFD9</code> 为 JPEG 文件的开始和结束的标志</p>
+<p>可能使用的隐写软件：<code>JPHS</code></p>
+<h3 id="压缩包分析"><a href="#压缩包分析" class="headerlink" title="压缩包分析"></a>压缩包分析</h3><p>比赛中压缩包的考察主要是集中在 <code>zip</code> 和 <code>rar</code> 这一块，其他类型的较为少见，不会特别深入</p>
+<p>通过 <code>binwalk</code> 以及 <code>strings</code> 可能发现部分信息</p>
+<p><code>strings</code> 通常可以发现隐藏在压缩包中的注释内容或者是解压需要的密码等</p>
+<h4 id="伪加密"><a href="#伪加密" class="headerlink" title="伪加密"></a>伪加密</h4><p>在 <code>Zip</code> 格式中的 <code>ZIPDIRENTRY</code> 中，我们可以看到一个叫做通用位标记（General purpose bit flag）的 2 字节，不同比特位有着不同的含义</p>
+<p>在 <code>010Editor</code> 中我们尝试着将这 1 位修改: 0–&gt;1</p>
+<p><img src="./zip.png" alt="zip 伪加密"></p>
+<p><code>Rar</code> 文件的伪加密在文件头中的位标记字段上，用 <code>010Editor</code> 可以很清楚地看见这一位，修改这一位可以造成伪加密</p>
+<p><img src="./rar.png" alt="rar 伪加密"></p>
+<h4 id="密码爆破"><a href="#密码爆破" class="headerlink" title="密码爆破"></a>密码爆破</h4><p>主要使用 <code>ARPR</code> 和 <code>AZPR</code> 对可能的密码进行爆破</p>
+<p>一般密码为数字+字母或纯数字，极有可能是本题的出题时间，比如说 <code>20180122</code></p>
+<h4 id="CRC-校验"><a href="#CRC-校验" class="headerlink" title="CRC 校验"></a>CRC 校验</h4><p><code>CRC</code> 本身是「冗余校验码」的意思，<code>CRC32</code> 则表示会产生一个 32bit（8 位十六进制数）的校验值。由于 <code>CRC32</code> 产生校验值时源数据块的每一个 bit（位）都参与了计算，所以数据块中即使只有一位发生了变化，也会得到不同的 <code>CRC32</code> 值</p>
+<p>值得注意的是，zip 中的 <code>CRC32</code> 是未加密文件的校验值.</p>
+<p>这也就导致了基于 <code>CRC32</code> 的攻击手法</p>
+<ul>
+<li>文件内内容很少（一般比赛中大多为 4 字节左右）</li>
+<li>加密的密码很长</li>
+</ul>
+<p>我们不去爆破压缩包的密码，而是直接去直接爆破源文件的内容（一般都是可见的字符串），从而获取想要的信息。</p>
+<p>比如我们新建一个 <code>flag.txt</code>，其中内容为 <code>123</code>，使用密码 <code>!QAZXSW@#EDCVFR$</code> 去加密</p>
+<p><img src="./crc1.png" alt="crc1"></p>
+<p><img src="./crc2.png" alt="crc2"></p>
+<h3 id="音频分析"><a href="#音频分析" class="headerlink" title="音频分析"></a>音频分析</h3><h4 id="MP3-隐写"><a href="#MP3-隐写" class="headerlink" title="MP3 隐写"></a>MP3 隐写</h4><p>MP3 隐写主要是使用 <code>Mp3Stego</code> 工具进行隐写，其使用方式如下</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">encode -E hidden_text.txt -P pass svega.wav svega_stego.mp3</div><div class="line">decode -X -P pass svega_stego.mp3</div></pre></td></tr></table></figure>
+<p><a href="./examples/Canon.wav">mp3stego 演示</a></p>
+<h4 id="波形-amp-amp-频谱"><a href="#波形-amp-amp-频谱" class="headerlink" title="波形 &amp;&amp; 频谱"></a>波形 &amp;&amp; 频谱</h4><p>通常来说，波形或频谱方向的题，在观察到异常后，需要使用相关软件（Audacity, Adobe Audition）</p>
+<p>波形题需要观察波形规律，并将波形进一步转化为 01 字符串等，从而提取转化出最终的 flag</p>
+<p>频谱隐写是将字符串隐藏在频谱中，此类音频通常会有一个较明显的特征，听起来是一段杂音或者比较刺耳</p>
+<h4 id="例题-flag在音乐中123"><a href="#例题-flag在音乐中123" class="headerlink" title="例题 flag在音乐中123"></a>例题 flag在音乐中123</h4><p><a href="./examples/wav.zip">波形图查看</a></p>
+<h3 id="流量分析"><a href="#流量分析" class="headerlink" title="流量分析"></a>流量分析</h3><h4 id="网络协议"><a href="#网络协议" class="headerlink" title="网络协议"></a>网络协议</h4><p>流量分析需要对一些常用的协议有简单的了解。</p>
+<ul>
+<li>IP / TCP</li>
+<li>UDP / TCP</li>
+<li>DNS</li>
+<li>HTTP / HTTPS</li>
+</ul>
+<h4 id="技巧"><a href="#技巧" class="headerlink" title="技巧"></a>技巧</h4><ul>
+<li>统计流量，以便于知道该流量包主要利用了哪些协议</li>
+<li>ip contains “xxx”，过滤内容</li>
+<li>流重组：Follow TCP Stream</li>
+<li>提取流中的文件数据</li>
+</ul>
+<h4 id="例题-2"><a href="#例题-2" class="headerlink" title="例题"></a>例题</h4><p><a href="./examples/+_+.pcapng">流量分析</a></p>
+<h2 id="常用工具一览"><a href="#常用工具一览" class="headerlink" title="常用工具一览"></a>常用工具一览</h2><h3 id="010Editor"><a href="#010Editor" class="headerlink" title="010Editor"></a>010Editor</h3><p>十六进制文件编辑器，可以查看文件对应的字节，利用010的模板功能，能够轻松查看特定类型文件的内部结构</p>
+<h3 id="Audacity"><a href="#Audacity" class="headerlink" title="Audacity"></a>Audacity</h3><p>音频隐写必备工具，可以方便地查看音频对应的波形和频谱</p>
+<h3 id="Stegsolve"><a href="#Stegsolve" class="headerlink" title="Stegsolve"></a>Stegsolve</h3><p>图片隐写必备软件，可以用于图片的 lsb 隐写相关的题目</p>
+<h3 id="Binwalk"><a href="#Binwalk" class="headerlink" title="Binwalk"></a>Binwalk</h3><p>Misc 必备神器，有助于我们分析文件格式</p>
+<h3 id="Advanced-Rar-Password-Recovery-amp-amp-Advanced-Zip-Password-Recovery"><a href="#Advanced-Rar-Password-Recovery-amp-amp-Advanced-Zip-Password-Recovery" class="headerlink" title="Advanced Rar Password Recovery &amp;&amp; Advanced Zip Password Recovery"></a>Advanced Rar Password Recovery &amp;&amp; Advanced Zip Password Recovery</h3><p>针对 rar &amp;&amp; zip 的密码爆破软件</p>
+<h3 id="WireShark"><a href="#WireShark" class="headerlink" title="WireShark"></a>WireShark</h3><p>流量分析必备软件</p>
+<h3 id="And-so-on…"><a href="#And-so-on…" class="headerlink" title="And so on…"></a>And so on…</h3><p>很多 Misc 题目往往需要我们现搜相应的工具和脚本进行做题，这时候就需要使用 Google or Baidu，相比较而言，Google 搜出来的结果往往质量更高~~</p>
+<h2 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h2><ul>
+<li><a href="https://ctf-wiki.github.io/ctf-wiki/misc/about.html" target="_blank" rel="external">ctf-wiki Misc 介绍</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/27598087" target="_blank" rel="external">CTF从入门到进（fang）阶(qi)之MISC</a></li>
+<li><a href="https://www.tuicool.com/articles/2E3INnm" target="_blank" rel="external">CTF中那些脑洞大开的编码和加密</a></li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/CTF/" rel="tag"># CTF</a>
+          
+            <a href="/tags/Misc/" rel="tag"># Misc</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/03/05/LeanCloud 使用笔记/" rel="next" title="LeanCloud 使用笔记">
+                <i class="fa fa-chevron-left"></i> LeanCloud 使用笔记
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/03/14/几种常见的排序算法/" rel="prev" title="几种常见的排序算法">
+                几种常见的排序算法 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+      <div id="disqus_thread">
+        <noscript>
+          Please enable JavaScript to view the
+          <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a>
+        </noscript>
+      </div>
+    </div>
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpeg"
+                alt="syang2forever" />
+            
+              <p class="site-author-name" itemprop="name">syang2forever</p>
+              <p class="site-description motion-element" itemprop="description">read and write more code</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">12</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">15</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/syang2forever" target="_blank" title="GitHub" rel="external nofollow"><i class="fa fa-fw fa-github"></i>GitHub</a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:syang2forever@gmail.com" target="_blank" title="E-Mail" rel="external nofollow"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#简介"><span class="nav-number">2.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#编码分析-amp-amp-古典密码"><span class="nav-number">3.</span> <span class="nav-text">编码分析 && 古典密码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Morse-编码"><span class="nav-number">3.1.</span> <span class="nav-text">Morse 编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点"><span class="nav-number">3.1.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具"><span class="nav-number">3.1.2.</span> <span class="nav-text">工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题"><span class="nav-number">3.1.3.</span> <span class="nav-text">例题</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#字母表编码"><span class="nav-number">3.2.</span> <span class="nav-text">字母表编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点-1"><span class="nav-number">3.2.1.</span> <span class="nav-text">特点</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ASCII-编码"><span class="nav-number">3.3.</span> <span class="nav-text">ASCII 编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点-2"><span class="nav-number">3.3.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#二进制编码"><span class="nav-number">3.3.2.</span> <span class="nav-text">二进制编码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#十六进制编码"><span class="nav-number">3.3.3.</span> <span class="nav-text">十六进制编码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题-Jarvis-oj-德军的密码"><span class="nav-number">3.3.4.</span> <span class="nav-text">例题 Jarvis oj 德军的密码</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Base-编码"><span class="nav-number">3.4.</span> <span class="nav-text">Base 编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点-3"><span class="nav-number">3.4.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具-1"><span class="nav-number">3.4.2.</span> <span class="nav-text">工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题-Jarvis-oj-base-64"><span class="nav-number">3.4.3.</span> <span class="nav-text">例题 Jarvis oj base 64?</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#URL-编码"><span class="nav-number">3.5.</span> <span class="nav-text">URL 编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点-4"><span class="nav-number">3.5.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具-2"><span class="nav-number">3.5.2.</span> <span class="nav-text">工具</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Unicode-编码"><span class="nav-number">3.6.</span> <span class="nav-text">Unicode 编码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#特点-5"><span class="nav-number">3.6.1.</span> <span class="nav-text">特点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具-3"><span class="nav-number">3.6.2.</span> <span class="nav-text">工具</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#凯撒加密"><span class="nav-number">3.7.</span> <span class="nav-text">凯撒加密</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#原理"><span class="nav-number">3.7.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#破解"><span class="nav-number">3.7.2.</span> <span class="nav-text">破解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具-4"><span class="nav-number">3.7.3.</span> <span class="nav-text">工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#题目"><span class="nav-number">3.7.4.</span> <span class="nav-text">题目</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#栅栏密码"><span class="nav-number">3.8.</span> <span class="nav-text">栅栏密码</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#原理-1"><span class="nav-number">3.8.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#破解-1"><span class="nav-number">3.8.2.</span> <span class="nav-text">破解</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#工具-5"><span class="nav-number">3.8.3.</span> <span class="nav-text">工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题-1"><span class="nav-number">3.8.4.</span> <span class="nav-text">例题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数字取证-amp-amp-隐写分析"><span class="nav-number">4.</span> <span class="nav-text">数字取证 && 隐写分析</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#前置技能"><span class="nav-number">4.1.</span> <span class="nav-text">前置技能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#图片隐写"><span class="nav-number">4.2.</span> <span class="nav-text">图片隐写</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#PNG"><span class="nav-number">4.2.1.</span> <span class="nav-text">PNG</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#JPEG"><span class="nav-number">4.2.2.</span> <span class="nav-text">JPEG</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#压缩包分析"><span class="nav-number">4.3.</span> <span class="nav-text">压缩包分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#伪加密"><span class="nav-number">4.3.1.</span> <span class="nav-text">伪加密</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#密码爆破"><span class="nav-number">4.3.2.</span> <span class="nav-text">密码爆破</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#CRC-校验"><span class="nav-number">4.3.3.</span> <span class="nav-text">CRC 校验</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#音频分析"><span class="nav-number">4.4.</span> <span class="nav-text">音频分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#MP3-隐写"><span class="nav-number">4.4.1.</span> <span class="nav-text">MP3 隐写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#波形-amp-amp-频谱"><span class="nav-number">4.4.2.</span> <span class="nav-text">波形 && 频谱</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题-flag在音乐中123"><span class="nav-number">4.4.3.</span> <span class="nav-text">例题 flag在音乐中123</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#流量分析"><span class="nav-number">4.5.</span> <span class="nav-text">流量分析</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#网络协议"><span class="nav-number">4.5.1.</span> <span class="nav-text">网络协议</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#技巧"><span class="nav-number">4.5.2.</span> <span class="nav-text">技巧</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#例题-2"><span class="nav-number">4.5.3.</span> <span class="nav-text">例题</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#常用工具一览"><span class="nav-number">5.</span> <span class="nav-text">常用工具一览</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#010Editor"><span class="nav-number">5.1.</span> <span class="nav-text">010Editor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Audacity"><span class="nav-number">5.2.</span> <span class="nav-text">Audacity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Stegsolve"><span class="nav-number">5.3.</span> <span class="nav-text">Stegsolve</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Binwalk"><span class="nav-number">5.4.</span> <span class="nav-text">Binwalk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Advanced-Rar-Password-Recovery-amp-amp-Advanced-Zip-Password-Recovery"><span class="nav-number">5.5.</span> <span class="nav-text">Advanced Rar Password Recovery && Advanced Zip Password Recovery</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#WireShark"><span class="nav-number">5.6.</span> <span class="nav-text">WireShark</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#And-so-on…"><span class="nav-number">5.7.</span> <span class="nav-text">And so on…</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考链接"><span class="nav-number">6.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2017 &mdash; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">syang2forever</span>
+
+  
+
+  
+</div>
+
+
+  
+
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" rel="external nofollow" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" rel="external nofollow" href="https://github.com/theme-next/hexo-theme-next">NexT.Muse</a> v6.0.5</div>
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="总访客量">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="总访问量">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.0.5"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.0.5"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.0.5"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.0.5"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.0.5"></script>
+
+
+
+  
+
+  
+    <script id="dsq-count-scr" src="https://syang.disqus.com/count.js" async></script>
+  
+
+  
+    <script type="text/javascript">
+      var disqus_config = function () {
+        this.page.url = 'https://syang2forever.github.io/2018/03/12/CTF Misc 入门/';
+        this.page.identifier = '2018/03/12/CTF Misc 入门/';
+        this.page.title = 'CTF Misc 入门';
+      };
+      function loadComments () {
+        var d = document, s = d.createElement('script');
+        s.src = 'https://syang.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', '' + +new Date());
+        (d.head || d.body).appendChild(s);
+      }
+      
+        loadComments();
+      
+    </script>
+  
+
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

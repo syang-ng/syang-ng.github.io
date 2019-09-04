@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/03/pwnable-tw-1.0/" />
+  <link rel="next" href="https://syang-ng.github.io/2019/04/kanxue-transformer/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2019/03/reverse-an-android-app/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Android 某应用的简单逆向 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Android 某应用的简单逆向 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Android 某应用的简单逆向",
+    "headline" : "Android 某应用的简单逆向",
+    "description" : "前言 项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。 Java 可以看到该应用使用了自定义的 Application 和 Activity 作为",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-03-22 13:30:50 \x2b0000 UTC",
+    "dateModified" : "2019-03-22 13:30:50 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2019\/03\/reverse-an-android-app\/",
+    "wordCount" : "1805",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android 某应用的简单逆向</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-03-22 itemprop="datePublished">March 22, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/"> 安全研究 </a>
+                        <a href="https://syang-ng.github.io/categories/android/"> Android </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。</p>
+
+<h2 id="java">Java</h2>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/manifest.png" alt="Manifest" class="lazyload"><figcaption class="image-caption">Manifest</figcaption></figure></p>
+
+<p>可以看到该应用使用了自定义的 Application 和 Activity 作为程序入口，继续跟到这两个类看相应源码：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/App.png" alt="App" class="lazyload"><figcaption class="image-caption">App</figcaption></figure>
+<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/MAct.png" alt="MAct" class="lazyload"><figcaption class="image-caption">MAct</figcaption></figure></p>
+
+<p>可以看到 <code>initSASDK()</code> 函数明显存在一定的问题，推测为加壳应用的壳入口，继续跟进相应代码：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/start.png" alt="start" class="lazyload"><figcaption class="image-caption">start</figcaption></figure></p>
+
+<p>可以看到最终调用的 start 函数里有如下的执行流程:</p>
+
+<pre><code class="language-Java">xzbs_ibq = WXMDGnzykrccwjZDVUmhfzZvEzBIzZfWBNKUhgaIOWSrSobBjR;
+srq(yiqomGNhdxLIJidVfyApfmJTIHPyutBbUkJxcWjBQHBrvbIXsOy, AvHtcXKhnamHsyrioJsYtObXYmrNsqUJmGFVnRXJTojtxBcOqgIj, FrzFWtDbeEGzjMXTZsUhYhYauwqXwJmljQFVrazhYTpbTiUljnepX, UyWqeczsunPuNjiSzoJlbLiNwGcpywsOaFqtWYqnJLjSYuVPEaozta, peVYfmJPInUHjHaTbqicJtUHmRZtZdUBcwvWjFSbbWlllsIdzEOXioi, LrAaxenJlqbZtbwLTeVausucgeMQpsscBeYNQPGYxiwYFHTARqqJgYDR);
+if (ezgyq()) {
+    xtmltaqolx(2, 3, 3, 3);
+    aozftlu();
+    lfob();
+    tevwztzyjqace();
+}
+umnyoz(324, 6, false, 6);
+</code></pre>
+
+<p>很明显，<code>ezqyg()</code> 函数试检测是否初始化完成的标志，阅读该函数代码：</p>
+
+<pre><code class="language-Java">private static boolean ezgyq() {
+    String qyhhdfdclv = &quot;aebchjtntz&quot; + &quot;xohpdsfuqm&quot;;
+    String osrz = &quot;zjydzywrik&quot; + &quot;yoxnmlxcskkcqfswphgt&quot;;
+    int uzcjyygfg = (1471 + 1) * 2;
+    return (new File(ozxzzjhyypbi()).exists() &amp;&amp; new File(ozxzzjhyypbi()).length() == new File(dyozzxjqf()).length() / 2) ? false : true;
+}
+</code></pre>
+
+<p>很明显除了最后一行外都是插入的 junk code，而最后一行的比较非常明显，是比较某一个文件的大小是否是另一个文件的两倍。继续阅读 <code>ozxzzjhyypbi()</code> 和 <code>dyozzxjqf()</code> 函数的源码，我们知道这两个文件其实是 <code>/data/user/0/aaa.bbb.ccc/files/libswbqgonYxEgdlSXzbootstrap.so</code> 和 <code>/data/app/aaa.bbb.ccc-1/lib/arm/libswbqgonYxEgdlSXzbootstrap.so</code>，很明显，在初始化的过程中，程序会将 <code>libswbqgonYxEgdlSXzbootstrap.so</code> 写入自身的 files 文件夹中，而且很有可能在写入过程中执行了某个解密函数，使得保存在本机的 so 文件只有之前的一半大小。</p>
+
+<p>下面再看初始化函数会执行什么操作，首先是 <code>xtmltaqolx</code> 函数会将 assets 文件下的几个文件拷贝到 files 文件夹下，代码优化如下：</p>
+
+<pre><code class="language-Java">private static void xtmltaqolx(int asdEw, int ggplklssfq, int kzpjmjnwdg, int qziqcjievs) {
+    File filespath = new File(xzbs_ibq.getFilesDir().getAbsolutePath() + &quot;/&quot; + nwm_tau);
+    if (filespath.exists()) {
+        filespath.delete();
+        filespath.mkdirs();
+    } else {
+        filespath.mkdirs();
+    }
+    try {
+        for (String sofile : xzbs_ibq.getAssets().list(nwm_tau)) {
+            InputStream is = xzbs_ibq.getAssets().open(&quot;wrhlrci/&quot; + sofile);
+            FileOutputStream fos = new FileOutputStream(new File(filespath, sofile));
+            byte[] data = new byte[1024];
+            while (true) {
+                int i = is.read(data);
+                if (i == -1) {
+                    break;
+                }
+                fos.write(data, 0, i);
+            }
+            fos.close();
+            is.close();
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+</code></pre>
+
+<p>后面三个函数的逻辑较为简单，除去 junk code 发现其实三个函数执行的是一个功能，将 <code>libswbqgonYxEgdlSXzbootstrap.so</code> 解密并完成之前所说的写入 files 文件夹下的功能。</p>
+
+<pre><code class="language-Java">private static int hwfhcg_uyf = 0;
+private static byte[] ytukd_pkq = new byte[40960];
+
+private static void aozftlu() throws IOException {
+    hwfhcg_uyf = new FileInputStream(dyozzxjqf()).read(ytukd_pkq) / 2;
+}
+
+private static void lfob() throws IOException {
+    for (int i = 0; i &lt; hwfhcg_uyf; i++) {
+        byte[] bArr = ytukd_pkq;
+        bArr[i] = (byte) (bArr[i] ^ ytukd_pkq[hwfhcg_uyf + i]);
+    }
+}
+
+private static void tevwztzyjqace() throws IOException {
+    new FileOutputStream(ozxzzjhyypbi()).write(ytukd_pkq, 0, hwfhcg_uyf);
+}
+</code></pre>
+
+<p>可以看到 apk 包中存储的其实是加密过的 so 文件，真正的 <code>libswbqgonYxEgdlSXzbootstrap.so</code> 文件是由该文件的前半部分和后半部分异或而成的。</p>
+
+<p>我们可以从 root 的 Android 手机上提取解密后的 so 文件，或者是编写 python 脚本来进行解密：</p>
+
+<pre><code class="language-python">data = file('libswbqgonYxEgdlSXzbootstrap.so', 'rb').read()
+mid = len(data) / 2
+so = [chr(ord(i) ^ ord(j)) for i, j in zip(data[:mid:], data[mid::])]
+with open('true.so', 'w') as f:
+    f.write(so)
+</code></pre>
+
+<p>然后我们可以看到存在这样一行代码： <code>umnyoz(324, 6, false, 6);</code>，会动态加载相应 so 文件。至此，Java 端的加密/解密部分已经结束了，我们可以发现 Java 端的操作就是解密并释放 assets 和 lib 文件夹下的 so 文件，然后通过 <code>System.load()</code> 函数进行加载。</p>
+
+<h2 id="native">Native</h2>
+
+<p>但仅有这些操作是不够的，我们有足够的理由相信在 so 文件里还存在着加壳的部分逻辑，使用 ida 打开相应文件，找到 <code>JNI_Onload</code> 函数：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/jni_onload.png" alt="JNI_Onload" class="lazyload"><figcaption class="image-caption">JNI_Onload</figcaption></figure></p>
+
+<p>现在可以确认 <code>JNI_Onload</code> 函数里有加壳的逻辑操作，因此我们需要继续理解该函数。不过幸运的是，我们可以看到代码里加入了很多的 log 函数，我们可以使用这些输出的 log 加深我们对程序逻辑的理解。</p>
+
+<p>这里截取部分 log：</p>
+
+<pre><code>03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: JNI_OnLoad
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got JNIEnv
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 00
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got Context true
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: after setJavaObjectForDebug
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1.1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: adn/suflej/fvvhmduk
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.1
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getOutDexDir
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: ()Ljava/lang/String;
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  3
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  2
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  4
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: if (getNames()) is false
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 2so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: decrypt
+03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: src=/data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so, out=/data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: 53_81_64_77_28
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: key = 53_81_64_77_28
+03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: dexclassloader
+03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/
+03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
+03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: load success
+03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: dexclassloader2
+03-22 04:41:28.596 28000-28000/aaa.bbb.ccc E/sa_bootstrap: end JNI_OnLoad
+</code></pre>
+
+<p>根据 log 我们就能很明显地发现程序会将之前存在 <code>/files/wrhlrci</code> 下的几个 so 文件释放到 <code>/files</code> 文件夹下，并将后缀名改为 <code>.jar</code>。随意打开其中任意两个文件进行比较，可以发现存在着很明显的差异，这里释放的 jar 文件其实就是 apk 的变体，而 so 文件很明显是一段无意义的数据，显然二者间的转换过程也必然存在着一个解密的过程。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/compare.png" alt="比较" class="lazyload"><figcaption class="image-caption">比较</figcaption></figure></p>
+
+<p>使用 ida 继续逆向源码，很容易地就找到了相应的代码：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/decrypt.png" alt="Decrpyt" class="lazyload"><figcaption class="image-caption">Decrpyt</figcaption></figure></p>
+
+<p>继续查看相应源码，可以看到 <code>decrypt</code> 函数的具体实现，可以看到其会从 so 文件中加载解密的密钥，再通过该密钥解密 so 文件。由于 log 的存在，我们很容易就能发现 <code>key = 53_81_64_77_28</code>。然后 while 函数里主要就是利用 key 对密文进行解密。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-An-Android-App/decrypt2.png" alt="Decrpyt 2" class="lazyload"><figcaption class="image-caption">Decrpyt 2</figcaption></figure></p>
+
+<p><code>JNI_Onload</code> 函数最后会调用 <code>com.nativedroid.module.dynamicloader.Dynamic</code> 的 <code>start</code> 函数，但令人奇怪的是 apk 文件中其实并无该库，所以这就是 apk 最后执行失败的原因？</p>
+
+<p>可以发现该 app 和 <a href="https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html" rel="nofollow noreferrer" target="_blank">Unmasking Android Malware: A Deep Dive into a New Rootnik Variant</a> 一文描述的还是比较相像的，本质上还是用了一堆对抗技术的加壳恶意软件，但壳的难度和商业级别的壳比较还是远远不如。</p>
+
+<h2 id="总结">总结</h2>
+
+<p>虽然头一天晚上看代码看的还是毫无头绪，不过在理解了其背后的逻辑之后，颇有种豁然开朗之感。这大概就是佛家所说的顿悟？</p>
+
+<h2 id="参考">参考</h2>
+
+<ol>
+<li><a href="https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html" rel="nofollow noreferrer" target="_blank">Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part I</a></li>
+<li><a href="https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-ii.html" rel="nofollow noreferrer" target="_blank">Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part II</a></li>
+</ol>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2019/03/reverse-an-android-app/>https://syang-ng.github.io/2019/03/reverse-an-android-app/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/03/pwnable-tw-1.0/" class="prev" rel="prev" title="pwnable.tw 入门 - start / orw / calc"><i class="iconfont icon-left"></i>&nbsp;pwnable.tw 入门 - start / orw / calc</a>
+         
+        
+        <a href="https://syang-ng.github.io/2019/04/kanxue-transformer/" class="next" rel="next" title="看雪CTF - 变形金钢">看雪CTF - 变形金钢&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

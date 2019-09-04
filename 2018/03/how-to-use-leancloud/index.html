@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2018/02/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97/" />
+  <link rel="next" href="https://syang-ng.github.io/2018/03/ctf-misc/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2018/03/how-to-use-leancloud/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           LeanCloud 使用笔记 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="LeanCloud 使用笔记 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "LeanCloud 使用笔记",
+    "headline" : "LeanCloud 使用笔记",
+    "description" : "前言 最近在校内的三叶草比赛中需要使用 leancloud 作为后台服务的提供者，但从看文档到具体使用还是有差距的，mark 一下中间踩过的坑 节点 LeanCloud 有三个节点：中国",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2018",
+    "datePublished": "2018-03-05 21:50:31 \x2b0000 UTC",
+    "dateModified" : "2018-03-05 21:50:31 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2018\/03\/how-to-use-leancloud\/",
+    "wordCount" : "2652",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">LeanCloud 使用笔记</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2018-03-05 itemprop="datePublished">March 5, 2018</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/"> 环境配置 </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>最近在校内的三叶草比赛中需要使用 leancloud 作为后台服务的提供者，但从看文档到具体使用还是有差距的，mark 一下中间踩过的坑</p>
+
+<h2 id="节点">节点</h2>
+
+<p>LeanCloud 有三个节点：<code>中国华北节点</code>、<code>中国华东节点</code>、<code>美国节点</code>，用户可以选择三个节点中的一个部署应用，但问题关键是三个节点不互通。。所以这个就有点难受了。。幸好可以选择将同一个应用部署到三个节点上，起码不用重复写代码，但还是好麻烦呀  <em>(:з」∠)</em></p>
+
+<p>三个节点的网址也是不一样的：
+- <a href="https://leancloud.cn/" rel="nofollow noreferrer" target="_blank">中国华北节点</a>
+- <a href="https://tab.leancloud.cn/" rel="nofollow noreferrer" target="_blank">中国华东节点</a>
+- <a href="https://tab.leancloud.cn/" rel="nofollow noreferrer" target="_blank">美国节点</a></p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/How-To-Use-LeanCloud/node.png" alt="节点选择" class="lazyload"><figcaption class="image-caption">节点选择</figcaption></figure></p>
+
+<p>我们可以根据直接的需求选择相应节点来部署自己的服务，应该用的项目中需要访问 Google 的网址，所以只能选择美国节点了（逃</p>
+
+<h2 id="应用创建与部署">应用创建与部署</h2>
+
+<h3 id="应用创建">应用创建</h3>
+
+<p>用户可以轻松创建开发版的应用，唯一的限制就是每个月请求上限是 2000 次，一般来说足以满足个人日常的开发使用</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/How-To-Use-LeanCloud/create.png" alt="应用创建" class="lazyload"><figcaption class="image-caption">应用创建</figcaption></figure></p>
+
+<p>创建完成后即可进入相应应用界面：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/How-To-Use-LeanCloud/version.png" alt="开发版应用" class="lazyload"><figcaption class="image-caption">开发版应用</figcaption></figure></p>
+
+<h3 id="应用部署">应用部署</h3>
+
+<p>我们已经创建了一个应用，那么如何部署一个应用呢？这里推荐使用官方的命令行工具：<code>lean-cli</code></p>
+
+<p><code>Windows</code> 或 <code>Linux</code> 可以选择在 <a href="https://releases.leanapp.cn/#/leancloud/lean-cli/releases" rel="nofollow noreferrer" target="_blank">Github releases 页面</a> 下载相应安装包进行安装，而 <code>Mac</code> 则可以选择使用 <code>Homebrew</code> 进行安装：</p>
+
+<pre><code class="language-macOS">brew update
+brew install lean-cli
+</code></pre>
+
+<p>在安装完成之后，我们可以选择使用 <code>lean</code> 命令进行操作：</p>
+
+<pre><code class="language-cmd">C:\Users\syang&gt;lean
+ _                        ______ _                 _
+| |                      / _____) |               | |
+| |      ____ ____ ____ | /     | | ___  _   _  _ | |
+| |     / _  ) _  |  _ \| |     | |/ _ \| | | |/ || |
+| |____( (/ ( ( | | | | | \_____| | |_| | |_| ( (_| |
+|_______)____)_||_|_| |_|\______)_|\___/ \____|\____|
+NAME:
+   lean - Command line to manage and deploy LeanCloud apps
+
+USAGE:
+   lean [global options] command [command options] [arguments...]
+
+VERSION:
+   0.18.1
+
+COMMANDS:
+     login    登录 LeanCloud 账户
+     metric   获取当前项目云存储的性能总览
+     info     查看当前登录用户以及应用信息
+     up       本地启动云引擎应用
+     init     初始化云引擎项目
+     switch   切换当前项目关联的 LeanCloud 应用
+     deploy   部署云引擎项目到服务器
+     publish  部署当前预备环境的代码至生产环境
+     upload   上传文件到当前应用 File 表
+     logs     查看 LeanEngine 产生的日志
+     debug    不运行项目，直接启动云函数调试服务
+     env      输出运行当前云引擎应用所需要的环境变量
+     cache    LeanCache 管理相关功能
+     cql      进入 CQL 交互查询
+     search   根据关键词查询开发文档
+     help, h  显示全部命令或者某个子命令的帮助
+
+GLOBAL OPTIONS:
+   --version, -v  print the version
+</code></pre>
+
+<p>可以看的 <code>lean-cli</code> 官方的说明其实是相当详细的</p>
+
+<p>一般我们需要熟悉以下几个操作：<code>login</code>、<code>init</code>、<code>up</code>、<code>switch</code>、<code>deploy</code></p>
+
+<p><code>login</code> 操作会登录相应用户</p>
+
+<pre><code class="language-cmd">[?] 请输入您的邮箱
+ =&gt; email@example.com
+[?] 请输入您的密码
+ =&gt; ******
+[INFO] 登录成功：
+[INFO] 用户名: xxxxxx
+[INFO] 邮箱: email@example.com
+</code></pre>
+
+<p>而 <code>init</code> 会在当前目录初始化应用并下载相应的模板代码</p>
+
+<pre><code class="language-cmd">C:\Users\syang\Desktop\&gt;lean init
+[?] 请选择应用节点
+ 1) 美国节点
+ 2) 中国华北节点
+ 3) 中国华东节点
+ =&gt; 2
+[?] 请选择 APP
+ 1) AutoDraw
+ =&gt; 1
+[?] 请选择需要创建应用的编程语言
+ 1) Node.js
+ 2) Python
+ 3) Java
+ 4) PHP
+ 5) Others
+ =&gt; 2
+[?] 请选择需要创建的应用模版
+ 1) Flask
+ 2) Django
+ =&gt; 2
+[INFO] 下载模版文件 5.92 KiB / 5.92 KiB [===========================] 100.00% 0s
+[INFO] 正在创建项目...
+[INFO] 创建 Django 项目成功，更多关于 Django 的文档请参考官网： https://www.djangoproject.com/
+</code></pre>
+
+<p>上面说到了节点的问题，其实同一份代码是可以部署到不同节点上的，关键就是 <code>switch</code> 这个命令:</p>
+
+<pre><code class="language-cmd">C:\Users\syang\Desktop\AutoDraw&gt;lean switch
+[?] 请选择应用节点
+ 1) 美国节点
+ 2) 中国华北节点
+ 3) 中国华东节点
+ =&gt; 3
+INFO] 获取应用列表 ...
+[?] 请选择 APP
+ 1) AutoDraw
+ =&gt; 1
+切换应用至：AutoDraw ，分组：web
+</code></pre>
+
+<p>我们在刚刚创建的 <code>AutoDraw</code> 这个项目里使用了 <code>switch</code> 这个命令，并将应该在华北节点的程序切换到了华东节点上</p>
+
+<p><code>lean up</code> 命令用来调试相应程序，我们可以在本地端口 3000 和 3001 对应用进行测试：</p>
+
+<pre><code class="language-cmd">[INFO] 当前命令行工具版本： 0.18.1
+[INFO] 检测到 Python 运行时
+[WARNING] 没有找到命令 `python2`，使用 `python` 代替
+[INFO] 获取应用信息 ...
+[INFO] 当前应用：AutoDraw (v0FzUWSFswfnQfGGQ08iILYS-9Nh9j0Va)
+[INFO] 使用 [python wsgi.py] 启动项目
+[INFO] 项目已启动，请使用浏览器访问：http://localhost:3000
+[INFO] 云函数调试服务已启动，请使用浏览器访问：http://localhost:3001
+</code></pre>
+
+<p><code>lean deploy</code> 用于将本地项目部署到 <code>LeanCloud</code> 平台上，类似效果如下：</p>
+
+<pre><code class="language-cmd">✓ 获取应用信息
+ ✓ 准备部署至目标应用：AwesomeApp (xxxxxx)
+ ✓ 获取应用分组信息
+ ✓ 准备部署应用到生产环境: web
+ ✓ 检测到 Python 运行时
+ ✓ 压缩项目文件
+ ✓ 上传应用文件 6.41 KB / 6.41 KB [=======================================] 100.00% 0s
+ ✓ 开始构建 20161021-171836
+ ✓ 正在下载应用代码 ...
+ ✓ 正在解压缩应用代码 ...
+ ✓ 运行环境: python (leanengine/python-base-2.7)
+ ✓ 从之前的构建中恢复依赖项 ...
+ ✓ 正在下载和安装依赖项 ...
+ ✓ 缓存最新的依赖项 ...
+ ✓ 存储镜像到仓库 ...
+ ✓ 镜像构建完成：20161021-171836
+ ✓ 开始部署 20161021-171836 到 web1
+ ✓ 正在创建新实例 ...
+ ✓ 正在启动新实例 ...
+ ✓ 实例启动成功：{&quot;version&quot;: &quot;1.6.5&quot;, &quot;runtime&quot;: &quot;cpython-2.7.6&quot;}
+ ✓ 正在统一切换新旧实例 ...
+ ✓ 正在更新云函数信息 ...
+ ✓ 部署完成：1 个实例部署成功
+ ✓ 删除临时文件
+</code></pre>
+
+<p>对于命令行工具的使用在这里就简单进行介绍，详情可以参考 LeanCloud 的官方文档：<a href="https://leancloud.cn/docs/leanengine_cli.html" rel="nofollow noreferrer" target="_blank">命令行工具使用指南</a></p>
+
+<h2 id="应用开发">应用开发</h2>
+
+<p>这才是重点 😊</p>
+
+<h3 id="云函数">云函数</h3>
+
+<p><code>LeanCloud</code> 实现了一种云函数的功能，即你定义了云函数的函数名，然后把它具体实现，那么你就可以通过 SDK 的函数来调用你定义的云函数了</p>
+
+<p>具体还是贴代码：</p>
+
+<pre><code class="language-JavaScript">const AV = require('leanengine');
+AV.Cloud.define('fetchUser', async (request) =&gt; {
+    const { u_id } = request.params;
+    let user;
+    try {
+        user = await findUser(u_id);
+    } catch (err) {
+        const UserModel = AV.Object.extend('UserModel');
+        user = new UserModel();
+        user.set('u_id', u_id);
+        user.set('amount', 1000);
+        user.set('rp_ids', []);
+        user.set('sp_ids', []);
+        user.set('rAmount', 0);
+        user.set('rNum', 0);
+        user.set('sAmount', 0);
+        user.set('sNum', 0);
+        await user.save();
+    }
+    return user;
+});
+</code></pre>
+
+<p>我们可以通过调用 <code>AV.Cloud.define()</code> 函数的方式来定义我们的云函数，函数的第一个参数是云函数的名称，注意每个云函数的名称必须是唯一的，而函数的第二个参数是云引擎接收到对函数调用时的回调函数，回调函数的参数是一个复杂的对象，其中一个属性 <code>params</code> 即调用云函数的用户调用时发送的参数，以对象的形式给出，这意味着我们很容易就能用 <code>{...}=request.params</code> 解构出相应属性。当我们需要返回值时，<code>LeanCloud</code> 建议我们以 <code>return</code> 方式返回，旧的返回方式已经不做推荐了，那么就不去研究了（逃</p>
+
+<p><code>LeanCloud</code> 建议是以 <code>Promise()</code> 的链式调用来优化代码的，但当然还是要用 <code>async () =&gt; {await...}</code> 实现才是王道呀，其它的实现代码可读性真是极差</p>
+
+<p>这里是调用者的代码，第一个参数是我们调用的函数名，第二个参数是相应参数对象，参数需要以键值对的方式给出。然后该函数会返回一个 <code>Promise()</code> 对象，然后就可以 <code>.then(()=&gt;{})</code> 编写熟悉的代码了</p>
+
+<pre><code class="language-JavaScript">AV.Cloud.run('fetchUser', {u_id: u_id}).then((response)=&gt;{
+    let {rAmount, rNum, sAmount, sNum, rp_ids, sp_ids} = response;
+    that.setData({
+        rAmount: rAmount,
+        rNum: rNum,
+        sAmount: sAmount,
+        sNum: sNum,
+        rp_ids: rp_ids,
+        sp_ids: sp_ids,
+        userInfo:app.globalData.userInfo
+    });
+}
+</code></pre>
+
+<p>这里贴一下相应的网络请求：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/How-To-Use-LeanCloud/network.png" alt="network" class="lazyload"><figcaption class="image-caption">network</figcaption></figure></p>
+
+<h3 id="数据存储">数据存储</h3>
+
+<p>我们可以直接使用 <code>LeanCloud</code> 提供的数据存储服务，大致有一下几个步骤：</p>
+
+<pre><code>1. 声明一个对象类型，如果我们需要声明一个对象为 Todo 类型，那么 const Todo = AV.Object.extend('Todo');
+2. 新建一个对象 const todo = new Todo();
+3. 为对象新建属性 todo.set('title', 'Hello World');
+4. 可以通过 save() 函数保存相应对象
+</code></pre>
+
+<p>与通常的 DB 相比，<code>LeanCloud</code> 提供的 <code>LeanStorage</code> 主要有以下几个差异：</p>
+
+<ol>
+<li>Schema Free／Not free 的差异；</li>
+<li>数据接口上，LeanStorage 是面向对象的（数据操作接口都是基于 Object 的），开放的（所有移动端都可以直接访问），DB 是面向结构的，封闭的（一般在 Server 内部访问）；</li>
+<li>数据之间关联的方式，DB 是主键外键模型，LeanStorage 则有自己的关系模型（Pointer、Relation 等）；</li>
+</ol>
+
+<p>大致看来 <code>LeanStorage</code> 有点类似 <code>MongoDB</code>，类似分布式的文件存储式的数据库系统，所以有极高的拓展性</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/How-To-Use-LeanCloud/db.png" alt="DB" class="lazyload"><figcaption class="image-caption">DB</figcaption></figure></p>
+
+<p><code>LeanCloud</code> 的增加、删除、更改、查询都有相应的 API 封装调用，需要的可以查询相应文档 <a href="https://leancloud.cn/docs/leanstorage_guide-js.html" rel="nofollow noreferrer" target="_blank">数据存储开发指南 · JavaScript</a></p>
+
+<p>这里贴上我的代码作为 demo：</p>
+
+<pre><code class="language-JavaScript">const uQuery = new AV.Query('UserModel');
+uQuery.equalTo('u_id', u_id);
+const result = await uQuery.find();
+if (result.length === 0) {
+  throw new AV.Cloud.Error('No such user!');
+}
+return result[0];
+</code></pre>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2018/03/how-to-use-leancloud/>https://syang-ng.github.io/2018/03/how-to-use-leancloud/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2018/02/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97/" class="prev" rel="prev" title="Chrome 自动性能分析指北"><i class="iconfont icon-left"></i>&nbsp;Chrome 自动性能分析指北</a>
+         
+        
+        <a href="https://syang-ng.github.io/2018/03/ctf-misc/" class="next" rel="next" title="CTF Misc 入门">CTF Misc 入门&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

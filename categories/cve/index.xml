@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>CVE on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/cve/</link>
+    <description>Recent content in CVE on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 25 Feb 2019 19:19:01 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/cve/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>WinRAR 目录穿越漏洞研究小记</title>
+      <link>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</link>
+      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</guid>
+      <description>起因 在摸鱼的时候看到先知上的一篇文章：WinRAR目录穿越漏洞，发现 WinRAR 爆出了一个惊天大洞（误），虽然称不上用处巨大，但是非常好玩。漏洞介绍如</description>
+    </item>
+    
+  </channel>
+</rss>

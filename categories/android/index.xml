@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Android on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/android/</link>
+    <description>Recent content in Android on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 22 Mar 2019 13:30:50 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/android/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Android 某应用的简单逆向</title>
+      <link>https://syang-ng.github.io/2019/03/reverse-an-android-app/</link>
+      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/03/reverse-an-android-app/</guid>
+      <description>前言 项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。 Java 可以看到该应用使用了自定义的 Application 和 Activity 作为</description>
+    </item>
+    
+  </channel>
+</rss>

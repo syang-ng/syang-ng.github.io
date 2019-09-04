@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>环境配置 on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/</link>
+    <description>Recent content in 环境配置 on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 15 Mar 2018 21:49:37 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>CentOS 7 MySQL 数据目录移动小记</title>
+      <link>https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/</link>
+      <pubDate>Thu, 15 Mar 2018 21:49:37 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/</guid>
+      <description>前言 实验室的机子 MySQL 的空间不够了，需要换一下数据目录，替它再续五百年（笑 当然这么简单的事情是一定要踩坑的，不踩坑怎么能表现研究的难度呢？ Step 1 查</description>
+    </item>
+    
+    <item>
+      <title>LeanCloud 使用笔记</title>
+      <link>https://syang-ng.github.io/2018/03/how-to-use-leancloud/</link>
+      <pubDate>Mon, 05 Mar 2018 21:50:31 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/03/how-to-use-leancloud/</guid>
+      <description>前言 最近在校内的三叶草比赛中需要使用 leancloud 作为后台服务的提供者，但从看文档到具体使用还是有差距的，mark 一下中间踩过的坑 节点 LeanCloud 有三个节点：中国</description>
+    </item>
+    
+    <item>
+      <title>Chrome 自动性能分析指北</title>
+      <link>https://syang-ng.github.io/2018/02/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97/</link>
+      <pubDate>Sat, 10 Feb 2018 23:43:05 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/02/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97/</guid>
+      <description>前言 实验室摸鱼总结 part2：如何进行 Chrome 网页自动化性能分析 主要还是对 Chrome 远程调试协议 的学习和对 nodejs 封装的 chrome-remote-interface 的使用 (..•˘_˘•..) 认识 Chrome 性能</description>
+    </item>
+    
+    <item>
+      <title>Chrome 远程调试协议不完全指南</title>
+      <link>https://syang-ng.github.io/2018/01/chrome-%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95%E5%8D%8F%E8%AE%AE%E4%B8%8D%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/</link>
+      <pubDate>Tue, 30 Jan 2018 19:22:28 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2018/01/chrome-%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95%E5%8D%8F%E8%AE%AE%E4%B8%8D%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97/</guid>
+      <description>前言 寒假在实验室的工作（摸鱼）中需要使用 Chrome 的远程调试协议（Remote debugging protocol），所以对这个协议学习了一番，现在把学到的简单做下整</description>
+    </item>
+    
+  </channel>
+</rss>

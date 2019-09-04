@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>安全研究 on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
+    <description>Recent content in 安全研究 on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Fri, 22 Mar 2019 13:30:50 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Android 某应用的简单逆向</title>
+      <link>https://syang-ng.github.io/2019/03/reverse-an-android-app/</link>
+      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/03/reverse-an-android-app/</guid>
+      <description>前言 项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。 Java 可以看到该应用使用了自定义的 Application 和 Activity 作为</description>
+    </item>
+    
+    <item>
+      <title>WinRAR 目录穿越漏洞研究小记</title>
+      <link>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</link>
+      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</guid>
+      <description>起因 在摸鱼的时候看到先知上的一篇文章：WinRAR目录穿越漏洞，发现 WinRAR 爆出了一个惊天大洞（误），虽然称不上用处巨大，但是非常好玩。漏洞介绍如</description>
+    </item>
+    
+    <item>
+      <title>无需 Ptrace 实现 Linux 进程间代码注入</title>
+      <link>https://syang-ng.github.io/2017/10/%E6%97%A0%E9%9C%80-ptrace-%E5%AE%9E%E7%8E%B0-linux-%E8%BF%9B%E7%A8%8B%E9%97%B4%E4%BB%A3%E7%A0%81%E6%B3%A8%E5%85%A5/</link>
+      <pubDate>Sat, 07 Oct 2017 10:22:28 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/2017/10/%E6%97%A0%E9%9C%80-ptrace-%E5%AE%9E%E7%8E%B0-linux-%E8%BF%9B%E7%A8%8B%E9%97%B4%E4%BB%A3%E7%A0%81%E6%B3%A8%E5%85%A5/</guid>
+      <description>前言 国庆期间研究了下 Linux 下一种新颖的代码注入方式，这种方式不依靠常用的 Ptrace 函数，而是依靠 shellcode 实现 ROP 的方式来代码注入的，真是神奇（￣▽￣） 然后发现网</description>
+    </item>
+    
+  </channel>
+</rss>

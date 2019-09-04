@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Categories on syang&#39;s blog</title>
+    <link>https://syang-ng.github.io/categories/</link>
+    <description>Recent content in Categories on syang&#39;s blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 27 May 2019 13:42:59 +0000</lastBuildDate>
+    
+	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>CTF</title>
+      <link>https://syang-ng.github.io/categories/ctf/</link>
+      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/ctf/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>SmartContract</title>
+      <link>https://syang-ng.github.io/categories/smartcontract/</link>
+      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/smartcontract/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Web</title>
+      <link>https://syang-ng.github.io/categories/web/</link>
+      <pubDate>Thu, 25 Apr 2019 19:29:23 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/web/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Reverse</title>
+      <link>https://syang-ng.github.io/categories/reverse/</link>
+      <pubDate>Sun, 07 Apr 2019 00:42:32 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/reverse/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Android</title>
+      <link>https://syang-ng.github.io/categories/android/</link>
+      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/android/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>安全研究</title>
+      <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
+      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Pwn</title>
+      <link>https://syang-ng.github.io/categories/pwn/</link>
+      <pubDate>Sun, 10 Mar 2019 14:51:57 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/pwn/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>CVE</title>
+      <link>https://syang-ng.github.io/categories/cve/</link>
+      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/cve/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>环境配置</title>
+      <link>https://syang-ng.github.io/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/</link>
+      <pubDate>Thu, 15 Mar 2018 21:49:37 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Misc</title>
+      <link>https://syang-ng.github.io/categories/misc/</link>
+      <pubDate>Mon, 12 Mar 2018 14:28:35 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/misc/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Linux</title>
+      <link>https://syang-ng.github.io/categories/linux/</link>
+      <pubDate>Sat, 07 Oct 2017 10:22:28 +0000</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/linux/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

