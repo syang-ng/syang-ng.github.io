@@ -627,6 +627,29 @@ decode -X -P pass svega_stego.mp3
           
                  
           
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
     </div>
 </article>
           </div>
