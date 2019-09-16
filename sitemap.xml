@@ -48,7 +48,7 @@
     <url>
       <loc>https://syang-ng.github.io/categories/ctf/</loc>
       
-      <lastmod>2019-05-27T13:42:59+00:00</lastmod>
+      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
       
       
       
@@ -60,11 +60,33 @@
     <url>
       <loc>https://syang-ng.github.io/categories/</loc>
       
-      <lastmod>2019-05-27T13:42:59+00:00</lastmod>
+      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
       
       
       
       <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/reverse/</loc>
+      
+      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/2019/08/reverse-tools-learning/</loc>
+      
+      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
+      
+      
       
       
     </url>
@@ -105,18 +127,6 @@
       <loc>https://syang-ng.github.io/categories/web/</loc>
       
       <lastmod>2019-04-25T19:29:23+00:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/reverse/</loc>
-      
-      <lastmod>2019-04-07T00:42:32+00:00</lastmod>
       
       
       

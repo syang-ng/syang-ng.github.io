@@ -6,7 +6,7 @@
     <description>Recent content in Categories on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 27 May 2019 13:42:59 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 16 Aug 2019 18:54:42 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
@@ -14,9 +14,18 @@
     <item>
       <title>CTF</title>
       <link>https://syang-ng.github.io/categories/ctf/</link>
-      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
+      <pubDate>Fri, 16 Aug 2019 18:54:42 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/ctf/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Reverse</title>
+      <link>https://syang-ng.github.io/categories/reverse/</link>
+      <pubDate>Fri, 16 Aug 2019 18:54:42 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/reverse/</guid>
       <description></description>
     </item>
     
@@ -35,15 +44,6 @@
       <pubDate>Thu, 25 Apr 2019 19:29:23 +0000</pubDate>
       
       <guid>https://syang-ng.github.io/categories/web/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Reverse</title>
-      <link>https://syang-ng.github.io/categories/reverse/</link>
-      <pubDate>Sun, 07 Apr 2019 00:42:32 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/reverse/</guid>
       <description></description>
     </item>
     

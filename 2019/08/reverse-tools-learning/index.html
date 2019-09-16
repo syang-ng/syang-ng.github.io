@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" />
+  <link rel="next" href="https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2019/08/reverse-tools-learning/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           用工具高效（摸鱼）地解逆向题 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="用工具高效（摸鱼）地解逆向题 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "用工具高效（摸鱼）地解逆向题",
+    "headline" : "用工具高效（摸鱼）地解逆向题",
+    "description" : "一般来说，解一道逆向题，通常考虑使用 ida \/ ghidra 进行静态逆向分析或者是使用 gdb \/ x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2019",
+    "datePublished": "2019-08-16 18:54:42 \x2b0800 CST",
+    "dateModified" : "2019-08-16 18:54:42 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2019\/08\/reverse-tools-learning\/",
+    "wordCount" : "2786",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">用工具高效（摸鱼）地解逆向题</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2019-08-16 itemprop="datePublished">August 16, 2019</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/reverse/"> Reverse </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<p>一般来说，解一道逆向题，通常考虑使用 ida / ghidra 进行静态逆向分析或者是使用 gdb / x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让人不由得思考一个问题：有没有方法来高效地解题（摸鱼）呢？</p>
+
+<p>恰好最近看到一道 p4 出的一道很有意思的逆向题目，虽然难度不大，但由于题目条件设置的原因，人工求解会变得非常繁琐，相对应地，利用工具就能方便地进行求解。正好可以借此机会，来尝试使用工具高效地对逆向题进行求解。</p>
+
+<h2 id="题目分析">题目分析</h2>
+
+<p> 用 file 命令检查文件，可以看到是一个 64 位的程序：</p>
+
+<pre><code class="language-bash">$ file elementary
+elementary: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=d5989f8d294badf15acaa157984968eea75f1fce, not stripped
+</code></pre>
+
+<p>用 ida64 打开，反编译 main 方法，可以看到程序的逻辑非常简单，根据 <code>checkFlag</code> 函数的返回结果，程序输出 <code>Good job!</code> 或者是 <code>Wrong!</code>：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/main.png" alt="主函数" class="lazyload"><figcaption class="image-caption">主函数</figcaption></figure></p>
+
+<p>继续跟进 <code>checkFlag</code>  函数：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/checkFlag.png" alt="checkFlag" class="lazyload"><figcaption class="image-caption">checkFlag</figcaption></figure></p>
+
+<p>可以看到这个方法很长，但其实逻辑还是较为简单的，输入共 104 个字节、 832 个 bit，然后针对其中的一个 bit，会调用 <code>function0</code> 到 <code>function831</code> 共 832 个函数中的一个。观察 <code>function0</code> 到 <code>function831</code> 函数的具体反汇编结果，可以看到，虽然总共有 832 个函数，但实际上函数具体的反汇编结果无非两种，一是直接返回该 bit，二是返回该 bit 的取反值。</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/function.png" alt="function" class="lazyload"><figcaption class="image-caption">function</figcaption></figure></p>
+
+<p>由此，函数的检查逻辑非常清晰，其实就是 832 个函数分别对 832 个输入的 bit 做校验，验证全部通过的输入即为 flag。那么，开始手动求解，832个函数很快的（不是）。我们下面来考虑如何利用工具对本题进行求解：</p>
+
+<h2 id="ida">ida</h2>
+
+<p>作为一款强大的二进制分析工具，ida 提供了相当之多的功能，比如说 <code>File</code>-&gt;<code>Produce file</code>  可以导出程序相关的文件，包括反汇编的 C 代码：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/produce.png" alt="produce" class="lazyload"><figcaption class="image-caption">produce</figcaption></figure></p>
+
+<p>看到这里，最直接的一个思路就是通过对 ida 生成的 C 代码进行修改，将对 bit 的验证修改为对 bit 的赋值，在执行完 832 次赋值后就会得到最终的 flag。</p>
+
+<p>观察其中一条判断语句，可以发现它要求对应的函数 <code>function572</code> 针对输入返回 0：</p>
+
+<pre><code class="language-c">if ( (unsigned int)function572((a1[85] &gt;&gt; 2) &amp; 1) )
+    return 0LL;
+</code></pre>
+
+<p>所以只需要判断在输入为 1 的情况下，该函数的返回是否为 0，如果为 0，说明该 bit 的值应该是 1，反之则为 0：</p>
+
+<pre><code class="language-c">if(function572(1) == 0)
+    a1[85] |= (1&lt;&lt;2);
+</code></pre>
+
+<p>可以利用 python 编写脚本，完成全部判断语句到赋值语句到转换：</p>
+
+<pre><code class="language-python">def trans_func(l):
+    sp = l.index('function')
+    ep = l.index('(', sp)
+    func = l[sp:ep]
+    if '[' not in l:
+        index = 0
+    else:
+        sp = l.index('[')
+        ep = l.index(']', sp)
+        index = int(l[sp+1:ep])
+    if &quot;&gt;&gt;&quot; not in l:
+        offset = 0
+    else:
+        sp = l.index(&quot;&gt;&gt;&quot;)
+        ep = l.index(&quot;)&quot;, sp)
+        offset = int(l[sp+3:ep])
+    return &quot;if({}(1) == 0)\n    a1[{}] |= (1&lt;&lt;{});&quot;.format(func, index, offset)
+
+# sample
+trans_func('if ( (unsigned int)function572((a1[85] &gt;&gt; 2) &amp; 1) )')
+# 'if(function572(1) == 0)\n    a1[85] |= (1&lt;&lt;2);'
+</code></pre>
+
+<p>通过对 ida 导出的 c 源码进行修改，最终生成 <code>solve.c</code> 文件如下，编译运行，即可得到 flag：</p>
+
+<pre><code class="language-c">#include &lt;stdio.h&gt;
+#inclue &lt;string.h&gt;
+
+int main(int argc, const char **argv, const char **envp);
+int function0(int a1);
+int function1(int a1);
+...
+int function830(int a1);
+int function831(int a1);
+int checkFlag(char *a1);
+
+int main(int argc, const char **argv, const char **envp) {
+  char v4[104];
+  memset(v4, 0, 104);
+  if (checkFlag(v4))
+    printf(&quot;%s\n&quot;, v4);
+  return 0;
+}
+
+int function0(int a1) {
+  return a1 ^ 1u;
+}
+...
+int function831(int a1) {
+  return a1 ^ 1u;
+}
+
+int checkFlag(char *a1) {
+    if(function0(1) == 0)
+        a1[64] |= (1&lt;&lt;0);
+    ...
+    if(function831(1) == 0)
+        a1[20] |= (1&lt;&lt;4);
+}
+</code></pre>
+
+<pre><code class="language-shell">$ gcc solve.c
+$ ./a.out
+p4{I_really_hope_you_automated_this_somehow_otherwise_it_might_be_a_bit_frustrating_to_do_this_manually}
+</code></pre>
+
+<h2 id="idapython">idapython</h2>
+
+<p>既然能通过 ida 导出的 c 文件和 python 相结合的方式解题，那么能否使用 idapython 直接完成本题呢？答案是肯定的，需要利用 idapython 提供的三个函数：</p>
+
+<ul>
+<li><code>Functions</code> ：遍历所有的函数（返回的是函数的入口地址）</li>
+<li><code>get_func_name</code>：根据地址返回函数名</li>
+<li><code>decompile</code>：反编译函数</li>
+</ul>
+
+<p>具体的操作和之前的解法在思路上较为相似，首先遍历所有的函数（<code>function0</code> - <code>function831</code>），对函数进行解析（判断是否取反）；然后反编译 <code>checkFlag</code> 函数，通过解析对各个函数的调用顺序，对 flag 变量进行赋值。</p>
+
+<p>相应代码如下（用正则匹配函数和相应的返回）：</p>
+
+<pre><code class="language-python">import re
+from idaapi import decompile
+from idautils import Functions
+
+funcs = {}
+flag = [0 for i in range(104)]
+
+for x in Functions():
+    fn = get_func_name(x)
+    if fn.find('function') != -1:
+        v = int(str(decompile(x)).find('^')!=-1)
+        funcs[fn] = v
+                
+checkFlag_addr = 0xceb7c
+codes = str(decompile(checkFlag_addr)).split('\n')[2👎2]
+
+for code in codes:
+    fn = re.search('function[0-9]+', code)
+    fn = fn.group(0)
+    idx = re.search('a1\[([0-9]+)', code)
+    idx = 0 if not idx else int(idx.group(1))
+    bit = re.search('&gt;&gt; ([0-9]+)', code)
+    bit = 0 if not bit else int(bit.group(1))
+
+    flag[idx] += funcs[fn] &lt;&lt; bit
+
+print(''.join(map(chr, flag)))
+</code></pre>
+
+<p>直接在 ida 内部的 python 终端下运行，运行结果如下：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/idapython.png" alt="IDA python" class="lazyload"><figcaption class="image-caption">IDA python</figcaption></figure></p>
+
+<h2 id="angr">angr</h2>
+
+<p>作为大名鼎鼎的符号执行工具，angr 也是解逆向题的神兵利器。有些时候甚至题目还没逆完说不定就用 angr 跑出结果了，用 angr 解题实乃摸鱼的不二法宝。</p>
+
+<p>使用 angr 求解通常需要以下两个步骤：</p>
+
+<ol>
+<li>确认 flag 的长度，建立约束条件</li>
+<li>明确需要执行到的分支和不想执行到的分支</li>
+</ol>
+
+<p>对本题来说，很明显 flag 长度为 832 个 bit，因为共有 832 个函数；然后希望执行到的分支地址为 <code>0x773</code>，输出 <code>Good job!</code>，不想执行到的分支地址为 <code>0x786</code>，最终会输出 <code>Wrong!</code>。</p>
+
+<p>另外，在 <code>checkFlag</code>  函数中，同样存在着大量我们不想执行的分支，比如会执行 <code>return 0</code> 的任意一个分支，相应的汇编代码如下：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/avoid.png" alt="branch" class="lazyload"><figcaption class="image-caption">branch</figcaption></figure></p>
+
+<p>为了加快求解速度，我们需要获得所有 <code>mov eax,0</code> 相关指令的地址，这些都不属于我们想要执行的分支。使用 linux 命令提取如下：</p>
+
+<pre><code class="language-shell"># 反编译，过滤得到相应指令
+$ objdump -d elementary | grep &quot;\$0x0,%eax&quot; &gt; asm.txt
+# 提取地址
+$ awk '{ print $1 }' asm.txt | cut -d':' -f1 &gt; avoid_addr
+# 过滤前几个无用地址
+$ tail -n +6 avoid_addr &gt; avoid_addr
+</code></pre>
+
+<p>提取了相应地址后，即可编写相应解题脚本，脚本参考：<a href="https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7" rel="nofollow noreferrer" target="_blank">https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7</a></p>
+
+<pre><code class="language-python">import angr
+import claripy
+
+# angr 使用 0x400000 作为基地址，所以需要加上相应偏移
+start = 0x40071a
+find = 0x400773
+avoid = [0x400786]
+
+flag_length = 104
+# 不希望执行的分支
+with open('./avoid_addr') as f:
+    lines = f.readlines()
+    lines = [line.strip() for line in lines]
+    for line in lines:
+        avoid.append(0x400000 + int(line, 16))
+
+def main():
+    # 初始化项目
+    p = angr.Project('./elementary')
+    # 设置 flag
+    flag = claripy.BVS('flag', flag_length * 8)
+    state = p.factory.blank_state(addr=start, stdin=flag, add_options={angr.options.LAZY_SOLVES})
+    # 输入字符的约束条件，必须是可打印字符
+    for c in flag.chop(8):
+        state.solver.add(state.solver.And(c &lt;= '~', c &gt;= ' '))
+
+    ex = p.factory.simulation_manager(state)
+    ex.use_technique(angr.exploration_techniques.Explorer(find=find, avoid=avoid))
+    # 运行 
+    ex.run()
+    # 输出结果
+    print(ex.found[0].posix.dumps(0).decode('utf-8'))
+
+if __name__ == '__main__':
+    main()
+</code></pre>
+
+<p>可以看到只用了 64 秒就可以跑出 flag，还是非常高效的：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/angr.png" alt="solve by angr" class="lazyload"><figcaption class="image-caption">solve by angr</figcaption></figure></p>
+
+<h2 id="pin-tool">PIN tool</h2>
+
+<p><code>PIN tool</code> 是 intel 开发的一款二进制程序的插桩分析工具，允许研究人员用不同的 pintool 在二进制程序层面分析程序的执行情况。利用 PIN tool 对程序进行插桩，而后通过侧信道的方式，能直接得到很多题目的答案。</p>
+
+<p>既然考虑到利用 PIN tool 需要侧信道，首先需要思考的问题是，利用什么信息可以推断我们的输入正确。</p>
+
+<p>直接使用统计执行指令数的 pintool - inscount1.so，可以发现在不同的输入下，程序实际执行的指令数不同。</p>
+
+<pre><code class="language-shell">$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &lt;&lt;&lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~8~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Password: Wrong!
+$ cat inscount.out
+Count 150764
+$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &lt;&lt;&lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~e~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Password: Wrong!
+$ cat inscount.out
+Count 153422
+</code></pre>
+
+<p>那么如何验证该输入是正确还是错误呢？回到 <code>checkFlag</code> 看其逻辑，可以发现只有 <code>function2</code>  函数返回 0 的情况下，程序才会继续往下执行，反之 <code>checkFlag</code> 函数会直接返回。因此，有了以下推论：输入正确 =&gt; 程序继续执行 =&gt; 执行的指令数更多；输入错误 =&gt; 程序提前返回 =&gt; 执行的指令数更少。所以可以通过判断不同输入下执行的指令数目多少，来判断我们的输入是否正确。</p>
+
+<pre><code class="language-c">if ( (unsigned int)function2((a1[64] &gt;&gt; 5) &amp; 1) )
+    return 0LL;
+if ( (unsigned int)function3((a1[64] &gt;&gt; 4) &amp; 1) )
+    return 0LL;
+</code></pre>
+
+<p>编写利用 pintool 进行侧信道的 python 脚本（需要提取每次爆破的字节顺序）：</p>
+
+<pre><code class="language-python">from subprocess import Popen, PIPE
+import string
+
+s = string.ascii_letters + string.digits + &quot;+-_{}&quot;
+
+flag = [&quot;?&quot; for i in range(104)]
+
+indexes = [64, 38, 67, 88, 21, 68, 95, 36, 39, 77, 101, 90, 6, 48, 23, 62, 81, 83, 79, 44, 25, 17, 52, 3, 29, 102, 28, 93, 16, 43, 78, 9, 60, 70, 71, 65, 40, 12, 56, 13, 57, 37, 69, 7, 84, 58, 89, 91, 14, 82, 45, 76, 66, 98, 75, 47, 97, 34, 80, 103, 86, 5, 74, 1, 18, 51, 72, 26, 8, 31, 42, 85, 49, 33, 54, 63, 46, 4, 41, 24, 73, 35, 30, 92, 11, 87, 50, 53, 32, 99, 96, 19, 10, 15, 55, 100, 2, 59, 94, 61, 22, 0, 27, 20]
+
+def use_pintool(test_flag):
+    pin_path = &quot;/home/syang/tools/pin/pin&quot;
+    pintool_path = &quot;/home/syang/tools/pin/source/tools/ManualExamples/obj-intel64/inscount1.so&quot;
+    binary_path = &quot;/home/syang/CTF/elementary&quot;
+    p = Popen([pin_path, '-t', pintool_path, '--', binary_path], stdin = PIPE, stdout = PIPE)
+    p.stdin.write(bytes(test_flag, encoding='utf-8'))
+    p.communicate()
+    with open('./inscount.out') as f:
+        data = f.read()
+        return int(data[len('Count '):])
+
+for i in indexes:
+    test = flag[::]
+    base_count = use_pintool(''.join(test))
+    c = '?'
+    for j in s:
+        test[i] = j
+        test_count = use_pintool(''.join(test))
+        # 执行的指令数目最多的输入，才是正确的输入
+        if base_count  &lt; test_count:
+            c = j
+            base_count = test_count
+
+    flag[i] = c
+    print(''.join(flag))
+</code></pre>
+
+<p>针对本题的条件，理论上 1bit 1bit 的爆破效率更高，但为了方便脚本的编写，我们对一个字节进行整体爆破，所以脚本运行需要更长的一段时间，最后结果如下：</p>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/pintool.png" alt="pintool crack" class="lazyload"><figcaption class="image-caption">pintool crack</figcaption></figure></p>
+
+<h2 id="总结">总结</h2>
+
+<p>用工具解题，跑不出来不亏，跑得出来血赚</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="https://ctf-wiki.github.io/ctf-tools/binary_core_tools/instrumentation/intel_pin/" rel="nofollow noreferrer" target="_blank">CTF Tools - intel pin</a></li>
+<li><a href="https://firmianay.gitbooks.io/ctf-all-in-one/doc/5.2.1_pin.html" rel="nofollow noreferrer" target="_blank">CTF All in One - 5.2.1 Pin 动态二进制插桩</a></li>
+<li><a href="https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7" rel="nofollow noreferrer" target="_blank">Elementary Writeup by One Man Orchestra</a></li>
+<li><a href="https://ctftime.org/writeup/13923" rel="nofollow noreferrer" target="_blank">Elementary Writeup by System87</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2019/08/reverse-tools-learning/>https://syang-ng.github.io/2019/08/reverse-tools-learning/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/05/ethernaut-part-writeup/" class="prev" rel="prev" title="Ethernaut 部分题解"><i class="iconfont icon-left"></i>&nbsp;Ethernaut 部分题解</a>
+         
+        
+        <a href="https://syang-ng.github.io/2019/09/side-channel-by-windows-defender/" class="next" rel="next" title="Windows Defender 侧信道攻击">Windows Defender 侧信道攻击&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2019</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

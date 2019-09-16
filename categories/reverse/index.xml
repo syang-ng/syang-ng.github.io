@@ -6,10 +6,19 @@
     <description>Recent content in Reverse on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 07 Apr 2019 00:42:32 +0000</lastBuildDate>
+    <lastBuildDate>Fri, 16 Aug 2019 18:54:42 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/reverse/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>用工具高效（摸鱼）地解逆向题</title>
+      <link>https://syang-ng.github.io/2019/08/reverse-tools-learning/</link>
+      <pubDate>Fri, 16 Aug 2019 18:54:42 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/08/reverse-tools-learning/</guid>
+      <description>一般来说，解一道逆向题，通常考虑使用 ida / ghidra 进行静态逆向分析或者是使用 gdb / x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让</description>
+    </item>
     
     <item>
       <title>看雪CTF - 变形金钢</title>
