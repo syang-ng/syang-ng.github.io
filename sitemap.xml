@@ -2,9 +2,67 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
     <url>
+      <loc>https://syang-ng.github.io/categories/ctf/</loc>
+      
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/</loc>
+      
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/2019/11/from-css-to-xss/</loc>
+      
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
       <loc>https://syang-ng.github.io/posts/</loc>
       
-      <lastmod>2019-09-05T13:25:41+08:00</lastmod>
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/web/</loc>
+      
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/</loc>
+      
+      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
       
       
       
@@ -24,47 +82,11 @@
     </url>
   
     <url>
-      <loc>https://syang-ng.github.io/</loc>
-      
-      <lastmod>2019-09-05T13:25:41+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
-      
-      
-    </url>
-  
-    <url>
       <loc>https://syang-ng.github.io/about/</loc>
       
       <lastmod>2019-09-04T09:20:22+08:00</lastmod>
       
       
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/ctf/</loc>
-      
-      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/</loc>
-      
-      <lastmod>2019-08-16T18:54:42+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
       
       
     </url>
@@ -119,18 +141,6 @@
       <lastmod>2019-04-25T19:29:23+00:00</lastmod>
       
       
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/web/</loc>
-      
-      <lastmod>2019-04-25T19:29:23+00:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
       
       
     </url>
