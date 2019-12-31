@@ -6,10 +6,19 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 03 Nov 2019 20:08:43 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 31 Dec 2019 23:38:58 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>写在二十一世纪第二个十年的末尾</title>
+      <link>https://syang-ng.github.io/2019/12/end-of-year-2019/</link>
+      <pubDate>Tue, 31 Dec 2019 23:38:58 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2019/12/end-of-year-2019/</guid>
+      <description>想了想大概两个月没有在博客里写过内容了，大概懒得写些什么，但还是做个这几年的（番剧）总结，希望之后的自己看到能有一点触动。 迷茫未来与懦弱的我</description>
+    </item>
     
     <item>
       <title>From CSS to XSS</title>
