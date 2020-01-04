@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2019/12/end-of-year-2019/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Java及Android类加载机制学习笔记 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Java及Android类加载机制学习笔记 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Java及Android类加载机制学习笔记",
+    "headline" : "Java及Android类加载机制学习笔记",
+    "description" : "Java 类加载和 Android 上类加载相关的学习笔记，大部分文字来自《深入理解 Java 虚拟机》，部分来自网上博文（我不生产知识，我只是知识的搬运工 XD） Java 中的类加载",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-03 18:26:07 \x2b0800 CST",
+    "dateModified" : "2020-01-03 18:26:07 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/01\/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0\/",
+    "wordCount" : "2788",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Java及Android类加载机制学习笔记</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-03 itemprop="datePublished">January 3, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/android/"> Android </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<p>Java 类加载和 Android 上类加载相关的学习笔记，大部分文字来自《深入理解 Java 虚拟机》，部分来自网上博文（我不生产知识，我只是知识的搬运工 XD）</p>
+
+<h2 id="java-中的类加载机制">Java 中的类加载机制</h2>
+
+<h3 id="类加载流程">类加载流程</h3>
+
+<blockquote>
+<p>一个类型从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期将会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个部分统称为连接（Linking）</p>
+
+<p>在加载阶段，Java虚拟机需要完成以下三件事情</p>
+
+<ol>
+<li>通过一个类的全限定名来获取定义此类的二进制字节流。</li>
+<li>将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构。</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口。</li>
+</ol>
+</blockquote>
+
+<p>但上述过程仅仅是 Java 虚拟机的规范要求，在真正的实现上给 Java 虚拟机留下了非常大的操作空间，比如<code>通过一个类的全限定名来获取定义此类的二进制字节流</code>这条规则，并不限定必须从磁盘上读取 class 文件，这极大地激发了开发者的创造性：</p>
+
+<blockquote>
+<ul>
+<li>从ZIP压缩包中读取，这很常见，最终成为日后JAR、EAR、WAR格式的基础。</li>
+<li>从网络中获取，这种场景最典型的应用就是Web Applet。</li>
+<li>运行时计算生成，这种场景使用得最多的就是动态代理技术，在java.lang.reflect.Proxy中，就是用了ProxyGenerator.generateProxyClass()来为特定接口生成形式为“*$Proxy”的代理类的二进制字节流。</li>
+<li>由其他文件生成，典型场景是JSP应用，由JSP文件生成对应的Class文件。</li>
+<li>从数据库中读取，这种场景相对少见些，例如有些中间件服务器（如SAP Netweaver）可以选择把程序安装到数据库中来完成程序代码在集群间的分发。</li>
+<li>可以从加密文件中获取，这是典型的防Class文件被反编译的保护措施，通过加载时解密Class文件来保障程序运行逻辑不被窥探。</li>
+<li>……</li>
+</ul>
+</blockquote>
+
+<h3 id="java-中的类加载器">Java 中的类加载器</h3>
+
+<ol>
+<li>BootStrap ClassLoader，Java 类加载层次中最顶层的类加载器，负责加载 JDK中 的核心类库，负责加载Java的核心类库，如 rt.jar，resources.jar 等，由C++编写。</li>
+<li>Extension ClassLoader，扩展类加载器，负责加载 Java 的扩展类库，如 $JAVA_HOME/jre/lib/ext/ 目录下的所有 jar。</li>
+<li>Application ClassLoader，系统类加载器，负责加载应用程序 classpath 目录下的所有 jar 和 class 文件。</li>
+<li>自定义类加载器，一般继承自 3，实现自定义的类加载器。</li>
+</ol>
+
+<h3 id="双亲委派机制">双亲委派机制</h3>
+
+<p>首先个人认为，将 <code>parents delegate</code> 翻译为 <code>双亲委派</code> 并不是特别准确，这个机制指的是，如果一个类加载器收到类加载的请求，它不会主动尝试自己加载类，而是将这个请求委托给父类的加载器完成，如此逐级往上，除非父加载器找不到指定类的时候，子加载器才会自己主动加载。很明显这里并没有 “双亲” 或者说两个父类的加载器的存在，译作 “双亲委派” 失去了翻译中的 “达”。</p>
+
+<p>这里贴一段 Java Doc 的原文：</p>
+
+<blockquote>
+<h3 id="the-java-class-loading-mechanism">The Java Class Loading Mechanism</h3>
+
+<p>The Java platform uses a delegation model for loading classes. <strong>The basic idea is that every class loader has a &ldquo;parent&rdquo; class loader.</strong> When loading a class, a class loader first &ldquo;delegates&rdquo; the search for the class to its parent class loader before attempting to find the class itself.</p>
+</blockquote>
+
+<h3 id="意义">意义</h3>
+
+<p>需要注意的是，在 Java 中，当且仅当两个实例的类名、包名、以及其加载器都相同时，才会被认为同一种类型，所以当使用不同的类加载器去加载一个对象时，会被判断为不同的类型。</p>
+
+<p>直接贴 <strong>深入理解 Java 虚拟机</strong> 一书的原文：</p>
+
+<blockquote>
+<p>使用双亲委派模型来组织类加载器之间的关系，一个显而易见的好处就是Java中的类随着它的类加载器一起具备了一种带有优先级的层次关系。例如类java.lang.Object，它存放在rt.jar之中，无论哪一个类加载器要加载这个类，最终都是委派给处于模型最顶端的启动类加载器进行加载，因此Object类在程序的各种类加载器环境中都能够保证是同一个类。</p>
+</blockquote>
+
+<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Java及Android类加载机制学习笔记/classloader.png" alt="ClassLoader" class="lazyload"><figcaption class="image-caption">ClassLoader</figcaption></figure></p>
+
+<h2 id="android-中的类加载机制">Android 中的类加载机制</h2>
+
+<p>与一般的 Java 虚拟机不同，Android 虚拟机加载的是 Dex 文件，所谓 Dalvik 虚拟机和 JVM 的区别以及二者背后的恩怨情仇按过不表，还是来看 Android 中的类加载机制。</p>
+
+<p>Android 类加载器的基类是 BaseDexClassLoader，其派生出三个子类加载器：</p>
+
+<ul>
+<li><code>BaseDexClassLoader</code>
+
+<ul>
+<li><code>PathClassLoader</code></li>
+<li><code>DexClassLoader</code></li>
+<li><code>InMemoryDexClassLoader</code></li>
+</ul></li>
+</ul>
+
+<p>其中 <code>InMemoryDexClassLoader</code> 在 Android 8.0 中被引入，在这里暂不讨论，之后开篇新文章继续分析新 ClassLoader 的意义和之前在 Android 加壳中的类似实现。</p>
+
+<p>下面继续来看 Android 的类加载机制：</p>
+
+<p><strong>PathClassLoader</strong></p>
+
+<pre><code class="language-Java">public class PathClassLoader extends BaseDexClassLoader {
+    
+    public PathClassLoader(String dexPath, ClassLoader parent) {
+        super(dexPath, null, null, parent);
+    }
+    
+    public PathClassLoader(String dexPath, String librarySearchPath, ClassLoader parent) {
+        super(dexPath, null, librarySearchPath, parent);
+    }
+}
+</code></pre>
+
+<p><strong>DexClassLoader</strong></p>
+
+<pre><code class="language-Java">public class DexClassLoader extends BaseDexClassLoader {
+   public DexClassLoader(String dexPath, String optimizedDirectory,
+            String librarySearchPath, ClassLoader parent) {
+        super(dexPath, new File(optimizedDirectory), librarySearchPath, parent);
+    }
+}
+</code></pre>
+
+<p>很明显可以看到二者在本质上是对父类 <code>BaseDexClassLoader</code> 的继承，差别仅在于调用父类构造方法时传入的参数不同，<code>PathClassLoader</code> 传入的 <code>optimizedDirectory</code> 为 null，而 <code>DexClassLoader</code> 提供了optimizedDirectory（<code>optimizedDirectory</code> 是优化后的 odex 的存放目录），具体最终还是由父类来实现，继续来看父类的代码（这里基于 <a href="https://cs.android.com/android/platform/superproject/+/android-6.0.1_r81:libcore/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java" rel="nofollow noreferrer" target="_blank">Android 6.0.1_r81</a>）：</p>
+
+<p><strong>BaseDexClassLoader</strong></p>
+
+<pre><code class="language-Java">public BaseDexClassLoader(String dexPath, File optimizedDirectory,
+            String libraryPath, ClassLoader parent) {
+        super(parent);
+        this.pathList = new DexPathList(this, dexPath, libraryPath, optimizedDirectory);
+    }
+
+    @Override
+    protected Class&lt;?&gt; findClass(String name) throws ClassNotFoundException {
+        List&lt;Throwable&gt; suppressedExceptions = new ArrayList&lt;Throwable&gt;();
+        Class c = pathList.findClass(name, suppressedExceptions);
+        if (c == null) {
+            ClassNotFoundException cnfe = new ClassNotFoundException(&quot;Didn't find class \&quot;&quot; + name + &quot;\&quot; on path: &quot; + pathList);
+            for (Throwable t : suppressedExceptions) {
+                cnfe.addSuppressed(t);
+            }
+            throw cnfe;
+        }
+        return c;
+    }
+}
+</code></pre>
+
+<p>可以看到 <code>BaseDexClassLoader</code> 的作用仅是创建了 <code>DexPathList</code> 实例，而之后所有的 <code>findClass</code> 调用都会委托给 <code>DexPathList</code> 来处理，继续看 <code>DexPathList</code> 的关键代码：</p>
+
+<pre><code class="language-Java">final class DexPathList {
+    public DexPathList(ClassLoader definingContext, String dexPath,
+            String libraryPath, File optimizedDirectory) {
+        // ... 省略
+        // save dexPath for BaseDexClassLoader
+        this.dexElements = makePathElements(splitDexPath(dexPath), optimizedDirectory,
+                                            suppressedExceptions);
+        // ... 省略
+    }
+    private static Element[] makePathElements(List&lt;File&gt; files, File optimizedDirectory,
+                                              List&lt;IOException&gt; suppressedExceptions) {
+        List&lt;Element&gt; elements = new ArrayList&lt;&gt;();
+        for (File file : files) {
+            File zip = null;
+            File dir = new File(&quot;&quot;);
+            DexFile dex = null;
+            String path = file.getPath();
+            String name = file.getName();
+            if (path.contains(zipSeparator)) {
+                String split[] = path.split(zipSeparator, 2);
+                zip = new File(split[0]);
+                dir = new File(split[1]);
+            } else if (file.isDirectory()) {
+                elements.add(new Element(file, true, null, null));
+            } else if (file.isFile()) {
+                if (name.endsWith(DEX_SUFFIX)) {
+                    try {
+                        dex = loadDexFile(file, optimizedDirectory);
+                    } catch (IOException ex) {
+                        System.logE(&quot;Unable to load dex file: &quot; + file, ex);
+                    }
+                } else {
+                    zip = file;
+
+                    try {
+                        dex = loadDexFile(file, optimizedDirectory);
+                    } catch (IOException suppressed) {
+                        suppressedExceptions.add(suppressed);
+                    }
+                }
+            } else {
+                System.logW(&quot;ClassLoader referenced unknown path: &quot; + file);
+            }
+            if ((zip != null) || (dex != null)) {
+                elements.add(new Element(dir, false, zip, dex));
+            }
+        }
+        return elements.toArray(new Element[elements.size()]);
+    }
+    private static DexFile loadDexFile(File file, File optimizedDirectory)
+            throws IOException {
+        if (optimizedDirectory == null) {
+            return new DexFile(file);
+        } else {
+            String optimizedPath = optimizedPathFor(file, optimizedDirectory);
+            return DexFile.loadDex(file.getPath(), optimizedPath, 0);
+        }
+    }
+}
+</code></pre>
+
+<p>到这里就能很明显地看到 <code>optimizedDirectory</code> 是否为 null 对 loadDexFile 有较大的影响，继续跟进 <code>DexFile</code> 查看其代码：</p>
+
+<pre><code class="language-Java">public final class DexFile {    
+    /**
+     * Opens a DEX file from a given filename. This will usually be a ZIP/JAR
+     * file with a &quot;classes.dex&quot; inside.
+     *
+     * The VM will generate the name of the corresponding file in
+     * /data/dalvik-cache and open it, possibly creating or updating
+     * it first if system permissions allow.  Don't pass in the name of
+     * a file in /data/dalvik-cache, as the named file is expected to be
+     * in its original (pre-dexopt) state.
+     *
+     * @param fileName
+     *            the filename of the DEX file
+     *
+     * @throws IOException
+     *             if an I/O error occurs, such as the file not being found or
+     *             access rights missing for opening it
+     */
+    public DexFile(String fileName) throws IOException {
+        mCookie = openDexFile(fileName, null, 0);
+        mFileName = fileName;
+        guard.open(&quot;close&quot;);
+    }
+
+    private DexFile(String sourceName, String outputName, int flags) throws IOException {
+        if (outputName != null) {
+            try {
+                String parent = new File(outputName).getParent();
+                if (Libcore.os.getuid() != Libcore.os.stat(parent).st_uid) {
+                    throw new IllegalArgumentException(&quot;Optimized data directory &quot; + parent
+                            + &quot; is not owned by the current user. Shared storage cannot protect&quot;
+                            + &quot; your application from code injection attacks.&quot;);
+                }
+            } catch (ErrnoException ignored) {
+            }
+        }
+
+        mCookie = openDexFile(sourceName, outputName, flags);
+        mFileName = sourceName;
+        guard.open(&quot;close&quot;);
+    }
+    // ... 省略
+    static public DexFile loadDex(String sourcePathName, String outputPathName,
+        int flags) throws IOException {
+        return new DexFile(sourcePathName, outputPathName, flags);
+    }
+}
+</code></pre>
+
+<p>很明显从注释里可以看到，当 <code>optimizedDirectory</code> 为 null 的情况下，调用 <code>new DexFile(file)</code>，odex 只能保存到 <code>/data/dalvik-cache</code> 目录下，而 <code>DexFile.loadDex(file.getPath(), optimizedPath, 0)</code> 能将 odex 保存到自定义的目录下。</p>
+
+<h3 id="总结">总结</h3>
+
+<p>在 Android 同样实现了双亲委派机制的类加载器，分别为 <code>PathClassLoader</code> 和 <code>DexClassLoader</code> ，均继承自父类 <code>BaseDexClassLoader</code>，其中 <code>DexClassLoader</code> 在 Android 插件化、动态代码加载等领域有较大的用途。</p>
+
+<p>需要看详细调用流程的，可以继续参考该篇文章：<a href="https://juejin.im/post/5d6a79de5188256c3920b8f7" rel="nofollow noreferrer" target="_blank">谈谈 Android 中的 PathClassLoader 和 DexClassLoader</a></p>
+
+<h2 id="end">End</h2>
+
+<p>上述笔记参考诸多资料，来源较多恕不一一列举，如有使用不当之处，还望不吝指出。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/>https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2019/12/end-of-year-2019/" class="prev" rel="prev" title="写在二十一世纪第二个十年的末尾"><i class="iconfont icon-left"></i>&nbsp;写在二十一世纪第二个十年的末尾</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

