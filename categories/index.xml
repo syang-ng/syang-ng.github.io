@@ -6,10 +6,28 @@
     <description>Recent content in Categories on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 03 Jan 2020 18:26:07 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 09 Jan 2020 20:29:44 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CVE</title>
+      <link>https://syang-ng.github.io/categories/cve/</link>
+      <pubDate>Thu, 09 Jan 2020 20:29:44 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/cve/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>安全研究</title>
+      <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
+      <pubDate>Thu, 09 Jan 2020 20:29:44 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Android</title>
@@ -66,29 +84,11 @@
     </item>
     
     <item>
-      <title>安全研究</title>
-      <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
-      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>Pwn</title>
       <link>https://syang-ng.github.io/categories/pwn/</link>
       <pubDate>Sun, 10 Mar 2019 14:51:57 +0000</pubDate>
       
       <guid>https://syang-ng.github.io/categories/pwn/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>CVE</title>
-      <link>https://syang-ng.github.io/categories/cve/</link>
-      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/cve/</guid>
       <description></description>
     </item>
     
