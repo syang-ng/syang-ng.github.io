@@ -6,10 +6,19 @@
     <description>Recent content in Categories on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 22 Jan 2020 11:10:21 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 24 Jan 2020 00:58:25 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>随笔</title>
+      <link>https://syang-ng.github.io/categories/%E9%9A%8F%E7%AC%94/</link>
+      <pubDate>Fri, 24 Jan 2020 00:58:25 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/%E9%9A%8F%E7%AC%94/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Android</title>
@@ -35,15 +44,6 @@
       <pubDate>Thu, 09 Jan 2020 20:29:44 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>随笔</title>
-      <link>https://syang-ng.github.io/categories/%E9%9A%8F%E7%AC%94/</link>
-      <pubDate>Tue, 31 Dec 2019 23:38:58 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/%E9%9A%8F%E7%AC%94/</guid>
       <description></description>
     </item>
     
