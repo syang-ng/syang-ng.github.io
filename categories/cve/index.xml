@@ -6,10 +6,19 @@
     <description>Recent content in CVE on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 09 Jan 2020 20:29:44 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 01 Feb 2020 17:02:55 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/cve/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析</title>
+      <link>https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/</link>
+      <pubDate>Sat, 01 Feb 2020 17:02:55 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/</guid>
+      <description>前言 前几天瞎逛 Github 看到的一个 CVE，就跟着调试一下，顺便记录一下调试过程中的收获。 repo 链接：poc-cribl-rce 以下是作者提供的描述： Info Tested</description>
+    </item>
     
     <item>
       <title>CVE-2019-10758 mongo-express RCE 漏洞分析</title>

