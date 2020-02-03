@@ -6,10 +6,19 @@
     <description>Recent content in Android on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 22 Jan 2020 11:10:21 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 27 Jan 2020 20:55:33 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/android/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>FART 学习笔记</title>
+      <link>https://syang-ng.github.io/2020/01/learn-fart/</link>
+      <pubDate>Mon, 27 Jan 2020 20:55:33 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/01/learn-fart/</guid>
+      <description>前言 假期自学计划开启，就以分析 FART 源码开始。 FART 是看雪大牛 hanbingle 提出的一种基于主动调用开发的脱壳工具，工具的具体原理可以阅读帖子 FART：ART环境</description>
+    </item>
     
     <item>
       <title>论如何加载内存中的 Dex</title>
