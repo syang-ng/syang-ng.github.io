@@ -6,10 +6,19 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 01 Feb 2020 17:02:55 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 04 Feb 2020 15:53:37 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>HackTM 的一道题背后的 JavaScript Tricks</title>
+      <link>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</link>
+      <pubDate>Tue, 04 Feb 2020 15:53:37 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</guid>
+      <description>HackTM 遇到的一道 JavaScript 相关 CTF 考题，太久没接触相关领域以至于都快忘记相关的考点了，这里再特定总结一下。 题目分析 题目链接如下：http://167.17</description>
+    </item>
     
     <item>
       <title>CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析</title>

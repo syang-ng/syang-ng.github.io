@@ -2,6 +2,64 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
     <url>
+      <loc>https://syang-ng.github.io/categories/ctf/</loc>
+      
+      <lastmod>2020-02-04T15:53:37+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/</loc>
+      
+      <lastmod>2020-02-04T15:53:37+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</loc>
+      
+      <lastmod>2020-02-04T15:53:37+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/posts/</loc>
+      
+      <lastmod>2020-02-04T15:53:37+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/</loc>
+      
+      <lastmod>2020-02-04T15:53:37+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
       <loc>https://syang-ng.github.io/categories/cve/</loc>
       
       <lastmod>2020-02-01T17:02:55+08:00</lastmod>
@@ -19,42 +77,6 @@
       <lastmod>2020-02-01T17:02:55+08:00</lastmod>
       
       
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/</loc>
-      
-      <lastmod>2020-02-01T17:02:55+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/posts/</loc>
-      
-      <lastmod>2020-02-01T17:02:55+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/</loc>
-      
-      <lastmod>2020-02-01T17:02:55+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
       
       
     </url>
@@ -151,18 +173,6 @@
       <lastmod>2019-12-31T23:38:58+08:00</lastmod>
       
       
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/ctf/</loc>
-      
-      <lastmod>2019-11-03T20:08:43+08:00</lastmod>
-      
-      
-      
-      <priority>0</priority>
       
       
     </url>

