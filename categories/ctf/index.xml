@@ -6,10 +6,19 @@
     <description>Recent content in CTF on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 04 Feb 2020 15:53:37 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 10 Feb 2020 14:22:52 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CODEGATE 2020 Web</title>
+      <link>https://syang-ng.github.io/2020/02/codegate-2020-web/</link>
+      <pubDate>Mon, 10 Feb 2020 14:22:52 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/02/codegate-2020-web/</guid>
+      <description>已经完全变成事后看 writeup 复现型选手了…… CSP 题目直接给了代码 &amp;lt;?php require_once &#39;config.php&#39;; if(!isset($_GET[&amp;quot;q&amp;quot;]) || !isset($_GET[&amp;quot;sig&amp;quot;])) { die(&amp;quot;?&amp;quot;); } $api_string = base64_decode($_GET[&amp;quot;q&amp;quot;]); $sig = $_GET[&amp;quot;sig&amp;quot;]; if(md5($salt.$api_string) !== $sig){ die(&amp;quot;??&amp;quot;); } //APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ... $apis = explode(&amp;quot;|&amp;quot;, $api_string); foreach($apis as $s) { $info = explode(&amp;quot;,&amp;quot;, $s); if(count($info) != 3) continue; $n =</description>
+    </item>
     
     <item>
       <title>HackTM 的一道题背后的 JavaScript Tricks</title>
