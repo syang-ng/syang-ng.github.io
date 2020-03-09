@@ -6,10 +6,19 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 18 Feb 2020 13:41:03 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 07 Mar 2020 17:31:58 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>EuroSys 2019 LockDoc</title>
+      <link>https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/</link>
+      <pubDate>Sat, 07 Mar 2020 17:31:58 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/</guid>
+      <description>EuroSys - 2019 - LockDoc: Trace-Based Analysis of Locking in the Linux Kernel 摘要 关注的问题：对 kernel 开发者来说，开发文档上关于锁的使用的介绍是不全面的，有时还会有出错的可能，最终会导致相关的 bug 出</description>
+    </item>
     
     <item>
       <title>理解 Android 中的 Dex 结构</title>
