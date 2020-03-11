@@ -57,7 +57,7 @@
     "datePublished": "2018-01-30 19:22:28 \x2b0000 UTC",
     "dateModified" : "2018-01-30 19:22:28 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/01\/chrome-%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95%E5%8D%8F%E8%AE%AE%E4%B8%8D%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97\/",
-    "wordCount" : "2138",
+    "wordCount" : "2521",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -130,8 +130,6 @@
         
 
         
-            
-        
 
         
         
@@ -144,270 +142,193 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>寒假在实验室的工作（摸鱼）中需要使用 Chrome 的远程调试协议（Remote debugging protocol），所以对这个协议学习了一番，现在把学到的简单做下整理~</p>
-
 <h2 id="关于-remote-debugging-protocol">关于 Remote-Debugging-Protocol</h2>
-
 <p>Chrome DevTools Protocol 允许工具对 Chromium，Chrome 和其它基于 Blink 的浏览器进行测试、检查、调试以及配置。现在有许多项目基于该协议，比如说 Chrome DevTools，同时该协议也由 Chrome DevTools 项目的开发团队负责维护。</p>
-
 <p>Chrome DevTools Protocol 被分为多个域（DOM，Debugger，Network 等），每个域定义了相应支持的 commands 和相关的 events，commands 和 events 都是固定结构的序列化 JSON 对象。协议使用 Websocket 来与页面建立通信，相应数据由发送给页面的 commands 和页面自身产生的 events 共同组成。</p>
-
 <p>Chrome 开发者工具是远程调试协议的主要使用者，当然，第三方开发者也允许调用这个协议来与页面进行交互调试。</p>
-
 <p>ps: Chrome DevTools Protocol、Remote Debugging Protocol、Chrome Debugging Protocol 其实指的是同一个协议，不知道为什么名字什么的变得这么多了？？？这里用官网的描述所以称为 Chrome DevTools Protocol。</p>
-
 <h2 id="启动">启动</h2>
-
 <p>如果想使用 Chrome Remote Debugging Protocol，那么 Chrome/Chromium 需要在运行在一个已知的的端口上（默认是 9222），相应开启命令如下：</p>
-
-<pre><code class="language-shell"># windows
-chrome.exe --remote-debugging-port=9222
-# linux
-google-chrome --remote-debugging-port=9222
-</code></pre>
-
-<h2 id="使用开发者工具-远程协议版">使用开发者工具（远程协议版）</h2>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># windows</span>
+chrome.exe --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span>
+<span style="color:#75715e"># linux</span>
+google-chrome --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span>
+</code></pre></div><h2 id="使用开发者工具远程协议版">使用开发者工具（远程协议版）</h2>
 <p>开启后访问 <code>http://localhost:9222/</code> 即可看到当前浏览器打开的所有页面（包括正在运行的 chrome 插件）</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/inspectable-pages.png" alt="视察页面" class="lazyload"><figcaption class="image-caption">视察页面</figcaption></figure></p>
-
+<p>![视察页面](/images/posts/Chrome 远程调试协议不完全指南/inspectable-pages.png)</p>
 <p>点击当前页面上的 <code>Github</code> 标签页选项，可以看到页面跳转到了 <code>Github</code> 页面所对应开发者工具页面</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/inspect-github.png" alt="视察 Github" class="lazyload"><figcaption class="image-caption">视察 Github</figcaption></figure></p>
-
+<p>![视察 Github](/images/posts/Chrome 远程调试协议不完全指南/inspect-github.png)</p>
 <p>可以发现该页面和直接在 <code>Github</code> 页面按 <code>F12</code> 打开开发者工具所弹出的开发者工具页面类似</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/github.png" alt="开发者工具页面" class="lazyload"><figcaption class="image-caption">开发者工具页面</figcaption></figure></p>
-
+<p>![开发者工具页面](/images/posts/Chrome 远程调试协议不完全指南/github.png)</p>
 <p>官方解释原因如下：</p>
-
 <ul>
 <li>When you navigate your client browser to the remote&rsquo;s Chrome port, Developer Tools front-end is being served from the host Chrome as a Web Application from the Web Server.</li>
 <li>It fetches HTML, JavaScript and CSS files over HTTP</li>
 <li>Once loaded, Developer Tools establishes a Web Socket connection to its host and starts exchanging JSON messages with it</li>
 </ul>
-
 <p>大意上就是说，Chrome 本身作为一个服务器向你提供相应的数据，而你打开的这个页面则作为前端页面对相应数据进行展示。二者之间通过 Websocket 建立了连接并通过 JSON 交互数据。所以我们就能像使用内嵌的开发者工具一样使用当前页面上远程调试协议版的开发者工具了。</p>
-
 <h2 id="功能介绍">功能介绍</h2>
-
 <p>远程调试协议运行我们通过 <code>http://localhost:9222/json/</code> 一系列的 URL 对应的页面作为客户端，对 Chrome 进行远程调试操作。</p>
-
-<p>支持的操作如下：
-* <code>list</code>  列举所以标签页
-* <code>new</code>   新标签页
-* <code>close</code> 关闭标签页
-* <code>activate</code> 激活标签页
-* <code>version</code> 显示版本</p>
-
+<p>支持的操作如下：</p>
+<ul>
+<li><code>list</code>  列举所以标签页</li>
+<li><code>new</code>   新标签页</li>
+<li><code>close</code> 关闭标签页</li>
+<li><code>activate</code> 激活标签页</li>
+<li><code>version</code> 显示版本</li>
+</ul>
 <p>默认访问 <code>http://localhost:9222/json/</code> 等价于访问 <code>http://localhost:9222/json/list</code>。</p>
-
 <h3 id="list">list</h3>
-
 <p>访问 <code>http://localhost:9222/json/list</code>，即可看到当前所有页面的描述信息，以 JSON 对象的数组形式给出</p>
-
-<pre><code class="language-JSON">[ {
-   &quot;description&quot;: &quot;&quot;,
-   &quot;devtoolsFrontendUrl&quot;: &quot;/devtools/inspector.html?ws=localhost:9222/devtools/page/(AF98D91E5E0F7F39B954D6C74D91D478)&quot;,
-   &quot;id&quot;: &quot;(AF98D91E5E0F7F39B954D6C74D91D478)&quot;,
-   &quot;title&quot;: &quot;localhost:9222/json/list&quot;,
-   &quot;type&quot;: &quot;page&quot;,
-   &quot;url&quot;: &quot;http://localhost:9222/json/list&quot;,
-   &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/page/(AF98D91E5E0F7F39B954D6C74D91D478)&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">[ {
+   <span style="color:#f92672">&#34;description&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+   <span style="color:#f92672">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#e6db74">&#34;/devtools/inspector.html?ws=localhost:9222/devtools/page/(AF98D91E5E0F7F39B954D6C74D91D478)&#34;</span>,
+   <span style="color:#f92672">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;(AF98D91E5E0F7F39B954D6C74D91D478)&#34;</span>,
+   <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;localhost:9222/json/list&#34;</span>,
+   <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;page&#34;</span>,
+   <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;http://localhost:9222/json/list&#34;</span>,
+   <span style="color:#f92672">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/page/(AF98D91E5E0F7F39B954D6C74D91D478)&#34;</span>
 }, {
-   &quot;description&quot;: &quot;&quot;,
-   &quot;devtoolsFrontendUrl&quot;: &quot;/devtools/inspector.html?ws=localhost:9222/devtools/page/(B12271C6B090237B0A3A24E619F4443)&quot;,
-   &quot;faviconUrl&quot;: &quot;https://www.baidu.com/favicon.ico&quot;,
-   &quot;id&quot;: &quot;(B12271C6B090237B0A3A24E619F4443)&quot;,
-   &quot;title&quot;: &quot;百度一下，你就知道&quot;,
-   &quot;type&quot;: &quot;page&quot;,
-   &quot;url&quot;: &quot;https://www.baidu.com/&quot;,
-   &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/page/(B12271C6B090237B0A3A24E619F4443)&quot;
+   <span style="color:#f92672">&#34;description&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+   <span style="color:#f92672">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#e6db74">&#34;/devtools/inspector.html?ws=localhost:9222/devtools/page/(B12271C6B090237B0A3A24E619F4443)&#34;</span>,
+   <span style="color:#f92672">&#34;faviconUrl&#34;</span>: <span style="color:#e6db74">&#34;https://www.baidu.com/favicon.ico&#34;</span>,
+   <span style="color:#f92672">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;(B12271C6B090237B0A3A24E619F4443)&#34;</span>,
+   <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;百度一下，你就知道&#34;</span>,
+   <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;page&#34;</span>,
+   <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://www.baidu.com/&#34;</span>,
+   <span style="color:#f92672">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/page/(B12271C6B090237B0A3A24E619F4443)&#34;</span>
 },
  {
-   &quot;description&quot;: &quot;&quot;,
-   &quot;devtoolsFrontendUrl&quot;: &quot;/devtools/inspector.html?ws=localhost:9222/devtools/page/(47EB7F10ED42189056F8BC191EB1D7E5)&quot;,
-   &quot;faviconUrl&quot;: &quot;https://assets-cdn.github.com/favicon.ico&quot;,
-   &quot;id&quot;: &quot;(47EB7F10ED42189056F8BC191EB1D7E5)&quot;,
-   &quot;title&quot;: &quot;GitHub&quot;,
-   &quot;type&quot;: &quot;page&quot;,
-   &quot;url&quot;: &quot;https://github.com/&quot;,
-   &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/page/(47EB7F10ED42189056F8BC191EB1D7E5)&quot;
+   <span style="color:#f92672">&#34;description&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+   <span style="color:#f92672">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#e6db74">&#34;/devtools/inspector.html?ws=localhost:9222/devtools/page/(47EB7F10ED42189056F8BC191EB1D7E5)&#34;</span>,
+   <span style="color:#f92672">&#34;faviconUrl&#34;</span>: <span style="color:#e6db74">&#34;https://assets-cdn.github.com/favicon.ico&#34;</span>,
+   <span style="color:#f92672">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;(47EB7F10ED42189056F8BC191EB1D7E5)&#34;</span>,
+   <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;GitHub&#34;</span>,
+   <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;page&#34;</span>,
+   <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://github.com/&#34;</span>,
+   <span style="color:#f92672">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/page/(47EB7F10ED42189056F8BC191EB1D7E5)&#34;</span>
 }]
-</code></pre>
-
-<p>具体 JSON 格式如下：</p>
-
-<pre><code class="language-JSON">{
-   &quot;description&quot;: 页面描述，基本都为空,
-   &quot;devtoolsFrontendUrl&quot;: 相对应开发者工具页面的 URL,
-   &quot;faviconUrl&quot;: 图标 URL,
-   &quot;id&quot;: 页面 id，每个页面唯一,
-   &quot;title&quot;: 页面标题,
-   &quot;type&quot;: 页面类型，最常见的是 page,
-   &quot;url&quot;: 页面 URL,
-   &quot;webSocketDebuggerUrl&quot;: websocket 对应的 URL
+</code></pre></div><p>具体 JSON 格式如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{
+   <span style="color:#f92672">&#34;description&#34;</span>: <span style="color:#960050;background-color:#1e0010">页面描述，基本都为空</span>,
+   <span style="color:#f92672">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#960050;background-color:#1e0010">相对应开发者工具页面的</span> <span style="color:#960050;background-color:#1e0010">URL</span>,
+   <span style="color:#f92672">&#34;faviconUrl&#34;</span>: <span style="color:#960050;background-color:#1e0010">图标</span> <span style="color:#960050;background-color:#1e0010">URL</span>,
+   <span style="color:#f92672">&#34;id&#34;</span>: <span style="color:#960050;background-color:#1e0010">页面</span> <span style="color:#960050;background-color:#1e0010">id，每个页面唯一</span>,
+   <span style="color:#f92672">&#34;title&#34;</span>: <span style="color:#960050;background-color:#1e0010">页面标题</span>,
+   <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#960050;background-color:#1e0010">页面类型，最常见的是</span> <span style="color:#960050;background-color:#1e0010">page</span>,
+   <span style="color:#f92672">&#34;url&#34;</span>: <span style="color:#960050;background-color:#1e0010">页面</span> <span style="color:#960050;background-color:#1e0010">URL</span>,
+   <span style="color:#f92672">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#960050;background-color:#1e0010">websocket</span> <span style="color:#960050;background-color:#1e0010">对应的</span> <span style="color:#960050;background-color:#1e0010">URL</span>
 }
-</code></pre>
-
-<h3 id="new">new</h3>
-
+</code></pre></div><h3 id="new">new</h3>
 <p>访问 <code>http://localhost:9222/json/new</code>，浏览器会创建一个新的 tab 页并将当前页面的信息以 JSON 格式给出</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/new.png" alt="new tab" class="lazyload"><figcaption class="image-caption">new tab</figcaption></figure></p>
-
+<p>![new tab](/images/posts/Chrome 远程调试协议不完全指南/new.png)</p>
 <p>如果在 new 后面添加相应 url 的话，会打开指定 url 的页面，如 <code>http://localhost:9222/json/new?https://github.com/</code></p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/new-url.png" alt="new tab with url" class="lazyload"><figcaption class="image-caption">new tab with url</figcaption></figure></p>
-
+<p>![new tab with url](/images/posts/Chrome 远程调试协议不完全指南/new-url.png)</p>
 <h3 id="close">close</h3>
-
 <p>我们可以通过访问 <code>http://localhost:9222/json/close/(xxxx_id)</code> 的方式，关闭相应 id 所对应的 tab</p>
-
 <p>比如说 我们刚刚打开了 Github 的一个页面，该 tab 对应的 id 是 <code>(30217EC62207250FA2096141D1A2A726)</code>，那么我们可以通过访问 <code>http://localhost:9222/json/close/(30217EC62207250FA2096141D1A2A726)</code> 来关闭该页面</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/close.png" alt="close" class="lazyload"><figcaption class="image-caption">close</figcaption></figure></p>
-
+<p>![close](/images/posts/Chrome 远程调试协议不完全指南/close.png)</p>
 <h3 id="activate">activate</h3>
-
 <p>启用某个已打开的标签页，即让浏览器显示指定的标签页。使用方法类似 close，我们可以通过访问 <code>http://localhost:9222/json/activate/(xxxx_id)</code> 的方式来重新启用该页面。</p>
-
 <p>比如我们想激活一个 id 为 <code>(75139F5AF5088D06DB59F1BCD10BC3F9)</code> 的百度页面，那么我们需要访问 <code>http://localhost:9222/json/activate/(75139F5AF5088D06DB59F1BCD10BC3F9)</code> ，此时百度页面会被重新激活，Chrome 会将其切换成显示状态。</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/activate-baidu.png" alt="启用百度" class="lazyload"><figcaption class="image-caption">启用百度</figcaption></figure></p>
-
+<p>![启用百度](/images/posts/Chrome 远程调试协议不完全指南/activate-baidu.png)</p>
 <p>重新回到之前访问的 URL，我们会看到页面上显示的 <code>Target activated</code></p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/activate-result.png" alt="结果" class="lazyload"><figcaption class="image-caption">结果</figcaption></figure></p>
-
+<p>![结果](/images/posts/Chrome 远程调试协议不完全指南/activate-result.png)</p>
 <h3 id="version">version</h3>
-
 <p>返回相应浏览器版本</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 远程调试协议不完全指南/version.png" alt="版本" class="lazyload"><figcaption class="image-caption">版本</figcaption></figure></p>
-
+<p>![版本](/images/posts/Chrome 远程调试协议不完全指南/version.png)</p>
 <h2 id="使用-nodejs-封装的-remote-debugging-protocol">使用 nodejs 封装的 remote debugging protocol</h2>
-
 <p>nodejs 已经有大牛将远程调试协议封装好了，我们只需要用（膜）就好了</p>
-
-<p>项目参见 <a href="https://github.com/cyrus-and/chrome-remote-interface" rel="nofollow noreferrer" target="_blank">chrome-remote-interface</a></p>
-
+<p>项目参见 <a href="https://github.com/cyrus-and/chrome-remote-interface">chrome-remote-interface</a></p>
 <h3 id="安装">安装</h3>
-
 <p>如果在相应项目中需要使用 <code>chrome-remote-interface</code>，使用 <code>npm</code> 进行安装即可</p>
-
-<pre><code class="language-shell"># local
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># local</span>
 npm install chrome-remote-interface
-# global
+<span style="color:#75715e"># global</span>
 npm install -g chrome-remote-interface
-</code></pre>
-
-<h3 id="使用">使用</h3>
-
+</code></pre></div><h3 id="使用">使用</h3>
 <p><code>chrome-remote-interface</code> 有两种使用模式，一种就是像正常包一样在项目中导入并使用，比如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Javascript" data-lang="Javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">CDP</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;chrome-remote-interface&#39;</span>);
 
-<pre><code class="language-Javascript">const CDP = require('chrome-remote-interface');
-
-(async ()=&gt; {
-    try {
-        // connect to endpoint
-        var client = await CDP();
-        // extract domains
-        const {Network, Page} = client;
-        // setup handlers
-        Network.requestWillBeSent((params) =&gt; {
-            console.log(params.request.url);
+(<span style="color:#a6e22e">async</span> ()=&gt; {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#75715e">// connect to endpoint
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">CDP</span>();
+        <span style="color:#75715e">// extract domains
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Network</span>, <span style="color:#a6e22e">Page</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
+        <span style="color:#75715e">// setup handlers
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">Network</span>.<span style="color:#a6e22e">requestWillBeSent</span>((<span style="color:#a6e22e">params</span>) =&gt; {
+            <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">url</span>);
         });
-        // enable events then start!
-        await Promise.all([Network.enable(), Page.enable()]);
-        await Page.navigate({url: 'https://github.com'});
-        await Page.loadEventFired();
-    } catch (err) {
-        console.error(err);
-    } finally {
-        if (client) {
-            await client.close();
+        <span style="color:#75715e">// enable events then start!
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">await</span> Promise.<span style="color:#a6e22e">all</span>([<span style="color:#a6e22e">Network</span>.<span style="color:#a6e22e">enable</span>(), <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>()]);
+        <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;https://github.com&#39;</span>});
+        <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">loadEventFired</span>();
+    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>);
+    } <span style="color:#66d9ef">finally</span> {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">client</span>) {
+            <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">close</span>();
         }
     }
 })();
-</code></pre>
-
-<p>还有一种是通过全局方式安装并使用其内嵌的命令行客户端，类似 shell 的交互模式，具体命令和协议支持的命令保持一致，如</p>
-
-<pre><code class="language-bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface list
-[
-    {
-        &quot;description&quot;: &quot;&quot;,
-        &quot;devtoolsFrontendUrl&quot;: &quot;/devtools/inspector.html?ws=localhost:9222/devtools/page/(C847D92465ACD4B12F5C697754CB78A0)&quot;,
-        &quot;faviconUrl&quot;: &quot;https://www.baidu.com/favicon.ico&quot;,
-        &quot;id&quot;: &quot;(C847D92465ACD4B12F5C697754CB78A0)&quot;,
-        &quot;title&quot;: &quot;百度一下，你就知道&quot;,
-        &quot;type&quot;: &quot;page&quot;,
-        &quot;url&quot;: &quot;https://www.baidu.com/&quot;,
-        &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/page/(C847D92465ACD4B12F5C697754CB78A0)&quot;
-    }
-]
-</code></pre>
-
-<pre><code class="language-bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface new https://github.com
-{
-    &quot;description&quot;: &quot;&quot;,
-    &quot;devtoolsFrontendUrl&quot;: &quot;/devtools/inspector.html?ws=localhost:9222/devtools/page/(4525E3F126B79F25D53A5BB7DD8A92FC)&quot;,
-    &quot;id&quot;: &quot;(4525E3F126B79F25D53A5BB7DD8A92FC)&quot;,
-    &quot;title&quot;: &quot;&quot;,
-    &quot;type&quot;: &quot;page&quot;,
-    &quot;url&quot;: &quot;https://github.com/&quot;,
-    &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/page/(4525E3F126B79F25D53A5BB7DD8A92FC)&quot;
-}
-</code></pre>
-
-<pre><code class="language-bash">chrome-remote-interface close &quot;(4525E3F126B79F25D53A5BB7DD8A92FC)&quot;
-</code></pre>
-
-<pre><code class="language-bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface version
-{
-    &quot;Browser&quot;: &quot;Chrome/64.0.3282.119&quot;,
-    &quot;Protocol-Version&quot;: &quot;1.2&quot;,
-    &quot;User-Agent&quot;: &quot;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36&quot;,
-    &quot;V8-Version&quot;: &quot;6.4.388.40&quot;,
-    &quot;WebKit-Version&quot;: &quot;537.36 (@5e944b2d79bce5f96dc35a05a76b03d65a6e9a0a)&quot;,
-    &quot;webSocketDebuggerUrl&quot;: &quot;ws://localhost:9222/devtools/browser/ddff5441-7de0-4d70-82f6-9b0db5ead44d&quot;
-}
-</code></pre>
-
-<p>使用 <code>inspect</code> 命令，<code>chrome-remote-interface</code> 会以 REPL 方式执行命令操作和事件绑定：</p>
-
-<pre><code class="language-bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface inspect
-&gt;&gt;&gt; Page.enable()
+</code></pre></div><p>还有一种是通过全局方式安装并使用其内嵌的命令行客户端，类似 shell 的交互模式，具体命令和协议支持的命令保持一致，如</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface list
+<span style="color:#f92672">[</span>
+    <span style="color:#f92672">{</span>
+        <span style="color:#e6db74">&#34;description&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+        <span style="color:#e6db74">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#e6db74">&#34;/devtools/inspector.html?ws=localhost:9222/devtools/page/(C847D92465ACD4B12F5C697754CB78A0)&#34;</span>,
+        <span style="color:#e6db74">&#34;faviconUrl&#34;</span>: <span style="color:#e6db74">&#34;https://www.baidu.com/favicon.ico&#34;</span>,
+        <span style="color:#e6db74">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;(C847D92465ACD4B12F5C697754CB78A0)&#34;</span>,
+        <span style="color:#e6db74">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;百度一下，你就知道&#34;</span>,
+        <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;page&#34;</span>,
+        <span style="color:#e6db74">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://www.baidu.com/&#34;</span>,
+        <span style="color:#e6db74">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/page/(C847D92465ACD4B12F5C697754CB78A0)&#34;</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">]</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface new https://github.com
+<span style="color:#f92672">{</span>
+    <span style="color:#e6db74">&#34;description&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+    <span style="color:#e6db74">&#34;devtoolsFrontendUrl&#34;</span>: <span style="color:#e6db74">&#34;/devtools/inspector.html?ws=localhost:9222/devtools/page/(4525E3F126B79F25D53A5BB7DD8A92FC)&#34;</span>,
+    <span style="color:#e6db74">&#34;id&#34;</span>: <span style="color:#e6db74">&#34;(4525E3F126B79F25D53A5BB7DD8A92FC)&#34;</span>,
+    <span style="color:#e6db74">&#34;title&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>,
+    <span style="color:#e6db74">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;page&#34;</span>,
+    <span style="color:#e6db74">&#34;url&#34;</span>: <span style="color:#e6db74">&#34;https://github.com/&#34;</span>,
+    <span style="color:#e6db74">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/page/(4525E3F126B79F25D53A5BB7DD8A92FC)&#34;</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">chrome-remote-interface close <span style="color:#e6db74">&#34;(4525E3F126B79F25D53A5BB7DD8A92FC)&#34;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface version
+<span style="color:#f92672">{</span>
+    <span style="color:#e6db74">&#34;Browser&#34;</span>: <span style="color:#e6db74">&#34;Chrome/64.0.3282.119&#34;</span>,
+    <span style="color:#e6db74">&#34;Protocol-Version&#34;</span>: <span style="color:#e6db74">&#34;1.2&#34;</span>,
+    <span style="color:#e6db74">&#34;User-Agent&#34;</span>: <span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.119 Safari/537.36&#34;</span>,
+    <span style="color:#e6db74">&#34;V8-Version&#34;</span>: <span style="color:#e6db74">&#34;6.4.388.40&#34;</span>,
+    <span style="color:#e6db74">&#34;WebKit-Version&#34;</span>: <span style="color:#e6db74">&#34;537.36 (@5e944b2d79bce5f96dc35a05a76b03d65a6e9a0a)&#34;</span>,
+    <span style="color:#e6db74">&#34;webSocketDebuggerUrl&#34;</span>: <span style="color:#e6db74">&#34;ws://localhost:9222/devtools/browser/ddff5441-7de0-4d70-82f6-9b0db5ead44d&#34;</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>使用 <code>inspect</code> 命令，<code>chrome-remote-interface</code> 会以 REPL 方式执行命令操作和事件绑定：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">ubuntu@ubuntu-pc:~$ chrome-remote-interface inspect
+&gt;&gt;&gt; Page.enable<span style="color:#f92672">()</span>
 ...
-{}
-&gt;&gt;&gt; Page.navigate({url:'https://github.com'})
+<span style="color:#f92672">{}</span>
+&gt;&gt;&gt; Page.navigate<span style="color:#f92672">({</span>url:<span style="color:#e6db74">&#39;https://github.com&#39;</span><span style="color:#f92672">})</span>
 ...
-{ frameId: '(C847D92465ACD4B12F5C697754CB78A0)',
-  loaderId: '(8FB578D2113991D14157A10E7D3FB7D1)' }
-&gt;&gt;&gt; Runtime.evaluate({expression: 'window.location.toString()'})
+<span style="color:#f92672">{</span> frameId: <span style="color:#e6db74">&#39;(C847D92465ACD4B12F5C697754CB78A0)&#39;</span>,
+  loaderId: <span style="color:#e6db74">&#39;(8FB578D2113991D14157A10E7D3FB7D1)&#39;</span> <span style="color:#f92672">}</span>
+&gt;&gt;&gt; Runtime.evaluate<span style="color:#f92672">({</span>expression: <span style="color:#e6db74">&#39;window.location.toString()&#39;</span><span style="color:#f92672">})</span>
 ...
-{ result: { type: 'string', value: 'https://github.com/' } }
+<span style="color:#f92672">{</span> result: <span style="color:#f92672">{</span> type: <span style="color:#e6db74">&#39;string&#39;</span>, value: <span style="color:#e6db74">&#39;https://github.com/&#39;</span> <span style="color:#f92672">}</span> <span style="color:#f92672">}</span>
 &gt;&gt;&gt;
-</code></pre>
-
-<p>由于 <code>chrome-remote-interface</code> 支持的命令和事件和 Chrome 远程调试协议保持一致，所以需要参考 API 文档可以直接访问 <a href="https://chromedevtools.github.io/devtools-protocol" rel="nofollow noreferrer" target="_blank">官方 API文档</a></p>
-
+</code></pre></div><p>由于 <code>chrome-remote-interface</code> 支持的命令和事件和 Chrome 远程调试协议保持一致，所以需要参考 API 文档可以直接访问 <a href="https://chromedevtools.github.io/devtools-protocol">官方 API文档</a></p>
 <p>不过感觉类似 shell 模式的作用偏向于短时间的调试，要写自动化脚本什么的还是需要使用 nodejs 项目导入包的方式一行一行写代码，偷懒是不可能的（笑</p>
-
 <p>以上就是关于 Chrome 远程调试协议的介绍，希望能在年前再把对网页自动化性能分析的学习总结一下（正经脸</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://chromedevtools.github.io/devtools-protocol" rel="nofollow noreferrer" target="_blank">remote debugging protocol 官方 API Docs</a></li>
-<li><a href="https://github.com/cyrus-and/chrome-remote-interface" rel="nofollow noreferrer" target="_blank">chrome-remote-interface：nodejs 封装的 chrome debugging protocol</a></li>
-<li><a href="https://div.io/topic/1464" rel="nofollow noreferrer" target="_blank">Chrome 之远程调试协议（Remote debugging protocol）</a></li>
+<li><a href="https://chromedevtools.github.io/devtools-protocol">remote debugging protocol 官方 API Docs</a></li>
+<li><a href="https://github.com/cyrus-and/chrome-remote-interface">chrome-remote-interface：nodejs 封装的 chrome debugging protocol</a></li>
+<li><a href="https://div.io/topic/1464">Chrome 之远程调试协议（Remote debugging protocol）</a></li>
 </ul>
 
     </div>
@@ -508,9 +429,8 @@ npm install -g chrome-remote-interface
 
 
     
-     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
-      
-     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
     
   
 

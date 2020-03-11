@@ -57,7 +57,7 @@
     "datePublished": "2018-02-10 23:43:05 \x2b0000 UTC",
     "dateModified" : "2018-02-10 23:43:05 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/02\/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97\/",
-    "wordCount" : "1421",
+    "wordCount" : "1941",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -130,8 +130,6 @@
         
 
         
-            
-        
 
         
         
@@ -144,203 +142,144 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>实验室摸鱼总结 part2：如何进行 Chrome 网页自动化性能分析</p>
-
 <p>主要还是对 <code>Chrome 远程调试协议</code> 的学习和对 nodejs 封装的 <code>chrome-remote-interface</code> 的使用 (..•˘_˘•..)</p>
-
 <h2 id="认识-chrome-性能分析工具">认识 Chrome 性能分析工具</h2>
-
-<p>选择一个网页，比如说 <a href="https://www.bilibili.com" rel="nofollow noreferrer" target="_blank">https://www.bilibili.com</a>，按 <code>F12</code> 调出开发者工具面板，选择 <code>Performance</code> 选项</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/bilibili.png" alt="测试页面" class="lazyload"><figcaption class="image-caption">测试页面</figcaption></figure></p>
-
+<p>选择一个网页，比如说 <a href="https://www.bilibili.com">https://www.bilibili.com</a>，按 <code>F12</code> 调出开发者工具面板，选择 <code>Performance</code> 选项</p>
+<p>![测试页面](/images/posts/Chrome 自动性能分析指北/bilibili.png)</p>
 <p>选择开发者工具左上角处小圆点 <code>Record</code>，开始性能分析</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/profiling.png" alt="开始性能分析" class="lazyload"><figcaption class="image-caption">开始性能分析</figcaption></figure></p>
-
+<p>![开始性能分析](/images/posts/Chrome 自动性能分析指北/profiling.png)</p>
 <p>在缓冲区耗尽之前，我们点击 <code>Stop</code> 即可结束此次性能分析，然然后我们可以看到开发者工具呈现给我们的效果图</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/profiling-results.png" alt="分析结果" class="lazyload"><figcaption class="image-caption">分析结果</figcaption></figure></p>
-
+<p>![分析结果](/images/posts/Chrome 自动性能分析指北/profiling-results.png)</p>
 <p>点击左上角 <code>Save profile</code> 即可保存详细数据描述 JSON 文件</p>
-
 <h3 id="相应-profiler-结果数据">相应 Profiler 结果数据</h3>
-
 <p><code>Performance</code> 由两部分数据构成，一部分是 <code>Timeline</code> 数据，一部分是 <code>JavaScript Profiler</code> 数据，<code>Performance</code> 前身是 <code>Timeline</code> 面板，在合并了 <code>JavaScript Profiler</code> 数据之后改成了 <code>Performance</code> 面板。<code>JavaScript Profiler</code> 面板虽然依旧可以被独立调出，但已经被标识为可能被废弃的功能，之后在某一版本的 Chrome 中就可能被正式废弃。</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/javascript-profiler.png" alt="JavaScript Profiler" class="lazyload"><figcaption class="image-caption">JavaScript Profiler</figcaption></figure></p>
-
+<p>![JavaScript Profiler](/images/posts/Chrome 自动性能分析指北/javascript-profiler.png)</p>
 <p>JavaScript Profiler 抓取的数据是 <code>Performance</code> 面板数据的一部分</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/js-profiler-data.png" alt="JavaScript Profiler 抓取的数据" class="lazyload"><figcaption class="image-caption">JavaScript Profiler 抓取的数据</figcaption></figure></p>
-
+<p>![JavaScript Profiler 抓取的数据](/images/posts/Chrome 自动性能分析指北/js-profiler-data.png)</p>
 <h2 id="如何自动化获得数据">如何自动化获得数据</h2>
-
 <h3 id="分析-chrome-开发者工具">分析 Chrome 开发者工具</h3>
-
 <p>分析 Chrome 开发者工具是不可能的，但我们可以分析远程协议版的 Chrome 开发者工具呀（笑</p>
-
 <p>step1：打开开启端口 <code>9222</code> 的 Chrome 和待分析页面 <code>https://www.bilibili.com</code></p>
-
 <p>step2: 打开 <code>http://localhost:9222</code> 并选择进入 bilibili 相关远程协议版本的开发者工具页面</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/devtools-cdp.png" alt="开发者工具 远程协议页面" class="lazyload"><figcaption class="image-caption">开发者工具 远程协议页面</figcaption></figure></p>
-
+<p>![开发者工具 远程协议页面](/images/posts/Chrome 自动性能分析指北/devtools-cdp.png)</p>
 <p>step3: 在该页面按 <code>F12</code>，打开开发者工具</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/devtools.png" alt="开发者工具" class="lazyload"><figcaption class="image-caption">开发者工具</figcaption></figure></p>
-
+<p>![开发者工具](/images/posts/Chrome 自动性能分析指北/devtools.png)</p>
 <p>现在的三个页面的关系如下：</p>
-
 <p>bilibili（待测页面） &mdash;&gt; 远程协议版开发者工具（对 bilibili 进行性能分析） &mdash;&gt; 开发者工具 （远程协议页面的开发者工具，用来查看远程协议页面的网络请求）</p>
-
 <p>step4: 选择开发者工具的 <code>Network</code> 面板，选择查看当前页面的 websocket 连接，然后在远程协议版本的 <code>Performance</code> 进行性能分析，查看相应 websocket 数据</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/network.png" alt="网络" class="lazyload"><figcaption class="image-caption">网络</figcaption></figure></p>
-
+<p>![网络](/images/posts/Chrome 自动性能分析指北/network.png)</p>
 <p>可以看到主要有这两帧比较重要：</p>
-
 <p><code>{id: 79, method: &quot;Profiler.start&quot;}</code> 和
- <code>{&quot;id&quot;:80,&quot;method&quot;:&quot;Tracing.start&quot;,&quot;params&quot;:{...}}</code>
- ，分别表示对 <code>JavaScritp Profiler</code> 和 <code>Timeline</code> 两方面的性能分析数据请求</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/network2.png" alt="网络" class="lazyload"><figcaption class="image-caption">网络</figcaption></figure>
+<code>{&quot;id&quot;:80,&quot;method&quot;:&quot;Tracing.start&quot;,&quot;params&quot;:{...}}</code>
+，分别表示对 <code>JavaScritp Profiler</code> 和 <code>Timeline</code> 两方面的性能分析数据请求</p>
+<p>![网络](/images/posts/Chrome 自动性能分析指北/network2.png)
 然后 <code>{&quot;id&quot;:84,&quot;method&quot;:&quot;Profiler.stop&quot;}</code> 和 <code>{&quot;id&quot;:85,&quot;method&quot;:&quot;Tracing.end&quot;}</code> 表示分析数据结束，Chrome 会返回相应数据</p>
-
 <p>其中，<code>Profiler</code> 对应的数据会通过和 <code>{&quot;id&quot;:84,&quot;method&quot;:&quot;Profiler.stop&quot;}</code> 同一个 id 的返回消息返回，而 <code>Tracing</code>
 则会通过 <code>Tracing.dataCollected()</code> 事件返回</p>
-
 <h3 id="研究优秀开源代码">研究优秀开源代码</h3>
-
-<p>写代码怎么能不借鉴 Github 上优秀的开源项目呢：<a href="https://github.com/paulirish/automated-chrome-profiling" rel="nofollow noreferrer" target="_blank">automated-chrome-profiling</a></p>
-
+<p>写代码怎么能不借鉴 Github 上优秀的开源项目呢：<a href="https://github.com/paulirish/automated-chrome-profiling">automated-chrome-profiling</a></p>
 <p>我们主要关注项目里的两个脚本：<code>get-cpu-profile.js</code> 和 <code>get-timeline-trace.js</code> 分别对应 <code>JavaScript Profiler</code> 面板和 <code>Timeline</code> 面板的数据</p>
+<h4 id="get-cpu-profilejs">get-cpu-profile.js</h4>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#75715e">// get-cpu-profile.js
+</span><span style="color:#75715e"></span>(<span style="color:#a6e22e">async</span> <span style="color:#66d9ef">function</span>() {
+   <span style="color:#75715e">// 实例化 Chrome
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
+   <span style="color:#75715e">// 实例化 CDP 接口
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">cdp</span>(); 
+   <span style="color:#75715e">// 从接口对象中解构处 Profiler Page Runtime 等域对象
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Profiler</span>, <span style="color:#a6e22e">Page</span>, <span style="color:#a6e22e">Runtime</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
+   <span style="color:#75715e">// enable domains to get events.
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>();
+   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
 
-<h4 id="get-cpu-profile-js">get-cpu-profile.js</h4>
+   <span style="color:#75715e">// Set JS profiler sampling resolution to 100 microsecond (default is 1000)
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
 
-<pre><code class="language-JavaScript"> // get-cpu-profile.js
- (async function() {
-    // 实例化 Chrome
-    const chrome = await chromelauncher.launch({port: 9222});
-    // 实例化 CDP 接口
-    const client = await cdp(); 
-    // 从接口对象中解构处 Profiler Page Runtime 等域对象
-    const {Profiler, Page, Runtime} = client;
-    // enable domains to get events.
-    await Page.enable();
-    await Profiler.enable();
-
-    // Set JS profiler sampling resolution to 100 microsecond (default is 1000)
-    await Profiler.setSamplingInterval({interval: 100});
-
-    await Page.navigate({url});
-    await client.on('Page.loadEventFired', async _ =&gt; {
-        // on load we'll start profiling, kick off the test, and finish
-        await Profiler.start();
-        await Runtime.evaluate({expression: 'startTest();'});
-        await sleep(600); // sleep 600ms
-        const data = await Profiler.stop();
-    });
+   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span>});
+   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;Page.loadEventFired&#39;</span>, <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">_</span> =&gt; {
+       <span style="color:#75715e">// on load we&#39;ll start profiling, kick off the test, and finish
+</span><span style="color:#75715e"></span>       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
+       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Runtime</span>.<span style="color:#a6e22e">evaluate</span>({<span style="color:#a6e22e">expression</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;startTest();&#39;</span>});
+       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>); <span style="color:#75715e">// sleep 600ms
+</span><span style="color:#75715e"></span>       <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
+   });
 })();
-</code></pre>
-
-<p>代码逻辑并不复杂，大致有以下步骤</p>
-
+</code></pre></div><p>代码逻辑并不复杂，大致有以下步骤</p>
 <ol>
 <li><code>Profiler.enable();</code> 开启 <code>Profiler</code></li>
 <li><code>Profiler.setSamplingInterval({interval: 100});</code> （可选）用以确定采样时间间隔，可以看到 Chrome 默认的是 100μs</li>
 <li><code>Profiler.start();</code> 开始采样</li>
 <li><code>Profiler.stop();</code> 结束采样，并在回调函数中返回相应采样后的数据</li>
 </ol>
-
 <p>可以看一下获得的数据：</p>
-
-<pre><code class="language-JSON">{&quot;profile&quot;:{&quot;nodes&quot;:[{&quot;id&quot;:1,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;(root)&quot;,&quot;scriptId&quot;:&quot;0&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:-1,&quot;columnNumber&quot;:-1},&quot;hitCount&quot;:0,&quot;children&quot;:[2,3,4,5]},{&quot;id&quot;:2,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;(program)&quot;,&quot;scriptId&quot;:&quot;0&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:-1,&quot;columnNumber&quot;:-1},&quot;hitCount&quot;:6},{&quot;id&quot;:3,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;(idle)&quot;,&quot;scriptId&quot;:&quot;0&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:-1,&quot;columnNumber&quot;:-1},&quot;hitCount&quot;:116},{&quot;id&quot;:4,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:0,&quot;columnNumber&quot;:22},&quot;hitCount&quot;:1,&quot;positionTicks&quot;:[{&quot;line&quot;:123,&quot;ticks&quot;:1}]},{&quot;id&quot;:5,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;wrapObject&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:27,&quot;columnNumber&quot;:112},&quot;hitCount&quot;:0,&quot;children&quot;:[6]},{&quot;id&quot;:6,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;_wrapObject&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:32,&quot;columnNumber&quot;:91},&quot;hitCount&quot;:0,&quot;children&quot;:[7]},{&quot;id&quot;:7,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;InjectedScript.RemoteObject&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:122,&quot;columnNumber&quot;:76},&quot;hitCount&quot;:0,&quot;children&quot;:[8,10]},{&quot;id&quot;:8,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;_describe&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:94,&quot;columnNumber&quot;:46},&quot;hitCount&quot;:0,&quot;children&quot;:[9]},{&quot;id&quot;:9,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;_subtype&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:89,&quot;columnNumber&quot;:94},&quot;hitCount&quot;:1,&quot;positionTicks&quot;:[{&quot;line&quot;:90,&quot;ticks&quot;:1}]},{&quot;id&quot;:10,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;_shouldPassByValue&quot;,&quot;scriptId&quot;:&quot;136&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:26,&quot;columnNumber&quot;:118},&quot;hitCount&quot;:0,&quot;children&quot;:[11]},{&quot;id&quot;:11,&quot;callFrame&quot;:{&quot;functionName&quot;:&quot;subtype&quot;,&quot;scriptId&quot;:&quot;0&quot;,&quot;url&quot;:&quot;&quot;,&quot;lineNumber&quot;:-1,&quot;columnNumber&quot;:-1},&quot;hitCount&quot;:1,&quot;positionTicks&quot;:[{&quot;line&quot;:27,&quot;ticks&quot;:1}]}],&quot;startTime&quot;:83365392500,&quot;endTime&quot;:83365424937,&quot;samples&quot;:[2,3,3,3,3,3,2,2,4,9,11,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,2],&quot;timeDeltas&quot;:[17143,118,118,113,110,119,109,107,111,109,109,107,122,112,109,110,110,109,110,109,109,110,187,187,187,188,187,185,167,118,118,117,117,117,118,117,117,117,118,118,117,118,118,118,118,117,118,118,118,118,118,117,118,118,117,117,117,118,117,117,117,118,118,118,118,118,117,118,118,118,118,118,117,118,118,118,118,118,117,118,118,118,118,117,118,118,118,118,118,117,118,118,118,118,118,117,118,117,117,118,117,117,117,118,117,118,117,117,118,117,118,117,117,118,117,118,118,111,114,108,108,108,110,109,129]}}
-</code></pre>
-
-<p>数据格式参考如下，或可参考<a href="https://chromedevtools.github.io/devtools-protocol/tot/Profiler" rel="nofollow noreferrer" target="_blank">官方说明</a></p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Chrome 自动性能分析指北/profiler-format.png" alt="数据格式" class="lazyload"><figcaption class="image-caption">数据格式</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{<span style="color:#f92672">&#34;profile&#34;</span>:{<span style="color:#f92672">&#34;nodes&#34;</span>:[{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;(root)&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;0&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">-1</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">-1</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">5</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">2</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;(program)&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;0&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">-1</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">-1</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">6</span>},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">3</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;(idle)&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;0&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">-1</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">-1</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">116</span>},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">4</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">22</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;positionTicks&#34;</span>:[{<span style="color:#f92672">&#34;line&#34;</span>:<span style="color:#ae81ff">123</span>,<span style="color:#f92672">&#34;ticks&#34;</span>:<span style="color:#ae81ff">1</span>}]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">5</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;wrapObject&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">27</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">112</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">6</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">6</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;_wrapObject&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">32</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">91</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">7</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">7</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;InjectedScript.RemoteObject&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">122</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">76</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">10</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">8</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;_describe&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">94</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">46</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">9</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">9</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;_subtype&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">89</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">94</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;positionTicks&#34;</span>:[{<span style="color:#f92672">&#34;line&#34;</span>:<span style="color:#ae81ff">90</span>,<span style="color:#f92672">&#34;ticks&#34;</span>:<span style="color:#ae81ff">1</span>}]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">10</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;_shouldPassByValue&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;136&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">26</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">118</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">0</span>,<span style="color:#f92672">&#34;children&#34;</span>:[<span style="color:#ae81ff">11</span>]},{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">11</span>,<span style="color:#f92672">&#34;callFrame&#34;</span>:{<span style="color:#f92672">&#34;functionName&#34;</span>:<span style="color:#e6db74">&#34;subtype&#34;</span>,<span style="color:#f92672">&#34;scriptId&#34;</span>:<span style="color:#e6db74">&#34;0&#34;</span>,<span style="color:#f92672">&#34;url&#34;</span>:<span style="color:#e6db74">&#34;&#34;</span>,<span style="color:#f92672">&#34;lineNumber&#34;</span>:<span style="color:#ae81ff">-1</span>,<span style="color:#f92672">&#34;columnNumber&#34;</span>:<span style="color:#ae81ff">-1</span>},<span style="color:#f92672">&#34;hitCount&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;positionTicks&#34;</span>:[{<span style="color:#f92672">&#34;line&#34;</span>:<span style="color:#ae81ff">27</span>,<span style="color:#f92672">&#34;ticks&#34;</span>:<span style="color:#ae81ff">1</span>}]}],<span style="color:#f92672">&#34;startTime&#34;</span>:<span style="color:#ae81ff">83365392500</span>,<span style="color:#f92672">&#34;endTime&#34;</span>:<span style="color:#ae81ff">83365424937</span>,<span style="color:#f92672">&#34;samples&#34;</span>:[<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">9</span>,<span style="color:#ae81ff">11</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">2</span>],<span style="color:#f92672">&#34;timeDeltas&#34;</span>:[<span style="color:#ae81ff">17143</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">113</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">119</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">107</span>,<span style="color:#ae81ff">111</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">107</span>,<span style="color:#ae81ff">122</span>,<span style="color:#ae81ff">112</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">187</span>,<span style="color:#ae81ff">187</span>,<span style="color:#ae81ff">187</span>,<span style="color:#ae81ff">188</span>,<span style="color:#ae81ff">187</span>,<span style="color:#ae81ff">185</span>,<span style="color:#ae81ff">167</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">117</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">118</span>,<span style="color:#ae81ff">111</span>,<span style="color:#ae81ff">114</span>,<span style="color:#ae81ff">108</span>,<span style="color:#ae81ff">108</span>,<span style="color:#ae81ff">108</span>,<span style="color:#ae81ff">110</span>,<span style="color:#ae81ff">109</span>,<span style="color:#ae81ff">129</span>]}}
+</code></pre></div><p>数据格式参考如下，或可参考<a href="https://chromedevtools.github.io/devtools-protocol/tot/Profiler">官方说明</a></p>
+<p>![数据格式](/images/posts/Chrome 自动性能分析指北/profiler-format.png)</p>
 <p>ps: Chrome 开发者工具默认采样间隔为 100μs，但不等价于获得的数据准确为 100μs，由于 CPU 性能和网络带宽等原因，通常会比设定的值大</p>
+<h4 id="get-timeline-tracejs">get-timeline-trace.js</h4>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">Chrome</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;chrome-remote-interface&#39;</span>);
 
-<h4 id="get-timeline-trace-js">get-timeline-trace.js</h4>
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">TRACE_CATEGORIES</span> <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;-*&#34;</span>, <span style="color:#e6db74">&#34;devtools.timeline&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-devtools.timeline&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-devtools.timeline.frame&#34;</span>, <span style="color:#e6db74">&#34;toplevel&#34;</span>, <span style="color:#e6db74">&#34;blink.console&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-devtools.timeline.stack&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-devtools.screenshot&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-v8.cpu_profile&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-v8.cpu_profiler&#34;</span>, <span style="color:#e6db74">&#34;disabled-by-default-v8.cpu_profiler.hires&#34;</span>];
 
-<pre><code class="language-JavaScript">var Chrome = require('chrome-remote-interface');
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">rawEvents</span> <span style="color:#f92672">=</span> [];
 
-var TRACE_CATEGORIES = [&quot;-*&quot;, &quot;devtools.timeline&quot;, &quot;disabled-by-default-devtools.timeline&quot;, &quot;disabled-by-default-devtools.timeline.frame&quot;, &quot;toplevel&quot;, &quot;blink.console&quot;, &quot;disabled-by-default-devtools.timeline.stack&quot;, &quot;disabled-by-default-devtools.screenshot&quot;, &quot;disabled-by-default-v8.cpu_profile&quot;, &quot;disabled-by-default-v8.cpu_profiler&quot;, &quot;disabled-by-default-v8.cpu_profiler.hires&quot;];
+<span style="color:#a6e22e">Chrome</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">chrome</span>) {
+    <span style="color:#66d9ef">with</span> (<span style="color:#a6e22e">chrome</span>) {
+        <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">start</span>({
+            <span style="color:#e6db74">&#34;categories&#34;</span><span style="color:#f92672">:</span>   <span style="color:#a6e22e">TRACE_CATEGORIES</span>.<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39;,&#39;</span>),
+            <span style="color:#e6db74">&#34;options&#34;</span><span style="color:#f92672">:</span>      <span style="color:#e6db74">&#34;sampling-frequency=10000&#34;</span>  <span style="color:#75715e">// 1000 is default and too slow.
+</span><span style="color:#75715e"></span>        });
 
-var rawEvents = [];
-
-Chrome(function (chrome) {
-    with (chrome) {
-        Tracing.start({
-            &quot;categories&quot;:   TRACE_CATEGORIES.join(','),
-            &quot;options&quot;:      &quot;sampling-frequency=10000&quot;  // 1000 is default and too slow.
+        <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#e6db74">&#39;url&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;http://paulirish.com&#39;</span>})
+        <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">loadEventFired</span>(<span style="color:#66d9ef">function</span> () {
+           <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">end</span>()
         });
 
-        Page.navigate({'url': 'http://paulirish.com'})
-        Page.loadEventFired(function () {
-           Tracing.end()
+        <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">tracingComplete</span>(<span style="color:#66d9ef">function</span> () {
+            <span style="color:#a6e22e">chrome</span>.<span style="color:#a6e22e">close</span>();
         });
 
-        Tracing.tracingComplete(function () {
-            chrome.close();
-        });
-
-        Tracing.dataCollected(function(data){
-            var events = data.value;
+        <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">dataCollected</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">data</span>){
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">events</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">value</span>;
         });
     }
 })
-</code></pre>
-
-<p>大致代码如上，删去了部分对功能介绍无关的代码</p>
-
+</code></pre></div><p>大致代码如上，删去了部分对功能介绍无关的代码</p>
 <p>可以看到 Timeline 对应的 domain 是 <code>Tracing</code>，主要有以下几个函数需要注意</p>
-
 <ul>
 <li><code>Tracing.start()</code> 开始函数，需要指定相应参数</li>
 <li><code>Tracing.end()</code> 结束函数</li>
 <li><code>Tracing.dataCollected()</code> 事件，调用 <code>Tracing.end()</code> 之后，该事件会被多次触发，相应数据会通过该事件返回</li>
 <li><code>Tracing.tracingComplete()</code> 所有数据全部返回后，该事件被触发</li>
 </ul>
-
 <h3 id="利用代码实现自动化性能分析">利用代码实现自动化性能分析</h3>
-
 <p>代码主要还是利用 <code>Profiler</code> 和 <code>Tracing</code> 两个相关 domain 的 api 来获得 <code>JavaScript Profiler</code> 和 <code>Timeline</code> 的数据。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#75715e">// demo.js
+</span><span style="color:#75715e"></span>(<span style="color:#a6e22e">async</span> ()=&gt;{
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">cdp</span>(); 
+    <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Profiler</span>, <span style="color:#a6e22e">Tracing</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
 
-<pre><code class="language-JavaScript">// demo.js
-(async ()=&gt;{
-    const chrome = await chromelauncher.launch({port: 9222});
-    const client = await cdp(); 
-    const {Profiler, Tracing} = client;
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
 
-    await Profiler.enable();
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
 
-    await Profiler.setSamplingInterval({interval: 100});
-    await Profiler.start();
-
-    await Tracing.start();
-    await sleep(600);
-    await Traing.end();
-    const data = await Profiler.stop();
-    console.log(data);
-    Tracing.dataCollected(function (data) {
-        console.log(data);
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">start</span>();
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>);
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Traing</span>.<span style="color:#a6e22e">end</span>();
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
+    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">data</span>);
+    <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">dataCollected</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">data</span>) {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">data</span>);
     });
 })();
-</code></pre>
-
-<h2 id="参考链接">参考链接</h2>
-
+</code></pre></div><h2 id="参考链接">参考链接</h2>
 <ul>
-<li><a href="https://nicholaslee119.github.io/2017/10/04/Chrome-Devtool-Performance%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/" rel="nofollow noreferrer" target="_blank">全新Chrome Devtool Performance使用指南</a></li>
-<li><a href="https://github.com/paulirish/automated-chrome-profiling" rel="nofollow noreferrer" target="_blank">automated-chrome-profiling</a></li>
+<li><a href="https://nicholaslee119.github.io/2017/10/04/Chrome-Devtool-Performance%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97/">全新Chrome Devtool Performance使用指南</a></li>
+<li><a href="https://github.com/paulirish/automated-chrome-profiling">automated-chrome-profiling</a></li>
 </ul>
 
     </div>
@@ -441,9 +380,8 @@ Chrome(function (chrome) {
 
 
     
-     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
-      
-     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
     
   
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on syang&#39;s blog</title>
@@ -6,10 +6,19 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 07 Mar 2020 17:31:58 +0800</lastBuildDate>
+    <lastBuildDate>Tue, 10 Mar 2020 00:03:36 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>RealWorldCTF 2019 MarxJS</title>
+      <link>https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/</link>
+      <pubDate>Tue, 10 Mar 2020 00:03:36 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/</guid>
+      <description>看了 wupco 师傅关于 nodejs 安全的总结：本人在2019年对一些NodeJS问题的研究，结合他在 RealWorld CTF 上出的题来深入学习一下。 MarxJS 首先看附件里的文件，real</description>
+    </item>
     
     <item>
       <title>EuroSys 2019 LockDoc</title>
@@ -35,7 +44,7 @@
       <pubDate>Mon, 10 Feb 2020 14:22:52 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/2020/02/codegate-2020-web/</guid>
-      <description>已经完全变成事后看 writeup 复现型选手了…… CSP 题目直接给了代码 &amp;lt;?php require_once &#39;config.php&#39;; if(!isset($_GET[&amp;quot;q&amp;quot;]) || !isset($_GET[&amp;quot;sig&amp;quot;])) { die(&amp;quot;?&amp;quot;); } $api_string = base64_decode($_GET[&amp;quot;q&amp;quot;]); $sig = $_GET[&amp;quot;sig&amp;quot;]; if(md5($salt.$api_string) !== $sig){ die(&amp;quot;??&amp;quot;); } //APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ... $apis = explode(&amp;quot;|&amp;quot;, $api_string); foreach($apis as $s) { $info = explode(&amp;quot;,&amp;quot;, $s); if(count($info) != 3) continue; $n =</description>
+      <description>已经完全变成事后看 writeup 复现型选手了…… CSP 题目直接给了代码 &amp;lt;?php require_once &amp;#39;config.php&amp;#39;; if(!isset($_GET[&amp;#34;q&amp;#34;]) || !isset($_GET[&amp;#34;sig&amp;#34;])) { die(&amp;#34;?&amp;#34;); } $api_string = base64_decode($_GET[&amp;#34;q&amp;#34;]); $sig = $_GET[&amp;#34;sig&amp;#34;]; if(md5($salt.$api_string) !== $sig){ die(&amp;#34;??&amp;#34;); } //APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ... $apis = explode(&amp;#34;|&amp;#34;, $api_string); foreach($apis as $s) { $info = explode(&amp;#34;,&amp;#34;, $s); if(count($info) != 3) continue; $n =</description>
     </item>
     
     <item>
@@ -152,7 +161,7 @@
       <pubDate>Thu, 25 Apr 2019 19:29:23 +0000</pubDate>
       
       <guid>https://syang-ng.github.io/2019/04/ddctf2019-web/</guid>
-      <description>前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http://116.85.48.107:5002/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = &#39;garzon&#39; from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = &#39;*********************&#39; # censored url_prefix = &#39;/d5af33f66147e857&#39; def FLAG():</description>
+      <description>前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http://116.85.48.107:5002/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = &amp;#39;garzon&amp;#39; from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = &amp;#39;*********************&amp;#39; # censored url_prefix = &amp;#39;/d5af33f66147e857&amp;#39; def FLAG():</description>
     </item>
     
     <item>
@@ -224,7 +233,7 @@
       <pubDate>Mon, 20 Aug 2018 18:35:43 +0000</pubDate>
       
       <guid>https://syang-ng.github.io/2018/08/wangding-web-writeup/</guid>
-      <description>fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: /user.php.bak Sitemap: http://domain.com/sitemap.xml &amp;lt;?php class UserInfo { public $name = &amp;quot;&amp;quot;; public $age = 0; public $blog = &amp;quot;&amp;quot;; public function __construct($name, $age, $blog) { $this-&amp;gt;name = $name; $this-&amp;gt;age = (int)$age; $this-&amp;gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,</description>
+      <description>fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: /user.php.bak Sitemap: http://domain.com/sitemap.xml &amp;lt;?php class UserInfo { public $name = &amp;#34;&amp;#34;; public $age = 0; public $blog = &amp;#34;&amp;#34;; public function __construct($name, $age, $blog) { $this-&amp;gt;name = $name; $this-&amp;gt;age = (int)$age; $this-&amp;gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,</description>
     </item>
     
     <item>
@@ -260,7 +269,7 @@
       <pubDate>Tue, 26 Jun 2018 18:28:38 +0000</pubDate>
       
       <guid>https://syang-ng.github.io/2018/06/googlectf-js_safe2-writeup/</guid>
-      <description>前言 GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧 分析 可以看到页面的输入框变化会触发 open_safe() 函数 &amp;lt;input id=&amp;quot;keyhole&amp;quot; autofocus onchange=&amp;quot;open_safe()&amp;quot; placeholder=</description>
+      <description>前言 GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧 分析 可以看到页面的输入框变化会触发 open_safe() 函数 &amp;lt;input id=&amp;#34;keyhole&amp;#34; autofocus onchange=&amp;#34;open_safe()&amp;#34; placeholder=</description>
     </item>
     
     <item>

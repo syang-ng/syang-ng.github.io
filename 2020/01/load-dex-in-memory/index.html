@@ -142,607 +142,555 @@
           
           
 
-          
-
-<p>从内存中加载 Dex 是近年来一个比较热门的需求，无论是 Android 加固的内存不落地实现，还是 Android 插件化、热修复等技术等的应用，都需要实现一个 ClassLoader 能主动从内存中加载 Dex 文件。而之前通用的做法大多数是通过自定义 ClassLoader + Hook ART/Dalvik 虚拟机实现，但在 Android 8.0 后，谷歌官方推出了可以从内存中加载 Dex 的 InMemoryDexClassLoader 来实现这一目标。本文旨在深入分析这两者的异同 XD</p>
-
+          <p>从内存中加载 Dex 是近年来一个比较热门的需求，无论是 Android 加固的内存不落地实现，还是 Android 插件化、热修复等技术等的应用，都需要实现一个 ClassLoader 能主动从内存中加载 Dex 文件。而之前通用的做法大多数是通过自定义 ClassLoader + Hook ART/Dalvik 虚拟机实现，但在 Android 8.0 后，谷歌官方推出了可以从内存中加载 Dex 的 InMemoryDexClassLoader 来实现这一目标。本文旨在深入分析这两者的异同 XD</p>
 <p>PS：写到一半的途中发现由于贴了过多的代码导致文章显得非常冗长，阅读可能需要一定耐心 (･_･;</p>
-
 <h2 id="inmemorydexclassloader">InMemoryDexClassLoader</h2>
-
 <p>首先直接看源代码（android-8.0.0_r1），可以看到 InMemoryDexClassLoader 是 BaseDexClassLoader 的子类：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Java" data-lang="Java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">final</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">InMemoryDexClassLoader</span> <span style="color:#66d9ef">extends</span> BaseDexClassLoader <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">InMemoryDexClassLoader</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@NonNull</span> ByteBuffer <span style="color:#a6e22e">@NonNull</span> <span style="color:#f92672">[]</span> dexBuffers<span style="color:#f92672">,</span>
+            <span style="color:#a6e22e">@Nullable</span> String librarySearchPath<span style="color:#f92672">,</span> <span style="color:#a6e22e">@Nullable</span> ClassLoader parent<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">super</span><span style="color:#f92672">(</span>dexBuffers<span style="color:#f92672">,</span> librarySearchPath<span style="color:#f92672">,</span> parent<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
 
-<pre><code class="language-Java">public final class InMemoryDexClassLoader extends BaseDexClassLoader {
-    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
-            @Nullable String librarySearchPath, @Nullable ClassLoader parent) {
-        super(dexBuffers, librarySearchPath, parent);
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">InMemoryDexClassLoader</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@NonNull</span> ByteBuffer <span style="color:#a6e22e">@NonNull</span> <span style="color:#f92672">[]</span> dexBuffers<span style="color:#f92672">,</span>
+            <span style="color:#a6e22e">@Nullable</span> ClassLoader parent<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">(</span>dexBuffers<span style="color:#f92672">,</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">,</span> parent<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
 
-    public InMemoryDexClassLoader(@NonNull ByteBuffer @NonNull [] dexBuffers,
-            @Nullable ClassLoader parent) {
-        this(dexBuffers, null, parent);
-    }
+    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">InMemoryDexClassLoader</span><span style="color:#f92672">(</span><span style="color:#a6e22e">@NonNull</span> ByteBuffer dexBuffer<span style="color:#f92672">,</span> <span style="color:#a6e22e">@Nullable</span> ClassLoader parent<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> ByteBuffer<span style="color:#f92672">[]</span> <span style="color:#f92672">{</span> dexBuffer <span style="color:#f92672">},</span> parent<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>Emmm，看来是直接丢给父类处理了，继续跟进查看父类的定义：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BaseDexClassLoader</span> <span style="color:#66d9ef">extends</span> ClassLoader <span style="color:#f92672">{</span>
+		<span style="color:#75715e">// …… 省略其他
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">public</span> <span style="color:#a6e22e">BaseDexClassLoader</span><span style="color:#f92672">(</span>ByteBuffer<span style="color:#f92672">[]</span> dexFiles<span style="color:#f92672">,</span> ClassLoader parent<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#75715e">// TODO We should support giving this a library search path maybe.
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">super</span><span style="color:#f92672">(</span>parent<span style="color:#f92672">);</span>
+        <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">pathList</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DexPathList<span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">,</span> dexFiles<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>可以看到 <code>DexPathList</code> 这个类也相应跟进了使用 ByteBuffer 数组来创建内存中的 Dex，继续跟进该函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#a6e22e">DexPathList</span><span style="color:#f92672">(</span>ClassLoader definingContext<span style="color:#f92672">,</span> ByteBuffer<span style="color:#f92672">[]</span> dexFiles<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>definingContext <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> NullPointerException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;definingContext == null&#34;</span><span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>dexFiles <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> NullPointerException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;dexFiles == null&#34;</span><span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>Arrays<span style="color:#f92672">.</span><span style="color:#a6e22e">stream</span><span style="color:#f92672">(</span>dexFiles<span style="color:#f92672">).</span><span style="color:#a6e22e">anyMatch</span><span style="color:#f92672">(</span>v <span style="color:#f92672">-&gt;</span> v <span style="color:#f92672">==</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> NullPointerException<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;dexFiles contains a null Buffer!&#34;</span><span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
 
-    public InMemoryDexClassLoader(@NonNull ByteBuffer dexBuffer, @Nullable ClassLoader parent) {
-        this(new ByteBuffer[] { dexBuffer }, parent);
-    }
-}
-</code></pre>
+  <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">definingContext</span> <span style="color:#f92672">=</span> definingContext<span style="color:#f92672">;</span>
+  <span style="color:#75715e">// TODO It might be useful to let in-memory dex-paths have native libraries.
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">nativeLibraryDirectories</span> <span style="color:#f92672">=</span> Collections<span style="color:#f92672">.</span><span style="color:#a6e22e">emptyList</span><span style="color:#f92672">();</span>
+  <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">systemNativeLibraryDirectories</span> <span style="color:#f92672">=</span>
+    splitPaths<span style="color:#f92672">(</span>System<span style="color:#f92672">.</span><span style="color:#a6e22e">getProperty</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;java.library.path&#34;</span><span style="color:#f92672">),</span> <span style="color:#66d9ef">true</span><span style="color:#f92672">);</span>
+  <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">nativeLibraryPathElements</span> <span style="color:#f92672">=</span> makePathElements<span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">systemNativeLibraryDirectories</span><span style="color:#f92672">);</span>
 
-<p>Emmm，看来是直接丢给父类处理了，继续跟进查看父类的定义：</p>
+  ArrayList<span style="color:#f92672">&lt;</span>IOException<span style="color:#f92672">&gt;</span> suppressedExceptions <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> ArrayList<span style="color:#f92672">&lt;</span>IOException<span style="color:#f92672">&gt;();</span>
+  <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">dexElements</span> <span style="color:#f92672">=</span> makeInMemoryDexElements<span style="color:#f92672">(</span>dexFiles<span style="color:#f92672">,</span> suppressedExceptions<span style="color:#f92672">);</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>suppressedExceptions<span style="color:#f92672">.</span><span style="color:#a6e22e">size</span><span style="color:#f92672">()</span> <span style="color:#f92672">&gt;</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">this</span><span style="color:#f92672">.</span><span style="color:#a6e22e">dexElementsSuppressedExceptions</span> <span style="color:#f92672">=</span>
+      suppressedExceptions<span style="color:#f92672">.</span><span style="color:#a6e22e">toArray</span><span style="color:#f92672">(</span><span style="color:#66d9ef">new</span> IOException<span style="color:#f92672">[</span>suppressedExceptions<span style="color:#f92672">.</span><span style="color:#a6e22e">size</span><span style="color:#f92672">()]);</span>
+  <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+    dexElementsSuppressedExceptions <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>那么很明显就是 <code>makeInMemoryDexElements</code> 函数了，继续查看该函数实现：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> Element<span style="color:#f92672">[]</span> <span style="color:#a6e22e">makeInMemoryDexElements</span><span style="color:#f92672">(</span>ByteBuffer<span style="color:#f92672">[]</span> dexFiles<span style="color:#f92672">,</span>
+                                                 List<span style="color:#f92672">&lt;</span>IOException<span style="color:#f92672">&gt;</span> suppressedExceptions<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  Element<span style="color:#f92672">[]</span> elements <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Element<span style="color:#f92672">[</span>dexFiles<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">];</span>
+  <span style="color:#66d9ef">int</span> elementPos <span style="color:#f92672">=</span> 0<span style="color:#f92672">;</span>
+  <span style="color:#66d9ef">for</span> <span style="color:#f92672">(</span>ByteBuffer buf <span style="color:#f92672">:</span> dexFiles<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">try</span> <span style="color:#f92672">{</span>
+      DexFile dex <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> DexFile<span style="color:#f92672">(</span>buf<span style="color:#f92672">);</span>
+      elements<span style="color:#f92672">[</span>elementPos<span style="color:#f92672">++]</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Element<span style="color:#f92672">(</span>dex<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">catch</span> <span style="color:#f92672">(</span>IOException suppressed<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+      System<span style="color:#f92672">.</span><span style="color:#a6e22e">logE</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;Unable to load dex file: &#34;</span> <span style="color:#f92672">+</span> buf<span style="color:#f92672">,</span> suppressed<span style="color:#f92672">);</span>
+      suppressedExceptions<span style="color:#f92672">.</span><span style="color:#a6e22e">add</span><span style="color:#f92672">(</span>suppressed<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+  <span style="color:#f92672">}</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>elementPos <span style="color:#f92672">!=</span> elements<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    elements <span style="color:#f92672">=</span> Arrays<span style="color:#f92672">.</span><span style="color:#a6e22e">copyOf</span><span style="color:#f92672">(</span>elements<span style="color:#f92672">,</span> elementPos<span style="color:#f92672">);</span>
+  <span style="color:#f92672">}</span>
+  <span style="color:#66d9ef">return</span> elements<span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
 
-<pre><code class="language-java">public class BaseDexClassLoader extends ClassLoader {
-		// …… 省略其他
-    public BaseDexClassLoader(ByteBuffer[] dexFiles, ClassLoader parent) {
-        // TODO We should support giving this a library search path maybe.
-        super(parent);
-        this.pathList = new DexPathList(this, dexFiles);
-    }
-}
-</code></pre>
+</code></pre></div><p>直接调用了 DexFile 的构造函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java">DexFile<span style="color:#f92672">(</span>ByteBuffer buf<span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> IOException <span style="color:#f92672">{</span>
+  mCookie <span style="color:#f92672">=</span> openInMemoryDexFile<span style="color:#f92672">(</span>buf<span style="color:#f92672">);</span>
+  mInternalCookie <span style="color:#f92672">=</span> mCookie<span style="color:#f92672">;</span>
+  mFileName <span style="color:#f92672">=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">;</span>
+<span style="color:#f92672">}</span>
 
-<p>可以看到 <code>DexPathList</code> 这个类也相应跟进了使用 ByteBuffer 数组来创建内存中的 Dex，继续跟进该函数：</p>
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> Object <span style="color:#a6e22e">openInMemoryDexFile</span><span style="color:#f92672">(</span>ByteBuffer buf<span style="color:#f92672">)</span> <span style="color:#66d9ef">throws</span> IOException <span style="color:#f92672">{</span>
+  <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>buf<span style="color:#f92672">.</span><span style="color:#a6e22e">isDirect</span><span style="color:#f92672">())</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> createCookieWithDirectBuffer<span style="color:#f92672">(</span>buf<span style="color:#f92672">,</span> buf<span style="color:#f92672">.</span><span style="color:#a6e22e">position</span><span style="color:#f92672">(),</span> buf<span style="color:#f92672">.</span><span style="color:#a6e22e">limit</span><span style="color:#f92672">());</span>
+  <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">return</span> createCookieWithArray<span style="color:#f92672">(</span>buf<span style="color:#f92672">.</span><span style="color:#a6e22e">array</span><span style="color:#f92672">(),</span> buf<span style="color:#f92672">.</span><span style="color:#a6e22e">position</span><span style="color:#f92672">(),</span> buf<span style="color:#f92672">.</span><span style="color:#a6e22e">limit</span><span style="color:#f92672">());</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
 
-<pre><code class="language-java">public DexPathList(ClassLoader definingContext, ByteBuffer[] dexFiles) {
-  if (definingContext == null) {
-    throw new NullPointerException(&quot;definingContext == null&quot;);
-  }
-  if (dexFiles == null) {
-    throw new NullPointerException(&quot;dexFiles == null&quot;);
-  }
-  if (Arrays.stream(dexFiles).anyMatch(v -&gt; v == null)) {
-    throw new NullPointerException(&quot;dexFiles contains a null Buffer!&quot;);
-  }
-
-  this.definingContext = definingContext;
-  // TODO It might be useful to let in-memory dex-paths have native libraries.
-  this.nativeLibraryDirectories = Collections.emptyList();
-  this.systemNativeLibraryDirectories =
-    splitPaths(System.getProperty(&quot;java.library.path&quot;), true);
-  this.nativeLibraryPathElements = makePathElements(this.systemNativeLibraryDirectories);
-
-  ArrayList&lt;IOException&gt; suppressedExceptions = new ArrayList&lt;IOException&gt;();
-  this.dexElements = makeInMemoryDexElements(dexFiles, suppressedExceptions);
-  if (suppressedExceptions.size() &gt; 0) {
-    this.dexElementsSuppressedExceptions =
-      suppressedExceptions.toArray(new IOException[suppressedExceptions.size()]);
-  } else {
-    dexElementsSuppressedExceptions = null;
-  }
-}
-</code></pre>
-
-<p>那么很明显就是 <code>makeInMemoryDexElements</code> 函数了，继续查看该函数实现：</p>
-
-<pre><code class="language-java">private static Element[] makeInMemoryDexElements(ByteBuffer[] dexFiles,
-                                                 List&lt;IOException&gt; suppressedExceptions) {
-  Element[] elements = new Element[dexFiles.length];
-  int elementPos = 0;
-  for (ByteBuffer buf : dexFiles) {
-    try {
-      DexFile dex = new DexFile(buf);
-      elements[elementPos++] = new Element(dex);
-    } catch (IOException suppressed) {
-      System.logE(&quot;Unable to load dex file: &quot; + buf, suppressed);
-      suppressedExceptions.add(suppressed);
-    }
-  }
-  if (elementPos != elements.length) {
-    elements = Arrays.copyOf(elements, elementPos);
-  }
-  return elements;
-}
-
-</code></pre>
-
-<p>直接调用了 DexFile 的构造函数：</p>
-
-<pre><code class="language-java">DexFile(ByteBuffer buf) throws IOException {
-  mCookie = openInMemoryDexFile(buf);
-  mInternalCookie = mCookie;
-  mFileName = null;
-}
-
-private static Object openInMemoryDexFile(ByteBuffer buf) throws IOException {
-  if (buf.isDirect()) {
-    return createCookieWithDirectBuffer(buf, buf.position(), buf.limit());
-  } else {
-    return createCookieWithArray(buf.array(), buf.position(), buf.limit());
-  }
-}
-
-private static native Object createCookieWithDirectBuffer(ByteBuffer buf, int start, int end);
-private static native Object createCookieWithArray(byte[] buf, int start, int end);
-</code></pre>
-
-<p>可以看到这里程序就进入了 native 逻辑，相应实现在 art/runtime/native/dalvik_system_DexFile.cc：</p>
-
-<pre><code class="language-c++">static jobject DexFile_createCookieWithDirectBuffer(JNIEnv* env,
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">native</span> Object <span style="color:#a6e22e">createCookieWithDirectBuffer</span><span style="color:#f92672">(</span>ByteBuffer buf<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> start<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> end<span style="color:#f92672">);</span>
+<span style="color:#66d9ef">private</span> <span style="color:#66d9ef">static</span> <span style="color:#66d9ef">native</span> Object <span style="color:#a6e22e">createCookieWithArray</span><span style="color:#f92672">(</span><span style="color:#66d9ef">byte</span><span style="color:#f92672">[]</span> buf<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> start<span style="color:#f92672">,</span> <span style="color:#66d9ef">int</span> end<span style="color:#f92672">);</span>
+</code></pre></div><p>可以看到这里程序就进入了 native 逻辑，相应实现在 art/runtime/native/dalvik_system_DexFile.cc：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">static</span> jobject <span style="color:#a6e22e">DexFile_createCookieWithDirectBuffer</span>(JNIEnv<span style="color:#f92672">*</span> env,
                                                     jclass,
                                                     jobject buffer,
                                                     jint start,
                                                     jint end) {
-  uint8_t* base_address = reinterpret_cast&lt;uint8_t*&gt;(env-&gt;GetDirectBufferAddress(buffer));
-  if (base_address == nullptr) {
+  <span style="color:#66d9ef">uint8_t</span><span style="color:#f92672">*</span> base_address <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">uint8_t</span><span style="color:#f92672">*&gt;</span>(env<span style="color:#f92672">-&gt;</span>GetDirectBufferAddress(buffer));
+  <span style="color:#66d9ef">if</span> (base_address <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
     ScopedObjectAccess soa(env);
-    ThrowWrappedIOException(&quot;dexFileBuffer not direct&quot;);
-    return 0;
+    ThrowWrappedIOException(<span style="color:#e6db74">&#34;dexFileBuffer not direct&#34;</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
   }
 
-  std::unique_ptr&lt;MemMap&gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
-  if (dex_mem_map == nullptr) {
-    DCHECK(Thread::Current()-&gt;IsExceptionPending());
-    return 0;
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>MemMap<span style="color:#f92672">&gt;</span> dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  <span style="color:#66d9ef">if</span> (dex_mem_map <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
+    DCHECK(Thread<span style="color:#f92672">::</span>Current()<span style="color:#f92672">-&gt;</span>IsExceptionPending());
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
   }
 
-  size_t length = static_cast&lt;size_t&gt;(end - start);
-  memcpy(dex_mem_map-&gt;Begin(), base_address, length);
-  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+  size_t length <span style="color:#f92672">=</span> <span style="color:#66d9ef">static_cast</span><span style="color:#f92672">&lt;</span>size_t<span style="color:#f92672">&gt;</span>(end <span style="color:#f92672">-</span> start);
+  memcpy(dex_mem_map<span style="color:#f92672">-&gt;</span>Begin(), base_address, length);
+  <span style="color:#66d9ef">return</span> CreateSingleDexFileCookie(env, std<span style="color:#f92672">::</span>move(dex_mem_map));
 }
 
-static jobject DexFile_createCookieWithArray(JNIEnv* env,
+<span style="color:#66d9ef">static</span> jobject <span style="color:#a6e22e">DexFile_createCookieWithArray</span>(JNIEnv<span style="color:#f92672">*</span> env,
                                              jclass,
                                              jbyteArray buffer,
                                              jint start,
                                              jint end) {
-  std::unique_ptr&lt;MemMap&gt; dex_mem_map(AllocateDexMemoryMap(env, start, end));
-  if (dex_mem_map == nullptr) {
-    DCHECK(Thread::Current()-&gt;IsExceptionPending());
-    return 0;
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>MemMap<span style="color:#f92672">&gt;</span> dex_mem_map(AllocateDexMemoryMap(env, start, end));
+  <span style="color:#66d9ef">if</span> (dex_mem_map <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
+    DCHECK(Thread<span style="color:#f92672">::</span>Current()<span style="color:#f92672">-&gt;</span>IsExceptionPending());
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
   }
 
-  auto destination = reinterpret_cast&lt;jbyte*&gt;(dex_mem_map.get()-&gt;Begin());
-  env-&gt;GetByteArrayRegion(buffer, start, end - start, destination);
-  return CreateSingleDexFileCookie(env, std::move(dex_mem_map));
+  <span style="color:#66d9ef">auto</span> destination <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>jbyte<span style="color:#f92672">*&gt;</span>(dex_mem_map.get()<span style="color:#f92672">-&gt;</span>Begin());
+  env<span style="color:#f92672">-&gt;</span>GetByteArrayRegion(buffer, start, end <span style="color:#f92672">-</span> start, destination);
+  <span style="color:#66d9ef">return</span> CreateSingleDexFileCookie(env, std<span style="color:#f92672">::</span>move(dex_mem_map));
 }
-</code></pre>
-
-<p>这两个函数最终的目的都是将 java 中的 byte 数组转为 native 层的 MemoryMap，然后通过  <code>CreateSingleDexFileCookie</code>  获得相应的 Cookie：</p>
-
-<pre><code class="language-c++">static jobject CreateSingleDexFileCookie(JNIEnv* env, std::unique_ptr&lt;MemMap&gt; data) {
-  std::unique_ptr&lt;const DexFile&gt; dex_file(CreateDexFile(env, std::move(data)));
-  if (dex_file.get() == nullptr) {
-    DCHECK(env-&gt;ExceptionCheck());
-    return nullptr;
+</code></pre></div><p>这两个函数最终的目的都是将 java 中的 byte 数组转为 native 层的 MemoryMap，然后通过  <code>CreateSingleDexFileCookie</code>  获得相应的 Cookie：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">static</span> jobject <span style="color:#a6e22e">CreateSingleDexFileCookie</span>(JNIEnv<span style="color:#f92672">*</span> env, std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>MemMap<span style="color:#f92672">&gt;</span> data) {
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">&gt;</span> dex_file(CreateDexFile(env, std<span style="color:#f92672">::</span>move(data)));
+  <span style="color:#66d9ef">if</span> (dex_file.get() <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
+    DCHECK(env<span style="color:#f92672">-&gt;</span>ExceptionCheck());
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
-  std::vector&lt;std::unique_ptr&lt;const DexFile&gt;&gt; dex_files;
-  dex_files.push_back(std::move(dex_file));
-  return ConvertDexFilesToJavaArray(env, nullptr, dex_files);
+  std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">&gt;&gt;</span> dex_files;
+  dex_files.push_back(std<span style="color:#f92672">::</span>move(dex_file));
+  <span style="color:#66d9ef">return</span> ConvertDexFilesToJavaArray(env, <span style="color:#66d9ef">nullptr</span>, dex_files);
 }
-</code></pre>
-
-<p>最终 Cookie 由 <code>ConvertDexFilesToJavaArray</code> 生成（没错，这个版本的 cookie 就是 jlongArray 类型）：</p>
-
-<pre><code class="language-c++">static jlongArray ConvertDexFilesToJavaArray(JNIEnv* env,
-                                             const OatFile* oat_file,
-                                             std::vector&lt;std::unique_ptr&lt;const DexFile&gt;&gt;&amp; vec) {
-  // Add one for the oat file.
-  jlongArray long_array = env-&gt;NewLongArray(static_cast&lt;jsize&gt;(kDexFileIndexStart + vec.size()));
-  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
-    return nullptr;
+</code></pre></div><p>最终 Cookie 由 <code>ConvertDexFilesToJavaArray</code> 生成（没错，这个版本的 cookie 就是 jlongArray 类型）：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">static</span> jlongArray <span style="color:#a6e22e">ConvertDexFilesToJavaArray</span>(JNIEnv<span style="color:#f92672">*</span> env,
+                                             <span style="color:#66d9ef">const</span> OatFile<span style="color:#f92672">*</span> oat_file,
+                                             std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">&gt;&gt;&amp;</span> vec) {
+  <span style="color:#75715e">// Add one for the oat file.
+</span><span style="color:#75715e"></span>  jlongArray long_array <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>NewLongArray(<span style="color:#66d9ef">static_cast</span><span style="color:#f92672">&lt;</span>jsize<span style="color:#f92672">&gt;</span>(kDexFileIndexStart <span style="color:#f92672">+</span> vec.size()));
+  <span style="color:#66d9ef">if</span> (env<span style="color:#f92672">-&gt;</span>ExceptionCheck() <span style="color:#f92672">==</span> JNI_TRUE) {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
   jboolean is_long_data_copied;
-  jlong* long_data = env-&gt;GetLongArrayElements(long_array, &amp;is_long_data_copied);
-  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
-    return nullptr;
+  jlong<span style="color:#f92672">*</span> long_data <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetLongArrayElements(long_array, <span style="color:#f92672">&amp;</span>is_long_data_copied);
+  <span style="color:#66d9ef">if</span> (env<span style="color:#f92672">-&gt;</span>ExceptionCheck() <span style="color:#f92672">==</span> JNI_TRUE) {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
-  long_data[kOatFileIndex] = reinterpret_cast&lt;uintptr_t&gt;(oat_file);
-  for (size_t i = 0; i &lt; vec.size(); ++i) {
-    long_data[kDexFileIndexStart + i] = reinterpret_cast&lt;uintptr_t&gt;(vec[i].get());
+  long_data[kOatFileIndex] <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>uintptr_t<span style="color:#f92672">&gt;</span>(oat_file);
+  <span style="color:#66d9ef">for</span> (size_t i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> vec.size(); <span style="color:#f92672">++</span>i) {
+    long_data[kDexFileIndexStart <span style="color:#f92672">+</span> i] <span style="color:#f92672">=</span> <span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span>uintptr_t<span style="color:#f92672">&gt;</span>(vec[i].get());
   }
 
-  env-&gt;ReleaseLongArrayElements(long_array, long_data, 0);
-  if (env-&gt;ExceptionCheck() == JNI_TRUE) {
-    return nullptr;
+  env<span style="color:#f92672">-&gt;</span>ReleaseLongArrayElements(long_array, long_data, <span style="color:#ae81ff">0</span>);
+  <span style="color:#66d9ef">if</span> (env<span style="color:#f92672">-&gt;</span>ExceptionCheck() <span style="color:#f92672">==</span> JNI_TRUE) {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
-  // Now release all the unique_ptrs.
-  for (auto&amp; dex_file : vec) {
+  <span style="color:#75715e">// Now release all the unique_ptrs.
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">auto</span><span style="color:#f92672">&amp;</span> dex_file : vec) {
     dex_file.release();
   }
 
-  return long_array;
+  <span style="color:#66d9ef">return</span> long_array;
 }
-</code></pre>
-
-<p>最后看一下是如何生存 Dex 结构的，可以看到 <code>DexFile::Open</code> 允许传入之前生成的MemoryMap结构： <code>dex_mem_map</code>，代码如下。</p>
-
-<pre><code class="language-c++">// art/runtime/native/dalvik_system_DexFile.cc
-static const DexFile* CreateDexFile(JNIEnv* env, std::unique_ptr&lt;MemMap&gt; dex_mem_map) {
-  std::string location = StringPrintf(&quot;Anonymous-DexFile@%p-%p&quot;,
-                                      dex_mem_map-&gt;Begin(),
-                                      dex_mem_map-&gt;End());
-  std::string error_message;
-  std::unique_ptr&lt;const DexFile&gt; dex_file(DexFile::Open(location,
-                                                        0,
-                                                        std::move(dex_mem_map),
-                                                        /* verify */ true,
-                                                        /* verify_location */ true,
-                                                        &amp;error_message));
-  if (dex_file == nullptr) {
+</code></pre></div><p>最后看一下是如何生存 Dex 结构的，可以看到 <code>DexFile::Open</code> 允许传入之前生成的MemoryMap结构： <code>dex_mem_map</code>，代码如下。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#75715e">// art/runtime/native/dalvik_system_DexFile.cc
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">*</span> <span style="color:#a6e22e">CreateDexFile</span>(JNIEnv<span style="color:#f92672">*</span> env, std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>MemMap<span style="color:#f92672">&gt;</span> dex_mem_map) {
+  std<span style="color:#f92672">::</span>string location <span style="color:#f92672">=</span> StringPrintf(<span style="color:#e6db74">&#34;Anonymous-DexFile@%p-%p&#34;</span>,
+                                      dex_mem_map<span style="color:#f92672">-&gt;</span>Begin(),
+                                      dex_mem_map<span style="color:#f92672">-&gt;</span>End());
+  std<span style="color:#f92672">::</span>string error_message;
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">&gt;</span> dex_file(DexFile<span style="color:#f92672">::</span>Open(location,
+                                                        <span style="color:#ae81ff">0</span>,
+                                                        std<span style="color:#f92672">::</span>move(dex_mem_map),
+                                                        <span style="color:#75715e">/* verify */</span> true,
+                                                        <span style="color:#75715e">/* verify_location */</span> true,
+                                                        <span style="color:#f92672">&amp;</span>error_message));
+  <span style="color:#66d9ef">if</span> (dex_file <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
     ScopedObjectAccess soa(env);
-    ThrowWrappedIOException(&quot;%s&quot;, error_message.c_str());
-    return nullptr;
+    ThrowWrappedIOException(<span style="color:#e6db74">&#34;%s&#34;</span>, error_message.c_str());
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
-  if (!dex_file-&gt;DisableWrite()) {
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>dex_file<span style="color:#f92672">-&gt;</span>DisableWrite()) {
     ScopedObjectAccess soa(env);
-    ThrowWrappedIOException(&quot;Failed to make dex file read-only&quot;);
-    return nullptr;
+    ThrowWrappedIOException(<span style="color:#e6db74">&#34;Failed to make dex file read-only&#34;</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
-  return dex_file.release();
+  <span style="color:#66d9ef">return</span> dex_file.release();
 }
 
-// art/runtime/dex_file.cc
-std::unique_ptr&lt;const DexFile&gt; DexFile::Open(const std::string&amp; location,
-                                             uint32_t location_checksum,
-                                             std::unique_ptr&lt;MemMap&gt; map,
-                                             bool verify,
-                                             bool verify_checksum,
-                                             std::string* error_msg) {
-  ScopedTrace trace(std::string(&quot;Open dex file from mapped-memory &quot;) + location);
-  CHECK(map.get() != nullptr);
+<span style="color:#75715e">// art/runtime/dex_file.cc
+</span><span style="color:#75715e"></span>std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">&gt;</span> DexFile<span style="color:#f92672">::</span>Open(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> location,
+                                             <span style="color:#66d9ef">uint32_t</span> location_checksum,
+                                             std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>MemMap<span style="color:#f92672">&gt;</span> map,
+                                             <span style="color:#66d9ef">bool</span> verify,
+                                             <span style="color:#66d9ef">bool</span> verify_checksum,
+                                             std<span style="color:#f92672">::</span>string<span style="color:#f92672">*</span> error_msg) {
+  ScopedTrace <span style="color:#a6e22e">trace</span>(std<span style="color:#f92672">::</span>string(<span style="color:#e6db74">&#34;Open dex file from mapped-memory &#34;</span>) <span style="color:#f92672">+</span> location);
+  CHECK(map.get() <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>);
 
-  if (map-&gt;Size() &lt; sizeof(DexFile::Header)) {
-    *error_msg = StringPrintf(
-        &quot;DexFile: failed to open dex file '%s' that is too short to have a header&quot;,
+  <span style="color:#66d9ef">if</span> (map<span style="color:#f92672">-&gt;</span>Size() <span style="color:#f92672">&lt;</span> <span style="color:#66d9ef">sizeof</span>(DexFile<span style="color:#f92672">::</span>Header)) {
+    <span style="color:#f92672">*</span>error_msg <span style="color:#f92672">=</span> StringPrintf(
+        <span style="color:#e6db74">&#34;DexFile: failed to open dex file &#39;%s&#39; that is too short to have a header&#34;</span>,
         location.c_str());
-    return nullptr;
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
 
-  std::unique_ptr&lt;DexFile&gt; dex_file = OpenCommon(map-&gt;Begin(),
-                                                 map-&gt;Size(),
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>DexFile<span style="color:#f92672">&gt;</span> dex_file <span style="color:#f92672">=</span> OpenCommon(map<span style="color:#f92672">-&gt;</span>Begin(),
+                                                 map<span style="color:#f92672">-&gt;</span>Size(),
                                                  location,
                                                  location_checksum,
                                                  kNoOatDexFile,
                                                  verify,
                                                  verify_checksum,
                                                  error_msg);
-  if (dex_file != nullptr) {
-    dex_file-&gt;mem_map_.reset(map.release());
+  <span style="color:#66d9ef">if</span> (dex_file <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+    dex_file<span style="color:#f92672">-&gt;</span>mem_map_.reset(map.release());
   }
-  return dex_file;
+  <span style="color:#66d9ef">return</span> dex_file;
 }
 
-std::unique_ptr&lt;DexFile&gt; DexFile::OpenCommon(const uint8_t* base,
+std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>DexFile<span style="color:#f92672">&gt;</span> DexFile<span style="color:#f92672">::</span>OpenCommon(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint8_t</span><span style="color:#f92672">*</span> base,
                                              size_t size,
-                                             const std::string&amp; location,
-                                             uint32_t location_checksum,
-                                             const OatDexFile* oat_dex_file,
-                                             bool verify,
-                                             bool verify_checksum,
-                                             std::string* error_msg,
-                                             VerifyResult* verify_result) {
-  if (verify_result != nullptr) {
-    *verify_result = VerifyResult::kVerifyNotAttempted;
+                                             <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> location,
+                                             <span style="color:#66d9ef">uint32_t</span> location_checksum,
+                                             <span style="color:#66d9ef">const</span> OatDexFile<span style="color:#f92672">*</span> oat_dex_file,
+                                             <span style="color:#66d9ef">bool</span> verify,
+                                             <span style="color:#66d9ef">bool</span> verify_checksum,
+                                             std<span style="color:#f92672">::</span>string<span style="color:#f92672">*</span> error_msg,
+                                             VerifyResult<span style="color:#f92672">*</span> verify_result) {
+  <span style="color:#66d9ef">if</span> (verify_result <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+    <span style="color:#f92672">*</span>verify_result <span style="color:#f92672">=</span> VerifyResult<span style="color:#f92672">::</span>kVerifyNotAttempted;
   }
-  std::unique_ptr&lt;DexFile&gt; dex_file(new DexFile(base,
+  std<span style="color:#f92672">::</span>unique_ptr<span style="color:#f92672">&lt;</span>DexFile<span style="color:#f92672">&gt;</span> dex_file(<span style="color:#66d9ef">new</span> DexFile(base,
                                                 size,
                                                 location,
                                                 location_checksum,
                                                 oat_dex_file));
-  if (dex_file == nullptr) {
-    *error_msg = StringPrintf(&quot;Failed to open dex file '%s' from memory: %s&quot;, location.c_str(),
-                              error_msg-&gt;c_str());
-    return nullptr;
+  <span style="color:#66d9ef">if</span> (dex_file <span style="color:#f92672">==</span> <span style="color:#66d9ef">nullptr</span>) {
+    <span style="color:#f92672">*</span>error_msg <span style="color:#f92672">=</span> StringPrintf(<span style="color:#e6db74">&#34;Failed to open dex file &#39;%s&#39; from memory: %s&#34;</span>, location.c_str(),
+                              error_msg<span style="color:#f92672">-&gt;</span>c_str());
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
-  if (!dex_file-&gt;Init(error_msg)) {
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>dex_file<span style="color:#f92672">-&gt;</span>Init(error_msg)) {
     dex_file.reset();
-    return nullptr;
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
-  if (verify &amp;&amp; !DexFileVerifier::Verify(dex_file.get(),
-                                         dex_file-&gt;Begin(),
-                                         dex_file-&gt;Size(),
+  <span style="color:#66d9ef">if</span> (verify <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span>DexFileVerifier<span style="color:#f92672">::</span>Verify(dex_file.get(),
+                                         dex_file<span style="color:#f92672">-&gt;</span>Begin(),
+                                         dex_file<span style="color:#f92672">-&gt;</span>Size(),
                                          location.c_str(),
                                          verify_checksum,
                                          error_msg)) {
-    if (verify_result != nullptr) {
-      *verify_result = VerifyResult::kVerifyFailed;
+    <span style="color:#66d9ef">if</span> (verify_result <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+      <span style="color:#f92672">*</span>verify_result <span style="color:#f92672">=</span> VerifyResult<span style="color:#f92672">::</span>kVerifyFailed;
     }
-    return nullptr;
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nullptr</span>;
   }
-  if (verify_result != nullptr) {
-    *verify_result = VerifyResult::kVerifySucceeded;
+  <span style="color:#66d9ef">if</span> (verify_result <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) {
+    <span style="color:#f92672">*</span>verify_result <span style="color:#f92672">=</span> VerifyResult<span style="color:#f92672">::</span>kVerifySucceeded;
   }
-  return dex_file;
+  <span style="color:#66d9ef">return</span> dex_file;
 }
-</code></pre>
-
-<p>最终调用了 DexFile 的构造函数：</p>
-
-<pre><code class="language-c++">DexFile::DexFile(const uint8_t* base,
+</code></pre></div><p>最终调用了 DexFile 的构造函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++">DexFile<span style="color:#f92672">::</span>DexFile(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint8_t</span><span style="color:#f92672">*</span> base,
                  size_t size,
-                 const std::string&amp; location,
-                 uint32_t location_checksum,
-                 const OatDexFile* oat_dex_file)
-    : begin_(base),
+                 <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> location,
+                 <span style="color:#66d9ef">uint32_t</span> location_checksum,
+                 <span style="color:#66d9ef">const</span> OatDexFile<span style="color:#f92672">*</span> oat_dex_file)
+    <span style="color:#f92672">:</span> begin_(base),
       size_(size),
       location_(location),
       location_checksum_(location_checksum),
-      header_(reinterpret_cast&lt;const Header*&gt;(base)),
-      string_ids_(reinterpret_cast&lt;const StringId*&gt;(base + header_-&gt;string_ids_off_)),
-      type_ids_(reinterpret_cast&lt;const TypeId*&gt;(base + header_-&gt;type_ids_off_)),
-      field_ids_(reinterpret_cast&lt;const FieldId*&gt;(base + header_-&gt;field_ids_off_)),
-      method_ids_(reinterpret_cast&lt;const MethodId*&gt;(base + header_-&gt;method_ids_off_)),
-      proto_ids_(reinterpret_cast&lt;const ProtoId*&gt;(base + header_-&gt;proto_ids_off_)),
-      class_defs_(reinterpret_cast&lt;const ClassDef*&gt;(base + header_-&gt;class_defs_off_)),
-      method_handles_(nullptr),
-      num_method_handles_(0),
-      call_site_ids_(nullptr),
-      num_call_site_ids_(0),
+      header_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> Header<span style="color:#f92672">*&gt;</span>(base)),
+      string_ids_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> StringId<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>string_ids_off_)),
+      type_ids_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> TypeId<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>type_ids_off_)),
+      field_ids_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> FieldId<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>field_ids_off_)),
+      method_ids_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> MethodId<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>method_ids_off_)),
+      proto_ids_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> ProtoId<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>proto_ids_off_)),
+      class_defs_(<span style="color:#66d9ef">reinterpret_cast</span><span style="color:#f92672">&lt;</span><span style="color:#66d9ef">const</span> ClassDef<span style="color:#f92672">*&gt;</span>(base <span style="color:#f92672">+</span> header_<span style="color:#f92672">-&gt;</span>class_defs_off_)),
+      method_handles_(<span style="color:#66d9ef">nullptr</span>),
+      num_method_handles_(<span style="color:#ae81ff">0</span>),
+      call_site_ids_(<span style="color:#66d9ef">nullptr</span>),
+      num_call_site_ids_(<span style="color:#ae81ff">0</span>),
       oat_dex_file_(oat_dex_file) {
-  CHECK(begin_ != nullptr) &lt;&lt; GetLocation();
-  CHECK_GT(size_, 0U) &lt;&lt; GetLocation();
-  // Check base (=header) alignment.
-  // Must be 4-byte aligned to avoid undefined behavior when accessing
-  // any of the sections via a pointer.
-  CHECK_ALIGNED(begin_, alignof(Header));
+  CHECK(begin_ <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>) <span style="color:#f92672">&lt;&lt;</span> GetLocation();
+  CHECK_GT(size_, <span style="color:#ae81ff">0U</span>) <span style="color:#f92672">&lt;&lt;</span> GetLocation();
+  <span style="color:#75715e">// Check base (=header) alignment.
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// Must be 4-byte aligned to avoid undefined behavior when accessing
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// any of the sections via a pointer.
+</span><span style="color:#75715e"></span>  CHECK_ALIGNED(begin_, <span style="color:#66d9ef">alignof</span>(Header));
 
   InitializeSectionsFromMapList();
 }
-</code></pre>
-
-<p>该方案和原有 DexClassLoader 实现的差异，可以参考文章 <a href="[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)" rel="nofollow noreferrer" target="_blank">InMemoryDexClassLoader探究</a>，这里不再赘叙。</p>
-
+</code></pre></div><p>该方案和原有 DexClassLoader 实现的差异，可以参考文章 <a href="%5Bhttp://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/%5D(http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/)">InMemoryDexClassLoader探究</a>，这里不再赘叙。</p>
 <h2 id="非官方内存不落地实现">非官方内存不落地实现</h2>
-
 <p>在 Android 8.0 之前，InMemoryClassLoader 并不存在，那么用什么方式来实现加载内存中的  Dex？</p>
-
-<p>用于参考的项目地址：<a href="https://github.com/woxihuannisja/Bangcle" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle</a></p>
-
+<p>用于参考的项目地址：https://github.com/woxihuannisja/Bangcle</p>
 <p>以下是作者的描述：</p>
-
 <blockquote>
 <h3 id="原理">原理</h3>
-
-<p>Dalvik下的动态加载方法使用的是我这篇文章的方案 <a href="https://bbs.pediy.com/thread-215078.htm，" rel="nofollow noreferrer" target="_blank">https://bbs.pediy.com/thread-215078.htm，</a>
+<p>Dalvik下的动态加载方法使用的是我这篇文章的方案 <a href="https://bbs.pediy.com/thread-215078.htm">https://bbs.pediy.com/thread-215078.htm</a>，
 Art 下提供了2种方案，
 方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
 方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题。</p>
 </blockquote>
-
-<p>首先来看最关键的两个函数 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp：</a></p>
-
+<p>首先来看最关键的两个函数 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp">https://github.com/woxihuannisja/Bangcle/blob/master/jni/packer.cpp</a>：</p>
 <ul>
 <li>native_attachBaseContext</li>
 <li>native_onCreate</li>
 </ul>
-
 <p>这两个函数主要实现了 attachBaseContext 和 onCreate 的逻辑。按函数的执行顺序，先看 <code>native_attachBaseContext</code>：</p>
-
-<pre><code class="language-c">void native_attachBaseContext(JNIEnv *env, jobject thiz, jobject ctx)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">native_attachBaseContext</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject thiz, jobject ctx)
 {
-#if defined(__arm__)
-    LOGD(&quot;[+]Running arm libdexload&quot;);
-#elif defined(__aarch64__)
-    LOGD(&quot;[+]Running aarch64 libdexload&quot;);
+<span style="color:#75715e">#if defined(__arm__)
+</span><span style="color:#75715e"></span>    LOGD(<span style="color:#e6db74">&#34;[+]Running arm libdexload&#34;</span>);
+<span style="color:#75715e">#elif defined(__aarch64__)
+</span><span style="color:#75715e"></span>    LOGD(<span style="color:#e6db74">&#34;[+]Running aarch64 libdexload&#34;</span>);
 
-#endif
+<span style="color:#75715e">#endif
+</span><span style="color:#75715e"></span>
+    jclass ApplicationClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(ctx);
+    jmethodID getFilesDir <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getFilesDir&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/io/File;&#34;</span>);
+    jobject File_obj <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getFilesDir);
+    jclass FileClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(File_obj);
 
-    jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
-    jmethodID getFilesDir = env-&gt;GetMethodID(ApplicationClass, &quot;getFilesDir&quot;, &quot;()Ljava/io/File;&quot;);
-    jobject File_obj = env-&gt;CallObjectMethod(ctx, getFilesDir);
-    jclass FileClass = env-&gt;GetObjectClass(File_obj);
+    jmethodID getAbsolutePath <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(FileClass, <span style="color:#e6db74">&#34;getAbsolutePath&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/String;&#34;</span>);
+    jstring data_file_dir <span style="color:#f92672">=</span> static_cast<span style="color:#f92672">&lt;</span>jstring<span style="color:#f92672">&gt;</span>(env<span style="color:#f92672">-&gt;</span>CallObjectMethod(File_obj, getAbsolutePath));
 
-    jmethodID getAbsolutePath = env-&gt;GetMethodID(FileClass, &quot;getAbsolutePath&quot;, &quot;()Ljava/lang/String;&quot;);
-    jstring data_file_dir = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(File_obj, getAbsolutePath));
+    g_file_dir <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetStringUTFChars(data_file_dir, NULL);
+    <span style="color:#75715e">//g_file_dir_backup=g_file_dir;
+</span><span style="color:#75715e"></span>    LOGD(<span style="color:#e6db74">&#34;[+]FilesDir:%s&#34;</span>, g_file_dir);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(data_file_dir);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(File_obj);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(FileClass);
 
-    g_file_dir = env-&gt;GetStringUTFChars(data_file_dir, NULL);
-    //g_file_dir_backup=g_file_dir;
-    LOGD(&quot;[+]FilesDir:%s&quot;, g_file_dir);
-    env-&gt;DeleteLocalRef(data_file_dir);
-    env-&gt;DeleteLocalRef(File_obj);
-    env-&gt;DeleteLocalRef(FileClass);
+    <span style="color:#75715e">// NativeLibraryDir
+</span><span style="color:#75715e"></span>    jmethodID getApplicationInfo <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getApplicationInfo&#34;</span>,
+                                                    <span style="color:#e6db74">&#34;()Landroid/content/pm/ApplicationInfo;&#34;</span>);
+    jobject ApplicationInfo_obj <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getApplicationInfo);
+    jclass ApplicationInfoClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(ApplicationInfo_obj);
+    jfieldID nativeLibraryDir_field <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ApplicationInfoClass, <span style="color:#e6db74">&#34;nativeLibraryDir&#34;</span>, <span style="color:#e6db74">&#34;Ljava/lang/String;&#34;</span>);
+    jstring nativeLibraryDir <span style="color:#f92672">=</span> (jstring)(env<span style="color:#f92672">-&gt;</span>GetObjectField(ApplicationInfo_obj, nativeLibraryDir_field));
 
-    // NativeLibraryDir
-    jmethodID getApplicationInfo = env-&gt;GetMethodID(ApplicationClass, &quot;getApplicationInfo&quot;,
-                                                    &quot;()Landroid/content/pm/ApplicationInfo;&quot;);
-    jobject ApplicationInfo_obj = env-&gt;CallObjectMethod(ctx, getApplicationInfo);
-    jclass ApplicationInfoClass = env-&gt;GetObjectClass(ApplicationInfo_obj);
-    jfieldID nativeLibraryDir_field = env-&gt;GetFieldID(ApplicationInfoClass, &quot;nativeLibraryDir&quot;, &quot;Ljava/lang/String;&quot;);
-    jstring nativeLibraryDir = (jstring)(env-&gt;GetObjectField(ApplicationInfo_obj, nativeLibraryDir_field));
+    g_NativeLibDir <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetStringUTFChars(nativeLibraryDir, NULL);
+    LOGD(<span style="color:#e6db74">&#34;[+]NativeLibDir:%s&#34;</span>, g_NativeLibDir);
 
-    g_NativeLibDir = env-&gt;GetStringUTFChars(nativeLibraryDir, NULL);
-    LOGD(&quot;[+]NativeLibDir:%s&quot;, g_NativeLibDir);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(nativeLibraryDir);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(ApplicationInfoClass);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(ApplicationInfo_obj);
 
-    env-&gt;DeleteLocalRef(nativeLibraryDir);
-    env-&gt;DeleteLocalRef(ApplicationInfoClass);
-    env-&gt;DeleteLocalRef(ApplicationInfo_obj);
+    jmethodID getPackageResourcePath <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getPackageResourcePath&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/String;&#34;</span>);
 
-    jmethodID getPackageResourcePath = env-&gt;GetMethodID(ApplicationClass, &quot;getPackageResourcePath&quot;, &quot;()Ljava/lang/String;&quot;);
+    jstring mPackageFilePath <span style="color:#f92672">=</span> static_cast<span style="color:#f92672">&lt;</span>jstring<span style="color:#f92672">&gt;</span>(env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getPackageResourcePath));
+    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>cmPackageFilePath <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetStringUTFChars(mPackageFilePath, NULL);
+    g_PackageResourcePath <span style="color:#f92672">=</span> const_cast<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*&gt;</span>(cmPackageFilePath);
+    LOGD(<span style="color:#e6db74">&#34;[+]PackageResourcePath:%s&#34;</span>, g_PackageResourcePath);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(mPackageFilePath);
 
-    jstring mPackageFilePath = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(ctx, getPackageResourcePath));
-    const char *cmPackageFilePath = env-&gt;GetStringUTFChars(mPackageFilePath, NULL);
-    g_PackageResourcePath = const_cast&lt;char *&gt;(cmPackageFilePath);
-    LOGD(&quot;[+]PackageResourcePath:%s&quot;, g_PackageResourcePath);
-    env-&gt;DeleteLocalRef(mPackageFilePath);
+    jmethodID getPackageName <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getPackageName&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/String;&#34;</span>);
+    jstring PackageName <span style="color:#f92672">=</span> static_cast<span style="color:#f92672">&lt;</span>jstring<span style="color:#f92672">&gt;</span>(env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getPackageName));
+    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>packagename <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetStringUTFChars(PackageName, NULL);
+    g_pkgName <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)packagename;
+    LOGD(<span style="color:#e6db74">&#34;[+]g_pkgName :%s&#34;</span>, g_pkgName);
+    env<span style="color:#f92672">-&gt;</span>DeleteLocalRef(PackageName);
 
-    jmethodID getPackageName = env-&gt;GetMethodID(ApplicationClass, &quot;getPackageName&quot;, &quot;()Ljava/lang/String;&quot;);
-    jstring PackageName = static_cast&lt;jstring&gt;(env-&gt;CallObjectMethod(ctx, getPackageName));
-    const char *packagename = env-&gt;GetStringUTFChars(PackageName, NULL);
-    g_pkgName = (char *)packagename;
-    LOGD(&quot;[+]g_pkgName :%s&quot;, g_pkgName);
-    env-&gt;DeleteLocalRef(PackageName);
-
-    char jiaguPath[256] = {0}; // 加密dex的存储路径
-
-    sprintf(g_jiagu_dir, &quot;%s/%s&quot;, g_file_dir, PACKER_MAGIC);
-    sprintf(jiaguPath, &quot;%s/%s&quot;, g_jiagu_dir, JIAMI_MAGIC);
-    LOGD(&quot;[+]g_jiagu_dir:%s,jiaguPath:%s&quot;, g_jiagu_dir, jiaguPath);
-    if (access(g_jiagu_dir, F_OK) != 0)
+    <span style="color:#66d9ef">char</span> jiaguPath[<span style="color:#ae81ff">256</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>}; <span style="color:#75715e">// 加密dex的存储路径
+</span><span style="color:#75715e"></span>
+    sprintf(g_jiagu_dir, <span style="color:#e6db74">&#34;%s/%s&#34;</span>, g_file_dir, PACKER_MAGIC);
+    sprintf(jiaguPath, <span style="color:#e6db74">&#34;%s/%s&#34;</span>, g_jiagu_dir, JIAMI_MAGIC);
+    LOGD(<span style="color:#e6db74">&#34;[+]g_jiagu_dir:%s,jiaguPath:%s&#34;</span>, g_jiagu_dir, jiaguPath);
+    <span style="color:#66d9ef">if</span> (access(g_jiagu_dir, F_OK) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>)
     {
-        if (mkdir(g_jiagu_dir, 0755) == -1)
+        <span style="color:#66d9ef">if</span> (mkdir(g_jiagu_dir, <span style="color:#ae81ff">0755</span>) <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
         {
-            LOGE(&quot;[-]mkdir %s error:%s&quot;, g_jiagu_dir, strerror(errno));
+            LOGE(<span style="color:#e6db74">&#34;[-]mkdir %s error:%s&#34;</span>, g_jiagu_dir, strerror(errno));
         }
     }
-    //从assets目录提取加密dex
-    extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);
+    <span style="color:#75715e">//从assets目录提取加密dex
+</span><span style="color:#75715e"></span>    extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);
     mem_loadDex(env, ctx, jiaguPath);
-} // native_attachBaseContext
-</code></pre>
-
-<p>可以看到大部分操作都是为了获得程序路径等关键属性，主要执行的函数为 <code>extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);</code> 和 <code>mem_loadDex(env, ctx, jiaguPath);</code> ，分别是提取 dex 文件以及在内存中加载 dex 文件。</p>
-
+} <span style="color:#75715e">// native_attachBaseContext
+</span></code></pre></div><p>可以看到大部分操作都是为了获得程序路径等关键属性，主要执行的函数为 <code> extract_file(env, ctx, jiaguPath, JIAMI_MAGIC);</code> 和 <code>mem_loadDex(env, ctx, jiaguPath);</code> ，分别是提取 dex 文件以及在内存中加载 dex 文件。</p>
 <p>下面看 <code>native_onCreate</code> 函数，对 Android 加固有研究的可以看到，这段代码主要实现的就是利用 JNI 实现 Application 和 Context 的替换：</p>
-
-<pre><code class="language-c">void native_onCreate(JNIEnv *env, jobject thiz, jobject instance)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">native_onCreate</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject thiz, jobject instance)
 {
-    LOGD(&quot;[+]native onCreate is called&quot;);
-    jclass ProxyApplicationClass = env-&gt;GetObjectClass(instance);
-    jmethodID getPackageManager = env-&gt;GetMethodID(ProxyApplicationClass, &quot;getPackageManager&quot;, &quot;()Landroid/content/pm/PackageManager;&quot;);
-    if (env-&gt;ExceptionCheck())
+    LOGD(<span style="color:#e6db74">&#34;[+]native onCreate is called&#34;</span>);
+    jclass ProxyApplicationClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(instance);
+    jmethodID getPackageManager <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ProxyApplicationClass, <span style="color:#e6db74">&#34;getPackageManager&#34;</span>, <span style="color:#e6db74">&#34;()Landroid/content/pm/PackageManager;&#34;</span>);
+    <span style="color:#66d9ef">if</span> (env<span style="color:#f92672">-&gt;</span>ExceptionCheck())
     {
-        LOGE(&quot;[-]find getPackageManager methodID failed&quot;);
-        return;
+        LOGE(<span style="color:#e6db74">&#34;[-]find getPackageManager methodID failed&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
     }
-    jobject packageManager = env-&gt;CallObjectMethod(instance, getPackageManager);
-    if (env-&gt;ExceptionCheck())
+    jobject packageManager <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(instance, getPackageManager);
+    <span style="color:#66d9ef">if</span> (env<span style="color:#f92672">-&gt;</span>ExceptionCheck())
     {
-        LOGE(&quot;[-]call getPackageManager method failed&quot;);
-        return;
+        LOGE(<span style="color:#e6db74">&#34;[-]call getPackageManager method failed&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
     }
-    jmethodID pmGetApplicationInfo = env-&gt;GetMethodID(env-&gt;GetObjectClass(packageManager), &quot;getApplicationInfo&quot;, &quot;(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;&quot;);
-    jmethodID getPackageName = env-&gt;GetMethodID(ProxyApplicationClass, &quot;getPackageName&quot;, &quot;()Ljava/lang/String;&quot;);
-    jobject pmAppInfo = env-&gt;CallObjectMethod(packageManager, pmGetApplicationInfo, env-&gt;CallObjectMethod(instance, getPackageName), 128);
+    jmethodID pmGetApplicationInfo <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(packageManager), <span style="color:#e6db74">&#34;getApplicationInfo&#34;</span>, <span style="color:#e6db74">&#34;(Ljava/lang/String;I)Landroid/content/pm/ApplicationInfo;&#34;</span>);
+    jmethodID getPackageName <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ProxyApplicationClass, <span style="color:#e6db74">&#34;getPackageName&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/String;&#34;</span>);
+    jobject pmAppInfo <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(packageManager, pmGetApplicationInfo, env<span style="color:#f92672">-&gt;</span>CallObjectMethod(instance, getPackageName), <span style="color:#ae81ff">128</span>);
 
-    jclass PackageItemInfoClass = env-&gt;FindClass(&quot;android/content/pm/PackageItemInfo&quot;);
+    jclass PackageItemInfoClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>FindClass(<span style="color:#e6db74">&#34;android/content/pm/PackageItemInfo&#34;</span>);
 
-    jfieldID metaDataField = env-&gt;GetFieldID(PackageItemInfoClass, &quot;metaData&quot;, &quot;Landroid/os/Bundle;&quot;);
-    jobject metaData = env-&gt;GetObjectField(pmAppInfo, metaDataField);
-    if (metaData == NULL)
+    jfieldID metaDataField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(PackageItemInfoClass, <span style="color:#e6db74">&#34;metaData&#34;</span>, <span style="color:#e6db74">&#34;Landroid/os/Bundle;&#34;</span>);
+    jobject metaData <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(pmAppInfo, metaDataField);
+    <span style="color:#66d9ef">if</span> (metaData <span style="color:#f92672">==</span> NULL)
     {
-        LOGE(&quot;[-]not found meta Bundle&quot;);
-        return;
+        LOGE(<span style="color:#e6db74">&#34;[-]not found meta Bundle&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
     }
 
-    jmethodID bundleGetString = env-&gt;GetMethodID(env-&gt;GetObjectClass(metaData), &quot;getString&quot;, &quot;(Ljava/lang/String;)Ljava/lang/String;&quot;);
-    //found orignal ApplicationName
-    jstring originApplicationName = (jstring)env-&gt;CallObjectMethod(metaData, bundleGetString, env-&gt;NewStringUTF(&quot;APP_NAME&quot;));
-    if (originApplicationName == NULL)
+    jmethodID bundleGetString <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(metaData), <span style="color:#e6db74">&#34;getString&#34;</span>, <span style="color:#e6db74">&#34;(Ljava/lang/String;)Ljava/lang/String;&#34;</span>);
+    <span style="color:#75715e">//found orignal ApplicationName
+</span><span style="color:#75715e"></span>    jstring originApplicationName <span style="color:#f92672">=</span> (jstring)env<span style="color:#f92672">-&gt;</span>CallObjectMethod(metaData, bundleGetString, env<span style="color:#f92672">-&gt;</span>NewStringUTF(<span style="color:#e6db74">&#34;APP_NAME&#34;</span>));
+    <span style="color:#66d9ef">if</span> (originApplicationName <span style="color:#f92672">==</span> NULL)
     {
-        LOGE(&quot;[-]not found original Application Name&quot;);
-        return;
+        LOGE(<span style="color:#e6db74">&#34;[-]not found original Application Name&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
     }
-    LOGD(&quot;[+]original Application Name : %s&quot;, env-&gt;GetStringUTFChars(originApplicationName, NULL));
+    LOGD(<span style="color:#e6db74">&#34;[+]original Application Name : %s&#34;</span>, env<span style="color:#f92672">-&gt;</span>GetStringUTFChars(originApplicationName, NULL));
 
-    //将LoadedApk中的mApplication对象替换
-    jclass ActivityThreadClass = env-&gt;FindClass(&quot;android/app/ActivityThread&quot;);
-    jmethodID currentActivityThread = env-&gt;GetStaticMethodID(ActivityThreadClass, &quot;currentActivityThread&quot;, &quot;()Landroid/app/ActivityThread;&quot;);
-    jobject activityThread = env-&gt;CallStaticObjectMethod(ActivityThreadClass, currentActivityThread);
-    LOGE(&quot;get ActivityThreadClass&quot;);
-    //得到AppBindData
-    jfieldID mBoundApplicationField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mBoundApplication&quot;, &quot;Landroid/app/ActivityThread$AppBindData;&quot;);
-    jobject mBoundApplication = env-&gt;GetObjectField(activityThread, mBoundApplicationField);
-    LOGE(&quot;get AppBindData&quot;);
-    //得到LoadedApk
-    jfieldID infoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mBoundApplication), &quot;info&quot;, &quot;Landroid/app/LoadedApk;&quot;);
-    jobject info = env-&gt;GetObjectField(mBoundApplication, infoField);
-    LOGE(&quot;get LoadedApk&quot;);
-    //把LoadedApk中的成员变量private Application mApplication;置空
-    jfieldID mApplicationField = env-&gt;GetFieldID(env-&gt;GetObjectClass(info), &quot;mApplication&quot;, &quot;Landroid/app/Application;&quot;);
-    env-&gt;SetObjectField(info, mApplicationField, NULL);
-    LOGE(&quot;mApplication set null&quot;);
-    //得到壳Application
-    jfieldID mInitialApplicationField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mInitialApplication&quot;, &quot;Landroid/app/Application;&quot;);
-    jobject mInitialApplication = env-&gt;GetObjectField(activityThread, mInitialApplicationField);
-    LOGE(&quot;get packer Application&quot;);
+    <span style="color:#75715e">//将LoadedApk中的mApplication对象替换
+</span><span style="color:#75715e"></span>    jclass ActivityThreadClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>FindClass(<span style="color:#e6db74">&#34;android/app/ActivityThread&#34;</span>);
+    jmethodID currentActivityThread <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetStaticMethodID(ActivityThreadClass, <span style="color:#e6db74">&#34;currentActivityThread&#34;</span>, <span style="color:#e6db74">&#34;()Landroid/app/ActivityThread;&#34;</span>);
+    jobject activityThread <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallStaticObjectMethod(ActivityThreadClass, currentActivityThread);
+    LOGE(<span style="color:#e6db74">&#34;get ActivityThreadClass&#34;</span>);
+    <span style="color:#75715e">//得到AppBindData
+</span><span style="color:#75715e"></span>    jfieldID mBoundApplicationField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ActivityThreadClass, <span style="color:#e6db74">&#34;mBoundApplication&#34;</span>, <span style="color:#e6db74">&#34;Landroid/app/ActivityThread$AppBindData;&#34;</span>);
+    jobject mBoundApplication <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(activityThread, mBoundApplicationField);
+    LOGE(<span style="color:#e6db74">&#34;get AppBindData&#34;</span>);
+    <span style="color:#75715e">//得到LoadedApk
+</span><span style="color:#75715e"></span>    jfieldID infoField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mBoundApplication), <span style="color:#e6db74">&#34;info&#34;</span>, <span style="color:#e6db74">&#34;Landroid/app/LoadedApk;&#34;</span>);
+    jobject info <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(mBoundApplication, infoField);
+    LOGE(<span style="color:#e6db74">&#34;get LoadedApk&#34;</span>);
+    <span style="color:#75715e">//把LoadedApk中的成员变量private Application mApplication;置空
+</span><span style="color:#75715e"></span>    jfieldID mApplicationField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(info), <span style="color:#e6db74">&#34;mApplication&#34;</span>, <span style="color:#e6db74">&#34;Landroid/app/Application;&#34;</span>);
+    env<span style="color:#f92672">-&gt;</span>SetObjectField(info, mApplicationField, NULL);
+    LOGE(<span style="color:#e6db74">&#34;mApplication set null&#34;</span>);
+    <span style="color:#75715e">//得到壳Application
+</span><span style="color:#75715e"></span>    jfieldID mInitialApplicationField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ActivityThreadClass, <span style="color:#e6db74">&#34;mInitialApplication&#34;</span>, <span style="color:#e6db74">&#34;Landroid/app/Application;&#34;</span>);
+    jobject mInitialApplication <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(activityThread, mInitialApplicationField);
+    LOGE(<span style="color:#e6db74">&#34;get packer Application&#34;</span>);
 
-    //将壳Application移除
-    jfieldID mAllApplicationsField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mAllApplications&quot;, &quot;Ljava/util/ArrayList;&quot;);
-    jobject mAllApplications = env-&gt;GetObjectField(activityThread, mAllApplicationsField);
-    jmethodID remove = env-&gt;GetMethodID(env-&gt;GetObjectClass(mAllApplications), &quot;remove&quot;, &quot;(Ljava/lang/Object;)Z&quot;);
-    env-&gt;CallBooleanMethod(mAllApplications, remove, mInitialApplication);
-    LOGE(&quot;remove packer Application&quot;);
-    //得到AppBindData中的ApplicationInfo
-    jfieldID appInfoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mBoundApplication), &quot;appInfo&quot;, &quot;Landroid/content/pm/ApplicationInfo;&quot;);
-    jobject appInfo = env-&gt;GetObjectField(mBoundApplication, appInfoField);
-    LOGE(&quot;get AppBindData's ApplicationInfo&quot;);
-    //得到LoadedApk中的ApplicationInfo
-    jfieldID mApplicationInfoField = env-&gt;GetFieldID(env-&gt;GetObjectClass(info), &quot;mApplicationInfo&quot;, &quot;Landroid/content/pm/ApplicationInfo;&quot;);
-    jobject mApplicationInfo = env-&gt;GetObjectField(info, mApplicationInfoField);
-    LOGE(&quot;get LoadedApk's ApplicationInfo&quot;);
-    //替换掉ApplicationInfo中的className
-    jfieldID classNameField = env-&gt;GetFieldID(env-&gt;GetObjectClass(appInfo), &quot;className&quot;, &quot;Ljava/lang/String;&quot;);
-    env-&gt;SetObjectField(appInfo, classNameField, originApplicationName);
-    env-&gt;SetObjectField(mApplicationInfo, classNameField, originApplicationName);
-    LOGE(&quot;replace ApplicationInfo's className&quot;);
-    //创建新的Application
-    jmethodID makeApplication = env-&gt;GetMethodID(env-&gt;GetObjectClass(info), &quot;makeApplication&quot;, &quot;(ZLandroid/app/Instrumentation;)Landroid/app/Application;&quot;);
-    //这里调用原始app的attacheBaseContext
-    jobject originApp = env-&gt;CallObjectMethod(info, makeApplication, false, NULL);
-    LOGE(&quot;create new Application&quot;);
-    //将句柄赋值到mInitialApplicationField
-    env-&gt;SetObjectField(activityThread, mInitialApplicationField, originApp);
-    LOGE(&quot;set object mInitialApplicationField&quot;);
+    <span style="color:#75715e">//将壳Application移除
+</span><span style="color:#75715e"></span>    jfieldID mAllApplicationsField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ActivityThreadClass, <span style="color:#e6db74">&#34;mAllApplications&#34;</span>, <span style="color:#e6db74">&#34;Ljava/util/ArrayList;&#34;</span>);
+    jobject mAllApplications <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(activityThread, mAllApplicationsField);
+    jmethodID remove <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mAllApplications), <span style="color:#e6db74">&#34;remove&#34;</span>, <span style="color:#e6db74">&#34;(Ljava/lang/Object;)Z&#34;</span>);
+    env<span style="color:#f92672">-&gt;</span>CallBooleanMethod(mAllApplications, remove, mInitialApplication);
+    LOGE(<span style="color:#e6db74">&#34;remove packer Application&#34;</span>);
+    <span style="color:#75715e">//得到AppBindData中的ApplicationInfo
+</span><span style="color:#75715e"></span>    jfieldID appInfoField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mBoundApplication), <span style="color:#e6db74">&#34;appInfo&#34;</span>, <span style="color:#e6db74">&#34;Landroid/content/pm/ApplicationInfo;&#34;</span>);
+    jobject appInfo <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(mBoundApplication, appInfoField);
+    LOGE(<span style="color:#e6db74">&#34;get AppBindData&#39;s ApplicationInfo&#34;</span>);
+    <span style="color:#75715e">//得到LoadedApk中的ApplicationInfo
+</span><span style="color:#75715e"></span>    jfieldID mApplicationInfoField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(info), <span style="color:#e6db74">&#34;mApplicationInfo&#34;</span>, <span style="color:#e6db74">&#34;Landroid/content/pm/ApplicationInfo;&#34;</span>);
+    jobject mApplicationInfo <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(info, mApplicationInfoField);
+    LOGE(<span style="color:#e6db74">&#34;get LoadedApk&#39;s ApplicationInfo&#34;</span>);
+    <span style="color:#75715e">//替换掉ApplicationInfo中的className
+</span><span style="color:#75715e"></span>    jfieldID classNameField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(appInfo), <span style="color:#e6db74">&#34;className&#34;</span>, <span style="color:#e6db74">&#34;Ljava/lang/String;&#34;</span>);
+    env<span style="color:#f92672">-&gt;</span>SetObjectField(appInfo, classNameField, originApplicationName);
+    env<span style="color:#f92672">-&gt;</span>SetObjectField(mApplicationInfo, classNameField, originApplicationName);
+    LOGE(<span style="color:#e6db74">&#34;replace ApplicationInfo&#39;s className&#34;</span>);
+    <span style="color:#75715e">//创建新的Application
+</span><span style="color:#75715e"></span>    jmethodID makeApplication <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(info), <span style="color:#e6db74">&#34;makeApplication&#34;</span>, <span style="color:#e6db74">&#34;(ZLandroid/app/Instrumentation;)Landroid/app/Application;&#34;</span>);
+    <span style="color:#75715e">//这里调用原始app的attacheBaseContext
+</span><span style="color:#75715e"></span>    jobject originApp <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(info, makeApplication, false, NULL);
+    LOGE(<span style="color:#e6db74">&#34;create new Application&#34;</span>);
+    <span style="color:#75715e">//将句柄赋值到mInitialApplicationField
+</span><span style="color:#75715e"></span>    env<span style="color:#f92672">-&gt;</span>SetObjectField(activityThread, mInitialApplicationField, originApp);
+    LOGE(<span style="color:#e6db74">&#34;set object mInitialApplicationField&#34;</span>);
     jfieldID mProviderMapField;
-    if (g_sdk_int &lt; 19)
+    <span style="color:#66d9ef">if</span> (g_sdk_int <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">19</span>)
     {
-        mProviderMapField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mProviderMap&quot;, &quot;Ljava/util/HashMap;&quot;);
+        mProviderMapField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ActivityThreadClass, <span style="color:#e6db74">&#34;mProviderMap&#34;</span>, <span style="color:#e6db74">&#34;Ljava/util/HashMap;&#34;</span>);
     }
-    else
+    <span style="color:#66d9ef">else</span>
     {
-        mProviderMapField = env-&gt;GetFieldID(ActivityThreadClass, &quot;mProviderMap&quot;, &quot;Landroid/util/ArrayMap;&quot;);
+        mProviderMapField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ActivityThreadClass, <span style="color:#e6db74">&#34;mProviderMap&#34;</span>, <span style="color:#e6db74">&#34;Landroid/util/ArrayMap;&#34;</span>);
     }
-    if (mProviderMapField == NULL)
+    <span style="color:#66d9ef">if</span> (mProviderMapField <span style="color:#f92672">==</span> NULL)
     {
-        LOGE(&quot;not found mProviderMapField&quot;);
-        return;
+        LOGE(<span style="color:#e6db74">&#34;not found mProviderMapField&#34;</span>);
+        <span style="color:#66d9ef">return</span>;
     }
-    LOGE(&quot;found mProviderMapField&quot;);
-    jobject mProviderMap = env-&gt;GetObjectField(activityThread, mProviderMapField);
-    LOGE(&quot;found mProviderMap&quot;);
-    jmethodID values = env-&gt;GetMethodID(env-&gt;GetObjectClass(mProviderMap), &quot;values&quot;, &quot;()Ljava/util/Collection;&quot;);
-    jobject collections = env-&gt;CallObjectMethod(mProviderMap, values);
-    jmethodID iterator = env-&gt;GetMethodID(env-&gt;GetObjectClass(collections), &quot;iterator&quot;, &quot;()Ljava/util/Iterator;&quot;);
-    jobject mIterator = env-&gt;CallObjectMethod(collections, iterator);
-    jmethodID hasNext = env-&gt;GetMethodID(env-&gt;GetObjectClass(mIterator), &quot;hasNext&quot;, &quot;()Z&quot;);
-    jmethodID next = env-&gt;GetMethodID(env-&gt;GetObjectClass(mIterator), &quot;next&quot;, &quot;()Ljava/lang/Object;&quot;);
+    LOGE(<span style="color:#e6db74">&#34;found mProviderMapField&#34;</span>);
+    jobject mProviderMap <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(activityThread, mProviderMapField);
+    LOGE(<span style="color:#e6db74">&#34;found mProviderMap&#34;</span>);
+    jmethodID values <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mProviderMap), <span style="color:#e6db74">&#34;values&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/util/Collection;&#34;</span>);
+    jobject collections <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(mProviderMap, values);
+    jmethodID iterator <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(collections), <span style="color:#e6db74">&#34;iterator&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/util/Iterator;&#34;</span>);
+    jobject mIterator <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(collections, iterator);
+    jmethodID hasNext <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mIterator), <span style="color:#e6db74">&#34;hasNext&#34;</span>, <span style="color:#e6db74">&#34;()Z&#34;</span>);
+    jmethodID next <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mIterator), <span style="color:#e6db74">&#34;next&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/Object;&#34;</span>);
 
-    //替换所有ContentProvider中的Context
-    LOGE(&quot;ready replace all ContentProvider's context&quot;);
-    while (env-&gt;CallBooleanMethod(mIterator, hasNext))
+    <span style="color:#75715e">//替换所有ContentProvider中的Context
+</span><span style="color:#75715e"></span>    LOGE(<span style="color:#e6db74">&#34;ready replace all ContentProvider&#39;s context&#34;</span>);
+    <span style="color:#66d9ef">while</span> (env<span style="color:#f92672">-&gt;</span>CallBooleanMethod(mIterator, hasNext))
     {
-        jobject providerClientRecord = env-&gt;CallObjectMethod(mIterator, next);
-        if (providerClientRecord == NULL)
+        jobject providerClientRecord <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(mIterator, next);
+        <span style="color:#66d9ef">if</span> (providerClientRecord <span style="color:#f92672">==</span> NULL)
         {
-            LOGE(&quot;providerClientRecord = NULL&quot;);
-            continue;
+            LOGE(<span style="color:#e6db74">&#34;providerClientRecord = NULL&#34;</span>);
+            <span style="color:#66d9ef">continue</span>;
         }
-        jclass ProviderClientRecordClass = env-&gt;FindClass(&quot;android/app/ActivityThread$ProviderClientRecord&quot;);
-        jfieldID mLocalProviderField = env-&gt;GetFieldID(ProviderClientRecordClass, &quot;mLocalProvider&quot;, &quot;Landroid/content/ContentProvider;&quot;);
-        if (mLocalProviderField == NULL)
+        jclass ProviderClientRecordClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>FindClass(<span style="color:#e6db74">&#34;android/app/ActivityThread$ProviderClientRecord&#34;</span>);
+        jfieldID mLocalProviderField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(ProviderClientRecordClass, <span style="color:#e6db74">&#34;mLocalProvider&#34;</span>, <span style="color:#e6db74">&#34;Landroid/content/ContentProvider;&#34;</span>);
+        <span style="color:#66d9ef">if</span> (mLocalProviderField <span style="color:#f92672">==</span> NULL)
         {
-            LOGE(&quot;mLocalProviderField not found&quot;);
-            continue;
+            LOGE(<span style="color:#e6db74">&#34;mLocalProviderField not found&#34;</span>);
+            <span style="color:#66d9ef">continue</span>;
         }
-        jobject mLocalProvider = env-&gt;GetObjectField(providerClientRecord, mLocalProviderField);
-        if (mLocalProvider == NULL)
+        jobject mLocalProvider <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectField(providerClientRecord, mLocalProviderField);
+        <span style="color:#66d9ef">if</span> (mLocalProvider <span style="color:#f92672">==</span> NULL)
         {
-            LOGE(&quot;mLocalProvider is NULL&quot;);
-            continue;
+            LOGE(<span style="color:#e6db74">&#34;mLocalProvider is NULL&#34;</span>);
+            <span style="color:#66d9ef">continue</span>;
         }
-        jfieldID mContextField = env-&gt;GetFieldID(env-&gt;GetObjectClass(mLocalProvider), &quot;mContext&quot;, &quot;Landroid/content/Context;&quot;);
-        if (mContextField == NULL)
+        jfieldID mContextField <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(mLocalProvider), <span style="color:#e6db74">&#34;mContext&#34;</span>, <span style="color:#e6db74">&#34;Landroid/content/Context;&#34;</span>);
+        <span style="color:#66d9ef">if</span> (mContextField <span style="color:#f92672">==</span> NULL)
         {
-            LOGE(&quot;mContextField not found&quot;);
-            continue;
+            LOGE(<span style="color:#e6db74">&#34;mContextField not found&#34;</span>);
+            <span style="color:#66d9ef">continue</span>;
         }
-        env-&gt;SetObjectField(mLocalProvider, mContextField, originApp);
+        env<span style="color:#f92672">-&gt;</span>SetObjectField(mLocalProvider, mContextField, originApp);
     }
 
-    //执行originApp的onCreate
-    jmethodID onCreate = env-&gt;GetMethodID(env-&gt;GetObjectClass(originApp), &quot;onCreate&quot;, &quot;()V&quot;);
-    env-&gt;CallVoidMethod(originApp, onCreate);
-    LOGD(&quot;Packer is done&quot;);
+    <span style="color:#75715e">//执行originApp的onCreate
+</span><span style="color:#75715e"></span>    jmethodID onCreate <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(env<span style="color:#f92672">-&gt;</span>GetObjectClass(originApp), <span style="color:#e6db74">&#34;onCreate&#34;</span>, <span style="color:#e6db74">&#34;()V&#34;</span>);
+    env<span style="color:#f92672">-&gt;</span>CallVoidMethod(originApp, onCreate);
+    LOGD(<span style="color:#e6db74">&#34;Packer is done&#34;</span>);
 }
-</code></pre>
-
-<p>onCreate 函数的流程大致如下：</p>
-
+</code></pre></div><p>onCreate 函数的流程大致如下：</p>
 <ol>
 <li>调用 ActivityThread 中 LoadedApk 对象的 makeApplication 方法来创建原始 Dex 文件的 Application 对象</li>
 <li>替换 ActivityThread 中 mBoundApplication 的 mApplication 属性为原始 Dex 文件的 Application 对象</li>
@@ -752,216 +700,207 @@ Art 下提供了2种方案，
 <li>替换 ActivityThread 中 mProviderMap 中每个 provider 的 mContext 为原始 Dex 文件的 Application 对象</li>
 <li>调用原始 Dex 文件的 Application 对象的 onCreate 方法，恢复原始 Dex 文件的组件启动</li>
 </ol>
-
-<p>该函数的加载流程主要完成的是替换的过程，在这一点上和内存落地式没有差异，至于为何要完成替换以及如何理解相应流程，可以查看该篇博文：<a href="https://www.jianshu.com/p/3ef82ac4bf4f" rel="nofollow noreferrer" target="_blank">Android动态替换Application实现</a>，所以关键函数还是在于 <code>extract_file</code> 和 <code>mem_loadDex</code>，下面继续来看以下两个函数：</p>
-
-<p><code>extract_file</code> 定义在 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从" rel="nofollow noreferrer" target="_blank">https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp，可以看到逻辑非常简单，从</a> Assets 中提取相应文件并保存到一定目录下：</p>
-
-<pre><code class="language-c">int extract_file(JNIEnv *env, jobject ctx, const char *szDexPath, const char *fileName)
+<p>该函数的加载流程主要完成的是替换的过程，在这一点上和内存落地式没有差异，至于为何要完成替换以及如何理解相应流程，可以查看该篇博文：<a href="https://www.jianshu.com/p/3ef82ac4bf4f">Android动态替换Application实现</a>，所以关键函数还是在于 <code>extract_file</code> 和 <code>mem_loadDex</code>，下面继续来看以下两个函数：</p>
+<p><code>extract_file</code> 定义在 <a href="https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp">https://github.com/woxihuannisja/Bangcle/blob/master/jni/utils.cpp</a>，可以看到逻辑非常简单，从 Assets 中提取相应文件并保存到一定目录下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">extract_file</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject ctx, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>szDexPath, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>fileName)
 {
-    if (access(szDexPath, F_OK) == 0)
+    <span style="color:#66d9ef">if</span> (access(szDexPath, F_OK) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
     {
-        LOGD(&quot;[+]File %s have existed&quot;, szDexPath);
-        return 0;
+        LOGD(<span style="color:#e6db74">&#34;[+]File %s have existed&#34;</span>, szDexPath);
+        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
     }
-    // jiami.dat不存在，开始提取
-    else
+    <span style="color:#75715e">// jiami.dat不存在，开始提取
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">else</span>
     {
-        AAssetManager *mgr;
-        jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
-        jmethodID getAssets =
-            env-&gt;GetMethodID(ApplicationClass, &quot;getAssets&quot;, &quot;()Landroid/content/res/AssetManager;&quot;);
-        jobject Assets_obj = env-&gt;CallObjectMethod(ctx, getAssets);
-        mgr = AAssetManager_fromJava(env, Assets_obj);
-        if (mgr == NULL)
+        AAssetManager <span style="color:#f92672">*</span>mgr;
+        jclass ApplicationClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(ctx);
+        jmethodID getAssets <span style="color:#f92672">=</span>
+            env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getAssets&#34;</span>, <span style="color:#e6db74">&#34;()Landroid/content/res/AssetManager;&#34;</span>);
+        jobject Assets_obj <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getAssets);
+        mgr <span style="color:#f92672">=</span> AAssetManager_fromJava(env, Assets_obj);
+        <span style="color:#66d9ef">if</span> (mgr <span style="color:#f92672">==</span> NULL)
         {
-            LOGE(&quot;[-]getAAssetManager failed&quot;);
-            return 0;
+            LOGE(<span style="color:#e6db74">&#34;[-]getAAssetManager failed&#34;</span>);
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
         }
-        AAsset *asset = AAssetManager_open(mgr, fileName, AASSET_MODE_STREAMING);
-        FILE *file = fopen(szDexPath, &quot;wb&quot;);
-        int bufferSize = AAsset_getLength(asset);
-        LOGD(&quot;[+]Asset FileName:%s,extract path:%s,size:%d\n&quot;, fileName, szDexPath, bufferSize);
-        void *buffer = malloc(4096);
-        while (true)
+        AAsset <span style="color:#f92672">*</span>asset <span style="color:#f92672">=</span> AAssetManager_open(mgr, fileName, AASSET_MODE_STREAMING);
+        FILE <span style="color:#f92672">*</span>file <span style="color:#f92672">=</span> fopen(szDexPath, <span style="color:#e6db74">&#34;wb&#34;</span>);
+        <span style="color:#66d9ef">int</span> bufferSize <span style="color:#f92672">=</span> AAsset_getLength(asset);
+        LOGD(<span style="color:#e6db74">&#34;[+]Asset FileName:%s,extract path:%s,size:%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, fileName, szDexPath, bufferSize);
+        <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>buffer <span style="color:#f92672">=</span> malloc(<span style="color:#ae81ff">4096</span>);
+        <span style="color:#66d9ef">while</span> (true)
         {
-            int numBytesRead = AAsset_read(asset, buffer, 4096);
-            if (numBytesRead &lt;= 0)
+            <span style="color:#66d9ef">int</span> numBytesRead <span style="color:#f92672">=</span> AAsset_read(asset, buffer, <span style="color:#ae81ff">4096</span>);
+            <span style="color:#66d9ef">if</span> (numBytesRead <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>)
             {
-                break;
+                <span style="color:#66d9ef">break</span>;
             }
-            fwrite(buffer, numBytesRead, 1, file);
+            fwrite(buffer, numBytesRead, <span style="color:#ae81ff">1</span>, file);
         }
         free(buffer);
         fclose(file);
         AAsset_close(asset);
-        chmod(szDexPath, 493);
+        chmod(szDexPath, <span style="color:#ae81ff">493</span>);
     }
-} // extract_file
-</code></pre>
-
-<p>那么看来最核心的逻辑在于 <code>mem_loadDex</code> 函数：</p>
-
-<pre><code class="language-c">void mem_loadDex(JNIEnv *env, jobject ctx, const char *dex_path)
+} <span style="color:#75715e">// extract_file
+</span></code></pre></div><p>那么看来最核心的逻辑在于 <code>mem_loadDex</code> 函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">mem_loadDex</span>(JNIEnv <span style="color:#f92672">*</span>env, jobject ctx, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>dex_path)
 {
-    char inPath[256] = {0};
-    char outPath[256] = {0};
-    jobject mini_dex_obj = NULL;
-    void *c_dex_cookie = NULL;
+    <span style="color:#66d9ef">char</span> inPath[<span style="color:#ae81ff">256</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+    <span style="color:#66d9ef">char</span> outPath[<span style="color:#ae81ff">256</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+    jobject mini_dex_obj <span style="color:#f92672">=</span> NULL;
+    <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>c_dex_cookie <span style="color:#f92672">=</span> NULL;
 
-    jclass ApplicationClass = env-&gt;GetObjectClass(ctx);
-    jmethodID getClassLoader = env-&gt;GetMethodID(ApplicationClass, &quot;getClassLoader&quot;, &quot;()Ljava/lang/ClassLoader;&quot;);
-    jobject classLoader = env-&gt;CallObjectMethod(ctx, getClassLoader);
+    jclass ApplicationClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetObjectClass(ctx);
+    jmethodID getClassLoader <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetMethodID(ApplicationClass, <span style="color:#e6db74">&#34;getClassLoader&#34;</span>, <span style="color:#e6db74">&#34;()Ljava/lang/ClassLoader;&#34;</span>);
+    jobject classLoader <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>CallObjectMethod(ctx, getClassLoader);
 
-    char szDexPath[256] = {0};
+    <span style="color:#66d9ef">char</span> szDexPath[<span style="color:#ae81ff">256</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
 
-    sprintf((char *)szDexPath, dex_path, strlen(dex_path));
-    LOGD(&quot;[+]Dex Path:%s&quot;, szDexPath);
-    //读取加密dex
-    int encrypt_size;
-    char *encrypt_buffer = parse_file(szDexPath, encrypt_size);
-    //check dex size
-    if (!encrypt_size)
+    sprintf((<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)szDexPath, dex_path, strlen(dex_path));
+    LOGD(<span style="color:#e6db74">&#34;[+]Dex Path:%s&#34;</span>, szDexPath);
+    <span style="color:#75715e">//读取加密dex
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> encrypt_size;
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>encrypt_buffer <span style="color:#f92672">=</span> parse_file(szDexPath, encrypt_size);
+    <span style="color:#75715e">//check dex size
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>encrypt_size)
     {
-        LOGE(&quot;[-]encrypt_size is 0&quot;);
-        exit(-1);
+        LOGE(<span style="color:#e6db74">&#34;[-]encrypt_size is 0&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
     }
-    else if (encrypt_size % 16)
+    <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (encrypt_size <span style="color:#f92672">%</span> <span style="color:#ae81ff">16</span>)
     {
-        LOGE(&quot;[-]encrypt_size is not mutiple 16&quot;);
-        exit(-1);
+        LOGE(<span style="color:#e6db74">&#34;[-]encrypt_size is not mutiple 16&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
     }
 
-    int zero = open(&quot;/dev/zero&quot;, PROT_WRITE);
-    g_decrypt_base = mmap(0, encrypt_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, zero, 0);
+    <span style="color:#66d9ef">int</span> zero <span style="color:#f92672">=</span> open(<span style="color:#e6db74">&#34;/dev/zero&#34;</span>, PROT_WRITE);
+    g_decrypt_base <span style="color:#f92672">=</span> mmap(<span style="color:#ae81ff">0</span>, encrypt_size, PROT_READ <span style="color:#f92672">|</span> PROT_WRITE, MAP_PRIVATE, zero, <span style="color:#ae81ff">0</span>);
     close(zero);
-    if (g_decrypt_base == MAP_FAILED)
+    <span style="color:#66d9ef">if</span> (g_decrypt_base <span style="color:#f92672">==</span> MAP_FAILED)
     {
-        LOGE(&quot;[-]ANONYMOUS mmap failed:%s&quot;, strerror(errno));
-        exit(-1);
+        LOGE(<span style="color:#e6db74">&#34;[-]ANONYMOUS mmap failed:%s&#34;</span>, strerror(errno));
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
     }
-    //LOGD(&quot;[+]ANONYMOUS mmap addr:%p&quot;, g_decrypt_base);
-    char decrypt_path[256] = {0};
-    sprintf((char *)decrypt_path, &quot;%s/decrypt.dat&quot;, g_jiagu_dir);
-    //char *decrypt_buffer = aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;g_dex_size);
-    char *decrypt_buffer = tiny_aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;g_dex_size);
-    if (!decrypt_buffer)
+    <span style="color:#75715e">//LOGD(&#34;[+]ANONYMOUS mmap addr:%p&#34;, g_decrypt_base);
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> decrypt_path[<span style="color:#ae81ff">256</span>] <span style="color:#f92672">=</span> {<span style="color:#ae81ff">0</span>};
+    sprintf((<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)decrypt_path, <span style="color:#e6db74">&#34;%s/decrypt.dat&#34;</span>, g_jiagu_dir);
+    <span style="color:#75715e">//char *decrypt_buffer = aes_decrypt_cbc(encrypt_buffer, encrypt_size, &amp;g_dex_size);
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>decrypt_buffer <span style="color:#f92672">=</span> tiny_aes_decrypt_cbc(encrypt_buffer, encrypt_size, <span style="color:#f92672">&amp;</span>g_dex_size);
+    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>decrypt_buffer)
     {
-        LOGE(&quot;[-]aes_decrypt_cbc decrypt dex failed&quot;);
-        exit(-1);
+        LOGE(<span style="color:#e6db74">&#34;[-]aes_decrypt_cbc decrypt dex failed&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
     }
 
     memcpy(g_decrypt_base, decrypt_buffer, g_dex_size);
-    g_page_size = PAGE_END(g_dex_size);
+    g_page_size <span style="color:#f92672">=</span> PAGE_END(g_dex_size);
     free(decrypt_buffer);
 
-    LOGD(&quot;[+]After decrypt dex magic:0x%x,size:%d,page_size:%d&quot;, *(int *)g_decrypt_base, g_dex_size, g_page_size);
+    LOGD(<span style="color:#e6db74">&#34;[+]After decrypt dex magic:0x%x,size:%d,page_size:%d&#34;</span>, <span style="color:#f92672">*</span>(<span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>)g_decrypt_base, g_dex_size, g_page_size);
 
-    if (!g_isArt)
+    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>g_isArt)
     {
-        jint mCookie = mem_loadDex_dvm(env, (char *)szDexPath);
-        LOGD(&quot;[+]Dalvik dex cookie :0x%x&quot;, mCookie);
-        jclass DexFileClass = env-&gt;FindClass(&quot;dalvik/system/DexFile&quot;);
-        jfieldID cookie_field = env-&gt;GetFieldID(DexFileClass, &quot;mCookie&quot;, &quot;I&quot;);
-        //replace cookie
-        env-&gt;SetIntField(mini_dex_obj, cookie_field, mCookie);
+        jint mCookie <span style="color:#f92672">=</span> mem_loadDex_dvm(env, (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)szDexPath);
+        LOGD(<span style="color:#e6db74">&#34;[+]Dalvik dex cookie :0x%x&#34;</span>, mCookie);
+        jclass DexFileClass <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>FindClass(<span style="color:#e6db74">&#34;dalvik/system/DexFile&#34;</span>);
+        jfieldID cookie_field <span style="color:#f92672">=</span> env<span style="color:#f92672">-&gt;</span>GetFieldID(DexFileClass, <span style="color:#e6db74">&#34;mCookie&#34;</span>, <span style="color:#e6db74">&#34;I&#34;</span>);
+        <span style="color:#75715e">//replace cookie
+</span><span style="color:#75715e"></span>        env<span style="color:#f92672">-&gt;</span>SetIntField(mini_dex_obj, cookie_field, mCookie);
         make_dex_elements(env, classLoader, mini_dex_obj);
-        return;
+        <span style="color:#66d9ef">return</span>;
     }
-    else
+    <span style="color:#66d9ef">else</span>
     {
-        sprintf(inPath, &quot;%s/mini.dex&quot;, g_jiagu_dir);
-        sprintf(outPath, &quot;%s/mini.oat&quot;, g_jiagu_dir);
+        sprintf(inPath, <span style="color:#e6db74">&#34;%s/mini.dex&#34;</span>, g_jiagu_dir);
+        sprintf(outPath, <span style="color:#e6db74">&#34;%s/mini.oat&#34;</span>, g_jiagu_dir);
         write_mix_dex(inPath);
-        g_ArtHandle = get_lib_handle(LIB_ART_PATH);
-        if (g_ArtHandle)
+        g_ArtHandle <span style="color:#f92672">=</span> get_lib_handle(LIB_ART_PATH);
+        <span style="color:#66d9ef">if</span> (g_ArtHandle)
         {
-            c_dex_cookie = openmemory_load_dex(g_ArtHandle, (char *)g_decrypt_base, (size_t)g_dex_size, g_sdk_int);
-            LOGD(&quot;[+]sdk_int :%d,c_dex_cookie:%p&quot;, g_sdk_int, c_dex_cookie);
-            if (c_dex_cookie)
+            c_dex_cookie <span style="color:#f92672">=</span> openmemory_load_dex(g_ArtHandle, (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)g_decrypt_base, (size_t)g_dex_size, g_sdk_int);
+            LOGD(<span style="color:#e6db74">&#34;[+]sdk_int :%d,c_dex_cookie:%p&#34;</span>, g_sdk_int, c_dex_cookie);
+            <span style="color:#66d9ef">if</span> (c_dex_cookie)
             {
-                // 加载mini.dex
-                mini_dex_obj = load_dex_fromfile(env, inPath, outPath);
+                <span style="color:#75715e">// 加载mini.dex
+</span><span style="color:#75715e"></span>                mini_dex_obj <span style="color:#f92672">=</span> load_dex_fromfile(env, inPath, outPath);
                 replace_cookie(env, mini_dex_obj, c_dex_cookie, g_sdk_int);
                 make_dex_elements(env, classLoader, mini_dex_obj);
-                LOGD(&quot;[+]using fast plan load dex finished&quot;);
+                LOGD(<span style="color:#e6db74">&#34;[+]using fast plan load dex finished&#34;</span>);
             }
-            else
+            <span style="color:#66d9ef">else</span>
             {
-                // 执行方案二
-                LOGD(&quot;[-]get c_dex_cookie failed! Try second plan&quot;);
-                goto label;
+                <span style="color:#75715e">// 执行方案二
+</span><span style="color:#75715e"></span>                LOGD(<span style="color:#e6db74">&#34;[-]get c_dex_cookie failed! Try second plan&#34;</span>);
+                <span style="color:#66d9ef">goto</span> label;
             }
         }
-        else
+        <span style="color:#66d9ef">else</span>
         {
-            LOGD(&quot;[-]get art handle failed! Try second plan&quot;);
+            LOGD(<span style="color:#e6db74">&#34;[-]get art handle failed! Try second plan&#34;</span>);
         label:
-            // get_path_frommaps(g_pkgName, (char *)g_fake_dex_path, (char *)&quot;.dex&quot;, (char *)&quot;.odex&quot;);
-            // pkgName
-            sprintf((char*)g_fake_dex_magic,&quot;%s/mini.dex&quot;,PACKER_MAGIC);
-            LOGD(&quot;[+]g_faked_dex_magic:%s&quot;,(char*)g_fake_dex_magic);
-            // 加载fake_dex
-            mini_dex_obj = hook_load_dex_internally(env, (const char *)LIB_ART_PATH, (char *)inPath, outPath);
+            <span style="color:#75715e">// get_path_frommaps(g_pkgName, (char *)g_fake_dex_path, (char *)&#34;.dex&#34;, (char *)&#34;.odex&#34;);
+</span><span style="color:#75715e"></span>            <span style="color:#75715e">// pkgName
+</span><span style="color:#75715e"></span>            sprintf((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)g_fake_dex_magic,<span style="color:#e6db74">&#34;%s/mini.dex&#34;</span>,PACKER_MAGIC);
+            LOGD(<span style="color:#e6db74">&#34;[+]g_faked_dex_magic:%s&#34;</span>,(<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)g_fake_dex_magic);
+            <span style="color:#75715e">// 加载fake_dex
+</span><span style="color:#75715e"></span>            mini_dex_obj <span style="color:#f92672">=</span> hook_load_dex_internally(env, (<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)LIB_ART_PATH, (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)inPath, outPath);
             
             make_dex_elements(env, classLoader, mini_dex_obj);
-            LOGD(&quot;[+]using second plan load dex finished&quot;);
+            LOGD(<span style="color:#e6db74">&#34;[+]using second plan load dex finished&#34;</span>);
         }
 
-        if (g_ArtHandle)
+        <span style="color:#66d9ef">if</span> (g_ArtHandle)
         {
             dlclose(g_ArtHandle);
         }
-        return;
+        <span style="color:#66d9ef">return</span>;
     }
 }
-</code></pre>
-
-<p>可以看到这段代码也比较长，但总的来说可以分成以下几个步骤：</p>
-
+</code></pre></div><p>可以看到这段代码也比较长，但总的来说可以分成以下几个步骤：</p>
 <ul>
-<li><p>读取加密文件并在内存中解密，存入一个 buffer 中</p></li>
-
-<li><p>根据虚拟机版本（art / dvm）进入不同逻辑</p></li>
-
-<li><p>dvm 的逻辑参考作者文章 <a href="https://bbs.pediy.com/thread-215078.htm" rel="nofollow noreferrer" target="_blank">阿里早期加固代码还原4.4-6.0</a></p></li>
-</ul>
-
+<li>
+<p>读取加密文件并在内存中解密，存入一个 buffer 中</p>
+</li>
+<li>
+<p>根据虚拟机版本（art / dvm）进入不同逻辑</p>
+</li>
+<li>
+<p>dvm 的逻辑参考作者文章 <a href="https://bbs.pediy.com/thread-215078.htm">阿里早期加固代码还原4.4-6.0</a></p>
 <blockquote>
 <p>用mmap将dex映射内存，使用openDexFile加载dex，就会得到cookie，然后用这个cookie设置Application类中的某些成员</p>
 </blockquote>
-
-<p>这里主要还是使用的是 dvm 虚拟机自带的 <code>Dalvik_dalvik_system_DexFile_openDexFile_bytearray</code> 函数来实现加载字节码，可以继续参考文章 <a href="https://paper.seebug.org/59/" rel="nofollow noreferrer" target="_blank">对抗静态分析——dex不落地加载</a>。</p>
-
-<ul>
-<li>Art 的逻辑参考作者的另一篇文章 <a href="https://bbs.pediy.com/thread-225303.htm" rel="nofollow noreferrer" target="_blank">Android第二代加固（support 4.4-8.1）</a>：</li>
-</ul>
-
+<p>这里主要还是使用的是 dvm 虚拟机自带的 <code>Dalvik_dalvik_system_DexFile_openDexFile_bytearray</code> 函数来实现加载字节码，可以继续参考文章 <a href="https://paper.seebug.org/59/">对抗静态分析——dex不落地加载</a>。</p>
+</li>
+<li>
+<p>Art 的逻辑参考作者的另一篇文章 <a href="https://bbs.pediy.com/thread-225303.htm">Android第二代加固（support 4.4-8.1）</a>：</p>
 <blockquote>
 <p>Art 下提供了2种方案，
 方案一是 call libart下的OpenMemory函数，如何将java的mCookie和c层的cookie联系起来是一个难点，
 方案二是 使用elf Hook来实现 ，由于在Nougat+上dlsym openMemory失败，还有dex_location和dex_cache_location的路径检查，使用方案一有些问题</p>
 </blockquote>
-
-<ul>
-<li>调用 make_dex_elements 函数，作用大致上就是模拟 DexClassLoader 加载过程中对 DexPathList 对象的 dexElements 进行赋值，将部分的 Java 逻辑用 JNI 实现。</li>
+</li>
+<li>
+<p>调用 make_dex_elements 函数，作用大致上就是模拟 DexClassLoader 加载过程中对 DexPathList 对象的 dexElements 进行赋值，将部分的 Java 逻辑用 JNI 实现。</p>
+</li>
 </ul>
-
 <h2 id="总结">总结</h2>
-
 <p>写完之后才感觉总结的并不恰当，花了很多时间和片段在分析代码逻辑上，导致最后读起来非常冗长，但既然已经写了这么多最后还是不舍得删了233。</p>
-
 <p>写归纳性的博客还是需要更多的归纳代码的思想和要点。</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="[http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/](http://zjutkz.net/2018/01/25/InMemoryDexClassLoader源码探究/)" rel="nofollow noreferrer" target="_blank">InMemoryDexClassLoader探究</a></li>
-<li><a href="https://bbs.pediy.com/thread-225303.htm" rel="nofollow noreferrer" target="_blank">Android第二代加固（support 4.4-8.1）</a></li>
-
-<li><p><a href="https://bbs.pediy.com/thread-215078.htm" rel="nofollow noreferrer" target="_blank">阿里早期加固代码还原4.4-6.0</a></p></li>
-
-<li><p><a href="https://xz.aliyun.com/t/5820" rel="nofollow noreferrer" target="_blank">深入理解Apk加固之Dex保护</a></p></li>
+<li>
+<p><a href="%5Bhttp://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/%5D(http://zjutkz.net/2018/01/25/InMemoryDexClassLoader%E6%BA%90%E7%A0%81%E6%8E%A2%E7%A9%B6/)">InMemoryDexClassLoader探究</a></p>
+</li>
+<li>
+<p><a href="https://bbs.pediy.com/thread-225303.htm">Android第二代加固（support 4.4-8.1）</a></p>
+</li>
+<li>
+<p><a href="https://bbs.pediy.com/thread-215078.htm">阿里早期加固代码还原4.4-6.0</a></p>
+</li>
+<li>
+<p><a href="https://xz.aliyun.com/t/5820">深入理解Apk加固之Dex保护</a></p>
+</li>
 </ul>
 
     </div>

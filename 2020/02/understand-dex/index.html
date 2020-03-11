@@ -144,18 +144,11 @@
           
           
 
-          
-
-<p>感觉有必要在 Android 的 Dex 结构上好好补点功课，特地开篇文章补充一下自己的知识储备。</p>
-
+          <p>感觉有必要在 Android 的 Dex 结构上好好补点功课，特地开篇文章补充一下自己的知识储备。</p>
 <p>虽然 Android 在虚拟机上有 Dalvik 和 ART 的分别，在不同版本上应用的机制也不一样，但在 Dex 结构上的设计在已开始就是通用的，理解该数据结构有利于对加深对 Android 虚拟机的理解。</p>
-
 <h2 id="dex-文件结构">Dex 文件结构</h2>
-
-<p>最权威的当属官方文档：<a href="https://source.android.com/devices/tech/dalvik/dex-format" rel="nofollow noreferrer" target="_blank">Dalvik 可执行文件格式</a></p>
-
+<p>最权威的当属官方文档：<a href="https://source.android.com/devices/tech/dalvik/dex-format">Dalvik 可执行文件格式</a></p>
 <p>这里贴一下文件板式的说明：</p>
-
 <table>
 <thead>
 <tr>
@@ -164,68 +157,57 @@
 <th align="left">说明</th>
 </tr>
 </thead>
-
 <tbody>
 <tr>
 <td align="left">header</td>
 <td align="left">header_item</td>
 <td align="left">头文件</td>
 </tr>
-
 <tr>
 <td align="left">string_ids</td>
 <td align="left">string_id_item[]</td>
 <td align="left">字符串标识符列表。这些是此文件使用的所有字符串的标识符，用于内部命名（例如类型描述符）或用作代码引用的常量对象。此列表必须使用 UTF-16 代码点值按字符串内容进行排序（不采用语言区域敏感方式），且不得包含任何重复条目。</td>
 </tr>
-
 <tr>
 <td align="left">type_ids</td>
 <td align="left">type_id_item[]</td>
 <td align="left">类型标识符列表。这些是此文件引用的所有类型（类、数组或原始类型）的标识符（无论文件中是否已定义）。此列表必须按 <code>string_id</code> 索引进行排序，且不得包含任何重复条目。</td>
 </tr>
-
 <tr>
 <td align="left">proto_ids</td>
 <td align="left">proto_id_item[]</td>
 <td align="left">方法原型标识符列表。这些是此文件引用的所有原型的标识符。此列表必须按返回类型（按 <code>type_id</code> 索引排序）主要顺序进行排序，然后按参数列表（按 <code>type_id</code> 索引排序的各个参数，采用字典排序方法）进行排序。该列表不得包含任何重复条目。</td>
 </tr>
-
 <tr>
 <td align="left">field_ids</td>
 <td align="left">field_id_item[]</td>
 <td align="left">字段标识符列表。这些是此文件引用的所有字段的标识符（无论文件中是否已定义）。此列表必须进行排序，其中定义类型（按 <code>type_id</code> 索引排序）是主要顺序，字段名称（按 <code>string_id</code> 索引排序）是中间顺序，而类型（按 <code>type_id</code> 索引排序）是次要顺序。该列表不得包含任何重复条目。</td>
 </tr>
-
 <tr>
 <td align="left">method_ids</td>
 <td align="left">method_id_item[]</td>
 <td align="left">方法标识符列表。这些是此文件引用的所有方法的标识符（无论文件中是否已定义）。此列表必须进行排序，其中定义类型（按 <code>type_id</code> 索引排序）是主要顺序，方法名称（按 <code>string_id</code> 索引排序）是中间顺序，而方法原型（按 <code>proto_id</code> 索引排序）是次要顺序。该列表不得包含任何重复条目。</td>
 </tr>
-
 <tr>
 <td align="left">class_defs</td>
 <td align="left">class_def_item[]</td>
 <td align="left">类定义列表。这些类必须进行排序，以便所指定类的超类和已实现的接口比引用类更早出现在该列表中。此外，对于在该列表中多次出现的同名类，其定义是无效的。</td>
 </tr>
-
 <tr>
 <td align="left">call_site_ids</td>
 <td align="left">call_site_id_item[]</td>
 <td align="left">调用站点标识符列表。这些是此文件引用的所有调用站点的标识符（无论文件中是否已定义）。此列表必须按 <code>call_site_off</code> 以升序进行排序。</td>
 </tr>
-
 <tr>
 <td align="left">method_handles</td>
 <td align="left">method_handle_item[]</td>
 <td align="left">方法句柄列表。此文件引用的所有方法句柄的列表（无论文件中是否已定义）。此列表未进行排序，而且可能包含将在逻辑上对应于不同方法句柄实例的重复项。</td>
 </tr>
-
 <tr>
 <td align="left">data</td>
 <td align="left">ubyte[]</td>
 <td align="left">数据区，包含上面所列表格的所有支持数据。不同的项有不同的对齐要求；如有必要，则在每个项之前插入填充字节，以实现所需的对齐效果。</td>
 </tr>
-
 <tr>
 <td align="left">link_data</td>
 <td align="left">ubyte[]</td>
@@ -233,91 +215,72 @@
 </tr>
 </tbody>
 </table>
-
 <p>单纯看文档可能无法理解，这里再补充一张图加深大家的理解：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Understand-Dex/dex_structure.png" alt="Dex 结构（来自网络，侵删）" class="lazyload"><figcaption class="image-caption">Dex 结构（来自网络，侵删）</figcaption></figure></p>
-
+<p><img src="/images/posts/Understand-Dex/dex_structure.png" alt="Dex 结构（来自网络，侵删）"></p>
 <p>Dex 较为复杂，推荐开启 010Editor 后自行调试，这样才能加深理解，这里我也拿贴一个调试的例子：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Understand-Dex/010Editor.png" alt="调试" class="lazyload"><figcaption class="image-caption">调试</figcaption></figure></p>
-
+<p><img src="/images/posts/Understand-Dex/010Editor.png" alt="调试"></p>
 <p>可以看到我选中的条目是 <code>class_defs</code> 段的第 59 个条目，类名为 <code>public final android.support.v4.view.ViewCompat</code>，然后根据 <code>class_data_off</code> 的值，可以看到偏移恰好在  <code>1766107(0x1AF2DB)</code> 是该类的数据段，而后数据段内基本也是各种类型嵌套，比如说 <code>encoded_method_list direct_methods</code> 里定义了类里的所有方法，而 <code>encoded_method method[4]</code> 则是其中的一个具体方法，函数签名为 <code>public static int android.support.v4.view.ViewCompat.getOverScrollMode(android.view.View)</code>，具体的函数体在 <code>code_item code</code> 内，而后函数体内的所有指令则是 <code>ushort insns[7]</code>。</p>
-
 <p>可以看到 Dex 文件实际上正是有这种嵌套+位置偏移的方式，巧妙地将信息存储在文件中。</p>
-
-<h2 id="练兵场-修改-fart-的修复脚本">练兵场 - 修改 FART 的修复脚本</h2>
-
-<p>FART 是看雪大牛 <a href="https://bbs.pediy.com/user-632473.htm" rel="nofollow noreferrer" target="_blank">hanbingle</a> 提出的一种基于主动调用的 Android 脱壳方案，在官网的 repo 中，作者提供了 fart.py 脚本，该脚本能合并提取出的指令和 Dex 文件，但只单纯以文本显示，因此我们的目标是在理解 Dex 结构的基础上，通过修改该脚本，得到还原的 Dex 文件。</p>
-
+<h2 id="练兵场---修改-fart-的修复脚本">练兵场 - 修改 FART 的修复脚本</h2>
+<p>FART 是看雪大牛 <a href="https://bbs.pediy.com/user-632473.htm">hanbingle</a> 提出的一种基于主动调用的 Android 脱壳方案，在官网的 repo 中，作者提供了 fart.py 脚本，该脚本能合并提取出的指令和 Dex 文件，但只单纯以文本显示，因此我们的目标是在理解 Dex 结构的基础上，通过修改该脚本，得到还原的 Dex 文件。</p>
 <p>看一下 FART 提取出的 <code>ABCD_abcd.bin</code> 文件，该文件由抽取而出的指令拼接而成，每个结构体如下图所示：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{
+  <span style="color:#960050;background-color:#1e0010">name:void</span> <span style="color:#960050;background-color:#1e0010">com.SecShell.SecShell.ApplicationWrapper.&lt;init&gt;(),</span>
+  <span style="color:#960050;background-color:#1e0010">method_idx:15,</span>
+  <span style="color:#960050;background-color:#1e0010">offset:10536,</span>
+  <span style="color:#960050;background-color:#1e0010">code_item_len:24,</span>
+  <span style="color:#960050;background-color:#1e0010">ins:AQABAAEAAAAAAAAABAAAAHAQAAAAAA4A</span>
+}<span style="color:#960050;background-color:#1e0010">;</span>
+</code></pre></div><p>其中 <code>ins</code> 字段内是 base64 编码的 DexCode 结构体，<code>offset</code> 字段是该结构体在对应 Dex 结构中的偏移，所以结合以上两点，能很方便地写出代码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> base64
+<span style="color:#f92672">import</span> os
+<span style="color:#f92672">import</span> re
+<span style="color:#f92672">import</span> sys
 
-<pre><code class="language-JSON">{
-  name:void com.SecShell.SecShell.ApplicationWrapper.&lt;init&gt;(),
-  method_idx:15,
-  offset:10536,
-  code_item_len:24,
-  ins:AQABAAEAAAAAAAAABAAAAHAQAAAAAA4A
-};
-</code></pre>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_ins_bin</span>(ins_path):
+    <span style="color:#66d9ef">with</span> open(ins_path, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
+        content <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+    ins_array<span style="color:#f92672">=</span>re<span style="color:#f92672">.</span>findall(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;{name:(.*?),method_idx:(.*?),offset:(.*?),code_item_len:(.*?),ins:(.*?)}&#34;</span>, content) <span style="color:#75715e">#(.*?)最短匹配</span>
+    code_items <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> ins <span style="color:#f92672">in</span> ins_array:
+        offset<span style="color:#f92672">=</span>(int)(ins[<span style="color:#ae81ff">2</span>])
+        code_item <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>b64decode(ins[<span style="color:#ae81ff">4</span>])
+        code_items<span style="color:#f92672">.</span>append((offset, code_item))
+    <span style="color:#66d9ef">return</span> code_items
 
-<p>其中 <code>ins</code> 字段内是 base64 编码的 DexCode 结构体，<code>offset</code> 字段是该结构体在对应 Dex 结构中的偏移，所以结合以上两点，能很方便地写出代码：</p>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_all_ins_bin</span>(ins_dir, keyword):
+    ins_bins <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>listdir(ins_dir)
+    ins_bins <span style="color:#f92672">=</span> [i <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> ins_bins <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;.bin&#39;</span> <span style="color:#f92672">in</span> i <span style="color:#f92672">and</span> keyword <span style="color:#f92672">in</span> i]
+    code_items <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> ins_bin <span style="color:#f92672">in</span> ins_bins:
+        code_items <span style="color:#f92672">+=</span> parse_ins_bin(<span style="color:#e6db74">&#39;{}/{}&#39;</span><span style="color:#f92672">.</span>format(ins_dir, ins_bin))
+    <span style="color:#66d9ef">return</span> code_items
 
-<pre><code class="language-python">import base64
-import os
-import re
-import sys
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+    dex_path <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">1</span>]
+    ins_dir <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">2</span>]
 
-def parse_ins_bin(ins_path):
-    with open(ins_path, 'r') as f:
-        content = f.read()
-    ins_array=re.findall(r&quot;{name:(.*?),method_idx:(.*?),offset:(.*?),code_item_len:(.*?),ins:(.*?)}&quot;, content) #(.*?)最短匹配
-    code_items = []
-    for ins in ins_array:
-        offset=(int)(ins[2])
-        code_item = base64.b64decode(ins[4])
-        code_items.append((offset, code_item))
-    return code_items
+    keyword <span style="color:#f92672">=</span> dex_path<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;/&#39;</span>)[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;_&#39;</span>)[<span style="color:#ae81ff">0</span>]
 
-def parse_all_ins_bin(ins_dir, keyword):
-    ins_bins = os.listdir(ins_dir)
-    ins_bins = [i for i in ins_bins if '.bin' in i and keyword in i]
-    code_items = []
-    for ins_bin in ins_bins:
-        code_items += parse_ins_bin('{}/{}'.format(ins_dir, ins_bin))
-    return code_items
-
-if __name__ == &quot;__main__&quot;:
-    dex_path = sys.argv[1]
-    ins_dir = sys.argv[2]
-
-    keyword = dex_path.split('/')[-1].split('_')[0]
-
-    with open(dex_path, 'rb') as f:
-        dex = bytearray(f.read())
+    <span style="color:#66d9ef">with</span> open(dex_path, <span style="color:#e6db74">&#39;rb&#39;</span>) <span style="color:#66d9ef">as</span> f:
+        dex <span style="color:#f92672">=</span> bytearray(f<span style="color:#f92672">.</span>read())
     
-    code_items = parse_all_ins_bin(ins_dir, keyword)
-    for offset, code_item in code_items:
-        size = len(code_item)
-        dex[offset:offset+size] = code_item
+    code_items <span style="color:#f92672">=</span> parse_all_ins_bin(ins_dir, keyword)
+    <span style="color:#66d9ef">for</span> offset, code_item <span style="color:#f92672">in</span> code_items:
+        size <span style="color:#f92672">=</span> len(code_item)
+        dex[offset:offset<span style="color:#f92672">+</span>size] <span style="color:#f92672">=</span> code_item
     
-    output_path = dex_path.replace('.dex', '_repair.dex')
-    with open(output_path, 'wb') as f:
-        f.write(dex)
-</code></pre>
-
-<h2 id="结语">结语</h2>
-
+    output_path <span style="color:#f92672">=</span> dex_path<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;.dex&#39;</span>, <span style="color:#e6db74">&#39;_repair.dex&#39;</span>)
+    <span style="color:#66d9ef">with</span> open(output_path, <span style="color:#e6db74">&#39;wb&#39;</span>) <span style="color:#66d9ef">as</span> f:
+        f<span style="color:#f92672">.</span>write(dex)
+</code></pre></div><h2 id="结语">结语</h2>
 <p>前前后后看了几天资料，最后结合 010Editor 一个个结构看下来才焕然大悟，果然实践出真知 →_→</p>
-
 <p>没写很详细的说明，想理解细节的建议阅读下方的参考链接👇</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://source.android.com/devices/tech/dalvik/dex-format" rel="nofollow noreferrer" target="_blank">Dalvik 可执行文件格式</a></li>
-<li><a href="https://blog.csdn.net/sbsujjbcy/article/details/52869361" rel="nofollow noreferrer" target="_blank">一篇胎死腹中的Android文章——Dex文件结构解析</a></li>
-<li><a href="https://juejin.im/post/5bf22bb5e51d454cdc56cbd5" rel="nofollow noreferrer" target="_blank">浅谈 Android Dex 文件</a></li>
+<li><a href="https://source.android.com/devices/tech/dalvik/dex-format">Dalvik 可执行文件格式</a></li>
+<li><a href="https://blog.csdn.net/sbsujjbcy/article/details/52869361">一篇胎死腹中的Android文章——Dex文件结构解析</a></li>
+<li><a href="https://juejin.im/post/5bf22bb5e51d454cdc56cbd5">浅谈 Android Dex 文件</a></li>
 </ul>
 
     </div>

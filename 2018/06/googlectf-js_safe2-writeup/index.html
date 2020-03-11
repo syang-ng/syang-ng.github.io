@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "googlectf js_safe2 writeup",
     "headline" : "googlectf js_safe2 writeup",
-    "description" : "前言 GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧 分析 可以看到页面的输入框变化会触发 open_safe() 函数 \x26lt;input id=\x26quot;keyhole\x26quot; autofocus onchange=\x26quot;open_safe()\x26quot; placeholder=",
+    "description" : "前言 GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧 分析 可以看到页面的输入框变化会触发 open_safe() 函数 \x26lt;input id=\x26#34;keyhole\x26#34; autofocus onchange=\x26#34;open_safe()\x26#34; placeholder=",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -57,7 +57,7 @@
     "datePublished": "2018-06-26 18:28:38 \x2b0000 UTC",
     "dateModified" : "2018-06-26 18:28:38 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/06\/googlectf-js_safe2-writeup\/",
-    "wordCount" : "1990",
+    "wordCount" : "2026",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -143,272 +143,240 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>GoogleCTF 2018 上的 Web 签到题，本质上是一道 JS 逆向，使用了 JS 里一些比较 trick 的技巧</p>
-
-<!-- more -->
-
+<!-- raw HTML omitted -->
 <h2 id="分析">分析</h2>
-
 <p>可以看到页面的输入框变化会触发 <code>open_safe()</code> 函数</p>
-
-<pre><code class="language-HTML">&lt;input id=&quot;keyhole&quot; autofocus onchange=&quot;open_safe()&quot; placeholder=&quot;🔑&quot;&gt;
-</code></pre>
-
-<p><code>open_safe()</code> 逻辑如下：</p>
-
-<pre><code class="language-JavaScript">function open_safe() {
-  keyhole.disabled = true;
-  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
-  if (!password || !x(password[1])) return document.body.className = 'denied';
-  document.body.className = 'granted';
-  password = Array.from(password[1]).map(c =&gt; c.charCodeAt());
-  encrypted = JSON.parse(localStorage.content || '');
-  content.value = encrypted.map((c,i) =&gt; c ^ password[i % password.length]).map(String.fromCharCode).join('')
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-HTML" data-lang="HTML">&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;keyhole&#34;</span> <span style="color:#a6e22e">autofocus</span> <span style="color:#a6e22e">onchange</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;open_safe()&#34;</span> <span style="color:#a6e22e">placeholder</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;🔑&#34;</span>&gt;
+</code></pre></div><p><code>open_safe()</code> 逻辑如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">open_safe</span>() {
+  <span style="color:#a6e22e">keyhole</span>.<span style="color:#a6e22e">disabled</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+  <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/^CTF{([0-9a-zA-Z_@!?-]+)}$/</span>.<span style="color:#a6e22e">exec</span>(<span style="color:#a6e22e">keyhole</span>.<span style="color:#a6e22e">value</span>);
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">password</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">x</span>(<span style="color:#a6e22e">password</span>[<span style="color:#ae81ff">1</span>])) <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">className</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;denied&#39;</span>;
+  document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">className</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;granted&#39;</span>;
+  <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(<span style="color:#a6e22e">password</span>[<span style="color:#ae81ff">1</span>]).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">c</span> =&gt; <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">charCodeAt</span>());
+  <span style="color:#a6e22e">encrypted</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">content</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>);
+  <span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">encrypted</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">c</span>,<span style="color:#a6e22e">i</span>) =&gt; <span style="color:#a6e22e">c</span> <span style="color:#f92672">^</span> <span style="color:#a6e22e">password</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">password</span>.<span style="color:#a6e22e">length</span>]).<span style="color:#a6e22e">map</span>(String.<span style="color:#a6e22e">fromCharCode</span>).<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39;&#39;</span>)
 }
-</code></pre>
-
-<p>可以看到这里会先做一个正则匹配，我们输入的内容格式必须是 <code>CTF{xxxxxx}</code>，其中 xxxxxx 的范围为 <code>0-9a-zA-Z_@!?-</code>，囊括了大部分的可见字符</p>
-
+</code></pre></div><p>可以看到这里会先做一个正则匹配，我们输入的内容格式必须是 <code>CTF{xxxxxx}</code>，其中 xxxxxx 的范围为 <code>0-9a-zA-Z_@!?-</code>，囊括了大部分的可见字符</p>
 <p>然后会将 <code>xxxxxx</code> 作为参数传入 <code>x()</code> 函数，所以我们这里需要 <code>x()</code> 函数返回一个 true 值（或者非空即可）</p>
-
 <p>这里有三个要点需要注意：</p>
-
 <ol>
-<li><p>x 和 х 的区别，前者是 ASCII 字符，后者是西里尔字母，而 <code>x = h(str(x));</code> 实际上的参数是函数自身字符串内容，并不是我们传入的参数</p></li>
-
-<li><p><code>for (a = 0; a != 1000; a++) debugger;</code> 运行后 a = 1000，所以当 h 函数被调用时，内部的 a 初始值为 1000</p></li>
+<li>
+<p>x 和 х 的区别，前者是 ASCII 字符，后者是西里尔字母，而 <code>x = h(str(x));</code> 实际上的参数是函数自身字符串内容，并不是我们传入的参数</p>
+</li>
+<li>
+<p><code>for (a = 0; a != 1000; a++) debugger;</code> 运行后 a = 1000，所以当 h 函数被调用时，内部的 a 初始值为 1000</p>
+</li>
 </ol>
-
-<pre><code class="language-JavaScript">function h(s) {
-    for (i = 0; i != s.length; i++) {
-        a = ((typeof a == 'undefined' ? 1 : a) + ord(str(s[i]))) % 65521;
-        b = ((typeof b == 'undefined' ? 0 : b) + a) % 65521
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">s</span>) {
+    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+        <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> ((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">?</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">a</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>]))) <span style="color:#f92672">%</span> <span style="color:#ae81ff">65521</span>;
+        <span style="color:#a6e22e">b</span> <span style="color:#f92672">=</span> ((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">?</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">b</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>) <span style="color:#f92672">%</span> <span style="color:#ae81ff">65521</span>
     }
-    return chr(b &gt;&gt; 8) + chr(b &amp; 0xFF) + chr(a &gt;&gt; 8) + chr(a &amp; 0xFF)
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>)
 }
-</code></pre>
-
-<ol>
+</code></pre></div><ol start="3">
 <li><code>source = /Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨/;</code> 是正则模板，其没有 <code>.length</code> 属性，所以循环应该会无限进行，但由于使用了 <code>with</code>，则实际访问的则是 <code>source.source</code> ，对应的是正则模板的字符串，具有 <code>.length</code> 属性</li>
 </ol>
-
 <h2 id="writeup">Writeup</h2>
-
 <p>优化后的代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">x</span>(<span style="color:#a6e22e">х</span>) {
+    <span style="color:#a6e22e">ord</span> <span style="color:#f92672">=</span> Function.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">call</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#e6db74">&#39;&#39;</span>.<span style="color:#a6e22e">charCodeAt</span>);
+    <span style="color:#a6e22e">chr</span> <span style="color:#f92672">=</span> String.<span style="color:#a6e22e">fromCharCode</span>;
+    <span style="color:#a6e22e">str</span> <span style="color:#f92672">=</span> String;
 
-<pre><code class="language-JavaScript">function x(х) {
-    ord = Function.prototype.call.bind(''.charCodeAt);
-    chr = String.fromCharCode;
-    str = String;
-
-    function h(s) {
-        for (i = 0; i != s.length; i++) {
-            a = ((typeof a == 'undefined' ? 1 : a) + ord(str(s[i]))) % 65521;
-            b = ((typeof b == 'undefined' ? 0 : b) + a) % 65521
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">s</span>) {
+        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+            <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> ((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">?</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">a</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>]))) <span style="color:#f92672">%</span> <span style="color:#ae81ff">65521</span>;
+            <span style="color:#a6e22e">b</span> <span style="color:#f92672">=</span> ((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">b</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;undefined&#39;</span> <span style="color:#f92672">?</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">:</span> <span style="color:#a6e22e">b</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">a</span>) <span style="color:#f92672">%</span> <span style="color:#ae81ff">65521</span>
         }
-        return chr(b &gt;&gt; 8) + chr(b &amp; 0xFF) + chr(a &gt;&gt; 8) + chr(a &amp; 0xFF)
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span> <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xFF</span>)
     }
 
-    function c(a, b, c) {
-        for (i = 0; i != a.length; i++) c = (c || '') + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
-        return c
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">c</span>) {
+        <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>])) <span style="color:#f92672">^</span> <span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">length</span>])));
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
     }
 
-    var a = 1000;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">a</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">1000</span>;
 
-    x = h(str(`function x(х){ord=Function.prototype.call.bind(''.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a=='undefined'?1:a)+ord(str(s[i])))%65521;b=((typeof b=='undefined'?0:b)+a)%65521}return chr(b&gt;&gt;8)+chr(b&amp;0xFF)+chr(a&gt;&gt;8)+chr(a&amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||'')+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log('debug',source);with(source)return eval('eval(c(source,x))')}catch(e){}}`));
+    <span style="color:#a6e22e">x</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">str</span>(<span style="color:#e6db74">`function x(х){ord=Function.prototype.call.bind(&#39;&#39;.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a==&#39;undefined&#39;?1:a)+ord(str(s[i])))%65521;b=((typeof b==&#39;undefined&#39;?0:b)+a)%65521}return chr(b&gt;&gt;8)+chr(b&amp;0xFF)+chr(a&gt;&gt;8)+chr(a&amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||&#39;&#39;)+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log(&#39;debug&#39;,source);with(source)return eval(&#39;eval(c(source,x))&#39;)}catch(e){}}`</span>));
 
-    source = `Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨`;
+    <span style="color:#a6e22e">source</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨`</span>;
 
-    try {
-        console.log(c(source,x));
-        with(source) return eval('eval(c(source,x))')
-    } catch (e) {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">source</span>,<span style="color:#a6e22e">x</span>));
+        <span style="color:#66d9ef">with</span>(<span style="color:#a6e22e">source</span>) <span style="color:#66d9ef">return</span> eval(<span style="color:#e6db74">&#39;eval(c(source,x))&#39;</span>)
+    } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
     }
 }
-</code></pre>
-
-<p>运行后可以得到如下表达式：<code>х==c('¢×&amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;¨þJ',h(х))//᧢</code>，写 python 脚本爆破即可</p>
-
+</code></pre></div><p>运行后可以得到如下表达式：<code>х==c('¢×&amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;¨þJ',h(х))//᧢</code>，写 python 脚本爆破即可</p>
 <p>由于我们传入的参数对应的字符范围已知，并且加密密钥长度为 4，我们只需要根据加密函数爆破相应加密密钥：</p>
-
-<pre><code class="language-JavaScript">function c(a, b, c) {
-    for (i = 0; i != a.length; i++) c = (c || '') + chr(ord(str(a[i])) ^ ord(str(b[i % b.length])));
-    return c
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">c</span>) {
+    <span style="color:#66d9ef">for</span> (<span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>])) <span style="color:#f92672">^</span> <span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">length</span>])));
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>
 }
-</code></pre>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">p <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@!?-&#39;</span>
 
-<pre><code class="language-python">p = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_@!?-'
+sec <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;¢×&amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;¨þJ&#39;&#39;&#39;</span>
 
-sec = '''¢×&amp;Ê´cÊ¯¬$¶³´}ÍÈ´T©Ð8Í³Í|Ô÷aÈÐÝ&amp;¨þJ'''
-
-for i in range(4):
-    for c in p:
-        j = i 
-        k0 = ord(sec[j])^ord(c)
-        flag = True
-        while j &lt; len(sec)-4:
-            j += 4
-            if chr(k0^ord(sec[j])) not in p:
-                flag = False
-                break
-        if flag:
-            print('%d: %d' % (i, k0))
-</code></pre>
-
-<p>根据结果可以得到 <code>[253, 149, 21, 249]</code> \ <code>[253, 153, 21, 249]</code> 两种可能的 key 值，直接带入测试即可</p>
-
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+    <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> p:
+        j <span style="color:#f92672">=</span> i 
+        k0 <span style="color:#f92672">=</span> ord(sec[j])<span style="color:#f92672">^</span>ord(c)
+        flag <span style="color:#f92672">=</span> True
+        <span style="color:#66d9ef">while</span> j <span style="color:#f92672">&lt;</span> len(sec)<span style="color:#f92672">-</span><span style="color:#ae81ff">4</span>:
+            j <span style="color:#f92672">+=</span> <span style="color:#ae81ff">4</span>
+            <span style="color:#66d9ef">if</span> chr(k0<span style="color:#f92672">^</span>ord(sec[j])) <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> p:
+                flag <span style="color:#f92672">=</span> False
+                <span style="color:#66d9ef">break</span>
+        <span style="color:#66d9ef">if</span> flag:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;</span><span style="color:#e6db74">%d</span><span style="color:#e6db74">: </span><span style="color:#e6db74">%d</span><span style="color:#e6db74">&#39;</span> <span style="color:#f92672">%</span> (i, k0))
+</code></pre></div><p>根据结果可以得到 <code>[253, 149, 21, 249]</code> \ <code>[253, 153, 21, 249]</code> 两种可能的 key 值，直接带入测试即可</p>
 <p>直接带入可以解出真正的原文 <code>_N3x7-v3R51ON-h45-AnTI-4NTi-ant1-D3bUg_</code></p>
-
 <h2 id="overview">Overview</h2>
-
 <p>这题本质上是一道 reverse 题，使用了一种非常简单的加密，唯一的难度是有意无意使用了一些 trick 的技巧使得我们第一时间没有发现（比如我😭）</p>
-
 <h2 id="source-code">Source Code</h2>
-
-<pre><code class="language-HTML">&lt;!DOCTYPE html&gt;
-&lt;html&gt;
-&lt;head&gt;
-&lt;meta charset=&quot;utf-8&quot;&gt;
-&lt;title&gt;JS safe v2.0 - the leading localStorage based safe solution with military grade JS anti-debug technology&lt;/title&gt;
-&lt;!--
-Advertisement:
-Looking for a hand-crafted, browser based virtual safe to store your most
-interesting secrets? Look no further, you have found it. You can order your own
-by sending a mail to js_safe@example.com. When ordering, please specify the
-password you'd like to use to open and close the safe. We'll hand craft a
-unique safe just for you, that only works with your password of choice.
---&gt;
-&lt;style&gt;
-body {
-  text-align: center;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-HTML" data-lang="HTML"><span style="color:#75715e">&lt;!DOCTYPE html&gt;</span>
+&lt;<span style="color:#f92672">html</span>&gt;
+&lt;<span style="color:#f92672">head</span>&gt;
+&lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>&gt;
+&lt;<span style="color:#f92672">title</span>&gt;JS safe v2.0 - the leading localStorage based safe solution with military grade JS anti-debug technology&lt;/<span style="color:#f92672">title</span>&gt;
+<span style="color:#75715e">&lt;!--
+</span><span style="color:#75715e">Advertisement:
+</span><span style="color:#75715e">Looking for a hand-crafted, browser based virtual safe to store your most
+</span><span style="color:#75715e">interesting secrets? Look no further, you have found it. You can order your own
+</span><span style="color:#75715e">by sending a mail to js_safe@example.com. When ordering, please specify the
+</span><span style="color:#75715e">password you&#39;d like to use to open and close the safe. We&#39;ll hand craft a
+</span><span style="color:#75715e">unique safe just for you, that only works with your password of choice.
+</span><span style="color:#75715e">--&gt;</span>
+&lt;<span style="color:#f92672">style</span>&gt;
+<span style="color:#f92672">body</span> {
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">center</span>;
 }
-input {
-  font-size: 200%;
-  margin-top: 5em;
-  text-align: center;
-  width: 26em;
+<span style="color:#f92672">input</span> {
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">200</span><span style="color:#66d9ef">%</span>;
+  <span style="color:#66d9ef">margin-top</span>: <span style="color:#ae81ff">5</span><span style="color:#66d9ef">em</span>;
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">center</span>;
+  <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">26</span><span style="color:#66d9ef">em</span>;
 }
 #result {
-  margin-top: 8em;
-  font-size: 300%;
-  font-family: monospace;
-  font-weight: bold;
+  <span style="color:#66d9ef">margin-top</span>: <span style="color:#ae81ff">8</span><span style="color:#66d9ef">em</span>;
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">300</span><span style="color:#66d9ef">%</span>;
+  <span style="color:#66d9ef">font-family</span>: <span style="color:#66d9ef">monospace</span>;
+  <span style="color:#66d9ef">font-weight</span>: <span style="color:#66d9ef">bold</span>;
 }
-body.granted&gt;#result::before {
-  content: &quot;Access Granted&quot;;
-  color: green;
+<span style="color:#f92672">body</span>.<span style="color:#a6e22e">granted</span><span style="color:#f92672">&gt;</span>#result::<span style="color:#a6e22e">before</span> {
+  <span style="color:#66d9ef">content</span>: <span style="color:#e6db74">&#34;Access Granted&#34;</span>;
+  <span style="color:#66d9ef">color</span>: <span style="color:#66d9ef">green</span>;
 }
-body.denied&gt;#result::before {
-  content: &quot;Access Denied&quot;;
-  color: red;
+<span style="color:#f92672">body</span>.<span style="color:#a6e22e">denied</span><span style="color:#f92672">&gt;</span>#result::<span style="color:#a6e22e">before</span> {
+  <span style="color:#66d9ef">content</span>: <span style="color:#e6db74">&#34;Access Denied&#34;</span>;
+  <span style="color:#66d9ef">color</span>: <span style="color:#66d9ef">red</span>;
 }
 #content {
-  display: none;
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">none</span>;
 }
-body.granted #content {
-  display: initial;
+<span style="color:#f92672">body</span>.<span style="color:#a6e22e">granted</span> #content {
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">initial</span>;
 }
-.wrap {
-  display: inline-block;
-  margin-top: 50px;
-  perspective: 800px;
-  perspective-origin: 50% 100px;
+.<span style="color:#a6e22e">wrap</span> {
+  <span style="color:#66d9ef">display</span>: <span style="color:#66d9ef">inline</span><span style="color:#f92672">-</span><span style="color:#66d9ef">block</span>;
+  <span style="color:#66d9ef">margin-top</span>: <span style="color:#ae81ff">50</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">perspective</span>: <span style="color:#ae81ff">800</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">perspective-origin</span>: <span style="color:#ae81ff">50</span><span style="color:#66d9ef">%</span> <span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>;
 }
-.cube {
-  position: relative;
-  width: 200px;
-  transform-style: preserve-3d;
+.<span style="color:#a6e22e">cube</span> {
+  <span style="color:#66d9ef">position</span>: <span style="color:#66d9ef">relative</span>;
+  <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">200</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">transform-style</span>: <span style="color:#66d9ef">preserve-3d</span>;
 }
-.back {
-  transform: translateZ(-100px) rotateY(180deg);
+.<span style="color:#a6e22e">back</span> {
+  <span style="color:#66d9ef">transform</span>: translateZ(<span style="color:#ae81ff">-100</span><span style="color:#66d9ef">px</span>) rotateY(<span style="color:#ae81ff">180</span><span style="color:#66d9ef">deg</span>);
 }
-.right {
-  transform: rotateY(-270deg) translateX(100px);
-  transform-origin: top right;
+.<span style="color:#a6e22e">right</span> {
+  <span style="color:#66d9ef">transform</span>: rotateY(<span style="color:#ae81ff">-270</span><span style="color:#66d9ef">deg</span>) translateX(<span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>);
+  <span style="color:#66d9ef">transform-origin</span>: <span style="color:#66d9ef">top</span> <span style="color:#66d9ef">right</span>;
 }
-.left {
-  transform: rotateY(270deg) translateX(-100px);
-  transform-origin: center left;
+.<span style="color:#a6e22e">left</span> {
+  <span style="color:#66d9ef">transform</span>: rotateY(<span style="color:#ae81ff">270</span><span style="color:#66d9ef">deg</span>) translateX(<span style="color:#ae81ff">-100</span><span style="color:#66d9ef">px</span>);
+  <span style="color:#66d9ef">transform-origin</span>: <span style="color:#66d9ef">center</span> <span style="color:#66d9ef">left</span>;
 }
-.top {
-  transform: rotateX(-90deg) translateY(-100px);
-  transform-origin: top center;
+.<span style="color:#a6e22e">top</span> {
+  <span style="color:#66d9ef">transform</span>: rotateX(<span style="color:#ae81ff">-90</span><span style="color:#66d9ef">deg</span>) translateY(<span style="color:#ae81ff">-100</span><span style="color:#66d9ef">px</span>);
+  <span style="color:#66d9ef">transform-origin</span>: <span style="color:#66d9ef">top</span> <span style="color:#66d9ef">center</span>;
 }
-.bottom {
-  transform: rotateX(90deg) translateY(100px);
-  transform-origin: bottom center;
+.<span style="color:#a6e22e">bottom</span> {
+  <span style="color:#66d9ef">transform</span>: rotateX(<span style="color:#ae81ff">90</span><span style="color:#66d9ef">deg</span>) translateY(<span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>);
+  <span style="color:#66d9ef">transform-origin</span>: <span style="color:#66d9ef">bottom</span> <span style="color:#66d9ef">center</span>;
 }
-.front {
-  transform: translateZ(100px);
+.<span style="color:#a6e22e">front</span> {
+  <span style="color:#66d9ef">transform</span>: translateZ(<span style="color:#ae81ff">100</span><span style="color:#66d9ef">px</span>);
 }
-@keyframes spin {
-  from { transform: rotateY(0); }
-  to { transform: rotateY(360deg); }
+@<span style="color:#66d9ef">keyframes</span> <span style="color:#f92672">spin</span> {
+  <span style="color:#f92672">from</span> { <span style="color:#66d9ef">transform</span>: rotateY(<span style="color:#ae81ff">0</span>); }
+  <span style="color:#f92672">to</span> { <span style="color:#66d9ef">transform</span>: rotateY(<span style="color:#ae81ff">360</span><span style="color:#66d9ef">deg</span>); }
 }
-.cube {
-  animation: spin 20s infinite linear;
+.<span style="color:#a6e22e">cube</span> {
+  <span style="color:#66d9ef">animation</span>: spin <span style="color:#ae81ff">20</span><span style="color:#66d9ef">s</span> <span style="color:#66d9ef">infinite</span> <span style="color:#66d9ef">linear</span>;
 }
-.cube div {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  background: rgba(0, 0, 0, 0.51);
-  box-shadow: inset 0 0 60px white;
-  font-size: 20px;
-  text-align: center;
-  line-height: 200px;
-  color: rgba(0,0,0,0.5);
-  font-family: sans-serif;
-  text-transform: uppercase;
+.<span style="color:#a6e22e">cube</span> <span style="color:#f92672">div</span> {
+  <span style="color:#66d9ef">position</span>: <span style="color:#66d9ef">absolute</span>;
+  <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">200</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">height</span>: <span style="color:#ae81ff">200</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">background</span>: rgba(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0.51</span>);
+  <span style="color:#66d9ef">box-shadow</span>: <span style="color:#66d9ef">inset</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">60</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">white</span>;
+  <span style="color:#66d9ef">font-size</span>: <span style="color:#ae81ff">20</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">text-align</span>: <span style="color:#66d9ef">center</span>;
+  <span style="color:#66d9ef">line-height</span>: <span style="color:#ae81ff">200</span><span style="color:#66d9ef">px</span>;
+  <span style="color:#66d9ef">color</span>: rgba(<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">0.5</span>);
+  <span style="color:#66d9ef">font-family</span>: <span style="color:#66d9ef">sans-serif</span>;
+  <span style="color:#66d9ef">text-transform</span>: <span style="color:#66d9ef">uppercase</span>;
 }
-&lt;/style&gt;
-&lt;script&gt;
-function x(х){ord=Function.prototype.call.bind(''.charCodeAt);chr=String.fromCharCode;str=String;function h(s){for(i=0;i!=s.length;i++){a=((typeof a=='undefined'?1:a)+ord(str(s[i])))%65521;b=((typeof b=='undefined'?0:b)+a)%65521}return chr(b&gt;&gt;8)+chr(b&amp;0xFF)+chr(a&gt;&gt;8)+chr(a&amp;0xFF)}function c(a,b,c){for(i=0;i!=a.length;i++)c=(c||'')+chr(ord(str(a[i]))^ord(str(b[i%b.length])));return c}for(a=0;a!=1000;a++)debugger;x=h(str(x));source=/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨/;source.toString=function(){return c(source,x)};try{console.log('debug',source);with(source)return eval('eval(c(source,x))')}catch(e){}}
-&lt;/script&gt;
-&lt;script&gt;
-function open_safe() {
-  keyhole.disabled = true;
-  password = /^CTF{([0-9a-zA-Z_@!?-]+)}$/.exec(keyhole.value);
-  if (!password || !x(password[1])) return document.body.className = 'denied';
-  document.body.className = 'granted';
-  password = Array.from(password[1]).map(c =&gt; c.charCodeAt());
-  encrypted = JSON.parse(localStorage.content || '');
-  content.value = encrypted.map((c,i) =&gt; c ^ password[i % password.length]).map(String.fromCharCode).join('')
+&lt;/<span style="color:#f92672">style</span>&gt;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">x</span>(<span style="color:#a6e22e">х</span>){<span style="color:#a6e22e">ord</span><span style="color:#f92672">=</span>Function.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">call</span>.<span style="color:#a6e22e">bind</span>(<span style="color:#e6db74">&#39;&#39;</span>.<span style="color:#a6e22e">charCodeAt</span>);<span style="color:#a6e22e">chr</span><span style="color:#f92672">=</span>String.<span style="color:#a6e22e">fromCharCode</span>;<span style="color:#a6e22e">str</span><span style="color:#f92672">=</span>String;<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">s</span>){<span style="color:#66d9ef">for</span>(<span style="color:#a6e22e">i</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">!=</span><span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>){<span style="color:#a6e22e">a</span><span style="color:#f92672">=</span>((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">a</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;undefined&#39;</span><span style="color:#f92672">?</span><span style="color:#ae81ff">1</span><span style="color:#f92672">:</span><span style="color:#a6e22e">a</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">s</span>[<span style="color:#a6e22e">i</span>])))<span style="color:#f92672">%</span><span style="color:#ae81ff">65521</span>;<span style="color:#a6e22e">b</span><span style="color:#f92672">=</span>((<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">b</span><span style="color:#f92672">==</span><span style="color:#e6db74">&#39;undefined&#39;</span><span style="color:#f92672">?</span><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span><span style="color:#a6e22e">b</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">a</span>)<span style="color:#f92672">%</span><span style="color:#ae81ff">65521</span>}<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span><span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">8</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">b</span><span style="color:#f92672">&amp;</span><span style="color:#ae81ff">0xFF</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span><span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">8</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">a</span><span style="color:#f92672">&amp;</span><span style="color:#ae81ff">0xFF</span>)}<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">a</span>,<span style="color:#a6e22e">b</span>,<span style="color:#a6e22e">c</span>){<span style="color:#66d9ef">for</span>(<span style="color:#a6e22e">i</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">!=</span><span style="color:#a6e22e">a</span>.<span style="color:#a6e22e">length</span>;<span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>)<span style="color:#a6e22e">c</span><span style="color:#f92672">=</span>(<span style="color:#a6e22e">c</span><span style="color:#f92672">||</span><span style="color:#e6db74">&#39;&#39;</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">chr</span>(<span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">a</span>[<span style="color:#a6e22e">i</span>]))<span style="color:#f92672">^</span><span style="color:#a6e22e">ord</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">b</span>[<span style="color:#a6e22e">i</span><span style="color:#f92672">%</span><span style="color:#a6e22e">b</span>.<span style="color:#a6e22e">length</span>])));<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>}<span style="color:#66d9ef">for</span>(<span style="color:#a6e22e">a</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;<span style="color:#a6e22e">a</span><span style="color:#f92672">!=</span><span style="color:#ae81ff">1000</span>;<span style="color:#a6e22e">a</span><span style="color:#f92672">++</span>)<span style="color:#66d9ef">debugger</span>;<span style="color:#a6e22e">x</span><span style="color:#f92672">=</span><span style="color:#a6e22e">h</span>(<span style="color:#a6e22e">str</span>(<span style="color:#a6e22e">x</span>));<span style="color:#a6e22e">source</span><span style="color:#f92672">=</span><span style="color:#e6db74">/Ӈ#7ùª9¨M¤À.áÔ¥6¦¨¹.ÿÓÂ.Ö£JºÓ¹WþÊmãÖÚG¤¢dÈ9&amp;òªћ#³­1᧨/</span>;<span style="color:#a6e22e">source</span>.<span style="color:#a6e22e">toString</span><span style="color:#f92672">=</span><span style="color:#66d9ef">function</span>(){<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">c</span>(<span style="color:#a6e22e">source</span>,<span style="color:#a6e22e">x</span>)};<span style="color:#66d9ef">try</span>{<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;debug&#39;</span>,<span style="color:#a6e22e">source</span>);<span style="color:#66d9ef">with</span>(<span style="color:#a6e22e">source</span>)<span style="color:#66d9ef">return</span> eval(<span style="color:#e6db74">&#39;eval(c(source,x))&#39;</span>)}<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>){}}
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;<span style="color:#f92672">script</span>&gt;
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">open_safe</span>() {
+  <span style="color:#a6e22e">keyhole</span>.<span style="color:#a6e22e">disabled</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+  <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/^CTF{([0-9a-zA-Z_@!?-]+)}$/</span>.<span style="color:#a6e22e">exec</span>(<span style="color:#a6e22e">keyhole</span>.<span style="color:#a6e22e">value</span>);
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">password</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">x</span>(<span style="color:#a6e22e">password</span>[<span style="color:#ae81ff">1</span>])) <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">className</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;denied&#39;</span>;
+  document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">className</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;granted&#39;</span>;
+  <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(<span style="color:#a6e22e">password</span>[<span style="color:#ae81ff">1</span>]).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">c</span> =&gt; <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">charCodeAt</span>());
+  <span style="color:#a6e22e">encrypted</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">content</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>);
+  <span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">value</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">encrypted</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">c</span>,<span style="color:#a6e22e">i</span>) =&gt; <span style="color:#a6e22e">c</span> <span style="color:#f92672">^</span> <span style="color:#a6e22e">password</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">password</span>.<span style="color:#a6e22e">length</span>]).<span style="color:#a6e22e">map</span>(String.<span style="color:#a6e22e">fromCharCode</span>).<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39;&#39;</span>)
 }
-function save() {
-  plaintext = Array.from(content.value).map(c =&gt; c.charCodeAt());
-  localStorage.content = JSON.stringify(plaintext.map((c,i) =&gt; c ^ password[i % password.length]));
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">save</span>() {
+  <span style="color:#a6e22e">plaintext</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(<span style="color:#a6e22e">content</span>.<span style="color:#a6e22e">value</span>).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">c</span> =&gt; <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">charCodeAt</span>());
+  <span style="color:#a6e22e">localStorage</span>.<span style="color:#a6e22e">content</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">plaintext</span>.<span style="color:#a6e22e">map</span>((<span style="color:#a6e22e">c</span>,<span style="color:#a6e22e">i</span>) =&gt; <span style="color:#a6e22e">c</span> <span style="color:#f92672">^</span> <span style="color:#a6e22e">password</span>[<span style="color:#a6e22e">i</span> <span style="color:#f92672">%</span> <span style="color:#a6e22e">password</span>.<span style="color:#a6e22e">length</span>]));
 }
-&lt;/script&gt;
-&lt;/head&gt;
-&lt;body&gt;
-&lt;div&gt;
-  &lt;input id=&quot;keyhole&quot; autofocus onchange=&quot;open_safe()&quot; placeholder=&quot;🔑&quot;&gt;
-&lt;/div&gt;
-&lt;div class=&quot;wrap&quot;&gt;
-  &lt;div class=&quot;cube&quot;&gt;
-    &lt;div class=&quot;front&quot;&gt;&lt;/div&gt;
-    &lt;div class=&quot;back&quot;&gt;&lt;/div&gt;
-    &lt;div class=&quot;top&quot;&gt;&lt;/div&gt;
-    &lt;div class=&quot;bottom&quot;&gt;&lt;/div&gt;
-    &lt;div class=&quot;left&quot;&gt;&lt;/div&gt;
-    &lt;div class=&quot;right&quot;&gt;&lt;/div&gt;
-  &lt;/div&gt;
-&lt;/div&gt;
-&lt;div id=&quot;result&quot;&gt;
-&lt;/div&gt;
-&lt;div&gt;
-  &lt;input id=&quot;content&quot; onchange=&quot;save()&quot;&gt;
-&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
+&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;/<span style="color:#f92672">head</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;
+&lt;<span style="color:#f92672">div</span>&gt;
+  &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;keyhole&#34;</span> <span style="color:#a6e22e">autofocus</span> <span style="color:#a6e22e">onchange</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;open_safe()&#34;</span> <span style="color:#a6e22e">placeholder</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;🔑&#34;</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;wrap&#34;</span>&gt;
+  &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;cube&#34;</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;front&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;back&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;top&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bottom&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;left&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+    &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;right&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+  &lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;result&#34;</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;<span style="color:#f92672">div</span>&gt;
+  &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;content&#34;</span> <span style="color:#a6e22e">onchange</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;save()&#34;</span>&gt;
+&lt;/<span style="color:#f92672">div</span>&gt;
+&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div>
     </div>
 
     <div class="post-copyright">

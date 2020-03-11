@@ -144,98 +144,94 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>假期自学计划开启，就以分析 FART 源码开始。</p>
-
-<p>FART 是看雪大牛 hanbingle 提出的一种基于主动调用开发的脱壳工具，工具的具体原理可以阅读帖子 <a href="https://bbs.pediy.com/thread-252630.htm" rel="nofollow noreferrer" target="_blank">FART：ART环境下基于主动调用的自动化脱壳方案</a>，本文是结合该篇帖子和源码的学习笔记。</p>
-
-<p>源码地址：<a href="https://github.com/hanbinglengyue/FART" rel="nofollow noreferrer" target="_blank">https://github.com/hanbinglengyue/FART</a>，该代码是基于 Android 6.0 源码基础上修改而成的，加入了主动调用并修复函数的模块。</p>
-
+<p>FART 是看雪大牛 hanbingle 提出的一种基于主动调用开发的脱壳工具，工具的具体原理可以阅读帖子 <a href="https://bbs.pediy.com/thread-252630.htm">FART：ART环境下基于主动调用的自动化脱壳方案</a>，本文是结合该篇帖子和源码的学习笔记。</p>
+<p>源码地址：<a href="https://github.com/hanbinglengyue/FART">https://github.com/hanbinglengyue/FART</a>，该代码是基于 Android 6.0 源码基础上修改而成的，加入了主动调用并修复函数的模块。</p>
 <h2 id="代码结构">代码结构</h2>
-
 <ul>
 <li><code>art/runtime</code>
-
 <ul>
-<li><code>interpreter</code></li>
+<li><code>interpreter</code>
+<ul>
 <li><code>interpreter.cc</code></li>
-<li><code>native</code></li>
+</ul>
+</li>
+<li><code>native</code>
+<ul>
 <li><code>dalvik_system_DexFile.cc</code></li>
+</ul>
+</li>
 <li><code>art_method.cc</code></li>
 <li><code>art_method.h</code></li>
-</ul></li>
+</ul>
+</li>
 <li><code>frameworks/base/core/java/android/app</code>
-
 <ul>
 <li><code>ActivityThread.java</code></li>
-</ul></li>
+</ul>
+</li>
 <li><code>libcore/dalvik/src/main/java/dalvik/system</code>
-
 <ul>
 <li><code>DexFile.java</code></li>
-</ul></li>
 </ul>
-
+</li>
+</ul>
 <p>FART 大体上就修改了源码中的这六个文件，加上 <code>fart.py</code>  这个用于合并 Dex 结构体和 CodeItem 的脚本，共有七个文件。结合作者在帖子中的介绍，大概介绍下每个文件的作用：</p>
-
 <ul>
-<li><p><code>DexFile.java</code> - 声明了 native 函数 <code>dumpMethodCode</code>，该函数的作用是构造主动调用链，完成方法体的dump。</p></li>
-
-<li><p><code>dalvik_system_DexFile.cc</code> - 实现了 <code>dumpMethodCode</code> 函数，该函数会去主动调用 <code>myfartInvoke</code> 函数</p></li>
-
-<li><p><code>interpreter.cc</code> - 增加判断，当处于<code>&lt;clinit&gt;</code> 阶段时，调用 <code>dumpDexFileByExecute</code> 来进行 dump</p></li>
-
-<li><p><code>art_method.cc</code> - 增加了两个函数 <code>dumpDexFileByExecute</code> 和 <code>dumpArtMethod</code></p></li>
-
-<li><p><code>art_method.h</code> - 声明  <code>get_method_idx</code>，暴露出 dex_method<em>index</em></p></li>
-
-<li><p><code>ActivityThread.java</code> - 获得 ClassLoader，获得 mCookie，再利用 mCookie 获得所有的类，然后主动遍历类的所有函数，进而提取出每个函数体的 CodeItem，至于为何采用该类作为入口点，可以参考作者的解释。</p></li>
-</ul>
-
+<li>
+<p><code>DexFile.java</code> - 声明了 native 函数 <code>dumpMethodCode</code>，该函数的作用是构造主动调用链，完成方法体的dump。</p>
+</li>
+<li>
+<p><code>dalvik_system_DexFile.cc</code> - 实现了 <code>dumpMethodCode</code> 函数，该函数会去主动调用 <code>myfartInvoke</code> 函数</p>
+</li>
+<li>
+<p><code>interpreter.cc</code> - 增加判断，当处于<code>&lt;clinit&gt;</code> 阶段时，调用 <code>dumpDexFileByExecute</code> 来进行 dump</p>
+</li>
+<li>
+<p><code>art_method.cc</code> - 增加了两个函数 <code>dumpDexFileByExecute</code> 和 <code>dumpArtMethod</code></p>
+</li>
+<li>
+<p><code>art_method.h</code> - 声明  <code>get_method_idx</code>，暴露出 dex_method_index_</p>
+</li>
+<li>
+<p><code>ActivityThread.java</code> - 获得 ClassLoader，获得 mCookie，再利用 mCookie 获得所有的类，然后主动遍历类的所有函数，进而提取出每个函数体的 CodeItem，至于为何采用该类作为入口点，可以参考作者的解释。</p>
 <blockquote>
 <p>众所周知，对于一个正常的应用来说，最终都要由一个个的Activity来展示应用的界面并和用户完成交互，那么我们就可以选择在ActivityThread中的performLaunchActivity函数作为时机，来获取最终的应用的Classloader。选择该函数还有一个好处在于该函数和应用的最终的application同在ActivityThread类中，可以很方便获取到该类的成员。</p>
 </blockquote>
-
+</li>
+</ul>
 <h2 id="codeitem-抽取">CodeItem 抽取</h2>
-
 <p>从我对 Android 加固有限的认知来看，目前最为广泛普及的加固技术即为指令抽取，更为高级的 VMP 或者 Dex2C 由于性能问题并不会大范围应用，因此如果能有效地解决指令抽取问题，即可以解决 99% 的问题。</p>
-
 <p>通常情况下，Java 类中的代码有两部分，一些代码只会在初始化阶段执行一次，因此针对 <code>＜clinit＞</code> 需要进行特判并在执行时直接抽取 CodeItem 部分，而其他部分可以在主动调用过程中进行抽取。</p>
-
 <p>针对这两部分，作者设计了不同的 dump 逻辑，分别如下：</p>
-
 <ul>
 <li><code>&lt;clinit&gt;</code> - <code>Execute</code> =&gt; <code>dumpDexFileByExecute</code></li>
 <li>正常函数 - <code>DexFile_dumpMethodCode</code> =&gt; <code>myfartInvoke</code> =&gt; <code>Invoke</code> =&gt; <code>dumpArtMethod</code></li>
 </ul>
-
 <p><code>dumpDexFileByExecute</code> 的逻辑如下，可以看到主要还是在执行时立刻保存 artmethod 所对应的 Dex 结构：</p>
-
-<pre><code class="language-c++">extern &quot;C&quot; void dumpDexFileByExecute(ArtMethod * artmethod)
-    SHARED_LOCKS_REQUIRED(Locks::mutator_lock_) {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">extern</span> <span style="color:#e6db74">&#34;C&#34;</span> <span style="color:#66d9ef">void</span> dumpDexFileByExecute(ArtMethod <span style="color:#f92672">*</span> artmethod)
+    SHARED_LOCKS_REQUIRED(Locks<span style="color:#f92672">::</span>mutator_lock_) {
   
-    // 省略部分代码
-    if (szProcName[0]) {
-        const DexFile *dex_file = artmethod-&gt;GetDexFile();
-        const uint8_t *begin_ = dex_file-&gt;Begin();	// Start of data.
-        size_t size_ = dex_file-&gt;Size();	// Length of data.
-      	// 继续省略代码
-        sprintf(dexfilepath,
-            &quot;/sdcard/fart/%s/%d_dexfile_execute.dex&quot;,
+    <span style="color:#75715e">// 省略部分代码
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (szProcName[<span style="color:#ae81ff">0</span>]) {
+        <span style="color:#66d9ef">const</span> DexFile <span style="color:#f92672">*</span>dex_file <span style="color:#f92672">=</span> artmethod<span style="color:#f92672">-&gt;</span>GetDexFile();
+        <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>begin_ <span style="color:#f92672">=</span> dex_file<span style="color:#f92672">-&gt;</span>Begin();	<span style="color:#75715e">// Start of data.
+</span><span style="color:#75715e"></span>        size_t size_ <span style="color:#f92672">=</span> dex_file<span style="color:#f92672">-&gt;</span>Size();	<span style="color:#75715e">// Length of data.
+</span><span style="color:#75715e"></span>      	<span style="color:#75715e">// 继续省略代码
+</span><span style="color:#75715e"></span>        sprintf(dexfilepath,
+            <span style="color:#e6db74">&#34;/sdcard/fart/%s/%d_dexfile_execute.dex&#34;</span>,
             szProcName, size_int_);
-        int dexfilefp = open(dexfilepath, O_RDONLY, 0666);
-        if (dexfilefp &gt; 0) {
+        <span style="color:#66d9ef">int</span> dexfilefp <span style="color:#f92672">=</span> open(dexfilepath, O_RDONLY, <span style="color:#ae81ff">0666</span>);
+        <span style="color:#66d9ef">if</span> (dexfilefp <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
             close(dexfilefp);
-            dexfilefp = 0;
-        } else {
-            dexfilefp =
-                open(dexfilepath, O_CREAT | O_RDWR,
-                    0666);
-            if (dexfilefp &gt; 0) {
-                write(dexfilefp, (void *) begin_,
+            dexfilefp <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+        } <span style="color:#66d9ef">else</span> {
+            dexfilefp <span style="color:#f92672">=</span>
+                open(dexfilepath, O_CREAT <span style="color:#f92672">|</span> O_RDWR,
+                    <span style="color:#ae81ff">0666</span>);
+            <span style="color:#66d9ef">if</span> (dexfilefp <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+                write(dexfilefp, (<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>) begin_,
                         size_);
                 fsync(dexfilefp);
                 close(dexfilefp);
@@ -243,75 +239,61 @@
         }
     }
 }
-</code></pre>
-
-<p>继续看 <code>dumpArtMethod</code> 的逻辑：</p>
-
-<pre><code class="language-c++">extern &quot;C&quot; void dumpArtMethod(ArtMethod * artmethod)
-    SHARED_LOCKS_REQUIRED(Locks::mutator_lock_) {
-    // 省略无关代码
-    if (szProcName[0]) {
-        // 省略代码
-        // 保存 Dex 结构
-        // 保存函数体
-        const DexFile::CodeItem * code_item =
-            artmethod-&gt;GetCodeItem();
-        if (LIKELY(code_item != nullptr)) {
-            int code_item_len = 0;
-            uint8_t *item = (uint8_t *) code_item;
-            if (code_item-&gt;tries_size_ &gt; 0) {
-                const uint8_t *handler_data =
-                    (const uint8_t *) (DexFile::
+</code></pre></div><p>继续看 <code>dumpArtMethod</code> 的逻辑：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">extern</span> <span style="color:#e6db74">&#34;C&#34;</span> <span style="color:#66d9ef">void</span> dumpArtMethod(ArtMethod <span style="color:#f92672">*</span> artmethod)
+    SHARED_LOCKS_REQUIRED(Locks<span style="color:#f92672">::</span>mutator_lock_) {
+    <span style="color:#75715e">// 省略无关代码
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (szProcName[<span style="color:#ae81ff">0</span>]) {
+        <span style="color:#75715e">// 省略代码
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 保存 Dex 结构
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// 保存函数体
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> DexFile<span style="color:#f92672">::</span>CodeItem <span style="color:#f92672">*</span> code_item <span style="color:#f92672">=</span>
+            artmethod<span style="color:#f92672">-&gt;</span>GetCodeItem();
+        <span style="color:#66d9ef">if</span> (LIKELY(code_item <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nullptr</span>)) {
+            <span style="color:#66d9ef">int</span> code_item_len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+            <span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>item <span style="color:#f92672">=</span> (<span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>) code_item;
+            <span style="color:#66d9ef">if</span> (code_item<span style="color:#f92672">-&gt;</span>tries_size_ <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span>) {
+                <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>handler_data <span style="color:#f92672">=</span>
+                    (<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>) (DexFile<span style="color:#f92672">::</span>
                                 GetTryItems
-                                (*code_item,
-                            code_item-&gt;
+                                (<span style="color:#f92672">*</span>code_item,
+                            code_item<span style="color:#f92672">-&gt;</span>
                             tries_size_));
-                uint8_t *tail =
-                    codeitem_end(&amp;handler_data);
-                code_item_len =
-                    (int) (tail - item);
-            } else {
-                code_item_len =
-                    16 +
-                    code_item-&gt;
-                    insns_size_in_code_units_ * 2;
+                <span style="color:#66d9ef">uint8_t</span> <span style="color:#f92672">*</span>tail <span style="color:#f92672">=</span>
+                    codeitem_end(<span style="color:#f92672">&amp;</span>handler_data);
+                code_item_len <span style="color:#f92672">=</span>
+                    (<span style="color:#66d9ef">int</span>) (tail <span style="color:#f92672">-</span> item);
+            } <span style="color:#66d9ef">else</span> {
+                code_item_len <span style="color:#f92672">=</span>
+                    <span style="color:#ae81ff">16</span> <span style="color:#f92672">+</span>
+                    code_item<span style="color:#f92672">-&gt;</span>
+                    insns_size_in_code_units_ <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>;
             }
-            // 保存 codeitem 信息 &lt;==&gt; base64 形式
-        }
+            <span style="color:#75715e">// 保存 codeitem 信息 &lt;==&gt; base64 形式
+</span><span style="color:#75715e"></span>        }
     }
 }
-</code></pre>
-
-<p>在正常保存 Dex 代码外，程序还会将一个函数的 CodeItem 抽取出来并保存。</p>
-
+</code></pre></div><p>在正常保存 Dex 代码外，程序还会将一个函数的 CodeItem 抽取出来并保存。</p>
 <h2 id="编译运行">编译运行</h2>
-
 <p>代码是基于 Android 6.0 的修改，因此我们可以自己编译 FART 工具并刷入自己的手机。然后找个带指令抽取的样本进行测试，脱壳结果如下：</p>
-
-<pre><code class="language-shell">root@angler:/sdcard/fart/de.k3b.android.androFotoFinder # ls -al
--rw-rw---- root     sdcard_rw 10139916 1970-01-11 02:22 10139916_dexfile_execute.dex
--rw-rw---- root     sdcard_rw  2499359 1970-01-11 02:25 1835412_5597.bin
--rw-rw---- root     sdcard_rw  1936402 1970-01-11 02:26 1835412_5724.bin
--rw-rw---- root     sdcard_rw  1832365 1970-01-11 02:26 1835412_5732.bin
--rw-rw---- root     sdcard_rw  1835412 1970-01-11 02:24 1835412_dexfile.dex
--rw-rw---- root     sdcard_rw  1835412 1970-01-11 02:22 1835412_dexfile_execute.dex
--rw-rw---- root     sdcard_rw   270916 1970-01-11 02:22 270916_dexfile_execute.dex
--rw-rw---- root     sdcard_rw  4307272 1970-01-11 02:22 4307272_dexfile_execute.dex
--rw-rw---- root     sdcard_rw     4906 1970-01-11 02:25 5109544_5597.bin
--rw-rw---- root     sdcard_rw  5109544 1970-01-11 02:25 5109544_dexfile.dex
--rw-rw---- root     sdcard_rw  5109544 1970-01-11 02:22 5109544_dexfile_execute.dex
-</code></pre>
-
-<p>然后利用 adb 将文件 pull 出来后，利用官方提供 fart.py 脚本可以尝试合并 dex 文件和相应的函数指令，可以看到相应效果为显示修复前 smali 代码和修复后 smali 代码：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/learn-fart/result.png" alt="result" class="lazyload"><figcaption class="image-caption">result</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">root@angler:/sdcard/fart/de.k3b.android.androFotoFinder <span style="color:#75715e"># ls -al</span>
+-rw-rw---- root     sdcard_rw <span style="color:#ae81ff">10139916</span> 1970-01-11 02:22 10139916_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">2499359</span> 1970-01-11 02:25 1835412_5597.bin
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">1936402</span> 1970-01-11 02:26 1835412_5724.bin
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">1832365</span> 1970-01-11 02:26 1835412_5732.bin
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">1835412</span> 1970-01-11 02:24 1835412_dexfile.dex
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">1835412</span> 1970-01-11 02:22 1835412_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw   <span style="color:#ae81ff">270916</span> 1970-01-11 02:22 270916_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">4307272</span> 1970-01-11 02:22 4307272_dexfile_execute.dex
+-rw-rw---- root     sdcard_rw     <span style="color:#ae81ff">4906</span> 1970-01-11 02:25 5109544_5597.bin
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">5109544</span> 1970-01-11 02:25 5109544_dexfile.dex
+-rw-rw---- root     sdcard_rw  <span style="color:#ae81ff">5109544</span> 1970-01-11 02:22 5109544_dexfile_execute.dex
+</code></pre></div><p>然后利用 adb 将文件 pull 出来后，利用官方提供 fart.py 脚本可以尝试合并 dex 文件和相应的函数指令，可以看到相应效果为显示修复前 smali 代码和修复后 smali 代码：</p>
+<p><img src="/images/posts/learn-fart/result.png" alt="result"></p>
 <p>如果需要合并成新 dex 的话，需要结合 Dex 结构对脚本进行修改。</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://bbs.pediy.com/thread-252630.htm" rel="nofollow noreferrer" target="_blank">FART：ART环境下基于主动调用的自动化脱壳方案</a></li>
+<li><a href="https://bbs.pediy.com/thread-252630.htm">FART：ART环境下基于主动调用的自动化脱壳方案</a></li>
 </ul>
 
     </div>

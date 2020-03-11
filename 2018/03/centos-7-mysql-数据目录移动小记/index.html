@@ -142,144 +142,84 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>实验室的机子 MySQL 的空间不够了，需要换一下数据目录，替它再续五百年（笑</p>
-
 <p>当然这么简单的事情是一定要踩坑的，不踩坑怎么能表现研究的难度呢？</p>
-
-<!-- more -->
-
+<!-- raw HTML omitted -->
 <h2 id="step-1-查看数据目录在哪">Step 1 查看数据目录在哪</h2>
-
 <p>通过执行相应 MySQL 查询操作我们发现，相应的数据目录位于 <code>/var/lib/mysql</code>（其实一般 centos 的都在）</p>
-
-<pre><code class="language-shell">## login
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">## login</span>
 mysql -u root -p
-## exec sql
-mysql&gt; select @@datadir;
-## output
+<span style="color:#75715e">## exec sql</span>
+mysql&gt; <span style="color:#66d9ef">select</span> @@datadir;
+<span style="color:#75715e">## output</span>
 +----------------------------+
 | @@datadir                  |
 +----------------------------+
 | /var/lib/mysql/ |
 +----------------------------+
-1 row in set (0.01 sec)
-</code></pre>
-
-<h2 id="step-2-关闭-mysql-服务">Step 2 关闭 MySQL 服务</h2>
-
+<span style="color:#ae81ff">1</span> row in set <span style="color:#f92672">(</span>0.01 sec<span style="color:#f92672">)</span>
+</code></pre></div><h2 id="step-2-关闭-mysql-服务">Step 2 关闭 MySQL 服务</h2>
 <p>这个就比较简单了，我们需要关闭一下我们的 MySQL 服务</p>
-
-<pre><code class="language-shell">sudo systemctl stop mysqld
-</code></pre>
-
-<p>关闭完成之后可以尝试输入：</p>
-
-<pre><code class="language-shell">sudo systemctl status mysqld
-</code></pre>
-
-<p>可以看到输出如下：</p>
-
-<pre><code class="language-shell">Mar 15 20:01:50 R920 systemd[1]: Stopping MySQL Server...
-Mar 15 20:01:54 R920 systemd[1]: Stopped MySQL Server.
-</code></pre>
-
-<h2 id="step-3-移动目录">Step 3 移动目录</h2>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo systemctl stop mysqld
+</code></pre></div><p>关闭完成之后可以尝试输入：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo systemctl status mysqld
+</code></pre></div><p>可以看到输出如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">Mar <span style="color:#ae81ff">15</span> 20:01:50 R920 systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Stopping MySQL Server...
+Mar <span style="color:#ae81ff">15</span> 20:01:54 R920 systemd<span style="color:#f92672">[</span>1<span style="color:#f92672">]</span>: Stopped MySQL Server.
+</code></pre></div><h2 id="step-3-移动目录">Step 3 移动目录</h2>
 <p>在这里，我们需要先新建一个文件夹作为我们之后的 MySQL 所存放的路径，那么需要的是新建这样一个文件夹</p>
-
 <p>比如我们在 <code>home</code> 下新建 <code>data</code> 目录</p>
-
-<pre><code class="language-shell">mkdir /home/data
-</code></pre>
-
-<p>然后拷贝相应数据</p>
-
-<pre><code class="language-shell">sudo rsync -av /var/lib/mysql /home/data/
-</code></pre>
-
-<p>这里使用 <code>rsync -av</code> 的作用是，详细模式并以递归方式传输文件，并保持所有文件属性</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">mkdir /home/data
+</code></pre></div><p>然后拷贝相应数据</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo rsync -av /var/lib/mysql /home/data/
+</code></pre></div><p>这里使用 <code>rsync -av</code> 的作用是，详细模式并以递归方式传输文件，并保持所有文件属性</p>
 <p>然后以防万一还是修改一下 <code>mysql</code> 文件夹的所有者，全部改为 <code>mysql</code></p>
-
-<pre><code class="language-shell">sudo chown -R mysql /home/data/mysql
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo chown -R mysql /home/data/mysql
 sudo chgrp -R mysql /home/data/mysql
-</code></pre>
-
-<p>上面的 <code>-R</code> 参数指的是以递归模式，即即所有的子文件夹均会更改所有者</p>
-
+</code></pre></div><p>上面的 <code>-R</code> 参数指的是以递归模式，即即所有的子文件夹均会更改所有者</p>
 <p>然后非常 <strong>关键</strong> 的一步，修改 <code>SELinux</code> 属性，要知道 CentOS 是默认开启 SELinux 的，那么也就是说，需要修改 SELinux 的相应属性值才能正常工作：</p>
-
-<pre><code class="language-shell">sudo chcon -R -t mysqld_db_t  /home/data/mysql
-</code></pre>
-
-<p>多少教程就是缺了这么一步导致无法运行😰</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo chcon -R -t mysqld_db_t  /home/data/mysql
+</code></pre></div><p>多少教程就是缺了这么一步导致无法运行😰</p>
 <h2 id="step-4-修改配置文件">Step 4 修改配置文件</h2>
-
 <p>修改数据目录的关键在于修改配置文件 <code>/etc/my.cnf</code>：</p>
-
-<pre><code class="language-shell">sudo vim /etc/my.cnf
-</code></pre>
-
-<p>然后做如下修改：</p>
-
-<pre><code class="language-shell">[mysqld]
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo vim /etc/my.cnf
+</code></pre></div><p>然后做如下修改：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#f92672">[</span>mysqld<span style="color:#f92672">]</span>
 . . .
-# datadir=/var/lib/mysql
-datadir=/home/data/mysql
-# socket=/var/lib/mysql/mysql.sock
-socket=/home/data/mysql/mysql.sock
+<span style="color:#75715e"># datadir=/var/lib/mysql</span>
+datadir<span style="color:#f92672">=</span>/home/data/mysql
+<span style="color:#75715e"># socket=/var/lib/mysql/mysql.sock</span>
+socket<span style="color:#f92672">=</span>/home/data/mysql/mysql.sock
 . . .
-</code></pre>
-
-<p>注释掉之前的语句并添加新增的目录</p>
-
+</code></pre></div><p>注释掉之前的语句并添加新增的目录</p>
 <p>然后为了客户端的访问，需要在最后加上：</p>
-
-<pre><code class="language-shell">[client]
-port=3306
-socket=/home/data/mysql/mysql.sock
-</code></pre>
-
-<h2 id="step-5-重新启动">Step 5 重新启动</h2>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#f92672">[</span>client<span style="color:#f92672">]</span>
+port<span style="color:#f92672">=</span><span style="color:#ae81ff">3306</span>
+socket<span style="color:#f92672">=</span>/home/data/mysql/mysql.sock
+</code></pre></div><h2 id="step-5-重新启动">Step 5 重新启动</h2>
 <p>重启 MySQL 服务：</p>
-
-<pre><code class="language-shell">sudo systemctl start mysqld
-</code></pre>
-
-<p>再次尝试 <code>sudo systemctl status mysqld</code> 命令，看到输出如下：</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">sudo systemctl start mysqld
+</code></pre></div><p>再次尝试 <code>sudo systemctl status mysqld</code> 命令，看到输出如下：</p>
 <pre><code>Mar 15 20:04:22 R920 systemd[1]: Starting MySQL Server...
 Mar 15 20:04:25 R920 systemd[1]: Started MySQL Server.
-</code></pre>
-
-<p>结束，走人！</p>
-
+</code></pre><p>结束，走人！</p>
 <p>当然你可以继续使用 MySQL 提供的 Client 来判断是否修改成功：</p>
-
-<pre><code class="language-shell">## login
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">## login</span>
 mysql -u root -p
-## exec sql
-mysql&gt; select @@datadir;
-## output
+<span style="color:#75715e">## exec sql</span>
+mysql&gt; <span style="color:#66d9ef">select</span> @@datadir;
+<span style="color:#75715e">## output</span>
 +----------------------------+
 | @@datadir                  |
 +----------------------------+
 | /home/data/mysql/          |
 +----------------------------+
-1 row in set (0.01 sec)
-</code></pre>
-
-<h2 id="参考资料">参考资料</h2>
-
+<span style="color:#ae81ff">1</span> row in set <span style="color:#f92672">(</span>0.01 sec<span style="color:#f92672">)</span>
+</code></pre></div><h2 id="参考资料">参考资料</h2>
 <ul>
-<li><a href="https://www.digitalocean.com/community/tutorials/how-to-change-a-mysql-data-directory-to-a-new-location-on-centos-7" rel="nofollow noreferrer" target="_blank">How to Change a MySQL Data Directory to a New Location on CentOS 7</a></li>
-<li><a href="https://www.howtoing.com/how-to-change-a-mysql-data-directory-to-a-new-location-on-centos-7" rel="nofollow noreferrer" target="_blank">如何在CentOS 7上将MySQL数据目录更改为新位置</a></li>
+<li><a href="https://www.digitalocean.com/community/tutorials/how-to-change-a-mysql-data-directory-to-a-new-location-on-centos-7">How to Change a MySQL Data Directory to a New Location on CentOS 7</a></li>
+<li><a href="https://www.howtoing.com/how-to-change-a-mysql-data-directory-to-a-new-location-on-centos-7">如何在CentOS 7上将MySQL数据目录更改为新位置</a></li>
 </ul>
 
     </div>

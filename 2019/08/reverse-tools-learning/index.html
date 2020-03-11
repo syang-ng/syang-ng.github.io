@@ -57,7 +57,7 @@
     "datePublished": "2019-08-16 18:54:42 \x2b0800 CST",
     "dateModified" : "2019-08-16 18:54:42 \x2b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2019\/08\/reverse-tools-learning\/",
-    "wordCount" : "2786",
+    "wordCount" : "2792",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,318 +145,244 @@
           
           
 
-          
-
-<p>一般来说，解一道逆向题，通常考虑使用 ida / ghidra 进行静态逆向分析或者是使用 gdb / x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让人不由得思考一个问题：有没有方法来高效地解题（摸鱼）呢？</p>
-
+          <p>一般来说，解一道逆向题，通常考虑使用 ida / ghidra 进行静态逆向分析或者是使用 gdb / x64dbg 来动态调试。有时程序的逻辑会非常繁琐，解题的过程也非常枯燥，这就让人不由得思考一个问题：有没有方法来高效地解题（摸鱼）呢？</p>
 <p>恰好最近看到一道 p4 出的一道很有意思的逆向题目，虽然难度不大，但由于题目条件设置的原因，人工求解会变得非常繁琐，相对应地，利用工具就能方便地进行求解。正好可以借此机会，来尝试使用工具高效地对逆向题进行求解。</p>
-
 <h2 id="题目分析">题目分析</h2>
-
 <p> 用 file 命令检查文件，可以看到是一个 64 位的程序：</p>
-
-<pre><code class="language-bash">$ file elementary
-elementary: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/l, for GNU/Linux 3.2.0, BuildID[sha1]=d5989f8d294badf15acaa157984968eea75f1fce, not stripped
-</code></pre>
-
-<p>用 ida64 打开，反编译 main 方法，可以看到程序的逻辑非常简单，根据 <code>checkFlag</code> 函数的返回结果，程序输出 <code>Good job!</code> 或者是 <code>Wrong!</code>：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/main.png" alt="主函数" class="lazyload"><figcaption class="image-caption">主函数</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ file elementary
+elementary: ELF 64-bit LSB shared object, x86-64, version <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>SYSV<span style="color:#f92672">)</span>, dynamically linked, interpreter /lib64/l, <span style="color:#66d9ef">for</span> GNU/Linux 3.2.0, BuildID<span style="color:#f92672">[</span>sha1<span style="color:#f92672">]=</span>d5989f8d294badf15acaa157984968eea75f1fce, not stripped
+</code></pre></div><p>用 ida64 打开，反编译 main 方法，可以看到程序的逻辑非常简单，根据 <code>checkFlag</code> 函数的返回结果，程序输出 <code>Good job!</code> 或者是 <code>Wrong!</code>：</p>
+<p><img src="/images/posts/Reverse-Tools-Learning/main.png" alt="主函数"></p>
 <p>继续跟进 <code>checkFlag</code>  函数：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/checkFlag.png" alt="checkFlag" class="lazyload"><figcaption class="image-caption">checkFlag</figcaption></figure></p>
-
+<p><img src="/images/posts/Reverse-Tools-Learning/checkFlag.png" alt="checkFlag"></p>
 <p>可以看到这个方法很长，但其实逻辑还是较为简单的，输入共 104 个字节、 832 个 bit，然后针对其中的一个 bit，会调用 <code>function0</code> 到 <code>function831</code> 共 832 个函数中的一个。观察 <code>function0</code> 到 <code>function831</code> 函数的具体反汇编结果，可以看到，虽然总共有 832 个函数，但实际上函数具体的反汇编结果无非两种，一是直接返回该 bit，二是返回该 bit 的取反值。</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/function.png" alt="function" class="lazyload"><figcaption class="image-caption">function</figcaption></figure></p>
-
+<p><img src="/images/posts/Reverse-Tools-Learning/function.png" alt="function"></p>
 <p>由此，函数的检查逻辑非常清晰，其实就是 832 个函数分别对 832 个输入的 bit 做校验，验证全部通过的输入即为 flag。那么，开始手动求解，832个函数很快的（不是）。我们下面来考虑如何利用工具对本题进行求解：</p>
-
 <h2 id="ida">ida</h2>
-
 <p>作为一款强大的二进制分析工具，ida 提供了相当之多的功能，比如说 <code>File</code>-&gt;<code>Produce file</code>  可以导出程序相关的文件，包括反汇编的 C 代码：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/produce.png" alt="produce" class="lazyload"><figcaption class="image-caption">produce</figcaption></figure></p>
-
+<p><img src="/images/posts/Reverse-Tools-Learning/produce.png" alt="produce"></p>
 <p>看到这里，最直接的一个思路就是通过对 ida 生成的 C 代码进行修改，将对 bit 的验证修改为对 bit 的赋值，在执行完 832 次赋值后就会得到最终的 flag。</p>
-
 <p>观察其中一条判断语句，可以发现它要求对应的函数 <code>function572</code> 针对输入返回 0：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">if</span> ( (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span>)function572((a1[<span style="color:#ae81ff">85</span>] <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">2</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">1</span>) )
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0LL</span>;
+</code></pre></div><p>所以只需要判断在输入为 1 的情况下，该函数的返回是否为 0，如果为 0，说明该 bit 的值应该是 1，反之则为 0：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">if</span>(function572(<span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+    a1[<span style="color:#ae81ff">85</span>] <span style="color:#f92672">|=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">2</span>);
+</code></pre></div><p>可以利用 python 编写脚本，完成全部判断语句到赋值语句到转换：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">trans_func</span>(l):
+   sp <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#39;function&#39;</span>)
+   ep <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#39;(&#39;</span>, sp)
+   func <span style="color:#f92672">=</span> l[sp:ep]
+   <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;[&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> l:
+       index <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+   <span style="color:#66d9ef">else</span>:
+       sp <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#39;[&#39;</span>)
+       ep <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#39;]&#39;</span>, sp)
+       index <span style="color:#f92672">=</span> int(l[sp<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>:ep])
+   <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34;&gt;&gt;&#34;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> l:
+       offset <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+   <span style="color:#66d9ef">else</span>:
+       sp <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#34;&gt;&gt;&#34;</span>)
+       ep <span style="color:#f92672">=</span> l<span style="color:#f92672">.</span>index(<span style="color:#e6db74">&#34;)&#34;</span>, sp)
+       offset <span style="color:#f92672">=</span> int(l[sp<span style="color:#f92672">+</span><span style="color:#ae81ff">3</span>:ep])
+   <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;if({}(1) == 0)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">    a1[{}] |= (1&lt;&lt;{});&#34;</span><span style="color:#f92672">.</span>format(func, index, offset)
 
-<pre><code class="language-c">if ( (unsigned int)function572((a1[85] &gt;&gt; 2) &amp; 1) )
-    return 0LL;
-</code></pre>
-
-<p>所以只需要判断在输入为 1 的情况下，该函数的返回是否为 0，如果为 0，说明该 bit 的值应该是 1，反之则为 0：</p>
-
-<pre><code class="language-c">if(function572(1) == 0)
-    a1[85] |= (1&lt;&lt;2);
-</code></pre>
-
-<p>可以利用 python 编写脚本，完成全部判断语句到赋值语句到转换：</p>
-
-<pre><code class="language-python">def trans_func(l):
-    sp = l.index('function')
-    ep = l.index('(', sp)
-    func = l[sp:ep]
-    if '[' not in l:
-        index = 0
-    else:
-        sp = l.index('[')
-        ep = l.index(']', sp)
-        index = int(l[sp+1:ep])
-    if &quot;&gt;&gt;&quot; not in l:
-        offset = 0
-    else:
-        sp = l.index(&quot;&gt;&gt;&quot;)
-        ep = l.index(&quot;)&quot;, sp)
-        offset = int(l[sp+3:ep])
-    return &quot;if({}(1) == 0)\n    a1[{}] |= (1&lt;&lt;{});&quot;.format(func, index, offset)
-
-# sample
-trans_func('if ( (unsigned int)function572((a1[85] &gt;&gt; 2) &amp; 1) )')
-# 'if(function572(1) == 0)\n    a1[85] |= (1&lt;&lt;2);'
-</code></pre>
-
-<p>通过对 ida 导出的 c 源码进行修改，最终生成 <code>solve.c</code> 文件如下，编译运行，即可得到 flag：</p>
-
-<pre><code class="language-c">#include &lt;stdio.h&gt;
-#inclue &lt;string.h&gt;
-
-int main(int argc, const char **argv, const char **envp);
-int function0(int a1);
-int function1(int a1);
+<span style="color:#75715e"># sample</span>
+trans_func(<span style="color:#e6db74">&#39;if ( (unsigned int)function572((a1[85] &gt;&gt; 2) &amp; 1) )&#39;</span>)
+<span style="color:#75715e"># &#39;if(function572(1) == 0)\n    a1[85] |= (1&lt;&lt;2);&#39;</span>
+</code></pre></div><p>通过对 ida 导出的 c 源码进行修改，最终生成 <code>solve.c</code> 文件如下，编译运行，即可得到 flag：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#inclue &lt;string.h&gt;
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>envp);
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">function0</span>(<span style="color:#66d9ef">int</span> a1);
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">function1</span>(<span style="color:#66d9ef">int</span> a1);
 ...
-int function830(int a1);
-int function831(int a1);
-int checkFlag(char *a1);
+<span style="color:#66d9ef">int</span> function830(<span style="color:#66d9ef">int</span> a1);
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">function831</span>(<span style="color:#66d9ef">int</span> a1);
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">checkFlag</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>a1);
 
-int main(int argc, const char **argv, const char **envp) {
-  char v4[104];
-  memset(v4, 0, 104);
-  if (checkFlag(v4))
-    printf(&quot;%s\n&quot;, v4);
-  return 0;
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>envp) {
+  <span style="color:#66d9ef">char</span> v4[<span style="color:#ae81ff">104</span>];
+  memset(v4, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">104</span>);
+  <span style="color:#66d9ef">if</span> (checkFlag(v4))
+    printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, v4);
+  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 }
 
-int function0(int a1) {
-  return a1 ^ 1u;
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">function0</span>(<span style="color:#66d9ef">int</span> a1) {
+  <span style="color:#66d9ef">return</span> a1 <span style="color:#f92672">^</span> <span style="color:#ae81ff">1u</span>;
 }
 ...
-int function831(int a1) {
-  return a1 ^ 1u;
+<span style="color:#66d9ef">int</span> function831(<span style="color:#66d9ef">int</span> a1) {
+  <span style="color:#66d9ef">return</span> a1 <span style="color:#f92672">^</span> <span style="color:#ae81ff">1u</span>;
 }
 
-int checkFlag(char *a1) {
-    if(function0(1) == 0)
-        a1[64] |= (1&lt;&lt;0);
+<span style="color:#66d9ef">int</span> checkFlag(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>a1) {
+    <span style="color:#66d9ef">if</span>(function0(<span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+        a1[<span style="color:#ae81ff">64</span>] <span style="color:#f92672">|=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">0</span>);
     ...
-    if(function831(1) == 0)
-        a1[20] |= (1&lt;&lt;4);
+    <span style="color:#66d9ef">if</span>(function831(<span style="color:#ae81ff">1</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+        a1[<span style="color:#ae81ff">20</span>] <span style="color:#f92672">|=</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">4</span>);
 }
-</code></pre>
-
-<pre><code class="language-shell">$ gcc solve.c
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ gcc solve.c
 $ ./a.out
-p4{I_really_hope_you_automated_this_somehow_otherwise_it_might_be_a_bit_frustrating_to_do_this_manually}
-</code></pre>
-
-<h2 id="idapython">idapython</h2>
-
+p4<span style="color:#f92672">{</span>I_really_hope_you_automated_this_somehow_otherwise_it_might_be_a_bit_frustrating_to_do_this_manually<span style="color:#f92672">}</span>
+</code></pre></div><h2 id="idapython">idapython</h2>
 <p>既然能通过 ida 导出的 c 文件和 python 相结合的方式解题，那么能否使用 idapython 直接完成本题呢？答案是肯定的，需要利用 idapython 提供的三个函数：</p>
-
 <ul>
 <li><code>Functions</code> ：遍历所有的函数（返回的是函数的入口地址）</li>
 <li><code>get_func_name</code>：根据地址返回函数名</li>
 <li><code>decompile</code>：反编译函数</li>
 </ul>
-
 <p>具体的操作和之前的解法在思路上较为相似，首先遍历所有的函数（<code>function0</code> - <code>function831</code>），对函数进行解析（判断是否取反）；然后反编译 <code>checkFlag</code> 函数，通过解析对各个函数的调用顺序，对 flag 变量进行赋值。</p>
-
 <p>相应代码如下（用正则匹配函数和相应的返回）：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> re
+<span style="color:#f92672">from</span> idaapi <span style="color:#f92672">import</span> decompile
+<span style="color:#f92672">from</span> idautils <span style="color:#f92672">import</span> Functions
 
-<pre><code class="language-python">import re
-from idaapi import decompile
-from idautils import Functions
+funcs <span style="color:#f92672">=</span> {}
+flag <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0</span> <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">104</span>)]
 
-funcs = {}
-flag = [0 for i in range(104)]
-
-for x in Functions():
-    fn = get_func_name(x)
-    if fn.find('function') != -1:
-        v = int(str(decompile(x)).find('^')!=-1)
-        funcs[fn] = v
+<span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> Functions():
+    fn <span style="color:#f92672">=</span> get_func_name(x)
+    <span style="color:#66d9ef">if</span> fn<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#39;function&#39;</span>) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>:
+        v <span style="color:#f92672">=</span> int(str(decompile(x))<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#39;^&#39;</span>)<span style="color:#f92672">!=-</span><span style="color:#ae81ff">1</span>)
+        funcs[fn] <span style="color:#f92672">=</span> v
                 
-checkFlag_addr = 0xceb7c
-codes = str(decompile(checkFlag_addr)).split('\n')[2👎2]
+checkFlag_addr <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xceb7c</span>
+codes <span style="color:#f92672">=</span> str(decompile(checkFlag_addr))<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span>)[<span style="color:#ae81ff">2</span><span style="color:#960050;background-color:#1e0010">👎</span><span style="color:#ae81ff">2</span>]
 
-for code in codes:
-    fn = re.search('function[0-9]+', code)
-    fn = fn.group(0)
-    idx = re.search('a1\[([0-9]+)', code)
-    idx = 0 if not idx else int(idx.group(1))
-    bit = re.search('&gt;&gt; ([0-9]+)', code)
-    bit = 0 if not bit else int(bit.group(1))
+<span style="color:#66d9ef">for</span> code <span style="color:#f92672">in</span> codes:
+    fn <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">&#39;function[0-9]+&#39;</span>, code)
+    fn <span style="color:#f92672">=</span> fn<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">0</span>)
+    idx <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">&#39;a1\[([0-9]+)&#39;</span>, code)
+    idx <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> idx <span style="color:#66d9ef">else</span> int(idx<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">1</span>))
+    bit <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">&#39;&gt;&gt; ([0-9]+)&#39;</span>, code)
+    bit <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> bit <span style="color:#66d9ef">else</span> int(bit<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">1</span>))
 
-    flag[idx] += funcs[fn] &lt;&lt; bit
+    flag[idx] <span style="color:#f92672">+=</span> funcs[fn] <span style="color:#f92672">&lt;&lt;</span> bit
 
-print(''.join(map(chr, flag)))
-</code></pre>
-
-<p>直接在 ida 内部的 python 终端下运行，运行结果如下：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/idapython.png" alt="IDA python" class="lazyload"><figcaption class="image-caption">IDA python</figcaption></figure></p>
-
+<span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(map(chr, flag)))
+</code></pre></div><p>直接在 ida 内部的 python 终端下运行，运行结果如下：</p>
+<p><img src="/images/posts/Reverse-Tools-Learning/idapython.png" alt="IDA python"></p>
 <h2 id="angr">angr</h2>
-
 <p>作为大名鼎鼎的符号执行工具，angr 也是解逆向题的神兵利器。有些时候甚至题目还没逆完说不定就用 angr 跑出结果了，用 angr 解题实乃摸鱼的不二法宝。</p>
-
 <p>使用 angr 求解通常需要以下两个步骤：</p>
-
 <ol>
 <li>确认 flag 的长度，建立约束条件</li>
 <li>明确需要执行到的分支和不想执行到的分支</li>
 </ol>
-
 <p>对本题来说，很明显 flag 长度为 832 个 bit，因为共有 832 个函数；然后希望执行到的分支地址为 <code>0x773</code>，输出 <code>Good job!</code>，不想执行到的分支地址为 <code>0x786</code>，最终会输出 <code>Wrong!</code>。</p>
-
 <p>另外，在 <code>checkFlag</code>  函数中，同样存在着大量我们不想执行的分支，比如会执行 <code>return 0</code> 的任意一个分支，相应的汇编代码如下：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/avoid.png" alt="branch" class="lazyload"><figcaption class="image-caption">branch</figcaption></figure></p>
-
+<p><img src="/images/posts/Reverse-Tools-Learning/avoid.png" alt="branch"></p>
 <p>为了加快求解速度，我们需要获得所有 <code>mov eax,0</code> 相关指令的地址，这些都不属于我们想要执行的分支。使用 linux 命令提取如下：</p>
-
-<pre><code class="language-shell"># 反编译，过滤得到相应指令
-$ objdump -d elementary | grep &quot;\$0x0,%eax&quot; &gt; asm.txt
-# 提取地址
-$ awk '{ print $1 }' asm.txt | cut -d':' -f1 &gt; avoid_addr
-# 过滤前几个无用地址
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e"># 反编译，过滤得到相应指令</span>
+$ objdump -d elementary | grep <span style="color:#e6db74">&#34;\$0x0,%eax&#34;</span> &gt; asm.txt
+<span style="color:#75715e"># 提取地址</span>
+$ awk <span style="color:#e6db74">&#39;{ print $1 }&#39;</span> asm.txt | cut -d<span style="color:#e6db74">&#39;:&#39;</span> -f1 &gt; avoid_addr
+<span style="color:#75715e"># 过滤前几个无用地址</span>
 $ tail -n +6 avoid_addr &gt; avoid_addr
-</code></pre>
+</code></pre></div><p>提取了相应地址后，即可编写相应解题脚本，脚本参考：https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> angr
+<span style="color:#f92672">import</span> claripy
 
-<p>提取了相应地址后，即可编写相应解题脚本，脚本参考：<a href="https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7" rel="nofollow noreferrer" target="_blank">https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7</a></p>
+<span style="color:#75715e"># angr 使用 0x400000 作为基地址，所以需要加上相应偏移</span>
+start <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x40071a</span>
+find <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x400773</span>
+avoid <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0x400786</span>]
 
-<pre><code class="language-python">import angr
-import claripy
+flag_length <span style="color:#f92672">=</span> <span style="color:#ae81ff">104</span>
+<span style="color:#75715e"># 不希望执行的分支</span>
+<span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;./avoid_addr&#39;</span>) <span style="color:#66d9ef">as</span> f:
+    lines <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>readlines()
+    lines <span style="color:#f92672">=</span> [line<span style="color:#f92672">.</span>strip() <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> lines]
+    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> lines:
+        avoid<span style="color:#f92672">.</span>append(<span style="color:#ae81ff">0x400000</span> <span style="color:#f92672">+</span> int(line, <span style="color:#ae81ff">16</span>))
 
-# angr 使用 0x400000 作为基地址，所以需要加上相应偏移
-start = 0x40071a
-find = 0x400773
-avoid = [0x400786]
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+    <span style="color:#75715e"># 初始化项目</span>
+    p <span style="color:#f92672">=</span> angr<span style="color:#f92672">.</span>Project(<span style="color:#e6db74">&#39;./elementary&#39;</span>)
+    <span style="color:#75715e"># 设置 flag</span>
+    flag <span style="color:#f92672">=</span> claripy<span style="color:#f92672">.</span>BVS(<span style="color:#e6db74">&#39;flag&#39;</span>, flag_length <span style="color:#f92672">*</span> <span style="color:#ae81ff">8</span>)
+    state <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span>factory<span style="color:#f92672">.</span>blank_state(addr<span style="color:#f92672">=</span>start, stdin<span style="color:#f92672">=</span>flag, add_options<span style="color:#f92672">=</span>{angr<span style="color:#f92672">.</span>options<span style="color:#f92672">.</span>LAZY_SOLVES})
+    <span style="color:#75715e"># 输入字符的约束条件，必须是可打印字符</span>
+    <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> flag<span style="color:#f92672">.</span>chop(<span style="color:#ae81ff">8</span>):
+        state<span style="color:#f92672">.</span>solver<span style="color:#f92672">.</span>add(state<span style="color:#f92672">.</span>solver<span style="color:#f92672">.</span>And(c <span style="color:#f92672">&lt;=</span> <span style="color:#e6db74">&#39;~&#39;</span>, c <span style="color:#f92672">&gt;=</span> <span style="color:#e6db74">&#39; &#39;</span>))
 
-flag_length = 104
-# 不希望执行的分支
-with open('./avoid_addr') as f:
-    lines = f.readlines()
-    lines = [line.strip() for line in lines]
-    for line in lines:
-        avoid.append(0x400000 + int(line, 16))
+    ex <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span>factory<span style="color:#f92672">.</span>simulation_manager(state)
+    ex<span style="color:#f92672">.</span>use_technique(angr<span style="color:#f92672">.</span>exploration_techniques<span style="color:#f92672">.</span>Explorer(find<span style="color:#f92672">=</span>find, avoid<span style="color:#f92672">=</span>avoid))
+    <span style="color:#75715e"># 运行 </span>
+    ex<span style="color:#f92672">.</span>run()
+    <span style="color:#75715e"># 输出结果</span>
+    <span style="color:#66d9ef">print</span>(ex<span style="color:#f92672">.</span>found[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>posix<span style="color:#f92672">.</span>dumps(<span style="color:#ae81ff">0</span>)<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>))
 
-def main():
-    # 初始化项目
-    p = angr.Project('./elementary')
-    # 设置 flag
-    flag = claripy.BVS('flag', flag_length * 8)
-    state = p.factory.blank_state(addr=start, stdin=flag, add_options={angr.options.LAZY_SOLVES})
-    # 输入字符的约束条件，必须是可打印字符
-    for c in flag.chop(8):
-        state.solver.add(state.solver.And(c &lt;= '~', c &gt;= ' '))
-
-    ex = p.factory.simulation_manager(state)
-    ex.use_technique(angr.exploration_techniques.Explorer(find=find, avoid=avoid))
-    # 运行 
-    ex.run()
-    # 输出结果
-    print(ex.found[0].posix.dumps(0).decode('utf-8'))
-
-if __name__ == '__main__':
+<span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;__main__&#39;</span>:
     main()
-</code></pre>
-
-<p>可以看到只用了 64 秒就可以跑出 flag，还是非常高效的：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/angr.png" alt="solve by angr" class="lazyload"><figcaption class="image-caption">solve by angr</figcaption></figure></p>
-
+</code></pre></div><p>可以看到只用了 64 秒就可以跑出 flag，还是非常高效的：</p>
+<p><img src="/images/posts/Reverse-Tools-Learning/angr.png" alt="solve by angr"></p>
 <h2 id="pin-tool">PIN tool</h2>
-
 <p><code>PIN tool</code> 是 intel 开发的一款二进制程序的插桩分析工具，允许研究人员用不同的 pintool 在二进制程序层面分析程序的执行情况。利用 PIN tool 对程序进行插桩，而后通过侧信道的方式，能直接得到很多题目的答案。</p>
-
 <p>既然考虑到利用 PIN tool 需要侧信道，首先需要思考的问题是，利用什么信息可以推断我们的输入正确。</p>
-
 <p>直接使用统计执行指令数的 pintool - inscount1.so，可以发现在不同的输入下，程序实际执行的指令数不同。</p>
-
-<pre><code class="language-shell">$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &lt;&lt;&lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~8~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary <span style="color:#f92672">&lt;&lt;&lt;</span> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~8~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Password: Wrong!
 $ cat inscount.out
-Count 150764
-$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary &lt;&lt;&lt; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~e~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Count <span style="color:#ae81ff">150764</span>
+$ ../../../pin -t obj-intel64/inscount1.so  -- /home/syang/CTF/elementary <span style="color:#f92672">&lt;&lt;&lt;</span> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~e~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Password: Wrong!
 $ cat inscount.out
-Count 153422
-</code></pre>
+Count <span style="color:#ae81ff">153422</span>
+</code></pre></div><p>那么如何验证该输入是正确还是错误呢？回到 <code>checkFlag</code> 看其逻辑，可以发现只有 <code>function2</code>  函数返回 0 的情况下，程序才会继续往下执行，反之 <code>checkFlag</code> 函数会直接返回。因此，有了以下推论：输入正确 =&gt; 程序继续执行 =&gt; 执行的指令数更多；输入错误 =&gt; 程序提前返回 =&gt; 执行的指令数更少。所以可以通过判断不同输入下执行的指令数目多少，来判断我们的输入是否正确。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">if</span> ( (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span>)function2((a1[<span style="color:#ae81ff">64</span>] <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">1</span>) )
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0LL</span>;
+<span style="color:#66d9ef">if</span> ( (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span>)function3((a1[<span style="color:#ae81ff">64</span>] <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">1</span>) )
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0LL</span>;
+</code></pre></div><p>编写利用 pintool 进行侧信道的 python 脚本（需要提取每次爆破的字节顺序）：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> subprocess <span style="color:#f92672">import</span> Popen, PIPE
+<span style="color:#f92672">import</span> string
 
-<p>那么如何验证该输入是正确还是错误呢？回到 <code>checkFlag</code> 看其逻辑，可以发现只有 <code>function2</code>  函数返回 0 的情况下，程序才会继续往下执行，反之 <code>checkFlag</code> 函数会直接返回。因此，有了以下推论：输入正确 =&gt; 程序继续执行 =&gt; 执行的指令数更多；输入错误 =&gt; 程序提前返回 =&gt; 执行的指令数更少。所以可以通过判断不同输入下执行的指令数目多少，来判断我们的输入是否正确。</p>
+s <span style="color:#f92672">=</span> string<span style="color:#f92672">.</span>ascii_letters <span style="color:#f92672">+</span> string<span style="color:#f92672">.</span>digits <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;+-_{}&#34;</span>
 
-<pre><code class="language-c">if ( (unsigned int)function2((a1[64] &gt;&gt; 5) &amp; 1) )
-    return 0LL;
-if ( (unsigned int)function3((a1[64] &gt;&gt; 4) &amp; 1) )
-    return 0LL;
-</code></pre>
+flag <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;?&#34;</span> <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">104</span>)]
 
-<p>编写利用 pintool 进行侧信道的 python 脚本（需要提取每次爆破的字节顺序）：</p>
+indexes <span style="color:#f92672">=</span> [<span style="color:#ae81ff">64</span>, <span style="color:#ae81ff">38</span>, <span style="color:#ae81ff">67</span>, <span style="color:#ae81ff">88</span>, <span style="color:#ae81ff">21</span>, <span style="color:#ae81ff">68</span>, <span style="color:#ae81ff">95</span>, <span style="color:#ae81ff">36</span>, <span style="color:#ae81ff">39</span>, <span style="color:#ae81ff">77</span>, <span style="color:#ae81ff">101</span>, <span style="color:#ae81ff">90</span>, <span style="color:#ae81ff">6</span>, <span style="color:#ae81ff">48</span>, <span style="color:#ae81ff">23</span>, <span style="color:#ae81ff">62</span>, <span style="color:#ae81ff">81</span>, <span style="color:#ae81ff">83</span>, <span style="color:#ae81ff">79</span>, <span style="color:#ae81ff">44</span>, <span style="color:#ae81ff">25</span>, <span style="color:#ae81ff">17</span>, <span style="color:#ae81ff">52</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">29</span>, <span style="color:#ae81ff">102</span>, <span style="color:#ae81ff">28</span>, <span style="color:#ae81ff">93</span>, <span style="color:#ae81ff">16</span>, <span style="color:#ae81ff">43</span>, <span style="color:#ae81ff">78</span>, <span style="color:#ae81ff">9</span>, <span style="color:#ae81ff">60</span>, <span style="color:#ae81ff">70</span>, <span style="color:#ae81ff">71</span>, <span style="color:#ae81ff">65</span>, <span style="color:#ae81ff">40</span>, <span style="color:#ae81ff">12</span>, <span style="color:#ae81ff">56</span>, <span style="color:#ae81ff">13</span>, <span style="color:#ae81ff">57</span>, <span style="color:#ae81ff">37</span>, <span style="color:#ae81ff">69</span>, <span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">84</span>, <span style="color:#ae81ff">58</span>, <span style="color:#ae81ff">89</span>, <span style="color:#ae81ff">91</span>, <span style="color:#ae81ff">14</span>, <span style="color:#ae81ff">82</span>, <span style="color:#ae81ff">45</span>, <span style="color:#ae81ff">76</span>, <span style="color:#ae81ff">66</span>, <span style="color:#ae81ff">98</span>, <span style="color:#ae81ff">75</span>, <span style="color:#ae81ff">47</span>, <span style="color:#ae81ff">97</span>, <span style="color:#ae81ff">34</span>, <span style="color:#ae81ff">80</span>, <span style="color:#ae81ff">103</span>, <span style="color:#ae81ff">86</span>, <span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">74</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">18</span>, <span style="color:#ae81ff">51</span>, <span style="color:#ae81ff">72</span>, <span style="color:#ae81ff">26</span>, <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">31</span>, <span style="color:#ae81ff">42</span>, <span style="color:#ae81ff">85</span>, <span style="color:#ae81ff">49</span>, <span style="color:#ae81ff">33</span>, <span style="color:#ae81ff">54</span>, <span style="color:#ae81ff">63</span>, <span style="color:#ae81ff">46</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">41</span>, <span style="color:#ae81ff">24</span>, <span style="color:#ae81ff">73</span>, <span style="color:#ae81ff">35</span>, <span style="color:#ae81ff">30</span>, <span style="color:#ae81ff">92</span>, <span style="color:#ae81ff">11</span>, <span style="color:#ae81ff">87</span>, <span style="color:#ae81ff">50</span>, <span style="color:#ae81ff">53</span>, <span style="color:#ae81ff">32</span>, <span style="color:#ae81ff">99</span>, <span style="color:#ae81ff">96</span>, <span style="color:#ae81ff">19</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">15</span>, <span style="color:#ae81ff">55</span>, <span style="color:#ae81ff">100</span>, <span style="color:#ae81ff">2</span>, <span style="color:#ae81ff">59</span>, <span style="color:#ae81ff">94</span>, <span style="color:#ae81ff">61</span>, <span style="color:#ae81ff">22</span>, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">27</span>, <span style="color:#ae81ff">20</span>]
 
-<pre><code class="language-python">from subprocess import Popen, PIPE
-import string
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">use_pintool</span>(test_flag):
+    pin_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/home/syang/tools/pin/pin&#34;</span>
+    pintool_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/home/syang/tools/pin/source/tools/ManualExamples/obj-intel64/inscount1.so&#34;</span>
+    binary_path <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/home/syang/CTF/elementary&#34;</span>
+    p <span style="color:#f92672">=</span> Popen([pin_path, <span style="color:#e6db74">&#39;-t&#39;</span>, pintool_path, <span style="color:#e6db74">&#39;--&#39;</span>, binary_path], stdin <span style="color:#f92672">=</span> PIPE, stdout <span style="color:#f92672">=</span> PIPE)
+    p<span style="color:#f92672">.</span>stdin<span style="color:#f92672">.</span>write(bytes(test_flag, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;utf-8&#39;</span>))
+    p<span style="color:#f92672">.</span>communicate()
+    <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;./inscount.out&#39;</span>) <span style="color:#66d9ef">as</span> f:
+        data <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>read()
+        <span style="color:#66d9ef">return</span> int(data[len(<span style="color:#e6db74">&#39;Count &#39;</span>):])
 
-s = string.ascii_letters + string.digits + &quot;+-_{}&quot;
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> indexes:
+    test <span style="color:#f92672">=</span> flag[::]
+    base_count <span style="color:#f92672">=</span> use_pintool(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(test))
+    c <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;?&#39;</span>
+    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> s:
+        test[i] <span style="color:#f92672">=</span> j
+        test_count <span style="color:#f92672">=</span> use_pintool(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(test))
+        <span style="color:#75715e"># 执行的指令数目最多的输入，才是正确的输入</span>
+        <span style="color:#66d9ef">if</span> base_count  <span style="color:#f92672">&lt;</span> test_count:
+            c <span style="color:#f92672">=</span> j
+            base_count <span style="color:#f92672">=</span> test_count
 
-flag = [&quot;?&quot; for i in range(104)]
-
-indexes = [64, 38, 67, 88, 21, 68, 95, 36, 39, 77, 101, 90, 6, 48, 23, 62, 81, 83, 79, 44, 25, 17, 52, 3, 29, 102, 28, 93, 16, 43, 78, 9, 60, 70, 71, 65, 40, 12, 56, 13, 57, 37, 69, 7, 84, 58, 89, 91, 14, 82, 45, 76, 66, 98, 75, 47, 97, 34, 80, 103, 86, 5, 74, 1, 18, 51, 72, 26, 8, 31, 42, 85, 49, 33, 54, 63, 46, 4, 41, 24, 73, 35, 30, 92, 11, 87, 50, 53, 32, 99, 96, 19, 10, 15, 55, 100, 2, 59, 94, 61, 22, 0, 27, 20]
-
-def use_pintool(test_flag):
-    pin_path = &quot;/home/syang/tools/pin/pin&quot;
-    pintool_path = &quot;/home/syang/tools/pin/source/tools/ManualExamples/obj-intel64/inscount1.so&quot;
-    binary_path = &quot;/home/syang/CTF/elementary&quot;
-    p = Popen([pin_path, '-t', pintool_path, '--', binary_path], stdin = PIPE, stdout = PIPE)
-    p.stdin.write(bytes(test_flag, encoding='utf-8'))
-    p.communicate()
-    with open('./inscount.out') as f:
-        data = f.read()
-        return int(data[len('Count '):])
-
-for i in indexes:
-    test = flag[::]
-    base_count = use_pintool(''.join(test))
-    c = '?'
-    for j in s:
-        test[i] = j
-        test_count = use_pintool(''.join(test))
-        # 执行的指令数目最多的输入，才是正确的输入
-        if base_count  &lt; test_count:
-            c = j
-            base_count = test_count
-
-    flag[i] = c
-    print(''.join(flag))
-</code></pre>
-
-<p>针对本题的条件，理论上 1bit 1bit 的爆破效率更高，但为了方便脚本的编写，我们对一个字节进行整体爆破，所以脚本运行需要更长的一段时间，最后结果如下：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/Reverse-Tools-Learning/pintool.png" alt="pintool crack" class="lazyload"><figcaption class="image-caption">pintool crack</figcaption></figure></p>
-
+    flag[i] <span style="color:#f92672">=</span> c
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(flag))
+</code></pre></div><p>针对本题的条件，理论上 1bit 1bit 的爆破效率更高，但为了方便脚本的编写，我们对一个字节进行整体爆破，所以脚本运行需要更长的一段时间，最后结果如下：</p>
+<p><img src="/images/posts/Reverse-Tools-Learning/pintool.png" alt="pintool crack"></p>
 <h2 id="总结">总结</h2>
-
 <p>用工具解题，跑不出来不亏，跑得出来血赚</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://ctf-wiki.github.io/ctf-tools/binary_core_tools/instrumentation/intel_pin/" rel="nofollow noreferrer" target="_blank">CTF Tools - intel pin</a></li>
-<li><a href="https://firmianay.gitbooks.io/ctf-all-in-one/doc/5.2.1_pin.html" rel="nofollow noreferrer" target="_blank">CTF All in One - 5.2.1 Pin 动态二进制插桩</a></li>
-<li><a href="https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7" rel="nofollow noreferrer" target="_blank">Elementary Writeup by One Man Orchestra</a></li>
-<li><a href="https://ctftime.org/writeup/13923" rel="nofollow noreferrer" target="_blank">Elementary Writeup by System87</a></li>
+<li><a href="https://ctf-wiki.github.io/ctf-tools/binary_core_tools/instrumentation/intel_pin/">CTF Tools - intel pin</a></li>
+<li><a href="https://firmianay.gitbooks.io/ctf-all-in-one/doc/5.2.1_pin.html">CTF All in One - 5.2.1 Pin 动态二进制插桩</a></li>
+<li><a href="https://gist.github.com/0xcpu/bad0b86f2a52b65ce4af06008d58a4c7">Elementary Writeup by One Man Orchestra</a></li>
+<li><a href="https://ctftime.org/writeup/13923">Elementary Writeup by System87</a></li>
 </ul>
 
     </div>

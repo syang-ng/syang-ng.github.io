@@ -57,7 +57,7 @@
     "datePublished": "2019-04-07 00:42:32 \x2b0000 UTC",
     "dateModified" : "2019-04-07 00:42:32 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2019\/04\/kanxue-transformer\/",
-    "wordCount" : "1174",
+    "wordCount" : "1167",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,184 +145,144 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>看雪 CTF 的一道题目，感觉做完之后能对 Android 逆向有更进一步的理解，特地码一下。</p>
-
-<p>题目链接：<a href="https://ctf.pediy.com/game-season_fight-93.htm" rel="nofollow noreferrer" target="_blank">第二题 变形金钢</a></p>
-
+<p>题目链接：<a href="https://ctf.pediy.com/game-season_fight-93.htm">第二题 变形金钢</a></p>
 <h2 id="android">Android</h2>
-
 <p>既然本题是 apk，那直接拖到 jadx 查看源码，很明显就能看到以下逻辑：</p>
-
-<pre><code class="language-Java">private void login(final String str, final String str2, final Handler handler) {
-    Toast.makeText(this, &quot;登录中。。。&quot;, 1).show();
-    runnable = new Runnable() {
-        public void run() {
-            Message obtain = Message.obtain();
-            StringBuilder stringBuilder = new StringBuilder(str2);
-            if (str.equals(stringBuilder.reverse().toString())) {
-                obtain.obj = stringBuilder.toString();
-            } else {
-                obtain.what = 1;
-            }
-            handler.sendMessage(obtain);
-        }
-    };
-    cachedThreadPool.execute(runnable);
-}
-</code></pre>
-
-<p>看样子很简单，貌似只需要将账号的反序作为密码输入即可通过，但在实际操作过程中发现这是错误的。再仔细观察就能发现 <code>public class MainActivity extends AppCompiatActivity {</code> 这行代码非常奇怪，正常情况下继承的应该是 <code>AppCompatActivity</code> 这个类，二者存在细微的差异，于是继续去看 <code>AppCompiatActivity</code> 的代码：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/AppCompatActivity.png" alt="AppCompiatActivity" class="lazyload"><figcaption class="image-caption">AppCompiatActivity</figcaption></figure></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Java" data-lang="Java"><span style="color:#66d9ef">private</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">login</span><span style="color:#f92672">(</span><span style="color:#66d9ef">final</span> String str<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> String str2<span style="color:#f92672">,</span> <span style="color:#66d9ef">final</span> Handler handler<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    Toast<span style="color:#f92672">.</span><span style="color:#a6e22e">makeText</span><span style="color:#f92672">(</span><span style="color:#66d9ef">this</span><span style="color:#f92672">,</span> <span style="color:#e6db74">&#34;登录中。。。&#34;</span><span style="color:#f92672">,</span> 1<span style="color:#f92672">).</span><span style="color:#a6e22e">show</span><span style="color:#f92672">();</span>
+    runnable <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Runnable<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">void</span> <span style="color:#a6e22e">run</span><span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+            Message obtain <span style="color:#f92672">=</span> Message<span style="color:#f92672">.</span><span style="color:#a6e22e">obtain</span><span style="color:#f92672">();</span>
+            StringBuilder stringBuilder <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> StringBuilder<span style="color:#f92672">(</span>str2<span style="color:#f92672">);</span>
+            <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>str<span style="color:#f92672">.</span><span style="color:#a6e22e">equals</span><span style="color:#f92672">(</span>stringBuilder<span style="color:#f92672">.</span><span style="color:#a6e22e">reverse</span><span style="color:#f92672">().</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">()))</span> <span style="color:#f92672">{</span>
+                obtain<span style="color:#f92672">.</span><span style="color:#a6e22e">obj</span> <span style="color:#f92672">=</span> stringBuilder<span style="color:#f92672">.</span><span style="color:#a6e22e">toString</span><span style="color:#f92672">();</span>
+            <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+                obtain<span style="color:#f92672">.</span><span style="color:#a6e22e">what</span> <span style="color:#f92672">=</span> 1<span style="color:#f92672">;</span>
+            <span style="color:#f92672">}</span>
+            handler<span style="color:#f92672">.</span><span style="color:#a6e22e">sendMessage</span><span style="color:#f92672">(</span>obtain<span style="color:#f92672">);</span>
+        <span style="color:#f92672">}</span>
+    <span style="color:#f92672">};</span>
+    cachedThreadPool<span style="color:#f92672">.</span><span style="color:#a6e22e">execute</span><span style="color:#f92672">(</span>runnable<span style="color:#f92672">);</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>看样子很简单，貌似只需要将账号的反序作为密码输入即可通过，但在实际操作过程中发现这是错误的。再仔细观察就能发现 <code>public class MainActivity extends AppCompiatActivity {</code> 这行代码非常奇怪，正常情况下继承的应该是 <code>AppCompatActivity</code> 这个类，二者存在细微的差异，于是继续去看 <code>AppCompiatActivity</code> 的代码：</p>
+<p><img src="/images/posts/kanxue-transformer/AppCompatActivity.png" alt="AppCompiatActivity"></p>
 <p>可以发现谁是李逵，谁是李鬼了。由此我们可以推断真正的校验逻辑在 <code>AppCompaitActivity</code> 这个类的 <code>public native boolean eq(String str);</code> 函数内，可以看到这个函数是一个 native 函数，那么具体的校验逻辑必然在 <code>oo000oo</code> 对应的 so 文件中</p>
-
 <h2 id="so">So</h2>
-
 <p>看到 Android 的 so 文件第一步就是看 <code>JNI_ONLoad</code> 函数:</p>
-
-<pre><code class="language-C">signed int __fastcall JNI_OnLoad(int a1)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#66d9ef">signed</span> <span style="color:#66d9ef">int</span> <span style="color:#66d9ef">__fastcall</span> <span style="color:#a6e22e">JNI_OnLoad</span>(<span style="color:#66d9ef">int</span> a1)
 {
-  int v1; // r8
-  signed int result; // r0
-  JNIEnv *v3; // r5
-  jclass v4; // r6
-  JNIEnv *v5; // [sp+0h] [bp-18h]
-  int v6; // [sp+4h] [bp-14h]
-  int v7; // [sp+8h] [bp-10h]
-
-  v7 = v1;
-  v5 = 0;
-  if ( !(*(int (**)(void))(*(_DWORD *)a1 + 24))() )
-    goto LABEL_4;
+  <span style="color:#66d9ef">int</span> v1; <span style="color:#75715e">// r8
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">signed</span> <span style="color:#66d9ef">int</span> result; <span style="color:#75715e">// r0
+</span><span style="color:#75715e"></span>  JNIEnv <span style="color:#f92672">*</span>v3; <span style="color:#75715e">// r5
+</span><span style="color:#75715e"></span>  jclass v4; <span style="color:#75715e">// r6
+</span><span style="color:#75715e"></span>  JNIEnv <span style="color:#f92672">*</span>v5; <span style="color:#75715e">// [sp+0h] [bp-18h]
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v6; <span style="color:#75715e">// [sp+4h] [bp-14h]
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v7; <span style="color:#75715e">// [sp+8h] [bp-10h]
+</span><span style="color:#75715e"></span>
+  v7 <span style="color:#f92672">=</span> v1;
+  v5 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>(<span style="color:#f92672">*</span>(<span style="color:#66d9ef">int</span> (<span style="color:#f92672">**</span>)(<span style="color:#66d9ef">void</span>))(<span style="color:#f92672">*</span>(_DWORD <span style="color:#f92672">*</span>)a1 <span style="color:#f92672">+</span> <span style="color:#ae81ff">24</span>))() )
+    <span style="color:#66d9ef">goto</span> LABEL_4;
 LABEL_2:
-  result = -1;
-  while ( _stack_chk_guard != v6 )
+  result <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+  <span style="color:#66d9ef">while</span> ( _stack_chk_guard <span style="color:#f92672">!=</span> v6 )
   {
 LABEL_4:
-    v3 = v5;
-    v4 = (*v5)-&gt;FindClass(v5, (const char *)off_4010);
-    dword_4110 = (int)(*v3)-&gt;NewGlobalRef(v3, v4);
-    if ( !v4 || (*v3)-&gt;RegisterNatives(v3, v4, (const JNINativeMethod *)off_4014, 1) &lt;= -1 )
-      goto LABEL_2;
-    result = 65542;
+    v3 <span style="color:#f92672">=</span> v5;
+    v4 <span style="color:#f92672">=</span> (<span style="color:#f92672">*</span>v5)<span style="color:#f92672">-&gt;</span>FindClass(v5, (<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)off_4010);
+    dword_4110 <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int</span>)(<span style="color:#f92672">*</span>v3)<span style="color:#f92672">-&gt;</span>NewGlobalRef(v3, v4);
+    <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>v4 <span style="color:#f92672">||</span> (<span style="color:#f92672">*</span>v3)<span style="color:#f92672">-&gt;</span>RegisterNatives(v3, v4, (<span style="color:#66d9ef">const</span> JNINativeMethod <span style="color:#f92672">*</span>)off_4014, <span style="color:#ae81ff">1</span>) <span style="color:#f92672">&lt;=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> )
+      <span style="color:#66d9ef">goto</span> LABEL_2;
+    result <span style="color:#f92672">=</span> <span style="color:#ae81ff">65542</span>;
   }
-  return result;
+  <span style="color:#66d9ef">return</span> result;
 }
-</code></pre>
-
-<p>可以发现本题使用的是利用 <code>jni</code> 所提供的 <code>RegisterNatives</code> 方法来动态注册 Native 函数，很明显 <code>off_4014</code> 上存储的就是需要注册的函数的地址，使用 ida 查看发现地址对应是 <code>sub_784()</code> 函数。</p>
-
+</code></pre></div><p>可以发现本题使用的是利用 <code>jni</code> 所提供的 <code>RegisterNatives</code> 方法来动态注册 Native 函数，很明显 <code>off_4014</code> 上存储的就是需要注册的函数的地址，使用 ida 查看发现地址对应是 <code>sub_784()</code> 函数。</p>
 <h3 id="算法分析">算法分析</h3>
-
-<p>本题使用的是魔改的 RC4 和替换码表的 Base64 编码，本函数主要实现的功能如下：
-1. 对输入的字符串先调用一次 RC4 算法
-2. 再用魔改的 Base64 函数对加密后的字符串进行编码</p>
-
+<p>本题使用的是魔改的 RC4 和替换码表的 Base64 编码，本函数主要实现的功能如下：</p>
+<ol>
+<li>对输入的字符串先调用一次 RC4 算法</li>
+<li>再用魔改的 Base64 函数对加密后的字符串进行编码</li>
+</ol>
 <h3 id="rc4">RC4</h3>
-
-<p>先简单介绍 RC4 加密，该加密主要分为以下几个步骤：
-1. 根据密钥 key 生成 s-box
-2. 根据 s-box 生成伪随机的密钥流
-3. 异或按位加密明文</p>
-
-<p>更详细的链接可以参考 <a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/" rel="nofollow noreferrer" target="_blank">经典对称加密RC4分析</a></p>
-
+<p>先简单介绍 RC4 加密，该加密主要分为以下几个步骤：</p>
+<ol>
+<li>根据密钥 key 生成 s-box</li>
+<li>根据 s-box 生成伪随机的密钥流</li>
+<li>异或按位加密明文</li>
+</ol>
+<p>更详细的链接可以参考 <a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/">经典对称加密RC4分析</a></p>
 <p>下面我们来看程序内部的 RC4 加密，和经典的 RC4 算法一样，程序内部的 RC4 算法也分为这样几个步骤：</p>
-
 <ol>
 <li>密钥生成</li>
 </ol>
-
 <p>这一段的代码最为冗长，但其实非常简单，即通过原始的密钥生成 RC4 算法所使用的密钥，大致是去掉 <code>-</code> 后翻转再加上 <code>-</code></p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/RC4-Key.png" alt="RC4 Key" class="lazyload"><figcaption class="image-caption">RC4 Key</figcaption></figure></p>
-
-<ol>
+<p><img src="/images/posts/kanxue-transformer/RC4-Key.png" alt="RC4 Key"></p>
+<ol start="2">
 <li>sbox 生成</li>
 </ol>
-
 <p>下一步是 RC4 算法的 sbox：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/RC4-SBox.png" alt="sbox" class="lazyload"><figcaption class="image-caption">sbox</figcaption></figure></p>
-
-<ol>
+<p><img src="/images/posts/kanxue-transformer/RC4-SBox.png" alt="sbox"></p>
+<ol start="3">
 <li>伪随机密钥流 / 加密明文</li>
 </ol>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/Encrypt.png" alt="encrypt" class="lazyload"><figcaption class="image-caption">encrypt</figcaption></figure></p>
-
+<p><img src="/images/posts/kanxue-transformer/Encrypt.png" alt="encrypt"></p>
 <p>加密明文分为两部分，在和 sbox 生产的密钥流进行异或之后，密文会通过一个魔改的 base64 进行输出</p>
-
-<ol>
+<ol start="4">
 <li>魔改 Base64</li>
 </ol>
-
 <p>对 Base64 的魔改有两个部分，一是替换码表，二是在每四个字符中，对第一个、第三个字符进行额外的异或处理，具体可以看上图的标注。</p>
-
-<ol>
+<ol start="5">
 <li>比较</li>
 </ol>
-
 <p>最后程序会将加密后的输出对内置的输出进行比较，只有每一个字符相同才会认为是通过判断。</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/kanxue-transformer/Compare.png" alt="compare" class="lazyload"><figcaption class="image-caption">compare</figcaption></figure></p>
-
+<p><img src="/images/posts/kanxue-transformer/Compare.png" alt="compare"></p>
 <h3 id="solve">Solve</h3>
-
 <p>最后编写脚本如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> base64
 
-<pre><code class="language-python">import base64
+std_base64table <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=&#34;</span>
+base64table <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;!:#$%&amp;()+-*/`~_[]{}?&lt;&gt;,.@^abcdefghijklmnopqrstuvwxyz0123456789</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#39;;&#34;</span>
+sbox <span style="color:#f92672">=</span> [<span style="color:#ae81ff">0xf0</span>,<span style="color:#ae81ff">0x37</span>,<span style="color:#ae81ff">0xe1</span>,<span style="color:#ae81ff">0x9b</span>,<span style="color:#ae81ff">0x2a</span>,<span style="color:#ae81ff">0x15</span>,<span style="color:#ae81ff">0x17</span>,<span style="color:#ae81ff">0x9f</span>,<span style="color:#ae81ff">0xd7</span>,<span style="color:#ae81ff">0x58</span>,<span style="color:#ae81ff">0x4d</span>,<span style="color:#ae81ff">0x6e</span>,<span style="color:#ae81ff">0x33</span>,<span style="color:#ae81ff">0xa0</span>,<span style="color:#ae81ff">0x39</span>,<span style="color:#ae81ff">0xae</span>,<span style="color:#ae81ff">0x4</span>,<span style="color:#ae81ff">0xd0</span>,<span style="color:#ae81ff">0xbe</span>,<span style="color:#ae81ff">0xed</span>,<span style="color:#ae81ff">0xf8</span>,<span style="color:#ae81ff">0x66</span>,<span style="color:#ae81ff">0x5e</span>,<span style="color:#ae81ff">0x0</span>,<span style="color:#ae81ff">0xd6</span>,<span style="color:#ae81ff">0x91</span>,<span style="color:#ae81ff">0x2f</span>,<span style="color:#ae81ff">0xc3</span>,<span style="color:#ae81ff">0x10</span>,<span style="color:#ae81ff">0x4c</span>,<span style="color:#ae81ff">0xf7</span>,<span style="color:#ae81ff">0xa6</span>,<span style="color:#ae81ff">0xc1</span>,<span style="color:#ae81ff">0xec</span>,<span style="color:#ae81ff">0x6d</span>,<span style="color:#ae81ff">0xb</span>,<span style="color:#ae81ff">0x50</span>,<span style="color:#ae81ff">0x65</span>,<span style="color:#ae81ff">0xbb</span>,<span style="color:#ae81ff">0x34</span>,<span style="color:#ae81ff">0xfa</span>,<span style="color:#ae81ff">0xa4</span>,<span style="color:#ae81ff">0x2d</span>,<span style="color:#ae81ff">0x3b</span>,<span style="color:#ae81ff">0x23</span>,<span style="color:#ae81ff">0xa1</span>,<span style="color:#ae81ff">0x96</span>,<span style="color:#ae81ff">0xd5</span>,<span style="color:#ae81ff">0x1d</span>,<span style="color:#ae81ff">0x38</span>,<span style="color:#ae81ff">0x56</span>,<span style="color:#ae81ff">0xa</span>,<span style="color:#ae81ff">0x5d</span>,<span style="color:#ae81ff">0x4f</span>,<span style="color:#ae81ff">0xe4</span>,<span style="color:#ae81ff">0xcc</span>,<span style="color:#ae81ff">0x24</span>,<span style="color:#ae81ff">0xd</span>,<span style="color:#ae81ff">0x12</span>,<span style="color:#ae81ff">0x87</span>,<span style="color:#ae81ff">0x35</span>,<span style="color:#ae81ff">0x85</span>,<span style="color:#ae81ff">0x8e</span>,<span style="color:#ae81ff">0x6f</span>,<span style="color:#ae81ff">0xc6</span>,<span style="color:#ae81ff">0x13</span>,<span style="color:#ae81ff">0x9a</span>,<span style="color:#ae81ff">0xd3</span>,<span style="color:#ae81ff">0xfc</span>,<span style="color:#ae81ff">0xe7</span>,<span style="color:#ae81ff">0x8</span>,<span style="color:#ae81ff">0xac</span>,<span style="color:#ae81ff">0xb7</span>,<span style="color:#ae81ff">0xe9</span>,<span style="color:#ae81ff">0xb0</span>,<span style="color:#ae81ff">0xe8</span>,<span style="color:#ae81ff">0x41</span>,<span style="color:#ae81ff">0xaa</span>,<span style="color:#ae81ff">0x55</span>,<span style="color:#ae81ff">0x53</span>,<span style="color:#ae81ff">0xc2</span>,<span style="color:#ae81ff">0x42</span>,<span style="color:#ae81ff">0xbc</span>,<span style="color:#ae81ff">0xe6</span>,<span style="color:#ae81ff">0xf</span>,<span style="color:#ae81ff">0x8a</span>,<span style="color:#ae81ff">0x86</span>,<span style="color:#ae81ff">0xa8</span>,<span style="color:#ae81ff">0xcf</span>,<span style="color:#ae81ff">0x84</span>,<span style="color:#ae81ff">0xc5</span>,<span style="color:#ae81ff">0x48</span>,<span style="color:#ae81ff">0x74</span>,<span style="color:#ae81ff">0x36</span>,<span style="color:#ae81ff">0x7</span>,<span style="color:#ae81ff">0xeb</span>,<span style="color:#ae81ff">0x88</span>,<span style="color:#ae81ff">0x51</span>,<span style="color:#ae81ff">0xf6</span>,<span style="color:#ae81ff">0x7f</span>,<span style="color:#ae81ff">0x57</span>,<span style="color:#ae81ff">0x5</span>,<span style="color:#ae81ff">0x63</span>,<span style="color:#ae81ff">0x3e</span>,<span style="color:#ae81ff">0xfe</span>,<span style="color:#ae81ff">0xb8</span>,<span style="color:#ae81ff">0xc9</span>,<span style="color:#ae81ff">0xf5</span>,<span style="color:#ae81ff">0xaf</span>,<span style="color:#ae81ff">0xdf</span>,<span style="color:#ae81ff">0xea</span>,<span style="color:#ae81ff">0x82</span>,<span style="color:#ae81ff">0x44</span>,<span style="color:#ae81ff">0xf9</span>,<span style="color:#ae81ff">0xcd</span>,<span style="color:#ae81ff">0x6</span>,<span style="color:#ae81ff">0xba</span>,<span style="color:#ae81ff">0x30</span>,<span style="color:#ae81ff">0x47</span>,<span style="color:#ae81ff">0x40</span>,<span style="color:#ae81ff">0xde</span>,<span style="color:#ae81ff">0xfd</span>,<span style="color:#ae81ff">0x1c</span>,<span style="color:#ae81ff">0x7c</span>,<span style="color:#ae81ff">0x11</span>,<span style="color:#ae81ff">0x5c</span>,<span style="color:#ae81ff">0x2</span>,<span style="color:#ae81ff">0x31</span>,<span style="color:#ae81ff">0x2c</span>,<span style="color:#ae81ff">0x9c</span>,<span style="color:#ae81ff">0x5f</span>,<span style="color:#ae81ff">0x46</span>,<span style="color:#ae81ff">0x27</span>,<span style="color:#ae81ff">0xc4</span>,<span style="color:#ae81ff">0x83</span>,<span style="color:#ae81ff">0x73</span>,<span style="color:#ae81ff">0x16</span>,<span style="color:#ae81ff">0x90</span>,<span style="color:#ae81ff">0x20</span>,<span style="color:#ae81ff">0x76</span>,<span style="color:#ae81ff">0x7b</span>,<span style="color:#ae81ff">0xf2</span>,<span style="color:#ae81ff">0xe3</span>,<span style="color:#ae81ff">0xf3</span>,<span style="color:#ae81ff">0x77</span>,<span style="color:#ae81ff">0x52</span>,<span style="color:#ae81ff">0x80</span>,<span style="color:#ae81ff">0x25</span>,<span style="color:#ae81ff">0x9</span>,<span style="color:#ae81ff">0x26</span>,<span style="color:#ae81ff">0x3f</span>,<span style="color:#ae81ff">0xc7</span>,<span style="color:#ae81ff">0x18</span>,<span style="color:#ae81ff">0x1b</span>,<span style="color:#ae81ff">0xa3</span>,<span style="color:#ae81ff">0xff</span>,<span style="color:#ae81ff">0xfb</span>,<span style="color:#ae81ff">0xcb</span>,<span style="color:#ae81ff">0xa9</span>,<span style="color:#ae81ff">0x8c</span>,<span style="color:#ae81ff">0x54</span>,<span style="color:#ae81ff">0x7a</span>,<span style="color:#ae81ff">0x68</span>,<span style="color:#ae81ff">0xb4</span>,<span style="color:#ae81ff">0x70</span>,<span style="color:#ae81ff">0x4b</span>,<span style="color:#ae81ff">0xe2</span>,<span style="color:#ae81ff">0x49</span>,<span style="color:#ae81ff">0x22</span>,<span style="color:#ae81ff">0x7e</span>,<span style="color:#ae81ff">0xa5</span>,<span style="color:#ae81ff">0xb6</span>,<span style="color:#ae81ff">0x81</span>,<span style="color:#ae81ff">0x9d</span>,<span style="color:#ae81ff">0x4e</span>,<span style="color:#ae81ff">0x67</span>,<span style="color:#ae81ff">0xf1</span>,<span style="color:#ae81ff">0xa7</span>,<span style="color:#ae81ff">0x3c</span>,<span style="color:#ae81ff">0xd9</span>,<span style="color:#ae81ff">0x94</span>,<span style="color:#ae81ff">0xef</span>,<span style="color:#ae81ff">0x32</span>,<span style="color:#ae81ff">0x6b</span>,<span style="color:#ae81ff">0x1f</span>,<span style="color:#ae81ff">0xb1</span>,<span style="color:#ae81ff">0x60</span>,<span style="color:#ae81ff">0xb9</span>,<span style="color:#ae81ff">0x64</span>,<span style="color:#ae81ff">0x59</span>,<span style="color:#ae81ff">0x1</span>,<span style="color:#ae81ff">0xb3</span>,<span style="color:#ae81ff">0x7d</span>,<span style="color:#ae81ff">0xe0</span>,<span style="color:#ae81ff">0x6c</span>,<span style="color:#ae81ff">0xad</span>,<span style="color:#ae81ff">0x97</span>,<span style="color:#ae81ff">0x19</span>,<span style="color:#ae81ff">0xb5</span>,<span style="color:#ae81ff">0x3a</span>,<span style="color:#ae81ff">0xf4</span>,<span style="color:#ae81ff">0xd8</span>,<span style="color:#ae81ff">0x8d</span>,<span style="color:#ae81ff">0x98</span>,<span style="color:#ae81ff">0x3</span>,<span style="color:#ae81ff">0x93</span>,<span style="color:#ae81ff">0x1a</span>,<span style="color:#ae81ff">0xdc</span>,<span style="color:#ae81ff">0x1e</span>,<span style="color:#ae81ff">0x4a</span>,<span style="color:#ae81ff">0xc0</span>,<span style="color:#ae81ff">0x5a</span>,<span style="color:#ae81ff">0xe5</span>,<span style="color:#ae81ff">0xd1</span>,<span style="color:#ae81ff">0x3d</span>,<span style="color:#ae81ff">0x14</span>,<span style="color:#ae81ff">0xc8</span>,<span style="color:#ae81ff">0x79</span>,<span style="color:#ae81ff">0xbd</span>,<span style="color:#ae81ff">0x43</span>,<span style="color:#ae81ff">0xdb</span>,<span style="color:#ae81ff">0x69</span>,<span style="color:#ae81ff">0xd2</span>,<span style="color:#ae81ff">0x61</span>,<span style="color:#ae81ff">0x95</span>,<span style="color:#ae81ff">0x9e</span>,<span style="color:#ae81ff">0x21</span>,<span style="color:#ae81ff">0x45</span>,<span style="color:#ae81ff">0x89</span>,<span style="color:#ae81ff">0x2b</span>,<span style="color:#ae81ff">0xab</span>,<span style="color:#ae81ff">0x29</span>,<span style="color:#ae81ff">0xa2</span>,<span style="color:#ae81ff">0x8b</span>,<span style="color:#ae81ff">0x2e</span>,<span style="color:#ae81ff">0xd4</span>,<span style="color:#ae81ff">0xe</span>,<span style="color:#ae81ff">0x62</span>,<span style="color:#ae81ff">0xca</span>,<span style="color:#ae81ff">0x28</span>,<span style="color:#ae81ff">0xda</span>,<span style="color:#ae81ff">0x5b</span>,<span style="color:#ae81ff">0x72</span>,<span style="color:#ae81ff">0x8f</span>,<span style="color:#ae81ff">0x99</span>,<span style="color:#ae81ff">0x75</span>,<span style="color:#ae81ff">0xee</span>,<span style="color:#ae81ff">0x78</span>,<span style="color:#ae81ff">0xc</span>,<span style="color:#ae81ff">0x71</span>,<span style="color:#ae81ff">0xbf</span>,<span style="color:#ae81ff">0xdd</span>,<span style="color:#ae81ff">0xce</span>,<span style="color:#ae81ff">0x92</span>,<span style="color:#ae81ff">0x6a</span>,<span style="color:#ae81ff">0xb2</span>]
 
-std_base64table = &quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=&quot;
-base64table = &quot;!:#$%&amp;()+-*/`~_[]{}?&lt;&gt;,.@^abcdefghijklmnopqrstuvwxyz0123456789\\';&quot;
-sbox = [0xf0,0x37,0xe1,0x9b,0x2a,0x15,0x17,0x9f,0xd7,0x58,0x4d,0x6e,0x33,0xa0,0x39,0xae,0x4,0xd0,0xbe,0xed,0xf8,0x66,0x5e,0x0,0xd6,0x91,0x2f,0xc3,0x10,0x4c,0xf7,0xa6,0xc1,0xec,0x6d,0xb,0x50,0x65,0xbb,0x34,0xfa,0xa4,0x2d,0x3b,0x23,0xa1,0x96,0xd5,0x1d,0x38,0x56,0xa,0x5d,0x4f,0xe4,0xcc,0x24,0xd,0x12,0x87,0x35,0x85,0x8e,0x6f,0xc6,0x13,0x9a,0xd3,0xfc,0xe7,0x8,0xac,0xb7,0xe9,0xb0,0xe8,0x41,0xaa,0x55,0x53,0xc2,0x42,0xbc,0xe6,0xf,0x8a,0x86,0xa8,0xcf,0x84,0xc5,0x48,0x74,0x36,0x7,0xeb,0x88,0x51,0xf6,0x7f,0x57,0x5,0x63,0x3e,0xfe,0xb8,0xc9,0xf5,0xaf,0xdf,0xea,0x82,0x44,0xf9,0xcd,0x6,0xba,0x30,0x47,0x40,0xde,0xfd,0x1c,0x7c,0x11,0x5c,0x2,0x31,0x2c,0x9c,0x5f,0x46,0x27,0xc4,0x83,0x73,0x16,0x90,0x20,0x76,0x7b,0xf2,0xe3,0xf3,0x77,0x52,0x80,0x25,0x9,0x26,0x3f,0xc7,0x18,0x1b,0xa3,0xff,0xfb,0xcb,0xa9,0x8c,0x54,0x7a,0x68,0xb4,0x70,0x4b,0xe2,0x49,0x22,0x7e,0xa5,0xb6,0x81,0x9d,0x4e,0x67,0xf1,0xa7,0x3c,0xd9,0x94,0xef,0x32,0x6b,0x1f,0xb1,0x60,0xb9,0x64,0x59,0x1,0xb3,0x7d,0xe0,0x6c,0xad,0x97,0x19,0xb5,0x3a,0xf4,0xd8,0x8d,0x98,0x3,0x93,0x1a,0xdc,0x1e,0x4a,0xc0,0x5a,0xe5,0xd1,0x3d,0x14,0xc8,0x79,0xbd,0x43,0xdb,0x69,0xd2,0x61,0x95,0x9e,0x21,0x45,0x89,0x2b,0xab,0x29,0xa2,0x8b,0x2e,0xd4,0xe,0x62,0xca,0x28,0xda,0x5b,0x72,0x8f,0x99,0x75,0xee,0x78,0xc,0x71,0xbf,0xdd,0xce,0x92,0x6a,0xb2]
+encode_flag <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34; {9*8ga*l!Tn?@#fj&#39;j$\g;;&#34;</span>
 
-encode_flag = &quot; {9*8ga*l!Tn?@#fj'j$\g;;&quot;
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">base64decode</span>():
+    encode_flag1 <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(len(encode_flag)):
+        <span style="color:#66d9ef">if</span> i <span style="color:#f92672">%</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+            bit <span style="color:#f92672">=</span> <span style="color:#ae81ff">7</span>
+        <span style="color:#66d9ef">elif</span> i <span style="color:#f92672">%</span> <span style="color:#ae81ff">4</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">and</span> encode_flag[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;;&#39;</span>:
+            bit <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xf</span>
+        <span style="color:#66d9ef">else</span>:
+            bit <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+        encode_flag1<span style="color:#f92672">.</span>append(chr(ord(encode_flag[i])<span style="color:#f92672">^</span>bit))
+    encode_flag2 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(encode_flag1)<span style="color:#f92672">.</span>translate(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>maketrans(base64table, std_base64table))
+    <span style="color:#66d9ef">return</span> base64<span style="color:#f92672">.</span>b64decode(encode_flag2)
 
-def base64decode():
-    encode_flag1 = []
-    for i in range(len(encode_flag)):
-        if i % 4 == 0:
-            bit = 7
-        elif i % 4 == 2 and encode_flag[i] != ';':
-            bit = 0xf
-        else:
-            bit = 0
-        encode_flag1.append(chr(ord(encode_flag[i])^bit))
-    encode_flag2 = ''.join(encode_flag1).translate(''.maketrans(base64table, std_base64table))
-    return base64.b64decode(encode_flag2)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">rc4decrypt</span>(s):
+    i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+    j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+    ss <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> k <span style="color:#f92672">in</span> range(len(s)):
+        i <span style="color:#f92672">=</span> (i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+        j <span style="color:#f92672">=</span> (j <span style="color:#f92672">+</span> sbox[i]) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+        sbox[i], sbox[j] <span style="color:#f92672">=</span> sbox[j], sbox[i]
+        index <span style="color:#f92672">=</span> (sbox[i] <span style="color:#f92672">+</span> sbox[j]) <span style="color:#f92672">%</span> <span style="color:#ae81ff">256</span>
+        ss<span style="color:#f92672">.</span>append(chr(s[k] <span style="color:#f92672">^</span> sbox[index]))
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(ss))
 
-def rc4decrypt(s):
-    i = 0
-    j = 0
-    ss = []
-    for k in range(len(s)):
-        i = (i + 1) % 256
-        j = (j + sbox[i]) % 256
-        sbox[i], sbox[j] = sbox[j], sbox[i]
-        index = (sbox[i] + sbox[j]) % 256
-        ss.append(chr(s[k] ^ sbox[index]))
-    print(''.join(ss))
-
-print(rc4decrypt(base64decode()))
-# fu0kzHp2aqtZAuY6
-</code></pre>
-
-<h3 id="补充">补充</h3>
-
+<span style="color:#66d9ef">print</span>(rc4decrypt(base64decode()))
+<span style="color:#75715e"># fu0kzHp2aqtZAuY6</span>
+</code></pre></div><h3 id="补充">补充</h3>
 <p>.init_array 函数执行了 <code>datadiv_decode5009363700628197108</code> 函数对字符串进行解密，之前在 ida 上直接显示的字符串是加密后的，因此可能部分是不可见的，只有在程序执行后执行该解密函数才会变成可见字符。</p>
-
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://xz.aliyun.com/t/4614" rel="nofollow noreferrer" target="_blank">先知社区 - 详解变形金刚</a></li>
-<li><a href="https://bbs.pediy.com/thread-250413.htm" rel="nofollow noreferrer" target="_blank">看雪论坛 - 第二题 变形金刚</a></li>
-<li><a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/" rel="nofollow noreferrer" target="_blank">经典对称加密RC4分析</a></li>
+<li><a href="https://xz.aliyun.com/t/4614">先知社区 - 详解变形金刚</a></li>
+<li><a href="https://bbs.pediy.com/thread-250413.htm">看雪论坛 - 第二题 变形金刚</a></li>
+<li><a href="http://ronpa.top/2018/11/27/%E7%BB%8F%E5%85%B8%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86RC4%E5%88%86%E6%9E%90/">经典对称加密RC4分析</a></li>
 </ul>
 
     </div>

