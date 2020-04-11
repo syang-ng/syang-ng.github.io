@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/04/sosp-2019-tsvd/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           SOSP 2019 TSVD | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="SOSP 2019 TSVD | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "SOSP 2019 TSVD",
+    "headline" : "SOSP 2019 TSVD",
+    "description" : "SOSP - 2019 - Efficient Scalable Thread-Safety-Violation Detection - Finding thousands of concurrency bugs during testing 论文链接：https:\/\/www.microsoft.com\/en-us\/research\/uploads\/",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-04-10 15:46:25 \x2b0800 CST",
+    "dateModified" : "2020-04-10 15:46:25 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/04\/sosp-2019-tsvd\/",
+    "wordCount" : "2893",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">SOSP 2019 TSVD</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-04-10 itemprop="datePublished">April 10, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="sosp---2019---efficient-scalable-thread-safety-violation-detection---finding-thousands-of-concurrency-bugs-during-testing">SOSP - 2019 - Efficient Scalable Thread-Safety-Violation Detection - Finding thousands of concurrency bugs during testing</h2>
+<p>论文链接：https://www.microsoft.com/en-us/research/uploads/prod/2019/09/sosp19-final193.pdf</p>
+<p>项目地址：https://github.com/microsoft/TSVD</p>
+<p>会议 PPT：https://sosp19.rcs.uwaterloo.ca/slides/li.pptx</p>
+<p>本篇文章是 SOSP 2019 两篇 best paper 之一，出自芝加哥大学的 Shan Lu 教授所带领的研究组，对于 Shan Lu 教授感兴趣的可以查看她的个人主页：http://cs.uchicago.edu/~shanlu/</p>
+<h2 id="主要内容">主要内容</h2>
+<p>一般来说，并发漏洞是非常难以查找、重现和调试的，而且在内部测试中其实也很难找到并发漏洞，但并发漏洞一旦引爆，极有可能造成生产环境的大规模停机等糟糕后果。现有的并发漏洞检测工具不能很好地集成到现有测试环境中的原因在于没有很好地解决以下几个问题：如何处理数千个使用不同同步机制团队开发的代码？如何降低工具的误报？如何尽可能的少占用测试资源？</p>
+<p>为了解决上诉问题带来的挑战，本篇工作提出了 TSVD，一款全新的并发漏洞检测工具，不同于先前工作随机注入延迟时间或者是采用代价昂贵的同步检测机制，TSVD 提出了一种轻量级的 <strong>near-miss tracking</strong> 机制来识别可能存在并发漏洞的线程不安全函数，然后结合一种作者称为 <strong>happens-before(HB) inferencing</strong> 的机制，TSVD 能在测试过程中有效地发现存在并发漏洞的调用或者排除不可能的调用。</p>
+<p>作者在 .NET 平台上实现了 TSVD 的原型，包括两部分：TSVD runtime library，实现了 TSVD 核心算法；TSVD instrumenter，能通过静态插桩的方式在 .NET 应用中集成 TSVD runtime library。最终 TSVD 找到了 1134 个并发漏洞，其中 80 个漏洞经过了开发者的确认，包括 77 个开发者之前未发现的并发漏洞。</p>
+<h2 id="背景知识">背景知识</h2>
+<h3 id="tsvthread-safety-violation">TSV(Thread-Safety Violation)</h3>
+<p>一般来说，一种程序语言的类库会定义线程安全相关的规则来决定其是否能被并发调用，而如果这种规则被违反，则我们称之为 Thread-Safety Violation。</p>
+<p>以类  <code>Dictionary</code> 为例，读操作 <code>ContainsKey</code> 可以被多线程同时调用，但写操作 <code>Add</code> 则只能在一个互斥的上下文内完成，看下面这段代码，线程 1 访问的 <code>key1</code> 和线程 2 访问的 <code>key2</code> 可能是同一个变量，因此这里存在着 TSV。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c#" data-lang="c#"><span style="color:#75715e">// Dictionary dict
+</span><span style="color:#75715e">// Thread 1:
+</span><span style="color:#75715e"></span>dict.Add(key1, <span style="color:#66d9ef">value</span>)
+<span style="color:#75715e">// Thread 2:
+</span><span style="color:#75715e"></span>dict.ContainsKey(key2)
+</code></pre></div><h3 id="happens-before">happens-before</h3>
+<p>这里介绍一下 Java 中的 happens-before：</p>
+<blockquote>
+<ol>
+<li>如果一个操作 happens-before 另一个操作，那么第一个操作的执行结果将对第二个操作可见，而且第一个操作的执行顺序排在第二个操作之前。</li>
+<li>两个操作之间存在 happens-before 关系，并不意味着 Java 平台的具体实现必须要按照 happens-before 关系指定的顺序来执行。</li>
+</ol>
+</blockquote>
+<p>happens-before 原则可以用来判断数据是否存在竞争、线程是否安全。</p>
+<h3 id="inject-delay">Inject Delay</h3>
+<p>有没有一种能降低 false positive 的方法？当然有，只要我们在 bug 触发的时候定位到这个 bug，那当然不存在任何的 false positive。那么如何触发 bug？一个很直接的思路就是向一个线程注入一定的延迟，增加两个线程同时访问一个变量，触发并发漏洞的可能性，示意图如下：</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/InjectDelay.png" alt="Inject Delay"></p>
+<h3 id="已有工作的缺点">已有工作的缺点</h3>
+<p>已有工作存在着很大的 overhead，其原因主要有以下两点：</p>
+<ol>
+<li>比如 DataCollider 会在所有可能的地方插入 delay，但需要多次运行以触发 bug，同时需要插入 delay 的位置多了本身就会带来巨大的 overhead</li>
+<li>第二种思路，如 RaceFuzzer 则是使用先动静态结合的分析工具，找到合适的插入 delay 的位置再精准插入。虽然该方法会减少总共需要插入 delay 的数目，但在分析阶段的 overhead 同样也很大。</li>
+</ol>
+<p>如下图所示，不同的工具在不同的侧重点上有着很大的 overhead，而 TSVD 的设计目的，就是尽可能地降低在识别和运行过程中的 overhead。</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/cost.png" alt="cost"></p>
+<h2 id="设计实现">设计实现</h2>
+<p>说了这么多，下面来仔细介绍以下 TSVD 的实现。首先，TSVD 会用一个轻量级的分析工具定位出所有可能造成 TSV 的调用点，称为 <em>trap set</em>，随后会在这些调用点进行插桩，所以这些函数在执行时就会调用 <code>OnCall</code> 函数。</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/OnCall.png" alt="OnCall"></p>
+<p>该机制的具体逻辑是：当第一个线程调用该函数时，TSVD 会在第 3 行告诉该线程是否需要 delay，如果需要，则在第 4 行将该线程注册到一个全局的 table，然后 delay。当第二个线程调用该函数时，会在第 2 行检查此前是否已经有 delay 的线程与它相关。检查的方式是判断两个线程的 <code>thread_id</code> 是否不一样，而 <code>obj_id</code> 是否一样，两个 <code>op_id</code> 是否至少有一个是 write。如果以上要求都满足的话，则找到一个并发漏洞。</p>
+<p>由于该机制在设计上很明显不会有任何的 false positive，唯一的挑战在于，如何有效地判断何时需要 delay，因为无条件的 delay 很明显会有很大的 overhead。这里作者提出了两个巧妙的思路来判断何时可能需要 delay，何时可能不存在 TSV。</p>
+<h3 id="identifying-near-misses">Identifying near misses</h3>
+<p>该思路其实就是通过 <strong>close-by physical</strong> 来找到 <strong>concurrent logical</strong>，我们知道并发漏洞出现在多线程对一个变量的访问上，而逻辑上的并发在时间上的表现就是重合或者是时间相近，因此如果两个线程对同一个变量的访问在时间上相近，而且其中有一个是写操作的话，就可以把它标记为需要 delay 的调用点。</p>
+<h3 id="inferring-likely-hb-relationship">Inferring likely HB relationship</h3>
+<p>前一阶段找到确认的两个调用点虽然在时间上有联系性，但这样不能代表绝对会出现 TSV，比如 happens-before 关系就是一个反面例子，所以此时需要去掉这些错误标记的调用点。这里的思路也非常直接巧妙，我们知道虽然不同的同步机制非常多，实现也各有不同，但如果同步机制确实存在的话，那么对 thread 1 的 delay 同样也会造成对 thread 2 的 delay，因此我们可以利用这种逻辑上的联系帮我们确定是否存在可能的 happens-before 关系。</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/hb-inference.png" alt="hb inference"></p>
+<p>比如我们在 thread 1 插入了一定的延迟，如果两个线程的访问存在着 HB 关系的话，可以看到 thread 2 也同样地发生了一定比例的延迟。</p>
+<h3 id="implementation">implementation</h3>
+<p>TSVD 实现在 .NET 平台上，由两部分组成，其中 <strong>TSVD Runtime</strong> 实现了前文的核心算法，而 <strong>TSVD Instrumenter</strong> 会针对 C# 上的 14 个类，59 个写操作函数，64 个读操作函数进行代码插桩，插桩前后代码的差异见下图：</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/instrumentation.png" alt="instrumentation"></p>
+<h2 id="实验评估">实验评估</h2>
+<h3 id="overall">Overall</h3>
+<p>实验使用的 benchmark 如下：</p>
+<ul>
+<li>Large benchmark：微软开发的 1657 个项目中使用的 43000 个模块，包含了约 122000个多线程单元测试和 89000 个二进制文件</li>
+<li>Small benchmark：从 Large benchmark 中随机选取的 1000 个模块</li>
+</ul>
+<p>其中 Large benchmark 用一台配置有Intel(R) Xeon(R) E5-2650 CPU，128G memory 以及 6T SSD 的服务器进行测试，而 Small benchmark 用一台搭载 Intel(R) Xeon(R) E5-1620 CPU，16G Memory 和 1T SSD 的服务器进行测试。</p>
+<p>最终找到了 1134 个 TSV，其中 96% 是之前未知的 bug，47% 会导致严重的问题。</p>
+<h3 id="和其他工具的对比">和其他工具的对比</h3>
+<p>通过在 Small benchmark 上的测试，可以看到 TSVD 找到的 bug 更多，overhead 更小：</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/compare.png" alt="Comparison"></p>
+<p>同时，多次运行对 TSVD 找到 bug 同样有帮助作用，而且在该情况下 TSVD 同样优于其他工具：</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/more-runs.png" alt="More Runs"></p>
+<h3 id="在开源数据集上的评估">在开源数据集上的评估</h3>
+<p>为了证明 TSVD 也可以应用到除了 Microsoft 外的其它开源 C# 项目上，作者从 Github 上随机选取了 9 个开源项目进行测试，结果同样证明了 TSVD 的高效准确。</p>
+<p><img src="/images/posts/SOSP-2019-TSVD/OpenSourceProjects.png" alt="TSVD on Open Source Projects"></p>
+<h2 id="总结">总结</h2>
+<p>作为 SOSP 19 的 best paper，TSVD 确实提个两个 idea 都非常有意思而且高效可行，最后也取得了很好的效果。不过这里注意到其实 TSVD 还是牺牲了可靠性来保证了完备性的，即我不保证找到全部的 bug，但我确认我找到的 bug 都是对的，而且我尽可能多的找到了 bug。这里有一个值得思考的点是，其实工业界有可能更看重可靠性，虽然有些工具在学术研究过程中，跑几小时甚至一两天都是合理的，但在工业界的代码量级和需求下，更快开销更低可能更贴合实际。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li>
+<p><a href="https://www.zhihu.com/question/336446443/answer/872624113">SOSP 2019 有哪些值得关注的论文？ - 陈乐群的回答 - 知乎</a></p>
+</li>
+<li>
+<p><a href="https://mp.weixin.qq.com/s/IQbBD_RxbeecrlPUiKcLjQ">SOSP‘2019——SJTU-IPADS的集体见闻 （Day-1）</a></p>
+</li>
+<li>
+<p><a href="https://houbb.github.io/2018/07/29/jmm-06-happens-before">JMM-06-happens before</a></p>
+</li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/04/sosp-2019-tsvd/>https://syang-ng.github.io/2020/04/sosp-2019-tsvd/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/" class="prev" rel="prev" title="RealWorldCTF 2019 MarxJS"><i class="iconfont icon-left"></i>&nbsp;RealWorldCTF 2019 MarxJS</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
