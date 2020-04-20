@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/04/sosp-2019-tsvd/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/04/sp19-asm2vec/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           S&amp;P19 Asm2Vec | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="S&amp;P19 Asm2Vec | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "S\x26P19 Asm2Vec",
+    "headline" : "S\x26P19 Asm2Vec",
+    "description" : "S\x26amp;P 2019 - Asm2Vec: Boosting Static Representation Robustness for Binary Clone Search against Code Obfuscation and Compiler Optimization 论文链接：https:\/\/www.computer.org\/csdl\/proceedings-artic",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-04-20 23:24:52 \x2b0800 CST",
+    "dateModified" : "2020-04-20 23:24:52 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/04\/sp19-asm2vec\/",
+    "wordCount" : "2522",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">S&amp;P19 Asm2Vec</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-04-20 itemprop="datePublished">April 20, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="sp-2019---asm2vec-boosting-static-representation-robustness-for-binary-clone-search-against-code-obfuscation-and-compiler-optimization">S&amp;P 2019 - Asm2Vec: Boosting Static Representation Robustness for Binary Clone Search against Code Obfuscation and Compiler Optimization</h2>
+<p>论文链接：https://www.computer.org/csdl/proceedings-article/sp/2019/666000a038/19skfc3ZfKo，以及相关的<a href="https://www.ieee-security.org/TC/SP2019/SP19-Slides-pdfs/honghui_ding_-_05-Steven_Ding-Asm2Vec_Boosting_Static_Representation_Robustness_for_Binary_Clone_Search_against_Code_Obfuscation_and_Compiler_Optimization_.pdf">会议 PPT</a></p>
+<p>本篇文章来自 S&amp;P 2019 ，可以看作是 SIGKDD 2016 一篇文章 <a href="https://drive.google.com/file/d/0BzRSjM7kjy-rZWUtRnFXR0ZpSjg/view?usp=sharing">Kam1n0: MapReduce-based Assembly Clone Search for Reverse Engineering</a> 的后续工作，基于这两篇工作开发出的 IDA PRO 插件已经在 GitHub 上开源了：https://github.com/McGill-DMaS/Kam1n0-Community</p>
+<p>文章的一作来自加拿大麦吉尔大学  <a href="http://dmas.lab.mcgill.ca/">Data Mining and Security Lab</a>，该实验室由 <a href="http://dmas.lab.mcgill.ca/fung/">Benjamin C. M. Fung</a> 教授指导。</p>
+<h2 id="主要内容">主要内容</h2>
+<p>代码优化选项和混淆技术使得传统以来基于逻辑分析的代码克隆搜索引擎很难生效，为此利用机器学习来识别代码克隆的浪潮逐渐兴起。这种利用机器学习的识别方式依赖于对汇编代码构建有效的向量表示，但现有的方法大多依赖于人工标注来生成特征向量，而且存在着两个问题：1. 忽略了不同特征之间的语义上的联系；2. 默认所有特征是等价重要的或者需要额外的映射来判断不同特征的权重，因此很难具有鲁棒性。</p>
+<p>因此，作者将现有问题的场景和 NLP 领域的场景进行了类比，认为能用 NLP 的思路来解决这类问题，因此作者在 PV-DM 模型的基础上，提出了 Asm2Vec 模型。在不需要任何的先验知识的情况下，该模型会学习不同 token 间的语义联系，并将汇编函数表示为函数内部复杂语义集合的特征向量。在之后的实验环节，针对 Asm2Vec 模型在不同的编译选项、不同的代码混淆选项下的代码克隆搜索效果，以及定位漏洞函数的能力，作者设计了复杂的的实验，结果证明 Asm2Vec 明显优于之前的工具如 BinGo，CACompare 等。</p>
+<h2 id="背景知识">背景知识</h2>
+<h3 id="assembly-code-clone-search">assembly code clone search</h3>
+<p>该技术大体上指的就是在二进制的汇编代码中找到类似功能作用的代码片段。利用该技术能实现以下几点功能：</p>
+<ol>
+<li>定位不同版本二进制文件间修改的部分</li>
+<li>识别已知的库函数比如加密函数</li>
+<li>在已知的软件或者固件中搜索 0 day 漏洞</li>
+<li>检测二进制代码中的侵权行为</li>
+</ol>
+<h3 id="pv-dm">PV-DM</h3>
+<p>在介绍 PV-DM 前，我们需要明白什么是 paragraph vector？</p>
+<blockquote>
+<p>paragraph vector 是 word vector 的扩展，word vector 是将一个词表示为一个实数向量，paragraph vector 是将一串文本表示为一个实数向量，这个文本可以是一句话，一个段落或者完整的文章。</p>
+<p>和传统的<a href="https://zh.wikipedia.org/wiki/%E8%AF%8D%E8%A2%8B%E6%A8%A1%E5%9E%8B">词袋模型(BOW model)</a>相比，这个方法克服了词袋模型的两个缺点:</p>
+<ul>
+<li>不考虑词之间的顺序</li>
+<li>不考虑词的语义</li>
+</ul>
+</blockquote>
+<p>以下图为例，PV-DM 一个重要的特点在于在输入层增加了一个 paragraph token/id 作为输入，这个输入也有单独的权重矩阵。如下图所示，以“The cat sat on a mat”为例，抽取“sat”这个词的对应向量，就是通过结合 paragraph id 和前两个单词以及后两个单词的向量维度取平均值，最后通过 sigmoid 的函数来获取最终的向量计算结果。</p>
+<p><img src="/images/posts/SP19-Asm2Vec/PV-DM.png" alt="PV-DM"></p>
+<h2 id="设计实现">设计实现</h2>
+<h3 id="overall">overall</h3>
+<p>Asm2Vec 整体的运行流程如下：</p>
+<ol>
+<li>利用一系列的函数的汇编代码作为训练集进行训练</li>
+<li>训练阶段结束之后，生成不同汇编函数的向量表示</li>
+<li>针对一个给定待测的 target function ft，利用模型训练出其向量表示</li>
+<li>计算待测函数向量表示和数据库中向量表示的余弦相似度，进而获得前 k 个最可能匹配的函数</li>
+</ol>
+<p><img src="/images/posts/SP19-Asm2Vec/overall.png" alt="Overall"></p>
+<h3 id="asm2vec-model">Asm2Vec Model</h3>
+<p>虽然汇编语言和自然语言在文本上来看非常相像，但不能简单地套用 PV-DM 模型来对汇编语言进行处理，因此作者在 PV-DM 的基础上提出了 Asm2Vec 模型。</p>
+<p><img src="/images/posts/SP19-Asm2Vec/Asm2Vec.png" alt="Asm2Vec"></p>
+<p>以这张图为例，其向量化过程如下：</p>
+<blockquote>
+<p>我们的目标是对“push rbx”这段代码进行向量化，借鉴 PV-DM 算法的思想，我们通过对于上下文的获取，即“mov rbp，rsp”和“sub rsp，138h”的向量，对应获得两段向量，并分别对它们这段汇编语句中的两个操作数对应的向量取平均值，再拼接上操作符对应的向量。分别完成对于这两段汇编语句向量化操作之后，再通过对于核心语句的映射关系之后，对这三段汇编语句取向量平均值，再通过 sigmoid 函数，就可以获得最终的结果，以此获得最终的向量表示。</p>
+</blockquote>
+<h3 id="模型训练">模型训练</h3>
+<p>一般来说函数是以 CFG 形式呈现的，但 CFG 不能直接用来进行训练，需需要从中抽取出相应序列，为了提高模型训练的效果，作者提出了以下三个策略来抽取序列：</p>
+<ol>
+<li><code>Selective Callee Expansion</code> 函数内联是常见的编译器优化，该策略在于模拟了函数内联对 callee 的展开</li>
+<li><code>Edge Coverage</code>  该策略保证 CFG 中的每一个 basic block 至少在某条序列中出现过一次，最终得到的序列集合则确保覆盖整个 CFG</li>
+<li><code>Random Walk</code> 上一个策略只保证来对 CFG 的覆盖，该策略则是对上一个策略的补充，其思路就是利用随机游走覆盖 basic block，最终得到的序列中会更多地覆盖关键路径的 basic block，因此序列更具有代表性。</li>
+</ol>
+<p>Asm2Vec 的核心逻辑如下图所示，在利用上述三个策略从 CFG 中生成函数的序列后，每个序列在训练的过程中会不断更新函数的向量表示，训练完成后可以得到函数最终的向量表示：</p>
+<p><img src="/images/posts/SP19-Asm2Vec/Code.png" alt="Code"></p>
+<h2 id="实验评估">实验评估</h2>
+<p>实验基于以下几个维度展开，分别是在编译器优化或者代码混淆存在的情况下，代码克隆识别的准确性，以及是否有效地检测出 vulnerability function。</p>
+<p>注：实验条件中取 k=1，即只判断 Asm2Vec 返回的第一个函数是否正确匹配</p>
+<h3 id="searching-with-different-compiler-optimization-levels">Searching with Different Compiler Optimization Levels</h3>
+<p>该实验针对编译器的 O2-O3 选项和 O0-O3 选项进行了实验，可以看到在 O2-O3 选项下进行的实验中，各个工具均有不错的检测成果，这是因为其实 O2 和 O3 在编译优化后的结果相差不大，特别是 basic block 没有明显变化，因此不同的工具均有不错的检出效果。但在 O0-O3 的实验中，Asm2Vec 依旧保证了较高的检测效果，可以认为这种基于 PV-DM 的模型确实能有效地保存函数的语义以及结构信息。</p>
+<p><img src="/images/posts/SP19-Asm2Vec/OptimizationLevels.png" alt="Asm2Vec"></p>
+<h3 id="searching-with-code-obfuscation">Searching with Code Obfuscation</h3>
+<p>在针对代码混淆的检测中，可以看到 Asm2Vec 依旧保持着较高的准确度，且高于原始的 PV-DM 模型，说明Asm2Vec 模型能更好地保存着函数的语义和结构信息。</p>
+<p><img src="/images/posts/SP19-Asm2Vec/CodeObfuscation.png" alt="Asm2Vec"></p>
+<h3 id="searching-vulnerability-functions">Searching Vulnerability Functions</h3>
+<p>如下表所示，Asm2Vec 同其他工具（TSH）相比，在 TP / FP 方面都有更好的表现，而且 ROC 和 CROC 值均为 1：</p>
+<p><img src="/images/posts/SP19-Asm2Vec/Table3.png" alt="Asm2Vec"></p>
+<p>下一个实验则证明了 Asm2Vec 即使在代码混淆存在的情况下也有一定的能力检测出漏洞相关的函数：</p>
+<p><img src="/images/posts/SP19-Asm2Vec/Table4.png" alt="Asm2Vec"></p>
+<h2 id="总结">总结</h2>
+<p>根据根据阅读相关论文的经验，机器学习在代码识别领域的应用可以用一下三个步骤归纳：</p>
+<ol>
+<li>总结代码识别中遇到的 challenge 和机器学习或者 NLP 在解决某类问题上的相似性</li>
+<li>针对该机器学习技术在代码识别场景内作出一定优化</li>
+<li>设计实验证明自己思路的有效性</li>
+</ol>
+<p>感觉这类的论文在行文或者思路上还是有着一定的套路性，整体上还是遵循着三个步骤来讲，其中最关键的则是两个点，一是证明思路的可行以及巧妙；二则是设计了详尽的实验来证明自己思路的可行性和效果。</p>
+<p>PS：由于没有机器学习基础，这种类型文章理解的不好，如果错误，不吝批评指出 😅</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://www.infoq.cn/article/E_TfObFg4EWe6z1ZbKKt">NLP技术也能帮助程序分析？</a></li>
+<li><a href="http://weiweiwang.github.io/nlp/2017/03/18/paragraph-vector.html">Paragraph Vector学习笔记</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/04/sp19-asm2vec/>https://syang-ng.github.io/2020/04/sp19-asm2vec/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/04/sosp-2019-tsvd/" class="prev" rel="prev" title="SOSP 2019 TSVD"><i class="iconfont icon-left"></i>&nbsp;SOSP 2019 TSVD</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
