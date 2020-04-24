@@ -6,10 +6,19 @@
     <description>Recent content in Web on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 10 Mar 2020 00:03:36 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 23 Apr 2020 19:41:25 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/web/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>From Prototype Pollution to RCE</title>
+      <link>https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/</link>
+      <pubDate>Thu, 23 Apr 2020 19:41:25 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/</guid>
+      <description>旧的两道题目的梳理，主要还是回顾一下如何放大原型链污染的危害 code-breaking 2018 thejs 题目源码地址 https://github.com/phith0n/code-breaking/tree/master/2018/thejs 可以先看 server.js，代码非常简单： const fs = require(&amp;#39;fs&amp;#39;) const express = require(&amp;#39;express&amp;#39;) const</description>
+    </item>
     
     <item>
       <title>RealWorldCTF 2019 MarxJS</title>

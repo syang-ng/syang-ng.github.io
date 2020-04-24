@@ -4,7 +4,7 @@
     <url>
       <loc>https://syang-ng.github.io/categories/</loc>
       
-      <lastmod>2020-04-20T23:24:52+08:00</lastmod>
+      <lastmod>2020-04-23T19:41:25+08:00</lastmod>
       
       
       
@@ -12,9 +12,19 @@
     </url>
   
     <url>
-      <loc>https://syang-ng.github.io/categories/paper/</loc>
+      <loc>https://syang-ng.github.io/categories/ctf/</loc>
       
-      <lastmod>2020-04-20T23:24:52+08:00</lastmod>
+      <lastmod>2020-04-23T19:41:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/</loc>
+      
+      <lastmod>2020-04-23T19:41:25+08:00</lastmod>
       
       
       
@@ -23,6 +33,26 @@
   
     <url>
       <loc>https://syang-ng.github.io/posts/</loc>
+      
+      <lastmod>2020-04-23T19:41:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/web/</loc>
+      
+      <lastmod>2020-04-23T19:41:25+08:00</lastmod>
+      
+      
+      
+      
+    </url>
+  
+    <url>
+      <loc>https://syang-ng.github.io/categories/paper/</loc>
       
       <lastmod>2020-04-20T23:24:52+08:00</lastmod>
       
@@ -52,27 +82,7 @@
     </url>
   
     <url>
-      <loc>https://syang-ng.github.io/categories/ctf/</loc>
-      
-      <lastmod>2020-03-10T00:03:36+08:00</lastmod>
-      
-      
-      
-      
-    </url>
-  
-    <url>
       <loc>https://syang-ng.github.io/2020/03/realworldctf-2019-marxjs/</loc>
-      
-      <lastmod>2020-03-10T00:03:36+08:00</lastmod>
-      
-      
-      
-      
-    </url>
-  
-    <url>
-      <loc>https://syang-ng.github.io/categories/web/</loc>
       
       <lastmod>2020-03-10T00:03:36+08:00</lastmod>
       
