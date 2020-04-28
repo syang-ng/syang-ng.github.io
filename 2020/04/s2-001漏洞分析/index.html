@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/04/s2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           S2 001漏洞分析 | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="S2 001漏洞分析 | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "S2 001漏洞分析",
+    "headline" : "S2 001漏洞分析",
+    "description" : "尝试入门 Java 安全，下一步的计划是结合 CodeQL 以及静态分析、污点分析这方面的技术积累构建自己的技术栈。 环境搭建 参考Java Web安全入门——S2漏洞测",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-04-28 14:17:55 \x2b0800 CST",
+    "dateModified" : "2020-04-28 14:17:55 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/04\/s2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90\/",
+    "wordCount" : "1215",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">S2 001漏洞分析</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-04-28 itemprop="datePublished">April 28, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/"> 安全研究 </a>
+                        <a href="https://syang-ng.github.io/categories/web/"> Web </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>尝试入门 Java 安全，下一步的计划是结合 CodeQL 以及静态分析、污点分析这方面的技术积累构建自己的技术栈。</p>
+<h2 id="环境搭建">环境搭建</h2>
+<p>参考<a href="https://mengsec.com/2019/10/29/Java-Web-Struts2-Env-Build/#more">Java Web安全入门——S2漏洞测试环境搭建</a>，搭建的本地环境，顺带试了一下 exp，效果还不错</p>
+<p><img src="/images/posts/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/show.png" alt="Show"></p>
+<h2 id="漏洞分析">漏洞分析</h2>
+<h3 id="漏洞成因">漏洞成因</h3>
+<p>关于漏洞的成因，参考 <a href="https://cwiki.apache.org/confluence/display/WW/S2-001">https://cwiki.apache.org/confluence/display/WW/S2-001</a> 的官方描述：</p>
+<blockquote>
+<h2 id="problem">Problem</h2>
+<p>The &lsquo;altSyntax&rsquo; feature of WebWork 2.1+ and Struts 2 allows OGNL expressions to be inserted into text strings and is processed recursively. This allows a malicious user to submit a string, usually through an HTML text field, containing an OGNL expression that will then be executed by the server if the form validation has failed. For example, say we had this form that required the &lsquo;phoneNumber&rsquo; field to not be blank:</p>
+<pre><code class="language-jsp" data-lang="jsp">&lt;s:form action=&quot;editUser&quot;&gt;
+  &lt;s:textfield name=&quot;name&quot; /&gt;
+  &lt;s:textfield name=&quot;phoneNumber&quot; /&gt;
+&lt;/s:form&gt;
+</code></pre><p>The user could leave the &lsquo;phoneNumber&rsquo; field blank to trigger the validation error, then populate the &lsquo;name&rsquo; field with %{1+1}. When the form is re-displayed to the user, the value of the &lsquo;name&rsquo; field will be &lsquo;2&rsquo;. The reason is the value field is, by default, processed as %{name}, and since OGNL expressions are evaluated recursively, it is evaluated as if the expression was %{%{1+1}}.</p>
+<p>The OGNL parsing code is actually in XWork and not in WebWork 2 or Struts 2.</p>
+</blockquote>
+<p>可以看出原因主要在于 XWork 允许 OGNL 表达式递归地执行，而当用户提交表单而且表单的验证失败时，会对字段进行解析，此时如果字段是 OGNL 表达式的话，则该字段会被递归执行。</p>
+<p>OGNL 是一种功能非常强大的表达式语言，但也存在着非常多的漏洞，关于 OGNL 的安全问题可以参考乌云上的这篇文章 <a href="https://wooyun.js.org/drops/OGNL%E8%AE%BE%E8%AE%A1%E5%8F%8A%E4%BD%BF%E7%94%A8%E4%B8%8D%E5%BD%93%E9%80%A0%E6%88%90%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E.html">OGNL设计及使用不当造成的远程代码执行漏洞</a>。</p>
+<h3 id="漏洞定位">漏洞定位</h3>
+<p>存在漏洞的函数在 <code>xwork-2.0.3.jar!/com/opensymphony/xwork2/util/TextParseUtil.java</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-java" data-lang="java"><span style="color:#66d9ef">public</span> <span style="color:#66d9ef">static</span> Object <span style="color:#a6e22e">translateVariables</span><span style="color:#f92672">(</span><span style="color:#66d9ef">char</span> open<span style="color:#f92672">,</span> String expression<span style="color:#f92672">,</span> ValueStack stack<span style="color:#f92672">,</span> Class asType<span style="color:#f92672">,</span> TextParseUtil<span style="color:#f92672">.</span><span style="color:#a6e22e">ParsedValueEvaluator</span> evaluator<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+  Object result <span style="color:#f92672">=</span> expression<span style="color:#f92672">;</span>
+
+  <span style="color:#66d9ef">while</span><span style="color:#f92672">(</span><span style="color:#66d9ef">true</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+    <span style="color:#66d9ef">int</span> start <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">indexOf</span><span style="color:#f92672">(</span>open <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;{&#34;</span><span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">int</span> length <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">length</span><span style="color:#f92672">();</span>
+    <span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> start <span style="color:#f92672">+</span> 2<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">int</span> count <span style="color:#f92672">=</span> 1<span style="color:#f92672">;</span>
+
+    <span style="color:#66d9ef">while</span><span style="color:#f92672">(</span>start <span style="color:#f92672">!=</span> <span style="color:#f92672">-</span>1 <span style="color:#f92672">&amp;&amp;</span> x <span style="color:#f92672">&lt;</span> length <span style="color:#f92672">&amp;&amp;</span> count <span style="color:#f92672">!=</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+      <span style="color:#66d9ef">char</span> c <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">charAt</span><span style="color:#f92672">(</span>x<span style="color:#f92672">++);</span>
+      <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;{&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#f92672">++</span>count<span style="color:#f92672">;</span>
+      <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;}&#39;</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+        <span style="color:#f92672">--</span>count<span style="color:#f92672">;</span>
+      <span style="color:#f92672">}</span>
+    <span style="color:#f92672">}</span>
+
+    <span style="color:#66d9ef">int</span> end <span style="color:#f92672">=</span> x <span style="color:#f92672">-</span> 1<span style="color:#f92672">;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>start <span style="color:#f92672">==</span> <span style="color:#f92672">-</span>1 <span style="color:#f92672">||</span> end <span style="color:#f92672">==</span> <span style="color:#f92672">-</span>1 <span style="color:#f92672">||</span> count <span style="color:#f92672">!=</span> 0<span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+      <span style="color:#66d9ef">return</span> XWorkConverter<span style="color:#f92672">.</span><span style="color:#a6e22e">getInstance</span><span style="color:#f92672">().</span><span style="color:#a6e22e">convertValue</span><span style="color:#f92672">(</span>stack<span style="color:#f92672">.</span><span style="color:#a6e22e">getContext</span><span style="color:#f92672">(),</span> result<span style="color:#f92672">,</span> asType<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+
+    String var <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">substring</span><span style="color:#f92672">(</span>start <span style="color:#f92672">+</span> 2<span style="color:#f92672">,</span> end<span style="color:#f92672">);</span>
+    Object o <span style="color:#f92672">=</span> stack<span style="color:#f92672">.</span><span style="color:#a6e22e">findValue</span><span style="color:#f92672">(</span>var<span style="color:#f92672">,</span> asType<span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>evaluator <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+      o <span style="color:#f92672">=</span> evaluator<span style="color:#f92672">.</span><span style="color:#a6e22e">evaluate</span><span style="color:#f92672">(</span>o<span style="color:#f92672">);</span>
+    <span style="color:#f92672">}</span>
+
+    String left <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">substring</span><span style="color:#f92672">(</span>0<span style="color:#f92672">,</span> start<span style="color:#f92672">);</span>
+    String right <span style="color:#f92672">=</span> expression<span style="color:#f92672">.</span><span style="color:#a6e22e">substring</span><span style="color:#f92672">(</span>end <span style="color:#f92672">+</span> 1<span style="color:#f92672">);</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>o <span style="color:#f92672">!=</span> <span style="color:#66d9ef">null</span><span style="color:#f92672">)</span> <span style="color:#f92672">{</span>
+      <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>TextUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">stringSet</span><span style="color:#f92672">(</span>left<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+        result <span style="color:#f92672">=</span> left <span style="color:#f92672">+</span> o<span style="color:#f92672">;</span>
+      <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+        result <span style="color:#f92672">=</span> o<span style="color:#f92672">;</span>
+      <span style="color:#f92672">}</span>
+
+      <span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>TextUtils<span style="color:#f92672">.</span><span style="color:#a6e22e">stringSet</span><span style="color:#f92672">(</span>right<span style="color:#f92672">))</span> <span style="color:#f92672">{</span>
+        result <span style="color:#f92672">=</span> result <span style="color:#f92672">+</span> right<span style="color:#f92672">;</span>
+      <span style="color:#f92672">}</span>
+
+      expression <span style="color:#f92672">=</span> left <span style="color:#f92672">+</span> o <span style="color:#f92672">+</span> right<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span> <span style="color:#66d9ef">else</span> <span style="color:#f92672">{</span>
+      result <span style="color:#f92672">=</span> left <span style="color:#f92672">+</span> right<span style="color:#f92672">;</span>
+      expression <span style="color:#f92672">=</span> left <span style="color:#f92672">+</span> right<span style="color:#f92672">;</span>
+    <span style="color:#f92672">}</span>
+  <span style="color:#f92672">}</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p>通过审计代码可以发现，当 while 循环生成的 <code>expression</code> 变量一直符合 <code>%{.*}</code> 的形式时，该循环会一直持续执行。当传入的参数是 <code>%{username}</code>，经过 <code>stack.findValue(var, asType);</code> 的解析，<code>expression</code>  变量会变成username 表单项内具体的值。也就是说如果我们在表单的 username 项填入 <code>%{1+1}</code> 的话，循环会继续。</p>
+<p><img src="/images/posts/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/loop1.png" alt="Loop 1"></p>
+<p>下一次循环，经过对 <code>%{1+1}</code> 的解析，得到结果 2，此时由于不满足格式的条件要求，循环停止，函数返回。</p>
+<p><img src="/images/posts/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/loop2.png" alt="Loop 2"></p>
+<p>最终页面将 username 项内的值渲染为 2:</p>
+<p><img src="/images/posts/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/result.png" alt="Loop 2"></p>
+<p>P.S. 关于调试的问题，可以参考 Dlive 师傅说的，以 OGNL 原生 API 处下断点，因为最终框架还是会调用原生 API 来实现功能。</p>
+<blockquote>
+<p>我在看《Struts2技术内幕 - 深入解析Struts2架构设计与实现原理》这本书的时候</p>
+<p>发现了一个调试Struts2 OGNL表达式导致的问题的一个好方法</p>
+<p>既然是OGNL导致的RCE，那就是说Payload里的OGNL表达式会被执行</p>
+<p>那么我们<strong>直接在OGNL的原生API getValue处下断点即可</strong>，这个方法用于解析OGNL表达式并返回表达式的值</p>
+<p>OGNL最低层的数据访问API存在于ognl jar包中的OGNL.java</p>
+</blockquote>
+<h3 id="漏洞修复">漏洞修复</h3>
+<p>通过加入变量 loopCount 限制了递归解析 OGNL 表达式的次数，进而完成了对漏洞的修复。</p>
+<p><img src="/images/posts/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/fix.png" alt="Fix"></p>
+<h2 id="总结">总结</h2>
+<p>还在想为啥这 bug 用的库都这么老，一看 CVE 号是 CVE-2007-4556，怪不得……</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li>
+<p><a href="http://rickgray.me/2016/05/06/review-struts2-remote-command-execution-vulnerabilities/">Struts2 历史 RCE 漏洞回顾不完全系列</a></p>
+</li>
+<li>
+<p><a href="%5Bhttp://d1iv3.me/2018/02/01/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/%5D(http://d1iv3.me/2018/02/01/S2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/)">S2-001漏洞分析</a></p>
+</li>
+<li>
+<p><a href="https://wooyun.js.org/drops/OGNL%E8%AE%BE%E8%AE%A1%E5%8F%8A%E4%BD%BF%E7%94%A8%E4%B8%8D%E5%BD%93%E9%80%A0%E6%88%90%E7%9A%84%E8%BF%9C%E7%A8%8B%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E6%BC%8F%E6%B4%9E.html">OGNL设计及使用不当造成的远程代码执行漏洞</a></p>
+</li>
+<li>
+<p><a href="https://mengsec.com/2019/10/29/Java-Web-S2-001/">Java Web安全入门——S2-001漏洞分析</a></p>
+</li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/04/s2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/>https://syang-ng.github.io/2020/04/s2-001%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/04/from-prototype-pollution-to-rce/" class="prev" rel="prev" title="From Prototype Pollution to RCE"><i class="iconfont icon-left"></i>&nbsp;From Prototype Pollution to RCE</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
