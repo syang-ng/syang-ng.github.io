@@ -6,10 +6,28 @@
     <description>Recent content in Categories on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 28 Apr 2020 14:17:55 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 30 Apr 2020 16:56:53 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CVE</title>
+      <link>https://syang-ng.github.io/categories/cve/</link>
+      <pubDate>Thu, 30 Apr 2020 16:56:53 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/cve/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>安全研究</title>
+      <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
+      <pubDate>Thu, 30 Apr 2020 16:56:53 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>Web</title>
@@ -17,15 +35,6 @@
       <pubDate>Tue, 28 Apr 2020 14:17:55 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/web/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>安全研究</title>
-      <link>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</link>
-      <pubDate>Tue, 28 Apr 2020 14:17:55 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
       <description></description>
     </item>
     
@@ -53,15 +62,6 @@
       <pubDate>Tue, 18 Feb 2020 13:41:03 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/android/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>CVE</title>
-      <link>https://syang-ng.github.io/categories/cve/</link>
-      <pubDate>Sat, 01 Feb 2020 17:02:55 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/cve/</guid>
       <description></description>
     </item>
     

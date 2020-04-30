@@ -6,10 +6,19 @@
     <description>Recent content in 安全研究 on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 28 Apr 2020 14:17:55 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 30 Apr 2020 16:56:53 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CVE 2018 1270 Spring Messaging RCE</title>
+      <link>https://syang-ng.github.io/2020/04/cve-2018-1270-spring-messaging-rce/</link>
+      <pubDate>Thu, 30 Apr 2020 16:56:53 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/04/cve-2018-1270-spring-messaging-rce/</guid>
+      <description>Java Web 安全入门第二篇，分析 CVE-2018-1270，个人感觉本质上是 SpEL 表达式的问题。 漏洞详情 该漏洞在2018年4月5日公布，详情参考链接 https://pivotal.io/security/cve-2018-1270 影</description>
+    </item>
     
     <item>
       <title>S2 001漏洞分析</title>
