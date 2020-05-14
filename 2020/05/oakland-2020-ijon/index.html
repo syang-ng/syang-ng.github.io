@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/04/cve-2018-1270-spring-messaging-rce/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/05/oakland-2020-ijon/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           S&amp;P 2020 IJON | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="S&amp;P 2020 IJON | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "S\x26P 2020 IJON",
+    "headline" : "S\x26P 2020 IJON",
+    "description" : "S\x26amp;P 2020 - IJON: Exploring Deep State Spaces via Fuzzing 论文链接：https:\/\/www.syssec.ruhr-uni-bochum.de\/media\/emma\/veroef",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-05-12 20:43:00 \x2b0800 CST",
+    "dateModified" : "2020-05-12 20:43:00 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/05\/oakland-2020-ijon\/",
+    "wordCount" : "4121",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">S&amp;P 2020 IJON</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-05-12 itemprop="datePublished">May 12, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="sp-2020---ijon-exploring-deep-state-spaces-via-fuzzing">S&amp;P 2020 - IJON: Exploring Deep State Spaces via Fuzzing</h2>
+<p>论文链接：https://www.syssec.ruhr-uni-bochum.de/media/emma/veroeffentlichungen/2020/02/27/IJON-Oakland20.pdf</p>
+<p>YouTube 视频介绍：https://www.youtube.com/watch?v=XuyF-Jb2hQ4&amp;list=PL0pRF4xvoD0n5MV4cPdF-AvrvRGQVYa-q&amp;index=79&amp;t=0s</p>
+<p>项目地址：https://github.com/RUB-SysSec/ijon</p>
+<p>本文作者均来自德国的波鸿鲁尔大学系统安全实验室，如果对该实验室感兴趣，可以去他们的<a href="https://www.syssec.ruhr-uni-bochum.de/chair/">官方网站</a>上获得更多信息。</p>
+<h2 id="背景知识">背景知识</h2>
+<h3 id="human-in-the-loop">human-in-the-loop</h3>
+<p>human-in-the-loop 指的是一种人工交互的模型，允许人工的介入以干涉程序的输出。在 fuzzing 的过程中，则表现为研究人员以更高维度的视角来看待并引导解决 fuzzer 遇到的问题。</p>
+<h3 id="state--state-space">state &amp; state space</h3>
+<p>这里的状态，指的是内存和寄存器的一种配置，以及系统的状态（文件描述符等）；而状态空间则是所有可能状态的集合，所以即使是一个非常小的程序，其状态空间所有可能的状态数也比这个宇宙的所有原子数还多。</p>
+<h3 id="edge--edge-coverage">Edge &amp; Edge Coverage</h3>
+<p>将一个程序以 CFG（控制流图） 的形式呈现，图的每一个节点是一个 Basic Block（基本块），而 Edge 则是用来连接这些基本块之间的边。AFL 以 Edge Coverage 作为 Code Coverage 的评估标准，相较 Basic Block 覆盖率而言，以 Edge 作为覆盖率的标准，能更有效地反应出程序的运行路径。比如下面的两条路径，用 Basic Block 则基本不能完成区分：</p>
+<pre><code>A -&gt; B -&gt; C -&gt; D -&gt; E (tuples: AB, BC, CD, DE)
+A -&gt; B -&gt; D -&gt; C -&gt; E (tuples: AB, BD, DC, CE)
+</code></pre><p><img src="/images/posts/Oakland-2020-IJON/EdgeCoverage.jpg" alt="Edge Coverage"></p>
+<h2 id="主要内容">主要内容</h2>
+<p>fuzzing 是时下最为流行的寻找漏洞的技术，当前的 fuzzer 普遍基于代码覆盖率而设计，Edge Coverage 是当前最有效的覆盖率统计方法，但这种方案仍然不能充分地描述程序的状态空间。因此，很多情况下，在 fuzzing 一段时间后，fuzzer 由于不能提升 Code Coverage，会陷入停滞状态。</p>
+<p>因此，受到研究人员在 fuzzing 过程中 <strong>fuzzing =&gt; 分析结果 =&gt; 调整 seed 和 fuzz 策略 =&gt; fuzzing</strong> 的启发，结合 human-in-the-loop 思想，本文提出了一个名为 IJON 的 fuzzer 辅助工具。该工具允许研究人员利用注解来指导 afl fuzzer 的行为，以提高代码覆盖率以及状态空间中某些中间值的覆盖率。</p>
+<p>通过实验，作者证明了 IJON 能有效地提高 fuzzer 的效果，解决了 10 个 CGC 挑战中的难题，并成功在真实软件 <code>dmg2img</code> 中找到了 3 个新的漏洞。</p>
+<h2 id="设计实现">设计实现</h2>
+<p>一般来说，fuzzer 的目标是尽可能在程序的状态空间中找到“有趣”的区域，但“有趣”不是一个明确的指标。afl 家族的成功表明 Edge Coverage 是一个非常有效的指标，每一条新的边都代表着一种新的情况。但在有些情况下，如果不结合结合状态空间中的一些中间点的话，fuzzer 很难产生新的代码覆盖率。因此，需要研究人员通过对这些中间点进行抽象总结并反馈给 fuzzer，fuzzer 才有可能解决覆盖率的问题。</p>
+<p>为此，论文中总结了三种需要分析总结的状态空间中间点，并进行了详细分析。</p>
+<h3 id="state-exploration">State Exploration</h3>
+<h4 id="known-relevant-state-values">Known Relevant State Values</h4>
+<p>以下面这段 C 实现的迷宫代码为例，可以看到只有当变量 <code>x</code> / <code>y</code> 满足一定条件时才会触发 <code>Bug()</code> 函数，但如果以 Edge Coverage 计算的话，一般情况下在覆盖四个分支（四个移动方向）后就不会再增加了，此时 fuzz 将进入没有正向回馈的停滞状态。因此，如果能有效地将 <code>x</code> / <code>y</code> 这两个变量值的变化作为反馈的因素，则能有效地提高 fuzz 的效率。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">while</span>(true) {
+    ox<span style="color:#f92672">=</span>x; oy<span style="color:#f92672">=</span>y;
+    
+    <span style="color:#66d9ef">switch</span> (input[i]) {
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;w&#39;</span><span style="color:#f92672">:</span> y<span style="color:#f92672">--</span>; <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;s&#39;</span><span style="color:#f92672">:</span> y<span style="color:#f92672">++</span>; <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;a&#39;</span><span style="color:#f92672">:</span> x<span style="color:#f92672">--</span>; <span style="color:#66d9ef">break</span>;
+        <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;d&#39;</span><span style="color:#f92672">:</span> x<span style="color:#f92672">++</span>; <span style="color:#66d9ef">break</span>;
+    }
+
+    <span style="color:#66d9ef">if</span> (maze[y][x] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;#&#39;</span>){ Bug(); }
+    
+    <span style="color:#75715e">//If target is blocked, do not advance
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> (maze[y][x] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39; &#39;</span>) { x <span style="color:#f92672">=</span> ox; y <span style="color:#f92672">=</span> oy; }
+}
+</code></pre></div><p>同样的，游戏超级马里奥也同样关注玩家的坐标，相比于庞大的状态空间，分析人员如果能提供一个更清晰的目标，比如说增加 x 坐标的值，fuzzer 就能更有效地探索程序的状态空间。</p>
+<p><img src="/images/posts/Oakland-2020-IJON/Mario.png" alt="Mario"></p>
+<p><img src="/images/posts/Oakland-2020-IJON/State.png" alt="State"></p>
+<h4 id="known-state-changes">Known State Changes</h4>
+<p>有些情况下，虽然程序的状态变化是已知的，但哪些状态更“有趣”更值得研究是不确定的，因此也很难有效地对 fuzzer 的工作给予反馈。以下面这段代码为例，fuzzer 能覆盖三种不同的消息处理逻辑，但 fuzzer 很难生成有意思的消息序列。即使不同的消息序列会导致状态机内部的状态发生变化，但 fuzzer 并没有区分出这种状态变化的能力。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">msg <span style="color:#f92672">=</span> parse_msg();
+<span style="color:#66d9ef">switch</span>(msg.type) {
+  <span style="color:#66d9ef">case</span> Hello: eval_hello(msg); <span style="color:#66d9ef">break</span>;
+  <span style="color:#66d9ef">case</span> Login: eval_login(msg); <span style="color:#66d9ef">break</span>;
+  <span style="color:#66d9ef">case</span> Msg_A: eval_msg_a(msg); <span style="color:#66d9ef">break</span>;
+}
+</code></pre></div><h4 id="missing-intermediate-state">Missing Intermediate State</h4>
+<p>有些情况下，比如 magic number 的校验，程序的覆盖率和值都无法提供有效的反馈，因为该比较只有成功/失败两种可能性，但分析人员可以基于推断出的程序逻辑，结合人为的中间状态，为 fuzzing 提供指示。以下面的代码为例，该代码片段来自 于objdump，包含一个哈希表查找和一个 if 条件判断，用于搜索含有给定的字符串的项。fuzzer 需要解决比较问题，使得保持输入的哈希值始终等于目标字符串的哈希值。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">//shortened version of a hashmap lookup from binutils
+</span><span style="color:#75715e"></span>entry<span style="color:#f92672">*</span> <span style="color:#a6e22e">bfd_get_section_by_name</span>(table <span style="color:#f92672">*</span>tbl, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str) {
+   entry <span style="color:#f92672">*</span>lp;
+   uint32_t hash <span style="color:#f92672">=</span> bfd_hash_hash(str);
+   uint32_t i <span style="color:#f92672">=</span> hash <span style="color:#f92672">%</span> tbl<span style="color:#f92672">-&gt;</span>size;
+   
+   <span style="color:#75715e">//Every hash bucket contains a linked list of strings
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">for</span> (lp <span style="color:#f92672">=</span> tbl<span style="color:#f92672">-&gt;</span>table[i]; lp <span style="color:#f92672">!=</span> NULL; lp <span style="color:#f92672">=</span> lp<span style="color:#f92672">-&gt;</span>next) {
+     <span style="color:#66d9ef">if</span> (lp<span style="color:#f92672">-&gt;</span>hash <span style="color:#f92672">==</span> hash <span style="color:#f92672">&amp;&amp;</span> strcmp( lp<span style="color:#f92672">-&gt;</span>string, str) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)
+       <span style="color:#66d9ef">return</span> lp;
+   }
+   <span style="color:#66d9ef">return</span> NULL;
+}
+<span style="color:#75715e">// used somewhere else
+</span><span style="color:#75715e"></span>section <span style="color:#f92672">=</span> bfd_get_section_by_name (abfd, <span style="color:#e6db74">&#34;.bootloader&#34;</span>);
+<span style="color:#66d9ef">if</span> (section <span style="color:#f92672">!=</span> NULL){ ... }
+</code></pre></div><h3 id="feedback-mechanisms">Feedback Mechanisms</h3>
+<p>为了研究人员能有效地解决上述三种情况，本文根据以下四个出发点设计了 IJON，一套辅助 AFL fuzzer 的注解机制。</p>
+<ol>
+<li>允许分析人员选择与解决当前的问题相关的代码区域。</li>
+<li>允许对 AFL bitmap 的直接添加和设置条目，从而将状态值直接反馈给 Fuzzer。</li>
+<li>允许分析人员影响覆盖率的计算，相同的 Edge Coverage 也可以得到不同的 Bitmap Coverage，由此能得到更细粒度的反馈。</li>
+<li>引入了一个新的原语，使得分析人员能够在状态空间爆炸的情况下，利用爬山算法进行优化。</li>
+</ol>
+<p>该设计的整体示意图如下（按本人理解）：</p>
+<p><img src="/images/posts/Oakland-2020-IJON/overview.png" alt="Overview"></p>
+<p>然后以下五种是作者重点介绍的注解：</p>
+<h4 id="ijon-enable">IJON-ENABLE</h4>
+<p>利用引入的一个额外的 mask，<code>IJON-ENABLE</code> 和 <code>IJON-DISABLE</code> 注解可用于启用和禁用覆盖率反馈。这能有效地排除掉部分分析人员不感兴趣的代码。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">IJON_DISABLE();
+<span style="color:#75715e">//...
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span>(x<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">0</span>)
+  IJON_ENABLE();
+</code></pre></div><h4 id="ijon-inc--ijon-set">IJON-INC &amp; IJON-SET</h4>
+<p><code>IJON-INC</code> 和  <code>IJON-SET</code> 注解能对 bitmap 里的特定条目进行操作，这增加了代码覆盖率外的反馈机制，使得新数据覆盖率同样可以反馈给 fuzzer。</p>
+<p>参考以下代码，当每次 x 更改时，<code>IJON</code> 会让位图中的相应条目的值增加：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">IJON_INC(x);
+</code></pre></div><p>而 <code>IJON-SET</code> 注解是直接设置位图值的最低有效位。比如在迷宫游戏中添加的第四行注解，它使用 x 和 y 坐标的组合作为反馈，于是游戏中任何新位置都被视为新的覆盖。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">while</span>(true) {
+  ox<span style="color:#f92672">=</span>x; oy<span style="color:#f92672">=</span>y;
+  
+  IJON_SET(hash_int(x,y));
+  <span style="color:#66d9ef">switch</span> (input[i]) {
+    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;w&#39;</span><span style="color:#f92672">:</span> y<span style="color:#f92672">--</span>; <span style="color:#66d9ef">break</span>;
+<span style="color:#75715e">//....
+</span></code></pre></div><h4 id="ijon-state">IJON-STATE</h4>
+<p>为了产生更细粒度的反馈，作者提供了 <code>IJON-STATE</code>，通过更改 Edge Coverage 的计算，将状态和代码覆盖率相关联。通过将 <code>virtual state</code> 作为第三个分量扩展 Edge 元组， 在计算任何 Edge 的位图索引时，该分量也会被同时考虑在内，因此只要该分量发生变化，即使是相同的 Edge 也会触发新的覆盖率。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">IJON_STATE(has_hello <span style="color:#f92672">+</span> has_login);
+msg <span style="color:#f92672">=</span> parse_msg();
+<span style="color:#75715e">//...
+</span></code></pre></div><h4 id="ijon-max">IJON-MAX</h4>
+<p>之前的几个注解均是为了丰富反馈率的形式，而 <code>IJON-MAX</code> 注解主要是为了特定目标或者状态空间过大的情况进行优化，通过爬山算法找到局部最优解。</p>
+<p>例如游戏《超级玛丽》，玩家的目标是到达关卡的末端，通过要求 fuzzer 尝试最大化玩家的 x 坐标对解决问题有极大的帮助。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">//inside main loop, after calculating positions
+</span><span style="color:#75715e"></span>IJON_MAX(player_y, player_x);
+</code></pre></div><h2 id="实验评估">实验评估</h2>
+<p>实验机器配置：Debian 4.9.65-3，Intel Xeon E5-2667（12核），2.9GHz，94GB RAM</p>
+<h3 id="the-maze--small-known-state-values">The Maze – Small, Known State Values</h3>
+<p>迷宫实验是符号执行工具最常见的测试用例。一般来说，AFL 和类似的 fuzzer 无法在合理的时间内解决问题，而 KLEE 可以在几秒钟内找到解决方案，因为该游戏的有效状态空间在采取的步骤数上是线性的，不会发生状态爆炸。为此，作者特意设计复杂度更高的迷宫：玩家可以退后并停留在同一位置。此时，状态空间的可能性呈指数增长，连 KLEE 也无法成功解决迷宫问题。此外，作者还设计了小/大两个迷宫版本。</p>
+<p>对于每个迷宫，实验比较的每个工具均会执行三次并统计；实验第一轮会直接执行相应的 fuzzer；然后在第二轮，则会在利用 IJON 添加下方代码第三行的注解：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">while</span>(true) {
+  ox<span style="color:#f92672">=</span>x; oy<span style="color:#f92672">=</span>y;
+  IJON_SET(hash_int(x,y));
+  <span style="color:#66d9ef">switch</span> (input[i]) {
+    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#39;w&#39;</span><span style="color:#f92672">:</span> y<span style="color:#f92672">--</span>; <span style="color:#66d9ef">break</span>;
+<span style="color:#75715e">//....
+</span></code></pre></div><p>实验结果证明了该注解非常有效：</p>
+<p><img src="/images/posts/Oakland-2020-IJON/maze-result.png" alt="Overview"></p>
+<h3 id="super-mario-bros--large-known-state-values">Super Mario Bros. – Large Known State Values</h3>
+<p>第二个则是该文章最出圈的超级玛丽实验，作者对游戏进行了一定的修改，会从 stdin 读取所有键盘命令，并且游戏角色Mario始终会始终向右跑，停止移动时会死亡。这主要是为了加快游戏的节奏。作者使用 <code>IJON_MAX</code> 这一注解来在每一个高度来最大化玩家的 x 坐标。可以看到使用了注解的 IJON 几分钟就通过了大部分的关卡，而只使用 AFL 效果较差。
+<img src="/images/posts/Oakland-2020-IJON/mario-result.png" alt="Overview"></p>
+<h3 id="structured-input-formats--state-change-logging">Structured Input Formats – State Change Logging</h3>
+<p>该实验有两个组成部分，第一个实验是对论文 AFLSMART 的测试目标——libpng 和 WavPack 进行了测试，利用随机 wav/png 文件的前 1024 个字节作为种子，IJON 能发现该篇论文发现的所有漏洞；相应的，AFL 没有找到任何漏洞。此外，该工具还在 libpng 中发现了另一个越界读漏洞。</p>
+<p>第二个实验则是在 LIBTPMS 上进行，在本实验中，作者并不关心是否解决约束，而是关注探索的不同消息序列的数量，所以只对 AFL 和 AFL+IJON 进行了评估，结果如下表所示，可以看到 IJON 很明显地增加了消息序列的数量。</p>
+<p><img src="/images/posts/Oakland-2020-IJON/tpm-result.png" alt="Overview"></p>
+<h3 id="binutils-hash-map---missing-intermediate-states">Binutils Hash map - Missing Intermediate States</h3>
+<p>作者使用带有和不带有 IJON 自定义注解的 fuzzer 进行了实验，结果如下表所示：</p>
+<p><img src="/images/posts/Oakland-2020-IJON/hash-result.png" alt="Overview"></p>
+<p>可以看到基本任何 fuzzer 都无法解决未修改的约束，但在使用了 IJON 注解后，基本所有的 fuzzer 都可以在几分钟内解决约束，只有 AFLFAST 在三分之二的测试中失败了，但唯一成功的一次也在 6 分钟内解决了约束。</p>
+<h3 id="cyber-grand-challenge">Cyber Grand Challenge</h3>
+<p>在随机选取的 30 个 CGC 挑战问题中，其中的八个目标，由于可能是移植版本的原因，即使用提供的 PoV 也不会导致崩溃。在剩下 22 个目标里，又有 12 个因为种种原因不能生效，最后 IJON 成功触发了 10 个挑战问题的 Crash。</p>
+<p><img src="/images/posts/Oakland-2020-IJON/CGC.png" alt="Overview"></p>
+<h3 id="real-world-software">Real-World Software</h3>
+<p>作者在这里选取了另一款 fuzz 工具 WEIZZ fuzz 过的工具 <code>dmg2img</code> 作为测试目标，在应用了补丁的版本上找到了三个全新的漏洞，前两个漏洞是 WEIZZ 找到的漏洞的变体，第三个漏洞是整数溢出，会导致 <code>malloc(0)</code> 的情况，具体代码如下所示，可以看到第二行就是漏洞所在：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">IJON_MAX(kolyblk.XMLLength);
+plist <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(kolyblk.XMLLength <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>);
+<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>plist)
+  mem_overflow();
+<span style="color:#75715e">//....
+</span><span style="color:#75715e"></span>plist[kolyblk.XMLLength] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</code></pre></div><h2 id="总结">总结</h2>
+<p>虽然 AFL 创新性地采取了 Edge Coverage 作为反馈的标准带来了非常优秀的效果，但不得不承认的是，这种策略在当下仍有无法解决的挑战，在 fuzzing 的过程中往往需要人工介入来对 fuzzer 的 seed 或者生成策略进行调整。本文工作创新性地将当前业界常用的  <strong>fuzz =&gt; 反馈 =&gt; 调整 =&gt; 继续 fuzz</strong> 这样一套流程系统化为了注解机制，允许研究人员用一到两行注解完成对 fuzzer 的干预，简化了研究人员与 fuzzer 间交互的成本。</p>
+<p>不过虽然该工作在论文的最后强调这种注解可能在未来的工作中可以尝试自动化地生成，但本人认为在较短的时间段内暂时不存在可能性，专家经验仍是指导 fuzzer 工作最有效的手段。此外，该工作在 Real-World 应用的例子也较为简单，找到的也是<code>dmg2img</code> 这种比较小众工具的漏洞。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://www.freebuf.com/articles/system/191543.html">AFL漏洞挖掘技术漫谈（一）：用AFL开始你的第一次Fuzzing</a></li>
+<li><a href="https://www.freebuf.com/articles/system/197678.html">AFL漏洞挖掘技术漫谈（二）：Fuzz结果分析和代码覆盖率</a></li>
+<li><a href="https://www.jianshu.com/p/cc7a486e5adb">翻译afl-fuzz白皮书</a></li>
+<li><a href="%5Bhttp://riusksk.me/2020/02/29/%E7%94%A8AFL%E5%BF%AB%E9%80%9F%E9%80%9A%E5%85%B3%E8%B6%85%E7%BA%A7%E7%8E%9B%E4%B8%BD/%5D(http://riusksk.me/2020/02/29/%E7%94%A8AFL%E5%BF%AB%E9%80%9F%E9%80%9A%E5%85%B3%E8%B6%85%E7%BA%A7%E7%8E%9B%E4%B8%BD/)">用afl玩超级玛丽：通过Fuzzing探索程序空间状态以发现更多执行路径</a></li>
+<li><a href="https://securitygossip.com/blog/2020/03/20/ijon-exploring-deep-state-spaces-via-fuzzing/">GoSSIP 阅读笔记 - IJON: Exploring Deep State Spaces via Fuzzing</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/05/oakland-2020-ijon/>https://syang-ng.github.io/2020/05/oakland-2020-ijon/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/04/cve-2018-1270-spring-messaging-rce/" class="prev" rel="prev" title="CVE 2018 1270 Spring Messaging RCE"><i class="iconfont icon-left"></i>&nbsp;CVE 2018 1270 Spring Messaging RCE</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
