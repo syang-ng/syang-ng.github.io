@@ -6,10 +6,19 @@
     <description>Recent content in CVE on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 30 Apr 2020 16:56:53 +0800</lastBuildDate>
+    <lastBuildDate>Wed, 27 May 2020 08:52:21 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/cve/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>CVE 2020 10199 Nexus Rce</title>
+      <link>https://syang-ng.github.io/2020/05/cve-2020-10199-nexus-rce/</link>
+      <pubDate>Wed, 27 May 2020 08:52:21 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/05/cve-2020-10199-nexus-rce/</guid>
+      <description>针对 Java Web 安全的学习，回顾一下今年的 Nexus Repository Manager 3 远程命令执行漏洞，该漏洞同样属于表达式注入的范畴。 环境搭建 参照 https://github.com/threedr3am/learnjavabug/tree/master/nexus/CVE-2020-10199 搭建漏洞环境。环境搭建完成后，登录</description>
+    </item>
     
     <item>
       <title>CVE 2018 1270 Spring Messaging RCE</title>
