@@ -57,7 +57,7 @@
     "datePublished": "2020-05-12 20:43:00 \x2b0800 CST",
     "dateModified" : "2020-05-12 20:43:00 \x2b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2020\/05\/oakland-2020-ijon\/",
-    "wordCount" : "4121",
+    "wordCount" : "4126",
     "keywords" : [  "syang\x27s blog"]
 }
 </script>
@@ -196,7 +196,7 @@ A -&gt; B -&gt; D -&gt; C -&gt; E (tuples: AB, BD, DC, CE)
   <span style="color:#66d9ef">case</span> Msg_A: eval_msg_a(msg); <span style="color:#66d9ef">break</span>;
 }
 </code></pre></div><h4 id="missing-intermediate-state">Missing Intermediate State</h4>
-<p>有些情况下，比如 magic number 的校验，程序的覆盖率和值都无法提供有效的反馈，因为该比较只有成功/失败两种可能性，但分析人员可以基于推断出的程序逻辑，结合人为的中间状态，为 fuzzing 提供指示。以下面的代码为例，该代码片段来自 于objdump，包含一个哈希表查找和一个 if 条件判断，用于搜索含有给定的字符串的项。fuzzer 需要解决比较问题，使得保持输入的哈希值始终等于目标字符串的哈希值。</p>
+<p>有些情况下，比如 magic number 的校验，程序的覆盖率和值都无法提供有效的反馈，因为该比较只有成功/失败两种可能性，但分析人员可以基于推断出的程序逻辑，结合人为的中间状态，为 fuzzing 提供指示。以下面的代码为例，该代码片段来自于 objdump，包含一个哈希表查找和一个 if 条件判断，用于搜索含有给定的字符串的项。fuzzer 需要解决比较问题，使得保持输入的哈希值始终等于目标字符串的哈希值。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">//shortened version of a hashmap lookup from binutils
 </span><span style="color:#75715e"></span>entry<span style="color:#f92672">*</span> <span style="color:#a6e22e">bfd_get_section_by_name</span>(table <span style="color:#f92672">*</span>tbl, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>str) {
    entry <span style="color:#f92672">*</span>lp;
@@ -288,7 +288,7 @@ plist <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</sp
 <span style="color:#75715e">//....
 </span><span style="color:#75715e"></span>plist[kolyblk.XMLLength] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
 </code></pre></div><h2 id="总结">总结</h2>
-<p>虽然 AFL 创新性地采取了 Edge Coverage 作为反馈的标准带来了非常优秀的效果，但不得不承认的是，这种策略在当下仍有无法解决的挑战，在 fuzzing 的过程中往往需要人工介入来对 fuzzer 的 seed 或者生成策略进行调整。本文工作创新性地将当前业界常用的  <strong>fuzz =&gt; 反馈 =&gt; 调整 =&gt; 继续 fuzz</strong> 这样一套流程系统化为了注解机制，允许研究人员用一到两行注解完成对 fuzzer 的干预，简化了研究人员与 fuzzer 间交互的成本。</p>
+<p>虽然 AFL 创新性地采取了 Edge Coverage 作为反馈的标准带来了非常优秀的效果，但不得不承认的是，这种策略在当下仍有无法解决的挑战。因此，在实际的 fuzzing 过程中，往往有人工介入来对 fuzzer 的 seed 或者生成策略进行调整。本文工作创新性地将当前业界常用的  <strong>fuzz =&gt; 反馈 =&gt; 调整 =&gt; 继续 fuzz</strong> 这样一套流程系统化为了注解机制，允许研究人员用一到两行注解完成对 fuzzer 的干预，简化了研究人员与 fuzzer 间交互的成本。</p>
 <p>不过虽然该工作在论文的最后强调这种注解可能在未来的工作中可以尝试自动化地生成，但本人认为在较短的时间段内暂时不存在可能性，专家经验仍是指导 fuzzer 工作最有效的手段。此外，该工作在 Real-World 应用的例子也较为简单，找到的也是<code>dmg2img</code> 这种比较小众工具的漏洞。</p>
 <h2 id="参考链接">参考链接</h2>
 <ul>

