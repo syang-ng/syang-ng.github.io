@@ -6,10 +6,28 @@
     <description>Recent content in Posts on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 19 Jun 2020 10:14:29 +0800</lastBuildDate>
+    <lastBuildDate>Thu, 25 Jun 2020 22:59:52 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Balsn Ctf 2019 Smartcontract</title>
+      <link>https://syang-ng.github.io/2020/06/balsn-ctf-2019-smartcontract/</link>
+      <pubDate>Thu, 25 Jun 2020 22:59:52 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/06/balsn-ctf-2019-smartcontract/</guid>
+      <description>前言 balsn ctf 2019 的两道 smart contract 的题目，相关题目 repo：https://github.com/x9453/balsn-ctf-2019 2020 年了，还在复现</description>
+    </item>
+    
+    <item>
+      <title>ICSE 2020 Taser</title>
+      <link>https://syang-ng.github.io/2020/06/icse-2020-taser/</link>
+      <pubDate>Wed, 24 Jun 2020 14:41:01 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/06/icse-2020-taser/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>CVE 2020 9296 Netflix Conductor RCE</title>
