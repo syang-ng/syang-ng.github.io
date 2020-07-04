@@ -21,15 +21,6 @@
     </item>
     
     <item>
-      <title>ICSE 2020 Taser</title>
-      <link>https://syang-ng.github.io/2020/06/icse-2020-taser/</link>
-      <pubDate>Wed, 24 Jun 2020 14:41:01 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/2020/06/icse-2020-taser/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>CVE 2020 9296 Netflix Conductor RCE</title>
       <link>https://syang-ng.github.io/2020/06/cve-2020-9296-netflix-conductor-rce/</link>
       <pubDate>Fri, 19 Jun 2020 10:14:29 +0800</pubDate>
@@ -45,6 +36,15 @@
       
       <guid>https://syang-ng.github.io/2020/06/ccs-2019-router/</guid>
       <description>论文链接：https://www.cyber-threat-intelligence.com/publications/CCS2019-ro</description>
+    </item>
+    
+    <item>
+      <title>CVE 2020 9297 Netflix Titus RCE</title>
+      <link>https://syang-ng.github.io/2020/06/cve-2020-9297-netflix-titus-rce/</link>
+      <pubDate>Wed, 03 Jun 2020 10:14:29 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/06/cve-2020-9297-netflix-titus-rce/</guid>
+      <description>漏洞通告 https://github.com/Netflix/security-bulletins/blob/master/advisories/nflx-2020-002.md Netflix Titus 是 Netflix 开发的容器管理平台，用来管理容器并提供集成到基础架构生态系统的功能。项目地址：https://github.com/Net</description>
     </item>
     
     <item>

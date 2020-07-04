@@ -30,15 +30,6 @@
     </item>
     
     <item>
-      <title>paper</title>
-      <link>https://syang-ng.github.io/categories/paper/</link>
-      <pubDate>Wed, 24 Jun 2020 14:41:01 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/paper/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>CVE</title>
       <link>https://syang-ng.github.io/categories/cve/</link>
       <pubDate>Fri, 19 Jun 2020 10:14:29 +0800</pubDate>
@@ -53,6 +44,15 @@
       <pubDate>Fri, 19 Jun 2020 10:14:29 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>paper</title>
+      <link>https://syang-ng.github.io/categories/paper/</link>
+      <pubDate>Fri, 12 Jun 2020 13:43:33 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/paper/</guid>
       <description></description>
     </item>
     
