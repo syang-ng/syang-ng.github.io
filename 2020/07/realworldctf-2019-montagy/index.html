@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/07/use-codeql-to-find-cve-2020-9297/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/07/realworldctf-2019-montagy/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           RealWorldCTF 2019 Montagy | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="RealWorldCTF 2019 Montagy | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "RealWorldCTF 2019 Montagy",
+    "headline" : "RealWorldCTF 2019 Montagy",
+    "description" : "前言 RealWorld CTF 2019 的一道题目，基于 Real World CTF Finals 2019 - Montagy 复现的。 用于复现的合约地址 ropsten@0x6e0279efce38a05394e233198005ae96816dd0d3 源码 pragma solidity ^0.5.11; contract Montagy{ address payable public owner; mapping(bytes32=\x26gt;bool) isOfficialChecksum; mapping(address=\x26gt;bytes32) puzzleChecksum; address public lastchildaddr; string public winnerinfo; bool public _gameon; constructor() public payable{ owner = msg.sender; _gameon = false; } modifier onlyOwner(){",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-07-08 18:33:07 \x2b0800 CST",
+    "dateModified" : "2020-07-08 18:33:07 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/07\/realworldctf-2019-montagy\/",
+    "wordCount" : "1370",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">RealWorldCTF 2019 Montagy</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-07-08 itemprop="datePublished">July 8, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/smartcontract/"> SmartContract </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="前言">前言</h2>
+<p>RealWorld CTF 2019 的一道题目，基于 <a href="https://x9453.github.io/2020/01/26/Real-World-CTF-Finals-2019-Montagy/">Real World CTF Finals 2019 - Montagy</a> 复现的。</p>
+<p>用于复现的合约地址 <a href="https://ropsten.etherscan.io/address/0x6e0279efce38a05394e233198005ae96816dd0d3">ropsten@0x6e0279efce38a05394e233198005ae96816dd0d3</a></p>
+<h2 id="源码">源码</h2>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">11</span>;
+
+<span style="color:#66d9ef">contract</span> Montagy{
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">payable</span> <span style="color:#66d9ef">public</span> owner;
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">bytes32</span><span style="color:#f92672">=&gt;</span><span style="color:#66d9ef">bool</span>) isOfficialChecksum;
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">address</span><span style="color:#f92672">=&gt;</span><span style="color:#66d9ef">bytes32</span>) puzzleChecksum;
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">public</span> lastchildaddr;
+    <span style="color:#66d9ef">string</span> <span style="color:#66d9ef">public</span> winnerinfo;
+    <span style="color:#66d9ef">bool</span> <span style="color:#66d9ef">public</span> _gameon;
+    constructor() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span>{
+        owner <span style="color:#f92672">=</span> msg.sender;
+        _gameon <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+    }
+    <span style="color:#66d9ef">modifier</span> onlyOwner(){
+        require(msg.sender <span style="color:#f92672">==</span> owner);
+        <span style="color:#66d9ef">_</span>;
+    }
+    <span style="color:#66d9ef">modifier</span> onlyPuzzle(){
+        require(puzzleChecksum[msg.sender] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>);
+        <span style="color:#66d9ef">_</span>;
+    }
+    <span style="color:#66d9ef">modifier</span> onlyGameOn(){
+        require(_gameon);
+        <span style="color:#66d9ef">_</span>;
+    }
+    
+    <span style="color:#66d9ef">function</span> setGame(<span style="color:#66d9ef">bool</span> status) <span style="color:#66d9ef">public</span> onlyOwner{
+        _gameon <span style="color:#f92672">=</span> status;
+    }
+    
+    <span style="color:#66d9ef">function</span> registerCode(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a) <span style="color:#66d9ef">public</span> onlyOwner {
+        isOfficialChecksum[tag(a)]<span style="color:#f92672">=</span><span style="color:#66d9ef">true</span>;
+    }
+    
+    <span style="color:#66d9ef">function</span> newPuzzle(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">public</span> onlyGameOn <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">address</span> addr){
+        <span style="color:#66d9ef">bytes32</span> cs <span style="color:#f92672">=</span> tag(code);
+        require(isOfficialChecksum[cs]);
+        
+        addr <span style="color:#f92672">=</span> deploy(code);
+        lastchildaddr<span style="color:#f92672">=</span>addr;
+        puzzleChecksum[addr] <span style="color:#f92672">=</span> cs;
+    }
+    
+    <span style="color:#66d9ef">function</span> solve(<span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span> onlyGameOn onlyPuzzle {
+        owner.transfer(<span style="color:#66d9ef">address</span>(this).balance);
+        winnerinfo <span style="color:#f92672">=</span> info;
+    }
+    
+    <span style="color:#66d9ef">function</span> deploy(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">address</span> addr){
+        <span style="color:#66d9ef">assembly</span> {
+            addr <span style="color:#f92672">:=</span> <span style="color:#a6e22e">create</span>(<span style="color:#ae81ff">0</span>,<span style="color:#a6e22e">add</span>(code,<span style="color:#ae81ff">0x20</span>), <span style="color:#a6e22e">mload</span>(code))
+            if <span style="color:#a6e22e">eq</span>(<span style="color:#a6e22e">extcodesize</span>(addr), <span style="color:#ae81ff">0</span>) { <span style="color:#a6e22e">revert</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>) }
+        }
+    }
+    
+    <span style="color:#66d9ef">function</span> tag(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a) <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bytes32</span> cs){
+        <span style="color:#66d9ef">assembly</span>{
+            <span style="color:#f92672">let</span> groupsize <span style="color:#f92672">:=</span> <span style="color:#ae81ff">16</span>
+            <span style="color:#f92672">let</span> head <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(a,groupsize)
+            <span style="color:#f92672">let</span> tail <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(head, <span style="color:#a6e22e">mload</span>(a))
+            <span style="color:#f92672">let</span> t1 <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x21711730</span>
+            <span style="color:#f92672">let</span> t2 <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x7312f103</span>
+            <span style="color:#f92672">let</span> m1,m2,m3,m4,p1,p2,p3,s,tmp
+            <span style="color:#a6e22e">for</span> { <span style="color:#f92672">let</span> i <span style="color:#f92672">:=</span> head } <span style="color:#a6e22e">lt</span>(i, tail) { i <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(i, groupsize) } {
+                s <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x6644498b</span>
+                tmp <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mload</span>(i)
+                m1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(tmp,<span style="color:#ae81ff">0xffffffff</span>)
+                m2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x20</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                m3 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x40</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                m4 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x60</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                <span style="color:#a6e22e">for</span> { <span style="color:#f92672">let</span> j <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span> } <span style="color:#a6e22e">lt</span>(j, <span style="color:#ae81ff">0x4</span>) { j <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(j, <span style="color:#ae81ff">1</span>) } {
+                    s <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(s, <span style="color:#ae81ff">0x68696e74</span>),<span style="color:#ae81ff">0xffffffff</span>)
+                    p1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sub</span>(<span style="color:#a6e22e">mul</span>(t1, <span style="color:#ae81ff">0x10</span>), m1)
+                    p2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(t1, s)
+                    p3 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">div</span>(t1,<span style="color:#ae81ff">0x20</span>), m2)
+                    t2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(t2, <span style="color:#a6e22e">xor</span>(p1,<span style="color:#a6e22e">xor</span>(p2,p3))), <span style="color:#ae81ff">0xffffffff</span>)
+                    p1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">mul</span>(t2, <span style="color:#ae81ff">0x10</span>), m3)
+                    p2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(t2, s)
+                    p3 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sub</span>(<span style="color:#a6e22e">div</span>(t2,<span style="color:#ae81ff">0x20</span>), m4)
+                    t1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(t1, <span style="color:#a6e22e">xor</span>(p1,<span style="color:#a6e22e">xor</span>(p2,p3))), <span style="color:#ae81ff">0xffffffff</span>)
+                }
+            }
+            cs <span style="color:#f92672">:=</span> <span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">mul</span>(t1,<span style="color:#ae81ff">0x100000000</span>),t2)
+        }
+    }
+}
+</code></pre></div><p>追踪合约相关的交易，可以看到该合约又部署了两个相关的合约：</p>
+<p><a href="https://ropsten.etherscan.io/address/0xb4cd04709a2c134ed66875177cce2a897df90f7f">ropsten@0xb4cd04709a2c134ed66875177cce2a897df90f7f</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">11</span>;
+
+<span style="color:#66d9ef">contract</span> Montagy{
+    <span style="color:#66d9ef">function</span> solve(<span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span>;
+}
+
+<span style="color:#66d9ef">contract</span> P1{
+    Montagy <span style="color:#66d9ef">public</span> server;
+    constructor() <span style="color:#66d9ef">public</span>{
+        server <span style="color:#f92672">=</span> Montagy(msg.sender);
+    }
+    <span style="color:#66d9ef">function</span> hello() <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span>){
+        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;ReadWriteCaTFlag&#34;</span>;
+    }
+    <span style="color:#66d9ef">function</span> day() <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">int</span>){
+        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span><span style="color:#f92672">+</span><span style="color:#ae81ff">0</span>;
+    }
+    <span style="color:#66d9ef">function</span> demo(<span style="color:#66d9ef">uint256</span> a, <span style="color:#66d9ef">uint256</span> b, <span style="color:#66d9ef">uint256</span> c, <span style="color:#66d9ef">uint256</span> d, <span style="color:#66d9ef">uint256</span> e, <span style="color:#66d9ef">uint256</span> f, <span style="color:#66d9ef">uint256</span> g, <span style="color:#66d9ef">uint256</span> h) <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bool</span> calc){
+        require(a<span style="color:#f92672">^</span>b<span style="color:#f92672">^</span>c<span style="color:#f92672">&amp;</span>d<span style="color:#f92672">^</span>e<span style="color:#f92672">|</span>f<span style="color:#f92672">^</span>g<span style="color:#f92672">^</span>h<span style="color:#f92672">&gt;=</span><span style="color:#ae81ff">0x726365</span>);
+        calc<span style="color:#f92672">=</span><span style="color:#66d9ef">true</span>;
+    }
+    <span style="color:#66d9ef">function</span> easy(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a, <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> b, <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> c, <span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span>{
+        require(<span style="color:#a6e22e">keccak256</span>(a)<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">keccak256</span>(b)<span style="color:#f92672">==</span><span style="color:#66d9ef">bytes32</span>(<span style="color:#66d9ef">bytes8</span>(<span style="color:#ae81ff">0x1234567890abcdef</span>)));
+        require(<span style="color:#a6e22e">keccak256</span>(b)<span style="color:#f92672">^</span><span style="color:#a6e22e">keccak256</span>(c)<span style="color:#f92672">==</span><span style="color:#66d9ef">bytes32</span>(<span style="color:#66d9ef">bytes8</span>(<span style="color:#ae81ff">0xabcdef1234567890</span>)));
+        require(<span style="color:#a6e22e">keccak256</span>(a)<span style="color:#f92672">|</span><span style="color:#a6e22e">keccak256</span>(c)<span style="color:#f92672">==</span><span style="color:#66d9ef">bytes32</span>(<span style="color:#66d9ef">bytes8</span>(<span style="color:#ae81ff">0xa1b2c3d4e5f60987</span>)));
+        server.solve(info);
+    }
+}
+</code></pre></div><p><a href="https://ropsten.etherscan.io/address/0x8855a20a14c7a43613cbd1ced033d7df6210c1b7">ropsten@0x8855a20a14c7a43613cbd1ced033d7df6210c1b7</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">11</span>;
+
+<span style="color:#66d9ef">contract</span> Montagy{
+    <span style="color:#66d9ef">function</span> setGame(<span style="color:#66d9ef">bool</span> status) <span style="color:#66d9ef">public</span>;
+    
+    <span style="color:#66d9ef">function</span> registerCode(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a) <span style="color:#66d9ef">public</span>;
+    
+    <span style="color:#66d9ef">function</span> newPuzzle(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">public</span>;
+    
+    <span style="color:#66d9ef">function</span> solve(<span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span>;
+    
+    <span style="color:#66d9ef">function</span> deploy(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">private</span>;
+    
+    <span style="color:#66d9ef">function</span> tag(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a) <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span>;
+}
+
+<span style="color:#66d9ef">contract</span> P2{
+    Montagy <span style="color:#66d9ef">public</span> server;
+    constructor() <span style="color:#66d9ef">public</span>{
+        server <span style="color:#f92672">=</span> Montagy(msg.sender);
+    }
+    <span style="color:#66d9ef">uint256</span> a;
+    <span style="color:#66d9ef">uint256</span> b;
+    <span style="color:#66d9ef">uint256</span> c;
+    <span style="color:#66d9ef">uint256</span> d;
+    <span style="color:#66d9ef">uint256</span> e;
+    <span style="color:#66d9ef">uint256</span> f;
+    <span style="color:#66d9ef">uint256</span> g;
+    <span style="color:#66d9ef">uint256</span> h;
+    <span style="color:#66d9ef">uint256</span> i;
+    <span style="color:#66d9ef">function</span> monica_init(<span style="color:#66d9ef">uint256</span> _a, <span style="color:#66d9ef">uint256</span> _b, <span style="color:#66d9ef">uint256</span> _c, <span style="color:#66d9ef">uint256</span> _d, <span style="color:#66d9ef">uint256</span> _e, <span style="color:#66d9ef">uint256</span> _f, <span style="color:#66d9ef">uint256</span> _g, <span style="color:#66d9ef">uint256</span> _h, <span style="color:#66d9ef">uint256</span> _i) <span style="color:#66d9ef">public</span> {
+        a<span style="color:#f92672">=</span>_a;
+        b<span style="color:#f92672">=</span>_b;
+        c<span style="color:#f92672">=</span>_c;
+        d<span style="color:#f92672">=</span>_d;
+        e<span style="color:#f92672">=</span>_e;
+        f<span style="color:#f92672">=</span>_f;
+        g<span style="color:#f92672">=</span>_g;
+        h<span style="color:#f92672">=</span>_h;
+        i<span style="color:#f92672">=</span>_i;
+    }
+    <span style="color:#66d9ef">function</span> loose() <span style="color:#66d9ef">view</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bool</span>){
+        <span style="color:#66d9ef">uint256</span> t1 <span style="color:#f92672">=</span> (a<span style="color:#f92672">^</span>b<span style="color:#f92672">^</span>c)<span style="color:#f92672">+</span>(d<span style="color:#f92672">^</span>e<span style="color:#f92672">^</span>f)<span style="color:#f92672">+</span>(g<span style="color:#f92672">^</span>h<span style="color:#f92672">^</span>i);
+        <span style="color:#66d9ef">uint256</span> t2 <span style="color:#f92672">=</span> (a<span style="color:#f92672">+</span>d<span style="color:#f92672">+</span>g)<span style="color:#f92672">^</span>(b<span style="color:#f92672">+</span>e<span style="color:#f92672">+</span>h)<span style="color:#f92672">^</span>(c<span style="color:#f92672">+</span>f<span style="color:#f92672">+</span>i);
+        require(t1 <span style="color:#f92672">+</span> t2 <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0xaabbccdd</span>);
+        require(t1 <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0x8261e26b90505061031256e5afb60721cb</span>); 
+        require(<span style="color:#ae81ff">0xf35b6080614321368282376084810151606401816080016143855161051756</span> <span style="color:#f92672">&gt;=</span> t1<span style="color:#f92672">*</span>t2);
+        require(t1 <span style="color:#f92672">-</span> t2 <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">0x65e670d9bd540cea22fdab97e36840e2</span>);
+        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>;
+    }
+    <span style="color:#66d9ef">function</span> harsh(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> seed, <span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span>{
+        require(loose());
+        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">keccak256</span>(seed) <span style="color:#f92672">==</span> <span style="color:#66d9ef">bytes32</span>(<span style="color:#66d9ef">bytes18</span>(<span style="color:#ae81ff">0x6111d850336107ef16565b908018915a9056</span>))) {
+            server.solve(info);
+        }
+    }
+    
+}
+</code></pre></div><h2 id="分析">分析</h2>
+<p>通过合约代码可以知道，解决本题的必要条件是触发 <code>solve()</code> 函数的执行，而很明显要触发 <code>solve()</code> 的执行需要满足 <code>onlyPuzzle</code> 的限制，因此我们需要使用 owner 发布的两个合约来尝试触发。但通过阅读 P1、P2 两个合约的代码，可以发现 <code>easy()</code> 和 <code>harsh()</code> 两个函数的要求基本是不能满足的，因此需要换一种思路。通过 <code>newPuzzle()</code> 来发布我们的合约，然后通过我们的合约来触发 <code>solve()</code> 函数，此时问题就变成了如何通过 <code>newPuzzle()</code> 来发布自己的合约。</p>
+<p>再仔细看一下如何用该合约来发布我们自定义的合约：</p>
+<ol>
+<li>通过 <code>registerCode(0)</code> 注册需要发布的合约代码</li>
+<li>通过 <code>newPuzzle(0)</code> 发布新合约，发布的新合约必须在上一步被注册</li>
+</ol>
+<p>很明显 <code>registerCode(0)</code> 由于有 <code>onlyOwner</code> 的限制无法调用，所以唯一的突破口在于利用 owner 之前部署的两个合约 P1 和 P2 注册好的哈希值，部署一个哈希值相同的攻击合约进行调用。</p>
+<p>这里要明确一下的就是，在一个合约后面随意 padding 字符，其实是不会改变这个合约的功能的，所以我们可以尝试在我们希望部署的合约后面 padding 字符，然后使其最后计算出的哈希值同之前注册过的两个哈希值中的一个函数相同。</p>
+<h2 id="solve">Solve</h2>
+<p>我们希望部署的合约是：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">11</span>;
+
+<span style="color:#66d9ef">contract</span> Montagy{
+    <span style="color:#66d9ef">function</span> solve(<span style="color:#66d9ef">string</span> <span style="color:#66d9ef">memory</span> info) <span style="color:#66d9ef">public</span>;
+}
+
+<span style="color:#66d9ef">contract</span> Solve{
+    Montagy <span style="color:#66d9ef">public</span> server;
+    constructor() <span style="color:#66d9ef">public</span>{
+        server <span style="color:#f92672">=</span> Montagy(<span style="color:#ae81ff">0x6e0279EfCe38A05394e233198005Ae96816Dd0D3</span>);
+    }
+    
+    <span style="color:#66d9ef">function</span> solve() <span style="color:#66d9ef">public</span> {
+        server.solve(<span style="color:#e6db74">&#34;syang solve&#34;</span>);
+    }
+}
+</code></pre></div><p>对应的字节码：</p>
+<pre><code>608060405234801561001057600080fd5b50736e0279efce38a05394e233198005ae96816dd0d36000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506101a8806100746000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063890d69081461003b578063fd922a4214610045575b600080fd5b61004361008f565b005b61004d61014e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166376fe1e926040518163ffffffff1660e01b815260040180806020018281038252600b8152602001807f7379616e6720736f6c7665000000000000000000000000000000000000000000815250602001915050600060405180830381600087803b15801561013457600080fd5b505af1158015610148573d6000803e3d6000fd5b50505050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff168156fea265627a7a723158209c9fe9ae135cdca5ef541d8fb75de29863503a323ffa094ed3c24deb87208fd664736f6c63430005110032
+</code></pre><p>编写 python 脚本计算相应 padding：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> z3 <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">tag</span>(a):
+    <span style="color:#66d9ef">if</span> len(a) <span style="color:#f92672">%</span> <span style="color:#ae81ff">32</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+        a <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">32</span> <span style="color:#f92672">-</span> len(a) <span style="color:#f92672">%</span> <span style="color:#ae81ff">32</span>)
+
+    t1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x21711730</span>
+    t2 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x7312f103</span>
+
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(a), <span style="color:#ae81ff">32</span>):
+        s <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x6644498b</span>
+        tmp <span style="color:#f92672">=</span> int(a[i:i<span style="color:#f92672">+</span><span style="color:#ae81ff">32</span>], <span style="color:#ae81ff">16</span>)
+        m1 <span style="color:#f92672">=</span> tmp <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m2 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m3 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x40</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m4 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x60</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        
+        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+            s <span style="color:#f92672">=</span> (s <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x68696e74</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+            p1 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">-</span> m1
+            p2 <span style="color:#f92672">=</span> t1 <span style="color:#f92672">+</span> s
+            p3 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">+</span> m2
+            t2 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">+</span> (p1 <span style="color:#f92672">^</span> (p2 <span style="color:#f92672">^</span> p3))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+            p1 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">+</span> m3
+            p2 <span style="color:#f92672">=</span> t2 <span style="color:#f92672">+</span> s
+            p3 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">-</span> m4
+            t1 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">+</span> (p1 <span style="color:#f92672">^</span> (p2 <span style="color:#f92672">^</span> p3))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+    <span style="color:#66d9ef">return</span> hex((t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">^</span> t2)[<span style="color:#ae81ff">2</span>::]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">16</span>)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">solve_pad</span>(current, target):
+    t1, t2 <span style="color:#f92672">=</span> int(current[:<span style="color:#ae81ff">8</span>:], <span style="color:#ae81ff">16</span>), int(current[<span style="color:#ae81ff">8</span>::], <span style="color:#ae81ff">16</span>)
+    target_t1, target_t2 <span style="color:#f92672">=</span> int(target[:<span style="color:#ae81ff">8</span>:], <span style="color:#ae81ff">16</span>), int(target[<span style="color:#ae81ff">8</span>::], <span style="color:#ae81ff">16</span>)
+
+    s <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x6644498b</span>
+
+    m1 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m1&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m2 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m2&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m3 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m3&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m4 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m4&#39;</span>, <span style="color:#ae81ff">256</span>)
+
+
+    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+        s <span style="color:#f92672">=</span> (s <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x68696e74</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        p1 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">-</span> m1
+        p2 <span style="color:#f92672">=</span> t1 <span style="color:#f92672">+</span> s
+        p3 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">+</span> m2
+        t2 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">+</span> (p1 <span style="color:#f92672">^</span> (p2 <span style="color:#f92672">^</span> p3))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        p1 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">+</span> m3
+        p2 <span style="color:#f92672">=</span> t2 <span style="color:#f92672">+</span> s
+        p3 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">-</span> m4
+        t1 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">+</span> (p1 <span style="color:#f92672">^</span> (p2 <span style="color:#f92672">^</span> p3))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+    solver <span style="color:#f92672">=</span> Solver()
+    solver<span style="color:#f92672">.</span>add(And(t1 <span style="color:#f92672">==</span> target_t1, t2 <span style="color:#f92672">==</span> target_t2))
+
+    <span style="color:#66d9ef">if</span> solver<span style="color:#f92672">.</span>check():
+        m <span style="color:#f92672">=</span> solver<span style="color:#f92672">.</span>model()
+        m_values <span style="color:#f92672">=</span> list(map(<span style="color:#66d9ef">lambda</span> x: m[x]<span style="color:#f92672">.</span>as_long(), [m1, m2, m3, m4]))
+        pad <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+        <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+            pad <span style="color:#f92672">|=</span> m_values[i] <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#ae81ff">0x20</span> <span style="color:#f92672">*</span> i)
+
+        <span style="color:#66d9ef">return</span> hex(pad)[<span style="color:#ae81ff">2</span>::]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">32</span>)
+
+target_bytecode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;608060405234801561001057600080fd5b50336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506106e0806100606000396000f3fe608060405234801561001057600080fd5b50600436106100575760003560e01c806319ff1d211461005c5780635d831619146100df5780637b76ac911461016c57806381a20b0a1461018a578063fd922a421461040a575b600080fd5b610064610454565b6040518080602001828103825283818151815260200191508051906020019080838360005b838110156100a4578082015181840152602081019050610089565b50505050905090810190601f1680156100d15780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b61015260048036036101008110156100f657600080fd5b810190808035906020019092919080359060200190929190803590602001909291908035906020019092919080359060200190929190803590602001909291908035906020019092919080359060200190929190505050610491565b604051808215151515815260200191505060405180910390f35b6101746104c1565b6040518082815260200191505060405180910390f35b610408600480360360808110156101a057600080fd5b81019080803590602001906401000000008111156101bd57600080fd5b8201836020820111156101cf57600080fd5b803590602001918460018302840111640100000000831117156101f157600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192908035906020019064010000000081111561025457600080fd5b82018360208201111561026657600080fd5b8035906020019184600183028401116401000000008311171561028857600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050509192919290803590602001906401000000008111156102eb57600080fd5b8201836020820111156102fd57600080fd5b8035906020019184600183028401116401000000008311171561031f57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192908035906020019064010000000081111561038257600080fd5b82018360208201111561039457600080fd5b803590602001918460018302840111640100000000831117156103b657600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506104c9565b005b610412610686565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b60606040518060400160405280601081526020017f526561645772697465436154466c616700000000000000000000000000000000815250905090565b600062726365828486181886888a168b8d1818181710156104b157600080fd5b6001905098975050505050505050565b600080905090565b671234567890abcdef60c01b77ffffffffffffffffffffffffffffffffffffffffffffffff191683805190602001208580519060200120161461050b57600080fd5b67abcdef123456789060c01b77ffffffffffffffffffffffffffffffffffffffffffffffff191682805190602001208480519060200120181461054d57600080fd5b67a1b2c3d4e5f6098760c01b77ffffffffffffffffffffffffffffffffffffffffffffffff191682805190602001208580519060200120171461058f57600080fd5b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166376fe1e92826040518263ffffffff1660e01b81526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561061c578082015181840152602081019050610601565b50505050905090810190601f1680156106495780820380516001836020036101000a031916815260200191505b5092505050600060405180830381600087803b15801561066857600080fd5b505af115801561067c573d6000803e3d6000fd5b5050505050505050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff168156fea265627a7a723158206302876a93a2f8c254feea0484f042ce2eeea0380fd5fca199b197d71e2e656e64736f6c634300050b0032&#39;</span>
+target <span style="color:#f92672">=</span> tag(target_bytecode)
+
+src_bytecode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;608060405234801561001057600080fd5b50736e0279efce38a05394e233198005ae96816dd0d36000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506101a8806100746000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063890d69081461003b578063fd922a4214610045575b600080fd5b61004361008f565b005b61004d61014e565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff166376fe1e926040518163ffffffff1660e01b815260040180806020018281038252600b8152602001807f7379616e6720736f6c7665000000000000000000000000000000000000000000815250602001915050600060405180830381600087803b15801561013457600080fd5b505af1158015610148573d6000803e3d6000fd5b50505050565b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff168156fea265627a7a723158209c9fe9ae135cdca5ef541d8fb75de29863503a323ffa094ed3c24deb87208fd664736f6c63430005110032&#34;</span>
+current <span style="color:#f92672">=</span> tag(src_bytecode)
+
+pad <span style="color:#f92672">=</span> solve_pad(current, target)
+<span style="color:#66d9ef">print</span>(pad)
+
+src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">32</span><span style="color:#f92672">-</span>len(src_bytecode)<span style="color:#f92672">%</span><span style="color:#ae81ff">32</span>)
+<span style="color:#66d9ef">print</span>(tag(src_bytecode <span style="color:#f92672">+</span> pad))
+<span style="color:#75715e"># print(tag(src_bytecode + pad2))</span>
+<span style="color:#66d9ef">assert</span>(tag(src_bytecode<span style="color:#f92672">+</span>pad) <span style="color:#f92672">==</span> target)
+
+<span style="color:#66d9ef">print</span>(src_bytecode<span style="color:#f92672">+</span>pad)
+</code></pre></div><p><img src="/images/posts/RealWorldCTF-2019-Montagy/contract.png" alt="Contract"></p>
+<p>在合约部署成功后在对应合约内调用 <code>solve()</code> 即可。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://x9453.github.io/2020/01/26/Real-World-CTF-Finals-2019-Montagy/">Real World CTF Finals 2019 - Montagy</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/07/realworldctf-2019-montagy/>https://syang-ng.github.io/2020/07/realworldctf-2019-montagy/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/07/use-codeql-to-find-cve-2020-9297/" class="prev" rel="prev" title="Use CodeQL to Find CVE 2020 9297"><i class="iconfont icon-left"></i>&nbsp;Use CodeQL to Find CVE 2020 9297</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
