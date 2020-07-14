@@ -6,10 +6,19 @@
     <description>Recent content in Categories on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 08 Jul 2020 18:33:07 +0800</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jul 2020 23:14:44 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>paper</title>
+      <link>https://syang-ng.github.io/categories/paper/</link>
+      <pubDate>Mon, 13 Jul 2020 23:14:44 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/categories/paper/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>CTF</title>
@@ -44,15 +53,6 @@
       <pubDate>Sat, 04 Jul 2020 09:25:19 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/categories/%E5%AE%89%E5%85%A8%E7%A0%94%E7%A9%B6/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>paper</title>
-      <link>https://syang-ng.github.io/categories/paper/</link>
-      <pubDate>Fri, 12 Jun 2020 13:43:33 +0800</pubDate>
-      
-      <guid>https://syang-ng.github.io/categories/paper/</guid>
       <description></description>
     </item>
     

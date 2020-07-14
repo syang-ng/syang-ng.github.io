@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/07/realworldctf-2019-montagy/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/07/ndss-2020-hfl/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           NDSS 2020 HFL | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="NDSS 2020 HFL | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "NDSS 2020 HFL",
+    "headline" : "NDSS 2020 HFL",
+    "description" : "NDSS 2020 - HFL: Hybrid Fuzzing on the Linux Kernel 原文链接：https:\/\/www.ndss-symposium.org\/wp-content\/uploads\/2020\/",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-07-13 23:14:44 \x2b0800 CST",
+    "dateModified" : "2020-07-13 23:14:44 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/07\/ndss-2020-hfl\/",
+    "wordCount" : "2705",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">NDSS 2020 HFL</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-07-13 itemprop="datePublished">July 13, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="ndss-2020---hfl-hybrid-fuzzing-on-the-linux-kernel">NDSS 2020 - HFL: Hybrid Fuzzing on the Linux Kernel</h2>
+<p>原文链接：https://www.ndss-symposium.org/wp-content/uploads/2020/02/24018-paper.pdf</p>
+<p>会议PPT：https://www.ndss-symposium.org/wp-content/uploads/24018-slides.pdf</p>
+<p>一作 Kyungtae Kim 来自普渡大学，其也是另一篇 fuzz kernel 相关工作 Razzer 的作者，感兴趣的可以浏览他的<a href="https://kt0755.github.io/">个人主页</a></p>
+<h2 id="主要内容">主要内容</h2>
+<p>将符号执行（symbolic execution）与模糊测试（fuzzing）相结合的混合模糊测试（hybrid fuzzing）由于结合了二者的优点，在漏洞自动化挖掘领域受到了越来越多的关注。但由于以下三点 challenge 的存在，混合模糊测试很难直接用于发现内核漏洞：</p>
+<ol>
+<li>内核为了实现多态而导致的存在大量由系统调用的参数决定的非直接调用</li>
+<li>系统调用间隐含的依赖关系</li>
+<li>调用系统调用时未知嵌套参数类型的结构推断</li>
+</ol>
+<p>为了解决上述问题，本文提出了 HFL，一款基于内核模糊测试工具 Syzkaller 和符号执行工具 s2e 开发的内核混合模糊测试工具，并利用以下三项技术解决了之前提到的内核模糊测试的难点：</p>
+<ol>
+<li>将间接控制流转换为直接控制流</li>
+<li>推断系统调用的顺序</li>
+<li>识别系统调用的嵌套参数类型</li>
+</ol>
+<p>最后的实验结果表明，HFL 在 Linux 内核中发现了 24 个新的漏洞；相比 Moonshine 和 Syzkaller 代码覆盖率分别提升了 15% 和 26%，相比 kAFL、S2E、TriforceAFL，在相同的资源消耗（CPU、时间）的情况下，代码覆盖率甚至高达四倍；此外，针对 13 个已知漏洞，HFL 的漏洞挖掘效率是 Syzkaller 的三倍。</p>
+<h2 id="设计实现">设计实现</h2>
+<h3 id="overview">Overview</h3>
+<p><img src="/images/posts/NDSS-2020-HFL/overview.png" alt="Overview"></p>
+<p>HFL 的通用混合模糊测试由以下三部分组成：</p>
+<ol>
+<li>Kernel Syscall Fuzzing</li>
+<li>Coverage Guided Fuzzing</li>
+<li>Symbolic Analyzer</li>
+</ol>
+<p>其中需要关注的是混合模糊测试从 fuzzing 切换到 symbolic execution 的时机，HFL 会维持一个频度表来统计模糊测试过程中遇到的各个分支取值为真或假的次数，这样它就能识别出一些在执行过程中一直为真或一直为假的困难分支，继而忽略那些之前已经见过的分支，触发更多的代码覆盖。</p>
+<h3 id="indirect-control-transfer-determined-by-input">Indirect Control Transfer Determined by Input</h3>
+<p>为了支持大量的设备和功能，Linux 内核中的大部分设计都被划分为了接口和实现两层，用接口来访问特定的实现，即所谓的“多态”。而这种多态一般使用函数指针表实现的，内核会维护一张函数指针表作为接口，里面包含指向不同实现的函数指针，示例代码如下所示：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">ssize_t (<span style="color:#f92672">*</span>ucma_table[])(<span style="color:#66d9ef">struct</span> ucma_file <span style="color:#f92672">*</span>file,
+                        <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>inbuf, <span style="color:#66d9ef">int</span> in_len, <span style="color:#66d9ef">int</span> out_len) <span style="color:#f92672">=</span> {
+    [RDMA_CREATE_ID] <span style="color:#f92672">=</span> ucma_create_id,
+    [RDMA_DESTROY_ID] <span style="color:#f92672">=</span> ucma_destroy_id,
+    [RDMA_BIND_IP] <span style="color:#f92672">=</span> ucma_bind_ip,
+    ...
+    [RDMA_JOIN_MCAST] <span style="color:#f92672">=</span> ucma_join_multicast
+};
+ssize_t <span style="color:#a6e22e">ucma_write</span>(<span style="color:#66d9ef">struct</span> file <span style="color:#f92672">*</span>filp, <span style="color:#66d9ef">char</span> __user <span style="color:#f92672">*</span>buf,
+                   size_t len, loff_t <span style="color:#f92672">*</span>pos) {
+    <span style="color:#66d9ef">struct</span> rdma_ucm_cmd_hdr hdr;
+    ...
+    <span style="color:#66d9ef">if</span> (copy_from_user(<span style="color:#f92672">&amp;</span>hdr, buf, <span style="color:#66d9ef">sizeof</span>(hdr)))
+    ...
+    <span style="color:#75715e">// indirect function invocation
+</span><span style="color:#75715e"></span>    ret <span style="color:#f92672">=</span> ucma_table[hdr.cmd](file, buf <span style="color:#f92672">+</span> <span style="color:#66d9ef">sizeof</span>(hdr), hdr.in, hdr.out);
+}
+</code></pre></div><p>为了解决这个问题，HFL 设计了一款基于内核源代码的离线转换工具，将间接跳转转换为直接跳转，其工作流程如下：</p>
+<ol>
+<li>工具验证函数指针表的索引来自系统调用的参数</li>
+<li>根据函数指针表和可行的索引值，HFL 会进行分支转换，针对每个索引值，HFL 会插入跳转到相应函数指针的条件分支（该过程类似循环展开）</li>
+</ol>
+<p>转换前后的代码如下所示：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">// before translation
+</span><span style="color:#75715e"></span>ret <span style="color:#f92672">=</span> ucma_table[hdr.cmd](...);
+...
+<span style="color:#75715e">// after translation
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (hdr.cmd <span style="color:#f92672">==</span> RDMA_CREATE_ID)
+    ret <span style="color:#f92672">=</span> ucma_create_id (...);
+<span style="color:#66d9ef">else</span> <span style="color:#a6e22e">if</span> (hdr.cmd <span style="color:#f92672">==</span> RDMA_DESTROY_ID)
+    ret <span style="color:#f92672">=</span> ucma_destroy_id (...);
+...
+</code></pre></div><h3 id="internal-system-states">Internal System States</h3>
+<p>内核通过维护系统内部状态来管理计算资源，而绝大多数的内部状态是通过 syscall 来控制的。因为 syscall 和系统状态是高度相关的，所以如果在没有构造出正确的系统内部状态下来调用 syscall，这个调用会被内核拒绝。比如最简单的系统调用 <code>read</code> / <code>write</code> 需要对一个打开的文件描述符进行操作，因此这两个 syscall 必须在调用了 <code>open</code> 后才能进行，否则该调用会直接被系统拒绝。</p>
+<p>更复杂的系统调用依赖关系，不止系统调用存在依赖关系，系统调用的参数也存在着依赖关系，如下图所示，两次调用参数 arg 中的 ID 字段就应该保持一致：</p>
+<p><img src="/images/posts/NDSS-2020-HFL/DRM.png" alt="DRM"></p>
+<p>为了解决该问题，HFL 会对系统调用间的顺序进行推断，该过程分为以下三个步骤：</p>
+<ol>
+<li>先用静态分析工具对内核进行过程间的指向分析，得到一系列的读/写操作对，每一对读/写操作会对同一片内存区域进行操作。这样的一对读写操作被称为候选依赖对。</li>
+<li>随后 HFL 会通过符号执行来检查每一对候选依赖对是否访问的是同一个地址，过滤可能的误报。</li>
+<li>除了确定系统调用的顺序外，HFL 还会通过追踪追踪符号化的系统调用参数的传播来保证系统调用参数之间的依赖。</li>
+</ol>
+<p><img src="/images/posts/NDSS-2020-HFL/syscall-sequence-inference.png" alt="syscall sequence inference"></p>
+<h3 id="nested-syscall-arguments">Nested Syscall Arguments</h3>
+<p>内核中大部分系统调用的参数都是嵌套结构的，结构中的某个字段可能会指向其他的结构。以下图的代码为例，为了拷贝数据，内核需要先拷贝结构 <code>ctrl</code>，该结构由两个字段构成，第一个是指向真实数据段的指针，第二个则是该数据的长度；第二次拷贝，则会再拷贝对应的真实数据。</p>
+<p><img src="/images/posts/NDSS-2020-HFL/nested-syscall-arguments.png" alt="nested syscall arguments"></p>
+<p>在嵌套参数结构中，1. 对应嵌套结构的内存位置；2. 对应缓冲区的长度，这两点至关重要，为了解决对嵌套结构的参数推断，HFL 会在动态符号执行的过程中不断监控传递函数（如 <code>copy_from_user</code>）的调用，如果该函数被调用，则看其对应的缓冲区是否被符号化的污染。通过结合符号执行和符号状态，HFL 可以理解并恢复系统调用的嵌套参数类型对应的内存位置和相应的缓冲区长度，进而恢复出相应嵌套参数的结构。</p>
+<p><img src="/images/posts/NDSS-2020-HFL/nested-syscall-argument-retrieval.png" alt="nested syscall argument retrieval"></p>
+<h2 id="实验评估">实验评估</h2>
+<p>实验将回答以下四个问题：</p>
+<ul>
+<li>
+<p>Q1: How effective is HFL in finding kernel bugs?</p>
+</li>
+<li>
+<p>Q2: What is the overall coverage enhancement that HFL brings over existing approaches?</p>
+</li>
+<li>
+<p>Q3: How efficiently can HFL find bugs compared to other fuzzers?</p>
+</li>
+<li>
+<p>Q4: What is the contribution of each feature in HFL to the overall performance?</p>
+</li>
+</ul>
+<p>根据不同系统的功能、与系统调用的相关性和出现漏洞的可能性，作者将内核分为了三个子系统：</p>
+<table>
+<thead>
+<tr>
+<th align="center">Category</th>
+<th align="center">Internal-type</th>
+<th align="center">Syscalls used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Device drivers</td>
+<td align="center">32</td>
+<td align="center">open, ioctl, write, read</td>
+</tr>
+<tr>
+<td align="center">Network</td>
+<td align="center">20</td>
+<td align="center">socket, accept, bind, listen, ioctl, getsockopt, setsockopt, sendto, recvfrom, sendmsg, recvmsg</td>
+</tr>
+<tr>
+<td align="center">File system</td>
+<td align="center">6</td>
+<td align="center">open, read, ioctl, write, lseek</td>
+</tr>
+</tbody>
+</table>
+<h3 id="漏洞挖掘">漏洞挖掘</h3>
+<p>在对几个最新的 Linux 内核进行测试后，HFL 找到了 51 个漏洞，其中 24 个是之前未发现的新漏洞，在将这些漏洞提交后，已经有 17 个漏洞被 Linux 社区确认。</p>
+<p><img src="/images/posts/NDSS-2020-HFL/vulnerabilities.png" alt="Vulnerabilities"></p>
+<h3 id="代码覆盖率">代码覆盖率</h3>
+<p>作者将 HFL 同其他内核模糊测试工具如 Moonshine 和 Syzkaller 相比较，可以看到 HFL 相比 Moonshine 和 Syzkaller，代码覆盖率分别提升了 15% 和 26%；而对比  kAFL、S2E 和 TriforceAFL，HFL 的覆盖率甚至提高了四倍：</p>
+<p><img src="/images/posts/NDSS-2020-HFL/coverage.png" alt="Coverage"></p>
+<h3 id="挖洞效率">挖洞效率</h3>
+<p>选取 13 个 HFL 和 Syzkaller 都能发现的已知漏洞，可以看到相较于 Syzkaller 花费了超过 50 个小时，HFL 只花费了约15个小时就找到了这些漏洞，这说明 HFL 的挖洞效率更高：</p>
+<p><img src="/images/posts/NDSS-2020-HFL/efficiency.png" alt="Efficiency"></p>
+<h3 id="hfl-采用的不同技术对于总体覆盖率的贡献">HFL 采用的不同技术对于总体覆盖率的贡献</h3>
+<p>为了测试 HFL 采用的不同技术对模糊测试的覆盖率起到的作用，作者选取了三个测试样例： ext4、rds11 和 ppp 进行测试。</p>
+<p>其中 F-H 表示使用混合模糊测试后的结果，F-I 表示会对间接跳转处理，F-C 表示会对系统调用顺序以及参数进行推断，F-N 表示作为基线的模糊测试结果，HL 则表示开启 HFL 全部功能后的结果。</p>
+<p><img src="/images/posts/NDSS-2020-HFL/per-feature-effectiveness.png" alt="Per Feature Effectiveness"></p>
+<p>可以看到不同功能均为模糊测试的结果有优化的作用，其中混合模糊测试对代码覆盖率贡献最大，但其他功能也有不可或缺的作用。</p>
+<h2 id="总结">总结</h2>
+<p>作为第一个在 Linux 内核上进行混合模糊测试的自动化漏洞挖掘工具，HFL 无疑具有非常重要的意义。同时文章中创新地将符号执行中的符号状态等信息用于污点分析，从而获得辅助信息来反馈给 fuzzer 以继续后续输入的 mutation，也给了大家不小的启发。</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://zhuanlan.zhihu.com/p/123373175">wcventure - HFL：基于混合模糊测试的Linux内核漏洞挖掘</a></li>
+<li><a href="https://securitygossip.com/blog/2020/05/09/hfl-hybrid-fuzzing-on-the-linux-kernel/">gossip blog - HFL: Hybrid Fuzzing on the Linux Kernel</a></li>
+<li><a href="https://mp.weixin.qq.com/s/RazaTgtrgrKfCFRKlBHyww">白泽带你读论文丨HFL: Hybrid Fuzzing on the Linux Kernel</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/07/ndss-2020-hfl/>https://syang-ng.github.io/2020/07/ndss-2020-hfl/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/07/realworldctf-2019-montagy/" class="prev" rel="prev" title="RealWorldCTF 2019 Montagy"><i class="iconfont icon-left"></i>&nbsp;RealWorldCTF 2019 Montagy</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
