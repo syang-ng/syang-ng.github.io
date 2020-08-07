@@ -6,10 +6,28 @@
     <description>Recent content in paper on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 13 Jul 2020 23:14:44 +0800</lastBuildDate>
+    <lastBuildDate>Fri, 07 Aug 2020 20:01:14 +0800</lastBuildDate>
     
 	<atom:link href="https://syang-ng.github.io/categories/paper/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Security 2015 UIPicker</title>
+      <link>https://syang-ng.github.io/2020/08/security-2015-uipicker/</link>
+      <pubDate>Fri, 07 Aug 2020 20:01:14 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/08/security-2015-uipicker/</guid>
+      <description>论文链接：https://www.usenix.org/system/files/conference/usenixsecurity15/s</description>
+    </item>
+    
+    <item>
+      <title>NDSS 2016 Mobile Ad</title>
+      <link>https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/</link>
+      <pubDate>Tue, 04 Aug 2020 23:14:44 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/</guid>
+      <description>NDSS - 2016 - The Price of Free: Privacy Leakage in Personalized Mobile In-App Ads 论文链接：https://wenke.gtisc.gatech.edu/papers/ndss16_mobil</description>
+    </item>
     
     <item>
       <title>NDSS 2020 HFL</title>

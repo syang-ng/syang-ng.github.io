@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/07/ndss-2020-hfl/" />
+  <link rel="next" href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" />
+  <link rel="canonical" href="https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           NDSS 2016 Mobile Ad | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="NDSS 2016 Mobile Ad | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "NDSS 2016 Mobile Ad",
+    "headline" : "NDSS 2016 Mobile Ad",
+    "description" : "NDSS - 2016 - The Price of Free: Privacy Leakage in Personalized Mobile In-App Ads 论文链接：https:\/\/wenke.gtisc.gatech.edu\/papers\/ndss16_mobil",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-08-04 23:14:44 \x2b0800 CST",
+    "dateModified" : "2020-08-04 23:14:44 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/08\/ndss-2016-mobile-ad\/",
+    "wordCount" : "2295",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">NDSS 2016 Mobile Ad</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-08-04 itemprop="datePublished">August 4, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <h2 id="ndss---2016---the-price-of-free-privacy-leakage-in-personalized-mobile-in-app-ads">NDSS - 2016 - The Price of Free: Privacy Leakage in Personalized Mobile In-App Ads</h2>
+<p>论文链接：https://wenke.gtisc.gatech.edu/papers/ndss16_mobile_ad.pdf</p>
+<p>会议 PPT：https://www.ndss-symposium.org/wp-content/uploads/2017/09/06_2-ndss2016-slides.pdf</p>
+<p>本篇论文作者全部来自佐治亚理工大学，其中一作 Wei Meng 老师已毕业并加入香港中文大学，感兴趣的可以访问他的<a href="https://www.cse.cuhk.edu.hk/~wei/#about">个人主页</a></p>
+<p>##主要内容</p>
+<p>移动广告的出现为免费移动应用的整体生态提供了一种双赢的可能：应用开发者可以通过从广告投放者获得收入的方式避免对使用者收费。但与此同时，移动应用内嵌的广告也带来了用户隐私流失的问题。为此，本文作者针对应用内嵌广告服务的提供商能够了解多少用户的属性和兴趣等特征，以及加载这些内嵌广告的应用是否具备从个性化的广告中反推出用户兴趣和个人信息这两个问题进行了研究。</p>
+<p>通过在现实世界中收集的 217 个真实样本，作者发现了以 Google 为代表的广告服务提供商能够基于用户的属性及兴趣，来对不同属性的用户有针对性地分发对应的广告。此外，作者还证明了利用机器学习，能有效地从应用内嵌广告中反推出用户的敏感信息，如性别（75%的准确率），父母身份（66%的准确率）等。说明当前在移动平台上的广告机制不足以保护用户的敏感信息，任何加载个性化内嵌广告的应用都有可能通过个性化的广告获得潜在的用户敏感信息。</p>
+<h2 id="实验方法">实验方法</h2>
+<p>首先作者使用 Amazon Mechanical Turk（Amazon 提供的众包服务）来招募美国的 Android 用户作为志愿者。每个志愿者会被要求安装一个用于收集广告流量的应用。为了排除应用对广告的干扰，作者设计了一个空白应用，该应用会随机地向 Google AdMob 请求 100 个广告。为了排除地理位置的干扰，作者要求志愿者在广告流量收集期间使用提供的 VPN 进行网络访问。</p>
+<p>在获得了广告流量后，作者会从中提取 landing URL，即点击广告后会跳转的网址作为该广告的代表。作者发现一般在 HTML 页面中可以通过 <code>buildRhTextAd</code> / <code>adurl=</code> / <code>final_destination_url</code> / <code>destination_url</code> /
+<code>destinationUrl</code> / <code>click_url</code> / <code>go.href</code> 等关键字来发现 landing URL，而一些无法被发现的 landing URL，作者会通过在 PC 端浏览器重新打开该广告并点击跳转的方式获得跳转后的网址。这些广告（landing URL）会被分类到 Google 提供个 24 个兴趣分类中。</p>
+<h2 id="实验设计">实验设计</h2>
+<h3 id="个性化移动广告的特征">个性化移动广告的特征</h3>
+<p>共有 284 个志愿者参加了本次实验，其中 67 个志愿者中途退出了实验，最后作者共收集到 217 个志愿者的有效数据。下表是志愿者的不同个人属性：</p>
+<p><img src="https://pic2.zhimg.com/80/v2-f4de65a3744d03e60afbcc5a418c6b06_1440w.png" alt="志愿者属性"></p>
+<p>作者在这里从三个维度对用户真实的个人兴趣和广告认为的用户兴趣进行了比较：</p>
+<ol>
+<li>兴趣数：即用户的个人兴趣数和广告推测的用户的个人兴趣数</li>
+<li>准确率：|Puser,i ∩ Pad,i|/|Pad,i|</li>
+<li>召回率：|Puser,i ∩ Pad,i|/|Puser,i|</li>
+</ol>
+<p>可以看到单纯从兴趣数上来看，用户真实的个人兴趣数和广告推测的个人兴趣数重叠程度不高</p>
+<p><img src="https://pic3.zhimg.com/80/v2-5bb5344033bc06c5783994953ba323f3_1440w.png" alt="兴趣数比较"></p>
+<p>但从准确率看，有超过 79% 的志愿者至少有 21% 的广告推测得到的兴趣分类是正确的；在 11% 的志愿者中，甚至至少有 83% 广告推测的兴趣分类是正确的。而依据召回率，Google 可以覆盖约 60％ 的志愿者至少一半的实际兴趣。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-dbcf557de48605a25e9d283a9f7d666d_1440w.png" alt="准确率"></p>
+<p><img src="https://pic2.zhimg.com/80/v2-0a3bd3b4b1c29ba5edaa910c73218a0a_1440w.png" alt="召回率"></p>
+<p>然后作者又关注了用户属性与广告推送的相关性，下图是不同用户属性与相关广告的种类，可以看到性别、家庭状态等个人属性确实会对移动应用对广告推送产生影响。这也不难理解，比如游戏 Game of War - Fire Age，在接收到该广告的志愿者中，70% 是男性，30% 是女性；而接收到游戏 Cookie Jam 广告的志愿者中，96% 是女性。而 约会网站 Zoosk（67%）的广告和社交应用 Facebook（70%）的广告则更倾向推送给未当上家长的用户。</p>
+<p><img src="https://pic1.zhimg.com/80/v2-c469a80c1e837e5b981984960b624ea9_1440w.png" alt="Demographic Category"></p>
+<p>总的来说，作者通过实验和数据分析有效地证明了用户的个人属性以及兴趣爱好会被应用到个性化广告的推荐中，而先前的工作则认为用户的个人属性并不会对个性化广告推送产生影响，地理位置等因素对广告的影响更大。可以说该工作很好地对之前的认识进行了补充。</p>
+<h3 id="个性化移动广告的隐私泄露">个性化移动广告的隐私泄露</h3>
+<p>移动端和之前的 PC 网页端广告一个非常重要的不同在于，网页端由于浏览器的同源策略，网页其实不能访问广告的内容，但在移动端，由于没有一个很好的保护措施，所以即使使用了 HTTPS 等措施，应用也有可能在广告完全加载完成后读取到移动广告的内容。这就带来了一个有趣的问题：应用是否能通过这些个性化广告反推出用户的个人属性？</p>
+<p>作者在这里用了几种最基本的分类算法（Decision Tree、Logistic Regression、Multinomial Naive Bayes、
+K-Nearest Neighbors、Random Forest、SVM）进行了实验，同时为了比较分类器的效果，作者还设计了 dummy classifier 作为 baseline，测试结果如下表所示：</p>
+<p><img src="https://pic4.zhimg.com/80/v2-3639e3088e5024bd6fce448ca1355253_1440w.png" alt="Classifier Accuracy"></p>
+<p>可以看到 SVM 是平均效果最好的分类器，而且在不同属性上均能找到一种分类器的识别效果明显优于 dummy classifier 的。此外训练后的分类器在性别和父母身份的识别上明显较好，分别达到了 0.74 和 0.66；而对于种族的识别，作者认为可能是收到了美国和受访者种族占比的影响，不具备特别大的意义。</p>
+<p>为了弥补数据集的局限性，作者对数据集进行了整理，使其在不同种类间的分布更加均匀，且用了多数选择策略来增强 dummy classifier，可以看到最终的结果显示分类器仍有较好的效果，用个性化广告来预测用户属性这种攻击在理论上是切实可行的。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-c03509b786ae1649609d6e662fe52dd1_1440w.png" alt="Classifier Accuracy after reorganizting"></p>
+<h2 id="总结">总结</h2>
+<p>个人感觉本文比较有意思的有以下两点：</p>
+<ol>
+<li>以真实用户作为测试对象，虽然在测试集存在偏小的遗憾，但无疑来自真实世界的数据更有说服力</li>
+<li>将应用假想为攻击者，并证明了应用利用个性化广告的内容反推出用户属性这种攻击存在的可能性</li>
+</ol>
+<p>相较网页广告有成熟的保护机制，如同源策略，能有效地阻止网页访问页面广告的内容；而移动端内嵌广告在保护机制上的缺陷使得应用能够随意读取应用内嵌广告的内容，无疑加剧了用户隐私泄露的风险</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/>https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/07/ndss-2020-hfl/" class="prev" rel="prev" title="NDSS 2020 HFL"><i class="iconfont icon-left"></i>&nbsp;NDSS 2020 HFL</a>
+         
+        
+        <a href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" class="next" rel="next" title="Security 2015 UIPicker">Security 2015 UIPicker&nbsp;<i class="iconfont icon-right"></i></a>
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>

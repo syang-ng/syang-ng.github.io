@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           Security 2015 UIPicker | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="Security 2015 UIPicker | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "Security 2015 UIPicker",
+    "headline" : "Security 2015 UIPicker",
+    "description" : "论文链接：https:\/\/www.usenix.org\/system\/files\/conference\/usenixsecurity15\/s",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-08-07 20:01:14 \x2b0800 CST",
+    "dateModified" : "2020-08-07 20:01:14 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/08\/security-2015-uipicker\/",
+    "wordCount" : "1916",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Security 2015 UIPicker</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-08-07 itemprop="datePublished">August 7, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/paper/"> paper </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>论文链接：https://www.usenix.org/system/files/conference/usenixsecurity15/sec15-paper-nan.pdf</p>
+<p>会议 PPT：https://www.usenix.org/sites/default/files/conference/protected-files/sec15_slides_nan.pdf</p>
+<p>本篇论文一作南雨宏博士毕业于复旦大学，现在正在普渡大学进行博士后研究。对他的研究方向感兴趣的话可以访问他的<a href="https://amazingnan.github.io/yuhongnan/">个人主页</a></p>
+<h2 id="主要内容">主要内容</h2>
+<p>随着移动应用的不断普及，移动应用的隐私问题也不断涌现。已有的工作在从静态分析、动态分析、访问控制等多个维度对隐私问题进行了深入的研究，但有一类非常重要的隐私被忽视了，那就是输入类型的隐私。不同于 GPS 这类的隐私可以用 <code>getLastKnownLocation()</code> 等 API 获取，用户输入型的隐私，比如身份证号，银行卡号等，不存在直接对应的 API，但对用户的重要程度不亚于 GPS 这类隐私，更令人可惜的是，这类隐私并没有得到很好的保护。</p>
+<p>为了对安卓上隐私输入类型的隐私展开深入的研究，作者设计了 UIPicker，一款能对 Android App 进行大规模的用户输入型隐私检测的工具。UIPicker 依赖 App 的资源文件和 UI 界面中跟隐私相关的描述来定位用户输入型的隐私，其主要原理是利用一批已经标记的数据进行训练，然后使用训练得到的分类器对 App 的资源文件进行识别，定位出用户输入型的隐私。此外，UIPicker 还会通过静态分析技术，结合代码，定位那些真正相关接受用户输入型隐私的界面元素，过滤可能的误报，比如说某些隐私相关的弹窗警告。</p>
+<p>利用 UIPicker，作者在 Google Play 的 17425 个 app 中发现了共有 35.46% 的 app 会要求获取用户输入型的隐私。在随机挑选的 200 个 app 中，UIPicker 的准确率和召回率分别达到了 93.6% 和 90.1%。基于 UIPicker，作者还设计实现了一款运行时的隐私保护机制，当包含被 UIPicker 标记的隐私的请求以不安全的形式从设备发出时，会及时提醒用户可能的隐私流失。</p>
+<h2 id="设计实现">设计实现</h2>
+<p>UIPicker 整体架构如下，该框架主要分为两个部分，模型训练部分和隐私识别部分，具体又分为 4 个阶段：</p>
+<ul>
+<li>Stage 1: Pre-Processing</li>
+<li>Stage 2: Privacy-related Texts Analysis</li>
+<li>Stage 3: UIP Data Element Identification</li>
+<li>Stage 4: Behavior Based Result Filtering</li>
+</ul>
+<p><img src="https://pic2.zhimg.com/80/v2-28a79ff8887ff63f8169ea05a72d3327_1440w.png" alt="UIPicker"></p>
+<h3 id="stage-1-pre-processing">Stage 1: Pre-Processing</h3>
+<p>第一步就是提取 UI 相关的描述性文本以及布局的描述性信息，比如前者一般定义在 <code>/res/values/strings.xml</code>，而后者一般定义在 <code>/res/layout/</code> 的各个资源文件下。通过对这些提取后的文本进行处理，比如说分词、去除冗余词、词干提取后，可以得到最终的文本。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-054a7d26c525d02c9b86b08b63f8bd80_1440w.png" alt="Pre-Processing"></p>
+<h3 id="stage-2-privacy-related-texts-analysis">Stage 2: Privacy-related Texts Analysis</h3>
+<p>在第二步，作者使用了卡方检验来提取特征词，大致步骤就是先选去了一堆关键词比如说 <code>username</code>，<code>password</code>，<code>location</code> 作为种子，然后根据页面布局和隐私的相关性，将 Registration.xml、SignUp.xml、Login.xml 等高度相关的划分为正样本；而 Activity_main.xml、Download.xml、category_item.xml 等无关的划分为负样本，最后得到隐私相关的文本集合。</p>
+<p><img src="https://pic4.zhimg.com/80/v2-92a70612323d4fbc75772a9c2536c478_1440w.png" alt="Chi-Square for privacy-related texts analysis"></p>
+<h3 id="stage-3-uip-data-element-identification">Stage 3: UIP Data Element Identification</h3>
+<p>第三步，作者使用 SVM 来训练关于用户输入类型隐私的分类器，而训练的数据主要来自上一阶段获得的隐私相关的关键词以及人工标注的一些关于财务相关的隐私信息。</p>
+<h3 id="stage-4-behavior-based-result-filtering">Stage 4: Behavior Based Result Filtering</h3>
+<p>针对识别出的可能的用户输入型隐私，UIPicker 还会根据代码行为来进行过滤，保证最终发现的隐私来自用户输入且确实会被应用代码获取，以下图为例，由于 <code>IB.getText()</code> 确实获得了用户输入的信用卡号，所以这里可以确认获得了用户输入型的隐私。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-96a7466db6b5fd36bed5136039795c6d_1440w.png" alt=""></p>
+<h3 id="runtime-security-enhancement-with-uipicker">Runtime Security Enhancement with UIPicker</h3>
+<p>作为 UIPicker 的补充部分，作者还提出了增加用户安全机制的方法，即将 UIPicker 发现的隐私作为 source，利用 FlowDroid 和 MalloDroid 来判断这些隐私是否有通过不安全的方式流出设备的可能性（比如 HTTP 明文，或者不安全的 SSL 传输）。</p>
+<h2 id="实验评估">实验评估</h2>
+<p>在 Google Play 的 17425 个应用中，UIPicker 成功找到了 6179 (35.46%) 个应用包含用户输入型隐私。不同的分类和占比见下表，可以看到 35 个分类中共有 9 个分类会有超过半数的 app 收集用户输入型隐私。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-0fb8ff47f309d22f15738c4bae1014f8_1440w.png" alt=""></p>
+<p>如下表，经过实验可以发现用户输入型的隐私和通过系统 API 获得的隐私存在着一定的重合，但用户输入型的隐私还是覆盖了 API 所覆盖不了的比如经济信息相关的隐私。</p>
+<p><img src="https://pic3.zhimg.com/80/v2-ff9991885f63c42d7d1b9a387a1f9522_1440w.png" alt=""></p>
+<h2 id="总结">总结</h2>
+<p>UIPicker 创新性地将用户输入型的隐私囊括到了隐私分析的范围内，有效地弥补了之前工作在这方面的空白，并且提出了一款有效的识别机制与保护机制。不过该工作也存在着一定的局限性，比如不能处理 webview 以及动态生成的页面等，在移动端开发技术趋于成熟的 2020 年，在工具的适用范围可能极大的缩小。此外 UIPicker 关注的隐私种类也较为简单，只关注了用户属性类型的输入隐私，比如姓名、手机号；经济类型的相关隐私，比如银行卡号等，其他相关的输入型隐私比如兴趣爱好、教育经历等都可以考虑在后续的工作中进行拓展。</p>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/08/security-2015-uipicker/>https://syang-ng.github.io/2020/08/security-2015-uipicker/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/08/ndss-2016-mobile-ad/" class="prev" rel="prev" title="NDSS 2016 Mobile Ad"><i class="iconfont icon-left"></i>&nbsp;NDSS 2016 Mobile Ad</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
