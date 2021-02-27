@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-03-05 21:50:31 \x2b0000 UTC",
-    "dateModified" : "2018-03-05 21:50:31 \x2b0000 UTC",
+    "datePublished": "2018-03-05 21:50:31 \u002b0000 UTC",
+    "dateModified" : "2018-03-05 21:50:31 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/03\/how-to-use-leancloud\/",
     "wordCount" : "2647",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -292,11 +292,11 @@ INFO] 获取应用列表 ...
 <p><code>LeanCloud</code> 实现了一种云函数的功能，即你定义了云函数的函数名，然后把它具体实现，那么你就可以通过 SDK 的函数来调用你定义的云函数了</p>
 <p>具体还是贴代码：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">AV</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;leanengine&#39;</span>);
-<span style="color:#a6e22e">AV</span>.<span style="color:#a6e22e">Cloud</span>.<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;fetchUser&#39;</span>, <span style="color:#a6e22e">async</span> (<span style="color:#a6e22e">request</span>) =&gt; {
+<span style="color:#a6e22e">AV</span>.<span style="color:#a6e22e">Cloud</span>.<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;fetchUser&#39;</span>, <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">request</span>) =&gt; {
     <span style="color:#66d9ef">const</span> { <span style="color:#a6e22e">u_id</span> } <span style="color:#f92672">=</span> <span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">params</span>;
     <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">user</span>;
     <span style="color:#66d9ef">try</span> {
-        <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">findUser</span>(<span style="color:#a6e22e">u_id</span>);
+        <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">findUser</span>(<span style="color:#a6e22e">u_id</span>);
     } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
         <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">UserModel</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">AV</span>.Object.<span style="color:#a6e22e">extend</span>(<span style="color:#e6db74">&#39;UserModel&#39;</span>);
         <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">UserModel</span>();
@@ -308,7 +308,7 @@ INFO] 获取应用列表 ...
         <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;rNum&#39;</span>, <span style="color:#ae81ff">0</span>);
         <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;sAmount&#39;</span>, <span style="color:#ae81ff">0</span>);
         <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">set</span>(<span style="color:#e6db74">&#39;sNum&#39;</span>, <span style="color:#ae81ff">0</span>);
-        <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">save</span>();
+        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">save</span>();
     }
     <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">user</span>;
 });
@@ -347,7 +347,7 @@ INFO] 获取应用列表 ...
 <p>这里贴上我的代码作为 demo：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">uQuery</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AV</span>.<span style="color:#a6e22e">Query</span>(<span style="color:#e6db74">&#39;UserModel&#39;</span>);
 <span style="color:#a6e22e">uQuery</span>.<span style="color:#a6e22e">equalTo</span>(<span style="color:#e6db74">&#39;u_id&#39;</span>, <span style="color:#a6e22e">u_id</span>);
-<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">uQuery</span>.<span style="color:#a6e22e">find</span>();
+<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">uQuery</span>.<span style="color:#a6e22e">find</span>();
 <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">0</span>) {
   <span style="color:#66d9ef">throw</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">AV</span>.<span style="color:#a6e22e">Cloud</span>.Error(<span style="color:#e6db74">&#39;No such user!&#39;</span>);
 }
@@ -425,7 +425,7 @@ INFO] 获取应用列表 ...
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

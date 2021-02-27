@@ -5,13 +5,13 @@
     <description>Recent content in syang&#39;s blog on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 04 Sep 2019 09:20:22 +0800</lastBuildDate>
+    <lastBuildDate>Sat, 30 Jan 2021 15:24:01 +0800</lastBuildDate>
     <atom:link href="/" rel="self" type="application/rss+xml" />
     
     <item>
       <title>Posts</title>
       <link>https://syang-ng.github.io/posts/</link>
-      <pubDate>Tue, 25 Aug 2020 23:27:11 +0800</pubDate>
+      <pubDate>Sat, 30 Jan 2021 15:24:01 +0800</pubDate>
       
       <guid>https://syang-ng.github.io/posts/</guid>
       <description></description>
@@ -47,10 +47,10 @@
 &lt;h2 id=&#34;publications&#34;&gt;Publications&lt;/h2&gt;
 &lt;h3 id=&#34;app-in-the-middle-demystify-application-virtualization-in-android-and-its-security-threats&#34;&gt;App in the middle: Demystify Application Virtualization in Android and its Security Threats.&lt;/h3&gt;
 &lt;p&gt;Lei Zhang, Zhemin Yang, Yuyu He, Mingqi Li, &lt;strong&gt;Sen Yang&lt;/strong&gt;, Min Yang, Yuan Zhang, Zhiyun Qian.
-In Proceedings of the 2019 ACM International Conference on Measurement and Modeling of Computer Systems , SIGMETRICS&amp;rsquo;19, Phoenix, Arizona, USA, June 24-28, 2019.&lt;/p&gt;
+In Proceedings of the 2019 ACM International Conference on Measurement and Modeling of Computer Systems , SIGMETRICS&#39;19, Phoenix, Arizona, USA, June 24-28, 2019.&lt;/p&gt;
 &lt;h3 id=&#34;how-you-get-shot-in-the-back-a-systematical-study-about-cryptojacking-in-the-real-world&#34;&gt;How You Get Shot in the Back: A Systematical Study about Cryptojacking in the Real World.&lt;/h3&gt;
 &lt;p&gt;Geng Hong, Zhemin Yang, &lt;strong&gt;Sen Yang&lt;/strong&gt;, Lei Zhang, Yuhong Nan, Zhibo Zhang, Min Yang, Yuan Zhang, Zhiyun Qian, Haixin Duan.
-In Proceedings of the 25th ACM Conference on Computer and Communications Security, CCS&amp;rsquo;18, Toronto, Canada, October 15-19, 2018.&lt;/p&gt;
+In Proceedings of the 25th ACM Conference on Computer and Communications Security, CCS&#39;18, Toronto, Canada, October 15-19, 2018.&lt;/p&gt;
 &lt;h2 id=&#34;contact-me&#34;&gt;Contact Me&lt;/h2&gt;
 &lt;p&gt;Github: &lt;a href=&#34;https://github.com/syang-ng&#34;&gt;https://github.com/syang-ng&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;Email: syang15 AT fudan.edu.cn&lt;/p&gt;

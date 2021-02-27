@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-09-30 20:01:34 \x2b0000 UTC",
-    "dateModified" : "2018-09-30 20:01:34 \x2b0000 UTC",
+    "datePublished": "2018-09-30 20:01:34 \u002b0000 UTC",
+    "dateModified" : "2018-09-30 20:01:34 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/09\/dragonctf-web-writeup\/",
     "wordCount" : "2384",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -347,7 +347,7 @@ s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</sp
   }
 });
 </code></pre></div><p>这么现在利用的方式非常明显了，我们需要控制 <code>title</code> 或者是 <code>content</code> 在页面中注入相应代码。回到源码上，我们可以看到这一段的逻辑在 <code>/routes/notes.js</code> 中：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/new&#39;</span>, <span style="color:#a6e22e">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/new&#39;</span>, <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">regex</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/[&lt;&gt;]/</span>;
 
   <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">errors</span> <span style="color:#f92672">=</span> [];
@@ -363,7 +363,7 @@ s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</sp
     <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;new&#39;</span>, {<span style="color:#a6e22e">errors</span>});
   }
 
-  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">get</span> <span style="color:#e6db74">`INSERT INTO notes (title, content, user_id) VALUES (</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">title</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">content</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">userId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">) RETURNING id`</span>;
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">get</span> <span style="color:#e6db74">`INSERT INTO notes (title, content, user_id) VALUES (</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">title</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">content</span><span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">session</span>.<span style="color:#a6e22e">userId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">) RETURNING id`</span>;
   <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span>) {
     <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">redirect</span>(<span style="color:#e6db74">`/notes/</span><span style="color:#e6db74">${</span><span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">id</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
   } <span style="color:#66d9ef">else</span> {
@@ -372,9 +372,9 @@ s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</sp
 });
 </code></pre></div><p>可以看到由于正则的存在使得我们无法直接传入相应 payload，因为我们要闭合标签必然要引入尖括号。但这是不是无法解决的呢？在万能的 js 中，一切都是可能的！</p>
 <p>我们注意到 <code>routes/notes.js</code> 中定义的路由在执行 sql 语句时，存在着一个注入点，所以可以尝试在 <code>req.body.value</code> 处进行 sql 注入：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/:noteId(\\d+)/pin&#39;</span>, <span style="color:#a6e22e">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">router</span>.<span style="color:#a6e22e">post</span>(<span style="color:#e6db74">&#39;/:noteId(\\d+)/pin&#39;</span>, <span style="color:#66d9ef">async</span> (<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
   <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">value</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">===</span> <span style="color:#ae81ff">1</span>) {
-    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">run</span>(<span style="color:#e6db74">`UPDATE notes SET pinned = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">value</span><span style="color:#e6db74">}</span><span style="color:#e6db74">::boolean WHERE id = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">noteId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">result</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">db</span>.<span style="color:#a6e22e">run</span>(<span style="color:#e6db74">`UPDATE notes SET pinned = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">value</span><span style="color:#e6db74">}</span><span style="color:#e6db74">::boolean WHERE id = </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">noteId</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
     <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">error</span>) {
       <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;index&#39;</span>, {<span style="color:#a6e22e">errors</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;An error occurred&#39;</span>]});
     }
@@ -494,7 +494,7 @@ s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</sp
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

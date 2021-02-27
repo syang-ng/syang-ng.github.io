@@ -10,7 +10,7 @@
   
   
   <link rel="prev" href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" />
-  
+  <link rel="next" href="https://syang-ng.github.io/2020/12/oakland-2018-oag/" />
   <link rel="canonical" href="https://syang-ng.github.io/2020/08/qwb-2020-blockchain/" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2020",
-    "datePublished": "2020-08-25 23:27:11 \x2b0800 CST",
-    "dateModified" : "2020-08-25 23:27:11 \x2b0800 CST",
+    "datePublished": "2020-08-25 23:27:11 \u002b0800 CST",
+    "dateModified" : "2020-08-25 23:27:11 \u002b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2020\/08\/qwb-2020-blockchain\/",
-    "wordCount" : "1847",
-    "keywords" : [  "syang\x27s blog"]
+    "wordCount" : "1848",
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -130,8 +130,6 @@
     <div class="post-content">
         
 
-        
-            
         
 
         
@@ -445,7 +443,7 @@ src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&
     }
 }
 </code></pre></div><p>题目考点是利用 delegatecall 来清空地址的余额，且被调用的合约字节码中不能出现 <code>0xf0</code> / <code>0xf1</code> / <code>0xf2</code> / <code>0xf4</code> / <code>0xfa</code> / <code>0xff</code> 这几个 opcode，即限制了对 <code>CREATE</code> / <code>CALL</code> / <code>CALLCODE</code> / <code>DELEGATECALL</code> / <code>STATICCALL</code> / <code>SELFDESTRUCT</code> 的调用，但题目没有限制 <code>CREATE2</code> 的使用，参考该 opcode 的定义，很明显本题需要我们使用 <code>CREATE2</code> 来清空合约的余额。</p>
-<p><img src="(/images/posts/QWB-2020-Blockchain/create2.png)" alt="CREATE2"></p>
+<p>![CREATE2]((/images/posts/QWB-2020-Blockchain/create2.png)</p>
 <p>这里本人的解题思路如下：</p>
 <ol>
 <li>构造交易，利用 <code>given_gift()</code> 的任意写满足 <code>require(sons[owner][0] == owner)</code> 和 <code>msg.sender == sons[owner][i]</code> 这两个条件</li>
@@ -529,6 +527,8 @@ src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&
         <a href="https://syang-ng.github.io/2020/08/security-2015-uipicker/" class="prev" rel="prev" title="Security 2015 UIPicker"><i class="iconfont icon-left"></i>&nbsp;Security 2015 UIPicker</a>
          
         
+        <a href="https://syang-ng.github.io/2020/12/oakland-2018-oag/" class="next" rel="next" title="S&amp;P 2018 OAG">S&amp;P 2018 OAG&nbsp;<i class="iconfont icon-right"></i></a>
+        
     </div>
 
     <div class="post-comment">
@@ -566,7 +566,7 @@ src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 
@@ -592,9 +592,8 @@ src_bytecode <span style="color:#f92672">+=</span> <span style="color:#e6db74">&
 
 
     
-     <link href="//lib.baomitu.com/lightgallery/1.6.11/css/lightgallery.min.css" rel="stylesheet">  
-      
-     <script src="/js/vendor_gallery.min.js" async="" ></script>
+    
+    <script src="/js/vendor_no_gallery.min.js" async=""></script>
     
   
 

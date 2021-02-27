@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-02-10 23:43:05 \x2b0000 UTC",
-    "dateModified" : "2018-02-10 23:43:05 \x2b0000 UTC",
+    "datePublished": "2018-02-10 23:43:05 \u002b0000 UTC",
+    "dateModified" : "2018-02-10 23:43:05 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/02\/chrome-%E8%87%AA%E5%8A%A8%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E6%8C%87%E5%8C%97\/",
     "wordCount" : "1941",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -183,27 +183,27 @@
 <p>我们主要关注项目里的两个脚本：<code>get-cpu-profile.js</code> 和 <code>get-timeline-trace.js</code> 分别对应 <code>JavaScript Profiler</code> 面板和 <code>Timeline</code> 面板的数据</p>
 <h4 id="get-cpu-profilejs">get-cpu-profile.js</h4>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#75715e">// get-cpu-profile.js
-</span><span style="color:#75715e"></span>(<span style="color:#a6e22e">async</span> <span style="color:#66d9ef">function</span>() {
+</span><span style="color:#75715e"></span>(<span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span>() {
    <span style="color:#75715e">// 实例化 Chrome
-</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
    <span style="color:#75715e">// 实例化 CDP 接口
-</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">cdp</span>(); 
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">cdp</span>(); 
    <span style="color:#75715e">// 从接口对象中解构处 Profiler Page Runtime 等域对象
 </span><span style="color:#75715e"></span>   <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Profiler</span>, <span style="color:#a6e22e">Page</span>, <span style="color:#a6e22e">Runtime</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
    <span style="color:#75715e">// enable domains to get events.
-</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>();
-   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>();
+   <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
 
    <span style="color:#75715e">// Set JS profiler sampling resolution to 100 microsecond (default is 1000)
-</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
+</span><span style="color:#75715e"></span>   <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
 
-   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span>});
-   <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;Page.loadEventFired&#39;</span>, <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">_</span> =&gt; {
+   <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span>});
+   <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#39;Page.loadEventFired&#39;</span>, <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">_</span> =&gt; {
        <span style="color:#75715e">// on load we&#39;ll start profiling, kick off the test, and finish
-</span><span style="color:#75715e"></span>       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
-       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Runtime</span>.<span style="color:#a6e22e">evaluate</span>({<span style="color:#a6e22e">expression</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;startTest();&#39;</span>});
-       <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>); <span style="color:#75715e">// sleep 600ms
-</span><span style="color:#75715e"></span>       <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
+</span><span style="color:#75715e"></span>       <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
+       <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Runtime</span>.<span style="color:#a6e22e">evaluate</span>({<span style="color:#a6e22e">expression</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;startTest();&#39;</span>});
+       <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>); <span style="color:#75715e">// sleep 600ms
+</span><span style="color:#75715e"></span>       <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
    });
 })();
 </code></pre></div><p>代码逻辑并不复杂，大致有以下步骤</p>
@@ -257,20 +257,20 @@
 <h3 id="利用代码实现自动化性能分析">利用代码实现自动化性能分析</h3>
 <p>代码主要还是利用 <code>Profiler</code> 和 <code>Tracing</code> 两个相关 domain 的 api 来获得 <code>JavaScript Profiler</code> 和 <code>Timeline</code> 的数据。</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-JavaScript" data-lang="JavaScript"><span style="color:#75715e">// demo.js
-</span><span style="color:#75715e"></span>(<span style="color:#a6e22e">async</span> ()=&gt;{
-    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
-    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">cdp</span>(); 
+</span><span style="color:#75715e"></span>(<span style="color:#66d9ef">async</span> ()=&gt;{
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">chrome</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">chromelauncher</span>.<span style="color:#a6e22e">launch</span>({<span style="color:#a6e22e">port</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">9222</span>});
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">cdp</span>(); 
     <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Profiler</span>, <span style="color:#a6e22e">Tracing</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
 
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">enable</span>();
 
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">setSamplingInterval</span>({<span style="color:#a6e22e">interval</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">100</span>});
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">start</span>();
 
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">start</span>();
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>);
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Traing</span>.<span style="color:#a6e22e">end</span>();
-    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">start</span>();
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">sleep</span>(<span style="color:#ae81ff">600</span>);
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Traing</span>.<span style="color:#a6e22e">end</span>();
+    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Profiler</span>.<span style="color:#a6e22e">stop</span>();
     <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">data</span>);
     <span style="color:#a6e22e">Tracing</span>.<span style="color:#a6e22e">dataCollected</span>(<span style="color:#66d9ef">function</span> (<span style="color:#a6e22e">data</span>) {
         <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">data</span>);
@@ -354,7 +354,7 @@
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

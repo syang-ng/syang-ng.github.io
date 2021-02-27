@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2019",
-    "datePublished": "2019-11-03 20:08:43 \x2b0800 CST",
-    "dateModified" : "2019-11-03 20:08:43 \x2b0800 CST",
+    "datePublished": "2019-11-03 20:08:43 \u002b0800 CST",
+    "dateModified" : "2019-11-03 20:08:43 \u002b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2019\/11\/from-css-to-xss\/",
     "wordCount" : "3644",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -262,7 +262,7 @@ $token2 = md5($token1);
 &lt;<span style="color:#f92672">big</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">token</span>&gt;&lt;/<span style="color:#f92672">big</span>&gt;&lt;<span style="color:#f92672">br</span>&gt;
 &lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">iframe</span>&gt;&lt;/<span style="color:#f92672">iframe</span>&gt;
 &lt;<span style="color:#f92672">script</span>&gt;
-	(<span style="color:#a6e22e">async</span> <span style="color:#66d9ef">function</span>() {
+	(<span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span>() {
 		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">EXPECTED_TOKEN_LENGTH</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>;
 		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ALPHABET</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(<span style="color:#e6db74">&#34;0123456789abcdef&#34;</span>);
     <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">iframe</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;iframe&#39;</span>);
@@ -271,7 +271,7 @@ $token2 = md5($token1);
 </span><span style="color:#75715e"></span>		<span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">extractedToken</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">EXPECTED_TOKEN_LENGTH</span>) {
 			<span style="color:#a6e22e">clearTokenCookie</span>();
 			<span style="color:#a6e22e">createIframeWithCss</span>();
-			<span style="color:#a6e22e">extractedToken</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getTokenFromCookie</span>();
+			<span style="color:#a6e22e">extractedToken</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getTokenFromCookie</span>();
 			<span style="color:#75715e">// 将获得的 token 写到页面处
 </span><span style="color:#75715e"></span>			document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;token&#39;</span>).<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">extractedToken</span>;
 		}
@@ -539,10 +539,10 @@ demo.svg  demo.woff  script.fontforge
 &lt;<span style="color:#f92672">script</span> <span style="color:#a6e22e">src</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;./cookie.js&#34;</span>&gt;&lt;/<span style="color:#f92672">script</span>&gt;
 &lt;<span style="color:#f92672">big</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">token</span>&gt;&lt;/<span style="color:#f92672">big</span>&gt;&lt;<span style="color:#f92672">br</span>&gt;
 &lt;<span style="color:#f92672">script</span>&gt;
-	(<span style="color:#a6e22e">async</span> <span style="color:#66d9ef">function</span>() {
+	(<span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span>() {
 		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">EXPECTED_TOKEN_LENGTH</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>;
 		<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ALPHABET</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(<span style="color:#e6db74">&#34;0123456789abcdef&#34;</span>);
-		<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">extractedToken</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getTokenFromCookie</span>();
+		<span style="color:#66d9ef">let</span> <span style="color:#a6e22e">extractedToken</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getTokenFromCookie</span>();
 		<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">extractedToken</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">EXPECTED_TOKEN_LENGTH</span>) {
 			<span style="color:#a6e22e">clearTokenCookie</span>();
 			<span style="color:#a6e22e">generateCSS</span>();
@@ -817,7 +817,7 @@ chars.forEach(c =&gt; {
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

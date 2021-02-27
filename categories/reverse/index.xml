@@ -6,11 +6,7 @@
     <description>Recent content in Reverse on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 16 Aug 2019 18:54:42 +0800</lastBuildDate>
-    
-	<atom:link href="https://syang-ng.github.io/categories/reverse/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Fri, 16 Aug 2019 18:54:42 +0800</lastBuildDate><atom:link href="https://syang-ng.github.io/categories/reverse/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>用工具高效（摸鱼）地解逆向题</title>
       <link>https://syang-ng.github.io/2019/08/reverse-tools-learning/</link>

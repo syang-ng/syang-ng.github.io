@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "EuroSys 2019 LockDoc",
     "headline" : "EuroSys 2019 LockDoc",
-    "description" : "EuroSys - 2019 - LockDoc: Trace-Based Analysis of Locking in the Linux Kernel 摘要 关注的问题：对 kernel 开发者来说，开发文档上关于锁的使用的介绍是不全面的，有时还会有出错的可能，最终会导致相关的 bug 出",
+    "description" : "EuroSys - 2019 - LockDoc: Trace-Based Analysis of Locking in the Linux Kernel 摘要 对内核开发者来说，锁的使用是一件非常烦琐而且复杂的工作，需要针对代码的上下文、特定的成员对象综合考虑锁的使用，",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2020",
-    "datePublished": "2020-03-07 17:31:58 \x2b0800 CST",
-    "dateModified" : "2020-03-07 17:31:58 \x2b0800 CST",
+    "datePublished": "2020-03-07 17:31:58 \u002b0800 CST",
+    "dateModified" : "2020-03-07 17:31:58 \u002b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2020\/03\/eurosys-2019-lockdoc\/",
-    "wordCount" : "3540",
-    "keywords" : [  "syang\x27s blog"]
+    "wordCount" : "3804",
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -146,10 +146,10 @@
 
           <h2 id="eurosys---2019---lockdoc-trace-based-analysis-of-locking-in-the-linux-kernel">EuroSys - 2019 - LockDoc: Trace-Based Analysis of Locking in the Linux Kernel</h2>
 <h2 id="摘要">摘要</h2>
-<p>关注的问题：对 kernel 开发者来说，开发文档上关于锁的使用的介绍是不全面的，有时还会有出错的可能，最终会导致相关的 bug 出现。</p>
-<p>Insight：一般而言，Linux 等操作系统绝大多数情况下处于正常运行状态，因此可以通过正常情况 Linux 内核的 trace 来推断什么是合理的加锁规则。</p>
-<p>解决：通过在一个插桩的 Linux kernel 上记录对内核的数据结构和对锁的获取记录，分析并推断锁的合理规则。</p>
-<p>效果：作者在实验中找到了 52,452 个违反加锁规则的例子，并由开发者确认了其中一个是真实存在的 bug。</p>
+<p>对内核开发者来说，锁的使用是一件非常烦琐而且复杂的工作，需要针对代码的上下文、特定的成员对象综合考虑锁的使用，更糟糕的一件事情是，开发文档上关于锁的使用的介绍是不全面的，甚至是出错的。在这样的条件下，开发者很难不写出错误代码，错误的使用锁可能造成死锁、条件竞争，或者是并行的性能下降等危害。</p>
+<p>相较之前的工作倾向于帮助开发者找到 内核中的 bug，本文采用了另一种思路来降低开发者写出含有 bug 代码的概率：即通过更完善的文档、更详细的介绍来帮助开发者编写正确的代码。那么如何得到正确的加锁规则和完善的文档？作者在这里基于以下出发点：一般而言，Linux 等操作系统绝大多数情况下处于正常运行状态，因此可以通过分析正常情况 下Linux 内核的 trace 来推断什么是合理的加锁规则。</p>
+<p>为此，本文提出了一种基于 trace 的自动加锁规则推断工具，通过在一个插桩的 Linux 内核上记录对内核的数据结构和对锁的获取释放的记录，可以分析并推断锁的合理加锁规则，通过这些规则可以验证现有文档的缺陷以及定位可能的bug。</p>
+<p>最终，作者在实验中找到了 52,452 个违反推导出的加锁规则的例子，并由开发者确认了其中一个是真实存在的 bug。</p>
 <h2 id="背景">背景</h2>
 <h3 id="锁的使用">锁的使用</h3>
 <p><img src="/images/posts/EuroSys-2019-LockDoc/Figure1.png" alt="Figure 1"></p>
@@ -347,7 +347,7 @@ unlock(<span style="color:#f92672">&amp;</span>sec_lock); <span style="color:#75
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

@@ -6,11 +6,7 @@
     <description>Recent content in Pwn on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 10 Mar 2019 14:51:57 +0000</lastBuildDate>
-    
-	<atom:link href="https://syang-ng.github.io/categories/pwn/index.xml" rel="self" type="application/rss+xml" />
-    
-    
+    <lastBuildDate>Sun, 10 Mar 2019 14:51:57 +0000</lastBuildDate><atom:link href="https://syang-ng.github.io/categories/pwn/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>pwnable.tw 入门 - start / orw / calc</title>
       <link>https://syang-ng.github.io/2019/03/pwnable-tw-1.0/</link>

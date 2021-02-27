@@ -46,7 +46,7 @@
     "articleSection" : "posts",
     "name" : "网鼎杯-Web-Writeup",
     "headline" : "网鼎杯-Web-Writeup",
-    "description" : "fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: \/user.php.bak Sitemap: http:\/\/domain.com\/sitemap.xml \x26lt;?php class UserInfo { public $name = \x26#34;\x26#34;; public $age = 0; public $blog = \x26#34;\x26#34;; public function __construct($name, $age, $blog) { $this-\x26gt;name = $name; $this-\x26gt;age = (int)$age; $this-\x26gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,",
+    "description" : "fakebook 访问 robots.txt 得到泄露的文件 user.php.bak： Disallow: \/user.php.bak Sitemap: http:\/\/domain.com\/sitemap.xml \u0026lt;?php class UserInfo { public $name = \u0026#34;\u0026#34;; public $age = 0; public $blog = \u0026#34;\u0026#34;; public function __construct($name, $age, $blog) { $this-\u0026gt;name = $name; $this-\u0026gt;age = (int)$age; $this-\u0026gt;blog = $blog; } function get($url) { $ch = curl_init(); curl_setopt($ch, CURLOPT_URL, $url); curl_setopt($ch,",
     "inLanguage" : "zh-cn",
     "author" : "syang",
     "creator" : "syang",
@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-08-20 18:35:43 \x2b0000 UTC",
-    "dateModified" : "2018-08-20 18:35:43 \x2b0000 UTC",
+    "datePublished": "2018-08-20 18:35:43 \u002b0000 UTC",
+    "dateModified" : "2018-08-20 18:35:43 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/08\/wangding-web-writeup\/",
     "wordCount" : "1510",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -149,7 +149,7 @@
 <p>访问 <code>robots.txt</code> 得到泄露的文件 <code>user.php.bak</code>：</p>
 <pre><code>Disallow: /user.php.bak
 Sitemap: http://domain.com/sitemap.xml
-</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">&lt;?php</span>
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
 <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">UserInfo</span>
 {
     <span style="color:#66d9ef">public</span> $name <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
@@ -517,7 +517,7 @@ app <span style="color:#f92672">=</span> Flask(__name__ , static_url_path<span s
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

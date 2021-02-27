@@ -6,10 +6,15 @@
     <description>Recent content in CTF on syang&#39;s blog</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 25 Aug 2020 23:27:11 +0800</lastBuildDate>
-    
-	<atom:link href="https://syang-ng.github.io/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
-    
+    <lastBuildDate>Sat, 30 Jan 2021 15:24:01 +0800</lastBuildDate><atom:link href="https://syang-ng.github.io/categories/ctf/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>RealWorldCTF 2020 EasyDefi &amp; Re:Montagy</title>
+      <link>https://syang-ng.github.io/2021/01/realworldctf-2020-ethereum/</link>
+      <pubDate>Sat, 30 Jan 2021 15:24:01 +0800</pubDate>
+      
+      <guid>https://syang-ng.github.io/2021/01/realworldctf-2020-ethereum/</guid>
+      <description>前言 RealWorld CTF 两道以太坊智能合约题目的事后复现。 首发在安全客：https://www.anquanke.com/post/id/231171 EasyDefi 本题</description>
+    </item>
     
     <item>
       <title>QWB 2020 Blockchain</title>

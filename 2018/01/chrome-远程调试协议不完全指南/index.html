@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-01-30 19:22:28 \x2b0000 UTC",
-    "dateModified" : "2018-01-30 19:22:28 \x2b0000 UTC",
+    "datePublished": "2018-01-30 19:22:28 \u002b0000 UTC",
+    "dateModified" : "2018-01-30 19:22:28 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/01\/chrome-%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95%E5%8D%8F%E8%AE%AE%E4%B8%8D%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97\/",
     "wordCount" : "2521",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -252,10 +252,10 @@ npm install -g chrome-remote-interface
 <p><code>chrome-remote-interface</code> 有两种使用模式，一种就是像正常包一样在项目中导入并使用，比如：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Javascript" data-lang="Javascript"><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">CDP</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;chrome-remote-interface&#39;</span>);
 
-(<span style="color:#a6e22e">async</span> ()=&gt; {
+(<span style="color:#66d9ef">async</span> ()=&gt; {
     <span style="color:#66d9ef">try</span> {
         <span style="color:#75715e">// connect to endpoint
-</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">CDP</span>();
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">client</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">CDP</span>();
         <span style="color:#75715e">// extract domains
 </span><span style="color:#75715e"></span>        <span style="color:#66d9ef">const</span> {<span style="color:#a6e22e">Network</span>, <span style="color:#a6e22e">Page</span>} <span style="color:#f92672">=</span> <span style="color:#a6e22e">client</span>;
         <span style="color:#75715e">// setup handlers
@@ -263,14 +263,14 @@ npm install -g chrome-remote-interface
             <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">params</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">url</span>);
         });
         <span style="color:#75715e">// enable events then start!
-</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">await</span> Promise.<span style="color:#a6e22e">all</span>([<span style="color:#a6e22e">Network</span>.<span style="color:#a6e22e">enable</span>(), <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>()]);
-        <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;https://github.com&#39;</span>});
-        <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">loadEventFired</span>();
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">await</span> Promise.<span style="color:#a6e22e">all</span>([<span style="color:#a6e22e">Network</span>.<span style="color:#a6e22e">enable</span>(), <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">enable</span>()]);
+        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">navigate</span>({<span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;https://github.com&#39;</span>});
+        <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">Page</span>.<span style="color:#a6e22e">loadEventFired</span>();
     } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">err</span>) {
         <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>(<span style="color:#a6e22e">err</span>);
     } <span style="color:#66d9ef">finally</span> {
         <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">client</span>) {
-            <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">close</span>();
+            <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">client</span>.<span style="color:#a6e22e">close</span>();
         }
     }
 })();
@@ -403,7 +403,7 @@ npm install -g chrome-remote-interface
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

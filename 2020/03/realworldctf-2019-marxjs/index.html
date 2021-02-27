@@ -54,11 +54,11 @@
     "accountablePerson" : "syang",
     "copyrightHolder" : "syang",
     "copyrightYear" : "2020",
-    "datePublished": "2020-03-10 00:03:36 \x2b0800 CST",
-    "dateModified" : "2020-03-10 00:03:36 \x2b0800 CST",
+    "datePublished": "2020-03-10 00:03:36 \u002b0800 CST",
+    "dateModified" : "2020-03-10 00:03:36 \u002b0800 CST",
     "url" : "https:\/\/syang-ng.github.io\/2020\/03\/realworldctf-2019-marxjs\/",
     "wordCount" : "1963",
-    "keywords" : [  "syang\x27s blog"]
+    "keywords" : [  "syang\u0027s blog"]
 }
 </script>
 
@@ -148,18 +148,18 @@
           <p>看了 wupco 师傅关于 nodejs 安全的总结：<a href="https://xz.aliyun.com/t/7237">本人在2019年对一些NodeJS问题的研究</a>，结合他在 RealWorld CTF 上出的题来深入学习一下。</p>
 <h2 id="marxjs">MarxJS</h2>
 <p>首先看附件里的文件，<code>real-world-cms/src/app/app.controller.ts</code> 里有一段初始化 admin 的代码：</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#a6e22e">async</span> <span style="color:#a6e22e">init</span>() {
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-javascript" data-lang="javascript"><span style="color:#66d9ef">async</span> <span style="color:#a6e22e">init</span>() {
   <span style="color:#66d9ef">try</span> {
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">clear</span>();
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">clear</span>();
   } <span style="color:#66d9ef">catch</span> (<span style="color:#a6e22e">e</span>) {
     <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">e</span>);
   }
   <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">User</span>();
   <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">email</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;admin@realworldctf.com&#39;</span>;
   <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">isAdmin</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>;
-  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">generateToken</span>();
-  <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">setPassword</span>(<span style="color:#a6e22e">password</span>);
-  <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">user</span>);
+  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">password</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">generateToken</span>();
+  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">setPassword</span>(<span style="color:#a6e22e">password</span>);
+  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">save</span>(<span style="color:#a6e22e">user</span>);
 }
 </code></pre></div><p>可以看到 admin 账户的密码是随机生成的 token，那么题目第一步必然是泄露出该密码。</p>
 <p>继续定位到 <code>real-world-cms/src/app/controllers/resetpass.controller.ts</code>，可以看到这里提供了重置密码的功能：</p>
@@ -172,14 +172,14 @@
 <span style="color:#66d9ef">export</span> <span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ResetpassController</span> {
   <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Post</span>()
   <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">ValidateBody</span>(<span style="color:#a6e22e">Email</span>)
-  <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">resetpass</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
-      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">findOne</span>({ <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span> });
+  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">resetpass</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">user</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">findOne</span>({ <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span> });
       <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">user</span>) {
           <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseBadRequest</span>(<span style="color:#e6db74">&#39;user not found&#39;</span>);
       }
-      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newpass</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">generateToken</span>();
-      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">passhash</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">newpass</span>);
-      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">updateOne</span>(
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">newpass</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">generateToken</span>();
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">passhash</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">newpass</span>);
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">getMongoRepository</span>(<span style="color:#a6e22e">User</span>).<span style="color:#a6e22e">updateOne</span>(
         { <span style="color:#a6e22e">email</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">email</span> }, { <span style="color:#a6e22e">$set</span><span style="color:#f92672">:</span> { <span style="color:#a6e22e">password</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">passhash</span>}});
       <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">res</span>) {
           <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseInternalServerError</span>(<span style="color:#e6db74">&#39;something error.&#39;</span>);
@@ -195,11 +195,11 @@
 
     };
 
-      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">info</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">transporter</span>.<span style="color:#a6e22e">sendMail</span>(<span style="color:#a6e22e">message</span>);
+      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">info</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">transporter</span>.<span style="color:#a6e22e">sendMail</span>(<span style="color:#a6e22e">message</span>);
       <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseRedirect</span>(<span style="color:#e6db74">&#39;/signin&#39;</span>);
   }
     <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">Get</span>()
-    <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">index</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+    <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">index</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
         <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">render</span>(<span style="color:#e6db74">&#39;templates/resetpass.html&#39;</span>);
     }
 
@@ -265,8 +265,8 @@
   })
   <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">AdminRequired</span>()
   <span style="color:#960050;background-color:#1e0010">@</span><span style="color:#a6e22e">ValidateBody</span>(<span style="color:#a6e22e">Url</span>)
-  <span style="color:#a6e22e">async</span> <span style="color:#a6e22e">checkstatus</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
-    <span style="color:#a6e22e">await</span> <span style="color:#a6e22e">rp</span>.<span style="color:#a6e22e">head</span>(<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">url</span>).<span style="color:#a6e22e">then</span>(() =&gt; { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; },
+  <span style="color:#66d9ef">async</span> <span style="color:#a6e22e">checkstatus</span>(<span style="color:#a6e22e">ctx</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">Context</span>) {
+    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">rp</span>.<span style="color:#a6e22e">head</span>(<span style="color:#a6e22e">ctx</span>.<span style="color:#a6e22e">request</span>.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">url</span>).<span style="color:#a6e22e">then</span>(() =&gt; { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">true</span>; },
         () =&gt; { <span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">false</span>; } );
     <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">new</span> <span style="color:#a6e22e">HttpResponseRedirect</span>(<span style="color:#66d9ef">this</span>.<span style="color:#a6e22e">status</span> <span style="color:#f92672">?</span> <span style="color:#e6db74">&#39;/admin?alive=true&#39;</span> <span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/admin?error=true&#39;</span>);
   }
@@ -479,7 +479,7 @@ request库存在参数har可以覆盖请求方式等参数。</p>
     <div class="copyright">
         &copy;
         
-        <span itemprop="copyrightYear">2017 - 2020</span>
+        <span itemprop="copyrightYear">2017 - 2021</span>
         
         <span class="with-love">
     	 <i class="iconfont icon-love"></i> 
